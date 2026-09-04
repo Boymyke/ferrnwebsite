@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://www.ferrnagency.com/sitemap.xml
+Disallow: /studio/
+Disallow: /api/
+Disallow: /lib/
+Disallow: /data/
+Sitemap: https://www.ferrnagency.com/sitemap.php
