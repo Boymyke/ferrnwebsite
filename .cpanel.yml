@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/ferrmxud/public_html/
+    - /bin/mkdir -p $DEPLOYPATH/assets
+    - /bin/cp index.html robots.txt sitemap.xml $DEPLOYPATH
+    - /bin/cp -R assets/* $DEPLOYPATH/assets/
