@@ -1,3 +1,4 @@
+<div class="page-loader active" id="pageLoader" aria-hidden="true"><div class="loader-inner"><img class="loader-mark" src="/assets/ferrn-mark.svg" alt=""><span class="loader-line"></span></div></div>
 <div class="nav-shell">
   <nav class="nav" aria-label="Primary navigation">
     <a class="brand" href="/" aria-label="Ferrn Digital Agency home"><img src="https://raw.githubusercontent.com/FERRN-AGENCY/ferrn-website/main/fern/src/assets/Fern.svg" alt="Ferrn Digital Agency"></a>
