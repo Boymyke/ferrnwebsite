@@ -4,9 +4,10 @@ deployment:
     - export DEPLOYPATH=/home/ferrmxud/public_html/
     - /bin/mkdir -p /home/ferrmxud/ferrn_cms
     - /bin/chmod 750 /home/ferrmxud/ferrn_cms
+    - /bin/mkdir -p $DEPLOYPATH/assets
     - /bin/rm -f $DEPLOYPATH/index.html $DEPLOYPATH/sitemap.xml
-    - /bin/rm -rf $DEPLOYPATH/api $DEPLOYPATH/data $DEPLOYPATH/insights $DEPLOYPATH/lib $DEPLOYPATH/studio $DEPLOYPATH/work
+    - /bin/rm -rf $DEPLOYPATH/admin $DEPLOYPATH/api $DEPLOYPATH/data $DEPLOYPATH/insights $DEPLOYPATH/lib $DEPLOYPATH/studio $DEPLOYPATH/work
     - /bin/cp index.php robots.txt sitemap.php $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH
-    - /bin/cp assets/site.css assets/site.js assets/ferrn-mark.svg $DEPLOYPATH/assets/
-    - /bin/cp -R api data insights lib studio work $DEPLOYPATH
+    - /bin/cp assets/site.css assets/site.js assets/overrides.css assets/ferrn-mark.svg $DEPLOYPATH/assets/
+    - /bin/cp -R admin api data insights lib studio work $DEPLOYPATH
