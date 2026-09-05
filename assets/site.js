@@ -19,6 +19,8 @@
     const themeBtn = e.target.closest('[data-theme-toggle]');
     const menuBtn = e.target.closest('[data-menu-toggle]');
     const filterBtn = e.target.closest('[data-project-filter]');
+    const faqBtn = e.target.closest('[data-faq-toggle]');
+
     if (themeBtn) {
       root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
       localStorage.setItem('ferrn-theme', root.dataset.theme);
@@ -36,6 +38,21 @@
       document.querySelectorAll('[data-project-category]').forEach(card => { card.hidden = card.dataset.projectCategory !== filter; });
       return;
     }
+    if (faqBtn) {
+      const item = faqBtn.closest('.faq-item');
+      const open = !item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(el => {
+        el.classList.remove('open');
+        const btn = el.querySelector('[data-faq-toggle]');
+        if (btn) btn.setAttribute('aria-expanded','false');
+      });
+      if (open) {
+        item.classList.add('open');
+        faqBtn.setAttribute('aria-expanded','true');
+      }
+      return;
+    }
+
     if (e.target.closest('.mobile-panel a')) document.body.classList.remove('menu-open');
 
     const a = e.target.closest('a[href]');
@@ -61,6 +78,63 @@
   }), {threshold:.07, rootMargin:'0px 0px -30px 0px'});
   document.querySelectorAll('.reveal').forEach(el => reveal.observe(el));
   document.querySelectorAll('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
+
+  /* Metrics count-up */
+  const counters = document.querySelectorAll('[data-count]');
+  if (counters.length) {
+    const counterObserver = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = Number(el.dataset.count || 0);
+      const suffix = el.dataset.suffix || '';
+      const duration = 1350;
+      const start = performance.now();
+      const tick = now => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.floor(target * eased) + suffix;
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = target + suffix;
+      };
+      requestAnimationFrame(tick);
+      counterObserver.unobserve(el);
+    }), {threshold:.55});
+    counters.forEach(el => counterObserver.observe(el));
+  }
+
+  /* Testimonial slider */
+  const slider = document.querySelector('[data-testimonial-slider]');
+  if (slider) {
+    const track = slider.querySelector('.testimonial-track');
+    const slides = [...slider.querySelectorAll('.testimonial-slide')];
+    const dots = [...slider.querySelectorAll('[data-testimonial-dot]')];
+    const prev = slider.querySelector('[data-testimonial-prev]');
+    const next = slider.querySelector('[data-testimonial-next]');
+    let index = 0;
+    let timer;
+    const go = i => {
+      index = (i + slides.length) % slides.length;
+      track.style.transform = `translateX(-${index * 100}%)`;
+      dots.forEach((dot, n) => dot.classList.toggle('active', n === index));
+    };
+    const restart = () => {
+      clearInterval(timer);
+      timer = setInterval(() => go(index + 1), 6000);
+    };
+    prev?.addEventListener('click', () => { go(index - 1); restart(); });
+    next?.addEventListener('click', () => { go(index + 1); restart(); });
+    dots.forEach((dot, i) => dot.addEventListener('click', () => { go(i); restart(); }));
+    slider.addEventListener('mouseenter', () => clearInterval(timer));
+    slider.addEventListener('mouseleave', restart);
+    let touchX = 0;
+    slider.addEventListener('touchstart', e => touchX = e.touches[0].clientX, {passive:true});
+    slider.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(diff) > 45) { go(index + (diff < 0 ? 1 : -1)); restart(); }
+    }, {passive:true});
+    go(0);
+    restart();
+  }
 
   const contactForm = document.querySelector('#contactForm');
   if (contactForm) {
