@@ -3,27 +3,19 @@
   const storedTheme = localStorage.getItem('ferrn-theme');
   if (storedTheme) root.dataset.theme = storedTheme;
   else root.dataset.theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  root.dataset.mono = localStorage.getItem('ferrn-mono') || 'false';
 
   const updateIcons = () => {
     const themeIcon = document.querySelector('[data-theme-icon]');
     if (themeIcon) themeIcon.setAttribute('data-lucide', root.dataset.theme === 'dark' ? 'sun' : 'moon');
-    document.querySelectorAll('[data-mono-label]').forEach(el => el.textContent = root.dataset.mono === 'true' ? 'COLOR' : 'B/W');
     if (window.lucide) window.lucide.createIcons();
   };
 
   document.addEventListener('click', e => {
     const themeBtn = e.target.closest('[data-theme-toggle]');
-    const monoBtn = e.target.closest('[data-mono-toggle]');
     const menuBtn = e.target.closest('[data-menu-toggle]');
     if (themeBtn) {
       root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
       localStorage.setItem('ferrn-theme', root.dataset.theme);
-      updateIcons();
-    }
-    if (monoBtn) {
-      root.dataset.mono = root.dataset.mono === 'true' ? 'false' : 'true';
-      localStorage.setItem('ferrn-mono', root.dataset.mono);
       updateIcons();
     }
     if (menuBtn) {
@@ -59,9 +51,9 @@
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.message || 'Could not send your enquiry.');
         contactForm.reset();
-        if (status) status.textContent = 'Received. We’ll reply from michael@ferrnagency.com.';
+        if (status) status.textContent = 'Received. We’ll reply from info@ferrnagency.com.';
       } catch (err) {
-        if (status) status.textContent = err.message || 'Something went wrong. Email michael@ferrnagency.com instead.';
+        if (status) status.textContent = err.message || 'Something went wrong. Email info@ferrnagency.com instead.';
       } finally { submit.disabled = false; }
     });
   }
