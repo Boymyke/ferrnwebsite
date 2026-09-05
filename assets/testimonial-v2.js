@@ -2,10 +2,10 @@
   const slider = document.querySelector('[data-testimonial-slider]');
   if (!slider) return;
 
-  const clone = slider.cloneNode(false);
-  clone.className = 'testimonial-slider-v2 reveal visible';
-  clone.removeAttribute('data-testimonial-slider');
-  slider.replaceWith(clone);
+  const shell = slider.cloneNode(false);
+  shell.className = 'testimonial-slider-v2 reveal visible';
+  shell.removeAttribute('data-testimonial-slider');
+  slider.replaceWith(shell);
 
   const viewport = document.createElement('div');
   viewport.className = 'testimonial-viewport-v2';
@@ -27,14 +27,16 @@
 
   const dots = document.createElement('div');
   dots.className = 'testimonial-dots-v2';
-  clone.append(viewport, prev, next, dots);
+  shell.append(viewport, prev, next, dots);
 
   let items = [];
   let index = 0;
+  let position = 1;
   let autoplay = null;
   let currentAudio = null;
   let audioPlaying = false;
   let transitioning = false;
+  let cards = [];
 
   const waveHeights = [10,18,25,14,29,21,12,27,33,18,26,14,30,20,12,24,32,15,28,21,11,26,34,17,24,13,29,22,16,31,19,11,25,30,14,27,20,12,33,18,24,15,29,21,10,26,31,16];
   const esc = s => String(s || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
@@ -49,9 +51,30 @@
     audioPlaying = false;
   }
 
-  function makeCard(t, actualIndex, state) {
+  function updateActiveState() {
+    cards.forEach(card => {
+      const actual = Number(card.dataset.actualIndex);
+      card.classList.toggle('active', actual === index);
+      const near = actual === ((index - 1 + items.length) % items.length) || actual === ((index + 1) % items.length);
+      card.classList.toggle('near', near && actual !== index);
+    });
+    [...dots.children].forEach((d, i) => d.classList.toggle('active', i === index));
+  }
+
+  function translateTo(pos, animate = true) {
+    const first = cards[0];
+    if (!first) return;
+    const styles = getComputedStyle(track);
+    const gap = parseFloat(styles.columnGap || styles.gap || '0') || 0;
+    const cardWidth = first.getBoundingClientRect().width;
+    const x = (viewport.clientWidth / 2) - (cardWidth / 2) - (pos * (cardWidth + gap));
+    track.style.transition = animate ? 'transform .88s cubic-bezier(.22,.61,.36,1)' : 'none';
+    track.style.transform = `translate3d(${x}px,0,0)`;
+  }
+
+  function makeCard(t, actualIndex) {
     const el = document.createElement('article');
-    el.className = `testimonial-card-v2 ${state}`;
+    el.className = 'testimonial-card-v2';
     el.dataset.actualIndex = String(actualIndex);
     el.dataset.person = personKey(t.name);
     el.innerHTML = `<img class="testimonial-image-v2" src="${esc(t.image)}" alt="${esc(t.name)}" loading="lazy"><div class="audio-wave-v2"><button class="audio-play-v2" type="button" aria-label="Play ${esc(t.name)} testimonial"><i data-lucide="play"></i></button><div class="audio-wave-bars">${waveHeights.map(h=>`<i style="height:${h}px"></i>`).join('')}</div><span class="audio-time-v2">0:00</span></div><div class="testimonial-meta-v2"><strong>${esc(t.name)}</strong><span>${esc(t.role)}</span></div>`;
@@ -116,34 +139,39 @@
       audio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * audio.duration;
     });
 
-    if (state !== 'active') el.addEventListener('click', () => go(actualIndex, true));
+    el.addEventListener('click', () => {
+      if (actualIndex !== index && !transitioning) go(actualIndex, true);
+    });
+
     return el;
   }
 
-  function render(settle = false) {
-    if (!items.length) return;
+  function build() {
     track.innerHTML = '';
-    const p = (index - 1 + items.length) % items.length;
-    const n = (index + 1) % items.length;
-    track.append(makeCard(items[p], p, 'near'), makeCard(items[index], index, 'active'), makeCard(items[n], n, 'near'));
-    [...dots.children].forEach((d, i) => d.classList.toggle('active', i === index));
-    if (settle) {
-      track.classList.remove('settle');
-      void track.offsetWidth;
-      track.classList.add('settle');
-      setTimeout(() => track.classList.remove('settle'), 540);
-    }
+    if (!items.length) return;
+
+    const sequence = [items[items.length - 1], ...items, items[0]];
+    sequence.forEach((item, seqIndex) => {
+      const actualIndex = seqIndex === 0 ? items.length - 1 : seqIndex === items.length + 1 ? 0 : seqIndex - 1;
+      track.appendChild(makeCard(item, actualIndex));
+    });
+    cards = [...track.children];
+    updateActiveState();
+
+    requestAnimationFrame(() => translateTo(position, false));
     window.lucide?.createIcons();
   }
 
-  function directionTo(target) {
-    const nextIndex = (index + 1) % items.length;
-    const prevIndex = (index - 1 + items.length) % items.length;
-    if (target === prevIndex) return -1;
-    if (target === nextIndex) return 1;
-    const forward = (target - index + items.length) % items.length;
-    const backward = (index - target + items.length) % items.length;
-    return forward <= backward ? 1 : -1;
+  function move(delta, user = false) {
+    if (!items.length || transitioning) return;
+    if (user) stopCurrent();
+    clearInterval(autoplay);
+
+    transitioning = true;
+    index = (index + delta + items.length) % items.length;
+    position += delta;
+    updateActiveState();
+    translateTo(position, true);
   }
 
   function go(target, user = false) {
@@ -151,39 +179,55 @@
     target = (target + items.length) % items.length;
     if (target === index) return;
     if (user) stopCurrent();
-
-    const dir = directionTo(target);
-    transitioning = true;
     clearInterval(autoplay);
-    track.classList.add('is-animating', dir > 0 ? 'slide-next' : 'slide-prev');
 
-    setTimeout(() => {
-      index = target;
-      track.classList.remove('slide-next', 'slide-prev', 'is-animating');
-      render(true);
-      transitioning = false;
-      if (!audioPlaying) restart();
-    }, 390);
+    transitioning = true;
+    index = target;
+    position = target + 1;
+    updateActiveState();
+    translateTo(position, true);
   }
+
+  track.addEventListener('transitionend', e => {
+    if (e.propertyName !== 'transform' || !transitioning) return;
+
+    if (position === 0) {
+      position = items.length;
+      translateTo(position, false);
+    } else if (position === items.length + 1) {
+      position = 1;
+      translateTo(position, false);
+    }
+
+    transitioning = false;
+    if (!audioPlaying) restart();
+  });
 
   function restart() {
     clearInterval(autoplay);
     if (!audioPlaying && !transitioning && items.length > 1) {
-      autoplay = setInterval(() => go(index + 1, false), 6500);
+      autoplay = setInterval(() => move(1, false), 6500);
     }
   }
 
-  prev.addEventListener('click', () => go(index - 1, true));
-  next.addEventListener('click', () => go(index + 1, true));
+  prev.addEventListener('click', () => move(-1, true));
+  next.addEventListener('click', () => move(1, true));
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => translateTo(position, false), 100);
+  }, { passive: true });
 
   fetch('/api/testimonials.php', { cache: 'no-store' })
     .then(r => r.json())
     .then(data => {
       items = Array.isArray(data.testimonials) ? data.testimonials : [];
       if (!items.length) {
-        clone.remove();
+        shell.remove();
         return;
       }
+
       dots.innerHTML = '';
       items.forEach((_, i) => {
         const d = document.createElement('button');
@@ -192,8 +236,9 @@
         d.addEventListener('click', () => go(i, true));
         dots.appendChild(d);
       });
-      render(true);
+
+      build();
       restart();
     })
-    .catch(() => clone.remove());
+    .catch(() => shell.remove());
 })();
