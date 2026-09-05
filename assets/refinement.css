@@ -42,23 +42,19 @@ html[data-theme="light"] .hero-editorial{background:#fff!important}
 }
 .hero-editorial .hero-copy-block .hero-actions{justify-content:center!important;margin-top:26px!important}
 .hero-editorial .hero-visual{display:none!important}
-.hero-editorial .hero-proof{margin:54px auto 0!important;text-align:center!important}
-.hero-editorial .proof-chips{justify-content:center!important}
-.hero-editorial .hero-note{text-align:center!important}
+/* Remove the old strategy/proof row and its divider line completely. */
+.hero-editorial .hero-proof{display:none!important}
 .hero-editorial .btn-primary{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
 .hero-editorial .btn-primary:hover{background:#ff5419!important;border-color:#ff5419!important}
 
-/* Dark/light foreground colours */
+/* Base hero colours */
 .hero-editorial{color:#fff!important}
-.hero-editorial .hero-copy,.hero-editorial .hero-note,.hero-editorial .hero-proof p{color:rgba(255,255,255,.68)!important}
-.hero-editorial .proof-chip{color:rgba(255,255,255,.72)!important;border-color:rgba(255,255,255,.16)!important;background:transparent!important}
+.hero-editorial .hero-copy,.hero-editorial .hero-note{color:rgba(255,255,255,.68)!important}
 .hero-editorial .btn-ghost{color:#fff!important;border-color:rgba(255,255,255,.28)!important;background:transparent!important}
 .hero-editorial .global-pill{color:#fff!important;border-color:rgba(255,255,255,.22)!important;background:transparent!important}
 html[data-theme="light"] .hero-editorial{color:#111!important}
 html[data-theme="light"] .hero-editorial .hero-copy,
-html[data-theme="light"] .hero-editorial .hero-note,
-html[data-theme="light"] .hero-editorial .hero-proof p{color:rgba(17,17,17,.66)!important}
-html[data-theme="light"] .hero-editorial .proof-chip{color:rgba(17,17,17,.72)!important;border-color:rgba(17,17,17,.16)!important}
+html[data-theme="light"] .hero-editorial .hero-note{color:rgba(17,17,17,.66)!important}
 html[data-theme="light"] .hero-editorial .btn-ghost{color:#111!important;border-color:rgba(17,17,17,.25)!important}
 html[data-theme="light"] .hero-editorial .global-pill{color:#111!important;border-color:rgba(17,17,17,.20)!important}
 .hero-editorial .accent{color:var(--accent)!important}
@@ -73,23 +69,37 @@ html[data-theme="light"] .hero-editorial .global-pill{color:#111!important;borde
   justify-content:center;
   padding:inherit;
   background:#fff;
-  color:#111;
+  color:#111!important;
   pointer-events:none;
   mask:url(#ferrn-smudge-mask);
   -webkit-mask:url(#ferrn-smudge-mask);
 }
-html[data-theme="light"] .hero-reveal-back{background:#000;color:#fff}
+html[data-theme="light"] .hero-reveal-back{background:#000;color:#fff!important}
 .hero-reveal-clone{width:100%;position:relative}
-.hero-reveal-back .hero-copy,.hero-reveal-back .hero-note,.hero-reveal-back .hero-proof p{color:rgba(17,17,17,.66)!important}
-.hero-reveal-back .proof-chip{color:rgba(17,17,17,.72)!important;border-color:rgba(17,17,17,.16)!important;background:transparent!important}
-.hero-reveal-back .btn-ghost{color:#111!important;border-color:rgba(17,17,17,.25)!important;background:transparent!important}
-.hero-reveal-back .global-pill{color:#111!important;border-color:rgba(17,17,17,.20)!important}
+
+/* Clones are created after the global reveal observer runs. Force them visible. */
+.hero-reveal-back .reveal,
+.hero-reveal-back .reveal.visible{
+  opacity:1!important;
+  visibility:visible!important;
+  transform:none!important;
+  transition:none!important;
+}
+
+/* Explicit inverse typography so the masked area always changes colour. */
+.hero-reveal-back h1{color:#111!important}
+.hero-reveal-back .hero-copy,
+.hero-reveal-back .hero-note{color:rgba(17,17,17,.68)!important}
+.hero-reveal-back .btn-ghost{color:#111!important;border-color:rgba(17,17,17,.28)!important;background:transparent!important}
+.hero-reveal-back .global-pill{color:#111!important;border-color:rgba(17,17,17,.22)!important;background:transparent!important}
+.hero-reveal-back .accent{color:var(--accent)!important}
+
+html[data-theme="light"] .hero-reveal-back h1{color:#fff!important}
 html[data-theme="light"] .hero-reveal-back .hero-copy,
-html[data-theme="light"] .hero-reveal-back .hero-note,
-html[data-theme="light"] .hero-reveal-back .hero-proof p{color:rgba(255,255,255,.68)!important}
-html[data-theme="light"] .hero-reveal-back .proof-chip{color:rgba(255,255,255,.72)!important;border-color:rgba(255,255,255,.16)!important}
+html[data-theme="light"] .hero-reveal-back .hero-note{color:rgba(255,255,255,.72)!important}
 html[data-theme="light"] .hero-reveal-back .btn-ghost{color:#fff!important;border-color:rgba(255,255,255,.28)!important}
 html[data-theme="light"] .hero-reveal-back .global-pill{color:#fff!important;border-color:rgba(255,255,255,.22)!important}
+
 .hero-reveal-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 
 /* Legacy testimonial wrapper rules retained harmlessly */
@@ -110,8 +120,6 @@ html[data-theme="light"] .hero-reveal-back .global-pill{color:#fff!important;bor
   .hero-editorial .hero-topline{flex-direction:column!important;gap:10px!important}
   .hero-editorial .hero-actions{width:100%!important;flex-direction:column!important;align-items:stretch!important}
   .hero-editorial .hero-actions .btn{width:100%!important;min-width:0!important}
-  .hero-editorial .hero-proof{margin-top:34px!important;padding-inline:var(--pad)!important}
-  .hero-editorial .proof-chips{justify-content:center!important}
   .hero-reveal-back,.hero-reveal-svg{display:none!important}
 }
 
@@ -119,8 +127,6 @@ html[data-theme="light"] .hero-reveal-back .global-pill{color:#fff!important;bor
   .hero-editorial{padding:118px 0 58px!important}
   .hero-editorial .hero-copy-block h1{font-size:clamp(38px,11.5vw,54px)!important}
   .hero-editorial .hero-copy-block .hero-copy{font-size:15px!important;line-height:1.65!important}
-  .hero-editorial .hero-proof{display:block!important;text-align:center!important}
-  .hero-editorial .proof-chips{margin-top:14px!important}
 }
 
 @media(prefers-reduced-motion:reduce){.hero-reveal-back,.hero-reveal-svg{display:none!important}}
