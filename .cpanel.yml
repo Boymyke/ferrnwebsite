@@ -9,5 +9,5 @@ deployment:
     - /bin/rm -rf $DEPLOYPATH/admin $DEPLOYPATH/api $DEPLOYPATH/data $DEPLOYPATH/insights $DEPLOYPATH/lib $DEPLOYPATH/studio $DEPLOYPATH/work
     - /bin/cp index.php robots.txt sitemap.php $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH
-    - /bin/cp assets/site.css assets/site.js assets/overrides.css assets/fx.css assets/fx.js assets/refinement.css assets/refinement.js assets/testimonial-v2.css assets/testimonial-v2.js assets/ferrn-mark.svg $DEPLOYPATH/assets/
+    - /bin/cp assets/site.css assets/site.js assets/overrides.css assets/fx.css assets/fx.js assets/refinement.css assets/refinement.js assets/testimonial-v2.css assets/testimonial-v2.js assets/enhancements.css assets/enhancements.js assets/ferrn-mark.svg $DEPLOYPATH/assets/
     - /bin/cp -R admin api data insights lib studio work $DEPLOYPATH
