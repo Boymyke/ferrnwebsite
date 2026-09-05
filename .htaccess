@@ -12,7 +12,8 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^insights/([a-z0-9-]+)/?$ insights/post.php?slug=$1 [L,QSA]
 
-RewriteRule ^admin/?$ studio/ [R=302,L]
+# Canonical admin route
+RewriteRule ^studio/?$ admin/ [R=302,L]
 
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
