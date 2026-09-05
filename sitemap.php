@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/lib/storage.php';
-$projects = require __DIR__ . '/data/projects.php';
+require_once __DIR__ . '/lib/projects.php';
+$projects=ferrn_projects();
 header('Content-Type: application/xml; charset=utf-8');
 $urls=[['loc'=>'https://www.ferrnagency.com/','priority'=>'1.0'],['loc'=>'https://www.ferrnagency.com/work/','priority'=>'0.9'],['loc'=>'https://www.ferrnagency.com/insights/','priority'=>'0.8']];
 foreach($projects as $slug=>$p)$urls[]=['loc'=>'https://www.ferrnagency.com/work/'.$slug,'priority'=>'0.8'];
