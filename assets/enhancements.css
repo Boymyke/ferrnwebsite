@@ -1,0 +1,46 @@
+/* Final interaction refinements */
+#contact .contact-panel > .eyebrow{
+  color:#000!important;
+}
+#contact .contact-panel > .eyebrow::before{
+  background:#000!important;
+  box-shadow:none!important;
+}
+
+.ferrn-confetti-layer{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:99999;
+}
+.ferrn-confetti-piece{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:9px;
+  height:15px;
+  border-radius:2px;
+  opacity:0;
+  transform:translate(-50%,-50%) rotate(0deg);
+  animation:ferrn-confetti-burst var(--duration,1200ms) cubic-bezier(.12,.72,.19,1) forwards;
+  animation-delay:var(--delay,0ms);
+}
+@keyframes ferrn-confetti-burst{
+  0%{opacity:0;transform:translate(-50%,-50%) translate(0,0) rotate(0deg) scale(.7)}
+  8%{opacity:1}
+  72%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-50%) translate(var(--x),var(--y)) rotate(var(--rot)) scale(1)}
+}
+
+.work-filter-wrap{
+  margin-bottom:34px;
+}
+.work-filter-wrap .impact-tabs{
+  margin:0;
+}
+.work-project-card[hidden]{display:none!important}
+
+@media (prefers-reduced-motion:reduce){
+  .ferrn-confetti-layer{display:none!important}
+}
