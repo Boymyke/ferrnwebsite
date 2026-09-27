@@ -14,7 +14,7 @@ function ferrn_default_settings(): array {
         'contact'=>[
             'email'=>'info@ferrnagency.com',
             'phone'=>'',
-            'booking_url'=>'',
+            'booking_url'=>'https://cal.com/ferrn-agency',
             'address'=>'',
             'country'=>'Nigeria'
         ],
