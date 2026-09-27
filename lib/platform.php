@@ -46,7 +46,7 @@ function ferrn_default_settings(): array {
             'geographic_coverage'=>'Nigeria · United Kingdom · United States · Canada · Australia · Remote/Global',
             'procurement_contact'=>'info@ferrnagency.com',
             'capability_statement_url'=>'',
-            'company_profile_url'=>''
+            'company_profile_url'=>'/assets/Ferrn-Agency-Company-Profile.pdf'
         ],
         'ai'=>[
             'enabled'=>false,
