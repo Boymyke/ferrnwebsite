@@ -12,6 +12,8 @@
   const updateIcons = () => {
     const themeIcon = document.querySelector('[data-theme-icon]');
     if (themeIcon) themeIcon.setAttribute('data-lucide', root.dataset.theme === 'dark' ? 'sun' : 'moon');
+    const favicon = document.querySelector('#ferrn-favicon');
+    if (favicon) favicon.href = root.dataset.theme === 'dark' ? '/assets/ferrn-favicon-black-animated-shine.svg' : '/assets/ferrn-favicon-white-animated-shine.svg';
     if (window.lucide) window.lucide.createIcons();
   };
 
