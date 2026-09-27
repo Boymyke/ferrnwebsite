@@ -52,7 +52,7 @@ function ferrn_default_settings(): array {
             'enabled'=>false,
             'articles_per_day'=>10,
             'trend_region'=>'NG',
-            'text_model'=>'gpt-5.4-mini',
+            'text_model'=>'gpt-5.6-terra',
             'image_model'=>'gpt-image-2.5-flare',
             'auto_publish'=>false
         ],
