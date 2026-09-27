@@ -2,6 +2,25 @@
 declare(strict_types=1);
 require_once __DIR__.'/storage.php';
 
+function ferrn_load_private_env(): void {
+    $path=ferrn_storage_dir().'/.env';
+    if(!is_file($path)) return;
+    $lines=@file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if(!is_array($lines)) return;
+    foreach($lines as $line){
+        $line=trim((string)$line);
+        if($line==='' || str_starts_with($line,'#') || !str_contains($line,'=')) continue;
+        [$key,$value]=array_map('trim',explode('=',$line,2));
+        if($key==='' || !preg_match('/^[A-Z0-9_]+$/',$key)) continue;
+        if((string)getenv($key)===''){
+            $value=trim($value," \t\n\r\0\x0B\"'");
+            putenv($key.'='.$value);
+            $_ENV[$key]=$value;
+        }
+    }
+}
+ferrn_load_private_env();
+
 function ferrn_default_settings(): array {
     return [
         'brand'=>[
