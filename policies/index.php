@@ -1,0 +1,8 @@
+<?php
+declare(strict_types=1);
+require_once __DIR__.'/../lib/platform.php';
+$items=array_values(array_filter(ferrn_collection('policies',ferrn_default_policies()),fn($x)=>!empty($x['published'])));
+$pageTitle='Policies & Compliance — Ferrn Agency';
+$pageDescription='Ferrn Agency legal, privacy, data protection, information security and business conduct policies.';
+$canonical='https://www.ferrnagency.com/policies/';
+?><!doctype html><html lang="en" data-theme="dark"><head><?php include __DIR__.'/../lib/head.php'; ?></head><body><?php include __DIR__.'/../lib/nav.php'; ?><main><section class="section procurement-hero"><div class="container"><span class="eyebrow">Policies & compliance</span><h1 class="h1">How Ferrn handles data, security and business conduct.</h1><p class="lead">Published policies are managed from the Ferrn admin platform and updated as the company’s compliance requirements evolve.</p></div></section><section class="section"><div class="container"><div class="credential-grid"><?php foreach($items as $p):?><a class="credential-card" href="/policies/<?=htmlspecialchars($p['slug'])?>/"><i data-lucide="file-check-2"></i><h3><?=htmlspecialchars($p['title'])?></h3><p><?=htmlspecialchars($p['summary']??'Read policy')?></p></a><?php endforeach;?><?php if(!$items):?><p class="lead">Policies are being prepared for publication.</p><?php endif;?></div></div></section></main><?php include __DIR__.'/../lib/footer.php'; ?></body></html>
