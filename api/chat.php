@@ -21,7 +21,7 @@ Official email: ".$s['contact']['email']."
 Booking link: ".$s['contact']['booking_url']."
 Ferrn positioning: We design and build conversion-focused websites, custom web applications, portals, dashboards, digital systems and practical AI automation.
 Approved knowledge:".$kb;
-$payload=['model'=>$s['ai']['text_model']?:'gpt-5.4-mini','input'=>[['role'=>'system','content'=>$system],['role'=>'user','content'=>$message]],'reasoning'=>['effort'=>'low'],'max_output_tokens'=>700];
+$payload=['model'=>$s['ai']['text_model']?:'gpt-5.6-terra','input'=>[['role'=>'system','content'=>$system],['role'=>'user','content'=>$message]],'reasoning'=>['effort'=>'low'],'max_output_tokens'=>700];
 $ch=curl_init('https://api.openai.com/v1/responses');
 curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$key,'Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode($payload),CURLOPT_TIMEOUT=>45]);
 $raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);curl_close($ch);
