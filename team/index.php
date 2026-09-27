@@ -1,0 +1,8 @@
+<?php
+declare(strict_types=1);
+require_once __DIR__.'/../lib/platform.php';
+$team=array_values(array_filter(ferrn_collection('team'),fn($x)=>!empty($x['published'])));
+$pageTitle='Leadership & Team — Ferrn Agency';
+$pageDescription='Meet the product, design, engineering, QA and specialist team behind Ferrn Agency.';
+$canonical='https://www.ferrnagency.com/team/';
+?><!doctype html><html lang="en" data-theme="dark"><head><?php include __DIR__.'/../lib/head.php'; ?></head><body><?php include __DIR__.'/../lib/nav.php'; ?><main><section class="section procurement-hero"><div class="container"><span class="eyebrow">Leadership / Team</span><h1 class="h1">Small, senior-minded, accountable from strategy to launch.</h1><p class="lead">Ferrn brings product thinking, design and engineering together so clients do not have to coordinate disconnected vendors.</p></div></section><section class="section"><div class="container"><div class="team-v2-grid"><?php foreach($team as $m):?><article class="team-v2-card"><?php if(!empty($m['headshot'])):?><img src="<?=htmlspecialchars($m['headshot'])?>" alt="<?=htmlspecialchars($m['name']??'Ferrn team member')?>" loading="lazy"><?php endif;?><div><span><?=htmlspecialchars($m['role']??'')?></span><h2><?=htmlspecialchars($m['name']??'')?></h2><p><?=htmlspecialchars($m['bio']??'')?></p><?php if(!empty($m['linkedin'])):?><a href="<?=htmlspecialchars($m['linkedin'])?>" target="_blank" rel="noopener">LinkedIn <i data-lucide="arrow-up-right"></i></a><?php endif;?></div></article><?php endforeach;?><?php if(!$team):?><p class="lead">Team profiles are being prepared for publication.</p><?php endif;?></div></div></section></main><?php include __DIR__.'/../lib/footer.php'; ?></body></html>
