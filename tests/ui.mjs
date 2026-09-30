@@ -42,7 +42,7 @@ try{
  ensure(Math.abs(mobileLayout.center-mobileLayout.viewport/2)<25,'Mobile hero is horizontally offset');
  await m.screenshot({path:'test-screenshots/home-mobile.png'});
  await m.goto(origin+'/testimonials/',{waitUntil:'domcontentloaded'});
- await m.locator('.testimonial-arrow-v2').first().waitFor({timeout:15000});
+ await m.locator('.testimonial-arrow-v2').first().waitFor({state:'attached',timeout:15000});
  const display=await m.locator('.testimonial-arrow-v2').first().evaluate(e=>getComputedStyle(e).display);
  ensure(display==='none','Mobile testimonial arrows are still visible');
  await m.locator('.testimonial-slider-v2').scrollIntoViewIfNeeded();
