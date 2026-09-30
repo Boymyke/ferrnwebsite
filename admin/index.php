@@ -3,6 +3,7 @@ declare(strict_types=1);
 session_start();
 require_once __DIR__.'/../lib/storage.php';
 require_once __DIR__.'/../lib/admin-auth.php';
+require_once __DIR__.'/../lib/admin-users.php';
 require_once __DIR__.'/../lib/projects.php';
 require_once __DIR__.'/../lib/platform.php';
 const ADMIN_EMAIL='michael@ferrnagency.com';
@@ -10,24 +11,37 @@ const ADMIN_HASH='$2y$12$0BYQeftlTVmqVqjUAjmZduUPPh6tL2aDD9H15RS28dXpSJhsEf8F2';
 function admin_credentials():array{return ferrn_load_json('admin-auth.json',['email'=>ADMIN_EMAIL,'password_hash'=>ADMIN_HASH,'password_changed'=>false]);}
 function csrf():string{if(empty($_SESSION['csrf']))$_SESSION['csrf']=bin2hex(random_bytes(24));return (string)$_SESSION['csrf'];}
 function valid_csrf():void{if(!hash_equals((string)($_SESSION['csrf']??''),(string)($_POST['csrf']??''))){http_response_code(403);exit('Invalid request');}}
-function auth():bool{return !empty($_SESSION['ferrn_admin']);}
+function auth():bool{return ferrn_current_admin()!==null;}
 function go(string $tab='dashboard'):never{header('Location: /admin/?tab='.$tab);exit;}
 $error='';
 if(isset($_GET['logout'])){session_destroy();header('Location:/admin/');exit;}
 if(!auth()&&$_SERVER['REQUEST_METHOD']==='POST'&&($_POST['action']??'')==='login'){
- $email=strtolower(trim((string)($_POST['email']??'')));
- $pw=(string)($_POST['password']??'');$creds=admin_credentials();
- $until=ferrn_auth_limits($email);
- if($until>time()){$error='Login temporarily locked. Try again in '.max(1,(int)ceil(($until-time())/60)).' minute(s).';http_response_code(429);}
- elseif($email===strtolower((string)($creds['email']??ADMIN_EMAIL))&&password_verify($pw,(string)($creds['password_hash']??ADMIN_HASH))){
-  ferrn_auth_limits($email,false,true);
-  session_regenerate_id(true);$_SESSION['ferrn_admin']=1;csrf();
-  if(empty($creds['password_changed'])){header('Location:/admin/account.php?first=1');exit;}go();
- } else {
-  $until=ferrn_auth_limits($email,true);
-  if($until>time()){$error='Three unsuccessful attempts. Login is locked for 30 minutes.';http_response_code(429);}
-  else {$error='Incorrect email or password.';usleep(350000);}
+ $email=strtolower(trim((string)($_POST['email']??'')));$pw=(string)($_POST['password']??'');
+ $creds=admin_credentials();$until=ferrn_auth_limits($email);
+ if($until>time()){
+   $error='Login temporarily locked. Try again in '.max(1,(int)ceil(($until-time())/60)).' minute(s).';http_response_code(429);
+ }else{
+   $super=hash_equals(strtolower((string)($creds['email']??ADMIN_EMAIL)),$email)
+      &&password_verify($pw,(string)($creds['password_hash']??ADMIN_HASH));
+   $secondary=$super?null:ferrn_secondary_login($email,$pw);
+   if($super||$secondary){
+      ferrn_auth_limits($email,false,true);session_regenerate_id(true);$_SESSION['ferrn_admin']=1;
+      if($super)$_SESSION['ferrn_admin_user']='super';csrf();
+      if(($super&&empty($creds['password_changed']))||($secondary&&!empty($secondary['must_change']))){
+         header('Location:/admin/account.php?first=1');exit;
+      }
+      go();
+   }
+   $until=ferrn_auth_limits($email,true);
+   if($until>time()){$error='Three unsuccessful attempts. Login is locked for 30 minutes.';http_response_code(429);}
+   else {$error='Incorrect email or password.';usleep(350000);}
  }
+}
+if(auth()){
+  $principal=ferrn_current_admin();
+  if(($principal['role']??'')!=='super'&&!empty($principal['must_change'])){header('Location:/admin/account.php?first=1');exit;}
+  $requested=(string)($_GET['tab']??'dashboard');
+  ferrn_require_admin_permission($requested==='overview'?'dashboard':$requested);
 }
 if(auth()&&$_SERVER['REQUEST_METHOD']==='POST'){valid_csrf();$action=(string)($_POST['action']??'');
  if($action==='lead_status'){$leads=ferrn_leads();$id=(string)($_POST['id']??'');$status=(string)($_POST['status']??'new');if(!in_array($status,['new','contacted','qualified','proposal','won','lost'],true))$status='new';foreach($leads as &$l)if(($l['id']??'')===$id)$l['status']=$status;unset($l);ferrn_save_json('leads.json',$leads);go('leads');}
@@ -37,9 +51,9 @@ if(auth()&&$_SERVER['REQUEST_METHOD']==='POST'){valid_csrf();$action=(string)($_
  if($action==='save_project'){$projects=ferrn_projects();$old=(string)($_POST['old_slug']??'');$title=trim((string)($_POST['title']??''));$live=trim((string)($_POST['live']??''));if($title===''||!filter_var($live,FILTER_VALIDATE_URL)){$error='Project title and a valid live URL are required.';}else{$slug=ferrn_slugify((string)($_POST['slug']?:$title));$category=in_array(($_POST['category']??''),['website','webapp','ai'],true)?(string)$_POST['category']:'website';$project=['title'=>$title,'type'=>trim((string)($_POST['type']??'Digital Project')),'category'=>$category,'industry'=>trim((string)($_POST['industry']??'Digital Product')),'year'=>trim((string)($_POST['year']??date('Y'))),'live'=>$live,'image'=>filter_var(trim((string)($_POST['image']??'')),FILTER_VALIDATE_URL)?trim((string)$_POST['image']):'','client'=>trim((string)($_POST['client']??$title)),'featured'=>!empty($_POST['featured']),'meta'=>trim((string)($_POST['meta']??'')),'summary'=>trim((string)($_POST['summary']??'')),'context'=>trim((string)($_POST['context']??'')),'challenge'=>trim((string)($_POST['challenge']??'')),'solution'=>trim((string)($_POST['solution']??'')),'impact'=>trim((string)($_POST['impact']??'')),'points'=>ferrn_project_points($category)];if($old!==''&&$old!==$slug)unset($projects[$old]);$projects[$slug]=$project;ferrn_save_projects($projects);go('projects');}}
  if($action==='delete_project'){$slug=(string)($_POST['slug']??'');$projects=ferrn_projects();unset($projects[$slug]);ferrn_save_projects($projects);go('projects');}
 }
-if(!auth()):?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ferrn Digital Agency Admin</title><link rel="icon" href="/assets/ferrn-mark.svg"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#090909;color:#fff;font-family:Poppins;padding:20px}.login{width:min(440px,100%);padding:34px;border:1px solid #262626;border-radius:22px;background:#111}.login img{width:44px}.login h1{font-size:32px;margin:26px 0 4px}.login p{color:#888;font-size:13px}.field{margin-top:14px}.field label{display:block;font-size:11px;color:#888;margin-bottom:7px}.field input{width:100%;padding:14px;border:1px solid #2b2b2b;background:#080808;color:#fff;border-radius:11px}.login button{width:100%;height:48px;border:0;border-radius:99px;background:#ff4100;color:#fff;font-weight:600;margin-top:18px}.err{background:#32120b;color:#ff9d84;padding:10px;border-radius:10px;font-size:12px}</style></head><body><form class="login" method="post"><img src="/assets/ferrn-mark.svg" alt="Ferrn"><h1>Ferrn Digital Agency</h1><p>Private content, project and enquiry dashboard.</p><?php if($error):?><div class="err"><?=htmlspecialchars($error)?></div><?php endif;?><input type="hidden" name="action" value="login"><div class="field"><label>Email</label><input name="email" type="email" value="<?=ADMIN_EMAIL?>" required></div><div class="field"><label>Password</label><input name="password" type="password" required></div><button>Sign in</button></form></body></html><?php exit;endif;
+if(!auth()):?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ferrn Digital Agency Admin</title><link rel="icon" href="/assets/ferrn-mark.svg"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#090909;color:#fff;font-family:Poppins;padding:20px}.login{width:min(440px,100%);padding:34px;border:1px solid #262626;border-radius:22px;background:#111}.login img{width:44px}.login h1{font-size:32px;margin:26px 0 4px}.login p{color:#888;font-size:13px}.field{margin-top:14px}.field label{display:block;font-size:11px;color:#888;margin-bottom:7px}.field input{width:100%;padding:14px;border:1px solid #2b2b2b;background:#080808;color:#fff;border-radius:11px}.login button{width:100%;height:48px;border:0;border-radius:99px;background:#ff4100;color:#fff;font-weight:600;margin-top:18px}.err{background:#32120b;color:#ff9d84;padding:10px;border-radius:10px;font-size:12px}</style></head><body><form class="login" method="post"><img src="/assets/ferrn-mark.svg" alt="Ferrn"><h1>Ferrn Digital Agency</h1><p>Private content, project and enquiry dashboard.</p><?php if($error):?><div class="err"><?=htmlspecialchars($error)?></div><?php endif;?><input type="hidden" name="action" value="login"><div class="field"><label>Email</label><input name="email" type="email" placeholder="name@company.com" autocomplete="username" required></div><div class="field"><label>Password</label><input name="password" type="password" required></div><button>Sign in</button></form></body></html><?php exit;endif;
 if((string)($_GET['tab']??'')==='testimonials'){require __DIR__.'/testimonials.php';exit;}
-$platformTabs=['overview','settings','team','certifications','awards','policies','careers','rfps','newsletter','analytics','knowledge'];
+$platformTabs=['overview','settings','team','certifications','awards','policies','careers','rfps','newsletter','analytics','knowledge','client_logos','chat_questions'];
 if(in_array((string)($_GET['tab']??''),$platformTabs,true)){require __DIR__.'/platform.php';exit;}
 $tab=in_array(($_GET['tab']??'dashboard'),['dashboard','leads','posts','projects'],true)?(string)($_GET['tab']??'dashboard'):'dashboard';$leads=ferrn_leads();$posts=ferrn_posts();$projects=ferrn_projects();$editProject=($tab==='projects'&&!empty($_GET['edit']))?($projects[(string)$_GET['edit']]??null):null;$editPost=null;if($tab==='posts'&&!empty($_GET['edit']))foreach($posts as $p)if(($p['id']??'')===$_GET['edit']){$editPost=$p;break;}
 ?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ferrn Digital Agency Admin</title><link rel="icon" href="/assets/ferrn-mark.svg"><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--o:#ff4100}*{box-sizing:border-box}body{margin:0;background:#090909;color:#f7f7f4;font-family:Poppins}.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.side{border-right:1px solid #252525;padding:24px 16px;position:sticky;top:0;height:100vh}.side img{width:36px;margin:4px 10px 30px}.side a{display:block;color:#8b8b87;padding:10px 12px;border-radius:9px;font-size:13px;margin:2px 0}.side a.active,.side a:hover{background:#171717;color:#fff}.logout{position:absolute;bottom:22px;left:16px;right:16px}.main{padding:34px clamp(20px,4vw,60px);min-width:0}.top{display:flex;justify-content:space-between;gap:15px;align-items:end;margin-bottom:26px}.top h1{font-size:36px;margin:0}.muted{color:#7f7f7a}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card,.panel{background:#111;border:1px solid #252525;border-radius:16px}.card{padding:20px}.card strong{display:block;font-size:30px;margin-top:10px}.card span{font-size:11px;color:#777}.panel{padding:20px;margin-top:16px;overflow:auto}.panel h2{margin:0 0 18px}.table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}.table th,.table td{text-align:left;padding:12px 9px;border-top:1px solid #242424;vertical-align:top}.table th{color:#777;font-weight:500}.status{padding:6px 9px;border:1px solid #303030;border-radius:99px;background:#181818}.actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.btn{display:inline-flex;border:0;border-radius:99px;padding:10px 14px;background:var(--o);color:#fff;font-size:11px;font-weight:600;text-decoration:none;cursor:pointer}.btn.secondary{background:#191919;border:1px solid #303030}.btn.danger{background:#35130c;color:#ffa088}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:span 2}.field label{font-size:10px;color:#888}.field input,.field textarea,.field select,select{background:#080808;border:1px solid #2b2b2b;color:#fff;border-radius:10px;padding:12px}.field textarea{min-height:110px;resize:vertical}.field.body textarea{min-height:300px}.check{display:flex;gap:8px;align-items:center;font-size:12px;color:#aaa}.check input{width:auto}.panel-head{display:flex;justify-content:space-between;gap:15px;align-items:center}.error{padding:10px;background:#35130c;color:#ffa088;border-radius:10px;margin-bottom:12px}@media(max-width:900px){.app{grid-template-columns:1fr}.side{height:auto;position:static;display:flex;align-items:center;gap:4px;overflow:auto;border-right:0;border-bottom:1px solid #252525}.side img{margin:0 8px 0 0;width:28px}.side a{white-space:nowrap}.logout{position:static;margin-left:auto}.cards{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}</style><link rel="stylesheet" href="/assets/admin-unified.css"><script src="/assets/admin-unified.js" defer></script></head><body><div class="app"><?php include __DIR__.'/sidebar.php'; ?><main class="main"><div class="top"><div><div class="muted">FERRN DIGITAL AGENCY</div><h1><?=ucfirst($tab)?></h1></div><a class="btn secondary" href="/" target="_blank">View website</a></div><?php if($error):?><div class="error"><?=htmlspecialchars($error)?></div><?php endif;?>
