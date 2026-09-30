@@ -13,6 +13,31 @@ function ferrn_campaign_reserved():array {
 function ferrn_campaign_install(array $zip,string $slug):void {
  if(($zip['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK)throw new RuntimeException('Choose a ZIP archive.');
  if(($zip['size']??0)<1||$zip['size']>12*1024*1024)throw new RuntimeException('Campaign ZIP must be at most 12 MB.');
+ $ext=strtolower(pathinfo((string)($zip['name']??''),PATHINFO_EXTENSION));
+ if(in_array($ext,['html','htm'],true)){
+   if(($zip['size']??0)>2*1024*1024)throw new RuntimeException('Single-file HTML uploads must be under 2 MB.');
+   $mime=(new finfo(FILEINFO_MIME_TYPE))->file((string)$zip['tmp_name']);
+   if(!in_array($mime,['text/html','text/plain'],true))throw new RuntimeException('Upload a valid HTML document.');
+   $markup=file_get_contents((string)$zip['tmp_name']);
+   if($markup===false||stripos($markup,'<html')===false)throw new RuntimeException('The uploaded HTML file must contain a complete HTML document.');
+   $destination=ferrn_campaign_root().'/'.$slug;
+   $temp=ferrn_campaign_root().'/tmp-'.bin2hex(random_bytes(8));$backup=null;
+   if(!mkdir($temp,0750,true))throw new RuntimeException('Could not create the upload workspace.');
+   if(file_put_contents($temp.'/index.html',$markup,LOCK_EX)===false){ferrn_campaign_delete_files($temp);throw new RuntimeException('Could not save HTML content.');}
+   @chmod($temp.'/index.html',0640);
+   if(is_dir($destination)){
+      $backup=$destination.'-backup-'.bin2hex(random_bytes(5));
+      if(!rename($destination,$backup)){ferrn_campaign_delete_files($temp);throw new RuntimeException('Could not prepare existing campaign.');}
+   }
+   if(!rename($temp,$destination)){
+      if($backup!==null)@rename($backup,$destination);
+      ferrn_campaign_delete_files($temp);
+      throw new RuntimeException('Could not activate HTML campaign.');
+   }
+   if($backup!==null)ferrn_campaign_delete_files($backup);
+   return;
+ }
+ if($ext!=='zip')throw new RuntimeException('Provide a static website ZIP or a standalone HTML file.');
  if(!class_exists('ZipArchive'))throw new RuntimeException('PHP ZipArchive is required on this hosting server.');
  $archive=new ZipArchive();
  if($archive->open((string)$zip['tmp_name'])!==true)throw new RuntimeException('The uploaded ZIP cannot be opened.');
