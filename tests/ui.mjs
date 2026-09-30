@@ -83,5 +83,42 @@ try{
  ensure(await c.locator('[data-cookie-banner]').isVisible(),'Cookie preferences did not reopen the notice');
  await c.locator('[data-cookie-choice="accepted"]').click();
  ensure(await c.evaluate(()=>localStorage.getItem('ferrn-cookie-consent-v2'))==='accepted','Analytics choice was not saved');
+
+ // Logged-in dashboard, admin testimonials and per-user permissions.
+ const adminCtx=await browser.newContext({viewport:{width:1440,height:900}});
+ const ad=await adminCtx.newPage();
+ await ad.goto(origin+'/admin/',{waitUntil:'domcontentloaded'});
+ await ad.locator('input[name="email"]').fill('qa-super@example.invalid');
+ await ad.locator('input[name="password"]').fill('QA-super-passphrase-2026');
+ await ad.getByRole('button',{name:'Sign in'}).click();
+ await ad.locator('.traffic-graph').waitFor({timeout:10000});
+ ensure(await ad.locator('[data-graph-range]').count()===3,'Dashboard graph period controls are missing');
+ ensure(await ad.locator('.side a[href="/admin/?tab=proposals"]').count()===1,'Proposal manager menu missing');
+ await ad.screenshot({path:'test-screenshots/admin-dashboard.png'});
+ await ad.goto(origin+'/admin/?tab=testimonials',{waitUntil:'domcontentloaded'});
+ await ad.locator('input[name="name"]').first().waitFor();
+ ensure(await ad.getByRole('button',{name:'Hide on site'}).count()>0,'Admin testimonial visibility controls are missing');
+ await ad.screenshot({path:'test-screenshots/admin-testimonials.png'});
+ await ad.goto(origin+'/admin/?tab=settings',{waitUntil:'domcontentloaded'});
+ ensure(await ad.locator('input[name="company_profile_pdf"]').count()===1,'Replaceable company-profile upload control missing');
+ ensure(await ad.locator('input[name="api_key"]').count()===1,'Encrypted chatbot API-key control missing');
+ await ad.goto(origin+'/admin/heatmap.php',{waitUntil:'domcontentloaded'});
+ await ad.locator('[data-heatmap-page]').waitFor();
+ ensure(await ad.locator('#toggleHeatmap').count()===1,'Full-screen heatmap toggle missing');
+ await ad.screenshot({path:'test-screenshots/admin-heatmap.png'});
+ await ad.goto(origin+'/admin/users.php',{waitUntil:'domcontentloaded'});
+ ensure(await ad.locator('input[name="permissions[analytics]"]').count()>0,'Admin user permissions missing');
+ const limitedCtx=await browser.newContext({viewport:{width:1280,height:800}});
+ const limited=await limitedCtx.newPage();
+ await limited.goto(origin+'/admin/',{waitUntil:'domcontentloaded'});
+ await limited.locator('input[name="email"]').fill('qa-limited@example.invalid');
+ await limited.locator('input[name="password"]').fill('QA-limited-passphrase-2026');
+ await limited.getByRole('button',{name:'Sign in'}).click();
+ await limited.locator('.traffic-graph').waitFor({timeout:10000});
+ ensure(await limited.locator('.side a[href="/admin/?tab=settings"]').count()===0,'Restricted settings still visible to limited admin');
+ const forbidden=await limited.goto(origin+'/admin/?tab=settings',{waitUntil:'domcontentloaded'});
+ ensure(forbidden.status()===403,'Limited admin can still access denied settings');
+ const forbiddenUsers=await limited.goto(origin+'/admin/users.php',{waitUntil:'domcontentloaded'});
+ ensure(forbiddenUsers.status()===403,'Limited admin can access super administrator user management');
  console.log('UI checks passed: centered desktop/mobile home, separate routes, nav/footer, mobile testimonials and cookie controls');
 }finally{await browser.close();}
