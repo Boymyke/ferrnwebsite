@@ -26,6 +26,13 @@ check_page /careers/ 'Current openings'
 check_page /policies/ 'Privacy Policy'
 check_page /procurement/ 'Download company profile'
 check_page /admin/ 'Sign in'
+check_page /proposal/ 'Proposal unavailable'
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/404.php)" = "404"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/500.php)" = "500"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/admin/users.php)" = "403"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/admin/proposals.php)" = "403"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/admin/campaigns.php)" = "403"
+echo 'Error pages and private admin routes validated'
 echo 'Testing three wrong login attempts and the 30-minute lockout'
 for n in 1 2 3; do
  curl -s -o /tmp/ferrn-smoke-login -X POST \
