@@ -1,0 +1,14 @@
+<?php
+declare(strict_types=1);
+$pageTitle='Services — Ferrn Agency';$pageDescription='Website design, custom web apps, portals, business systems, UX design and AI automation from Ferrn Agency.';$canonical='https://www.ferrnagency.com/services/';
+$services=[
+['01','Website Design & Development','Conversion-focused corporate websites, landing pages and modern digital experiences that communicate clearly and make it easier to enquire.'],
+['02','Custom Web Applications','Purpose-built software, SaaS products and workflow applications designed around the business rather than forcing a generic tool to fit.'],
+['03','Client Portals & Dashboards','Secure role-aware portals and dashboards for customers, employees, reporting and operational visibility.'],
+['04','Internal Business Systems','Structured approval, onboarding, reporting and administration workflows that replace fragile manual processes.'],
+['05','UI/UX & Product Design','Research-informed product journeys, wireframes, prototypes and responsive interface design.'],
+['06','CMS & Content Systems','Editable websites, content collections and administration tools so teams manage their own content.'],
+['07','AI Automation & Chatbots','Approved-knowledge chat interfaces and workflow assistance grounded in real business requirements.'],
+['08','Optimization & Support','Maintenance, performance reviews, iterative improvement and post-launch assistance.']
+];
+?><!doctype html><html lang="en" data-theme="dark"><head><?php include __DIR__.'/../lib/head.php'; ?></head><body><?php include __DIR__.'/../lib/nav.php'; ?><main><section class="section procurement-hero"><div class="container"><span class="eyebrow">What we build</span><h1 class="h1">Digital solutions, built around your business.</h1><p class="lead">One coordinated team across strategy, design and engineering — from a better website to the system behind your operations.</p></div></section><section class="section"><div class="container service-list"><?php foreach($services as $service):?><article class="service-row"><span class="service-num"><?=htmlspecialchars($service[0])?></span><h3><?=htmlspecialchars($service[1])?></h3><p><?=htmlspecialchars($service[2])?></p><span class="icon-wrap"><i data-lucide="arrow-up-right"></i></span></article><?php endforeach;?></div></section><section class="section"><div class="container"><div class="contact-wrap"><div class="contact-panel"><span class="eyebrow">Start a project</span><h2>Tell us the problem you're solving.</h2><p>Share your objectives and we’ll scope an appropriate digital solution.</p><a class="btn btn-primary" href="/contact/">Contact Ferrn <i data-lucide="arrow-up-right"></i></a></div></div></div></section></main><?php include __DIR__.'/../lib/footer.php'; ?></body></html>

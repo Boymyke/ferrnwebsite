@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/../lib/platform.php';
-$items=array_values(array_filter(ferrn_collection('policies',ferrn_default_policies()),fn($x)=>!empty($x['published'])));
+$items=array_values(array_filter(ferrn_policies(),fn($x)=>!empty($x['published'])));
 $pageTitle='Policies & Compliance — Ferrn Agency';
 $pageDescription='Ferrn Agency legal, privacy, data protection, information security and business conduct policies.';
 $canonical='https://www.ferrnagency.com/policies/';

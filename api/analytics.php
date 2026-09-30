@@ -9,7 +9,9 @@ $record=[
 'session'=>substr(preg_replace('/[^a-zA-Z0-9_-]/','',(string)($body['session']??''))??'',0,80),
 'path'=>ferrn_safe_text((string)($body['path']??''),500),'target'=>ferrn_safe_text((string)($body['target']??''),500),
 'referrer'=>ferrn_safe_text((string)($body['referrer']??''),800),'device'=>ferrn_safe_text((string)($body['device']??''),80),
-'country'=>ferrn_safe_text((string)($_SERVER['HTTP_CF_IPCOUNTRY']??'Unknown'),80)
+'country'=>ferrn_safe_text((string)($_SERVER['HTTP_CF_IPCOUNTRY']??'Unknown'),80),
+'x'=>isset($body['x'])&&is_numeric($body['x'])?max(0.0,min(1.0,round((float)$body['x'],4))):null,
+'y'=>isset($body['y'])&&is_numeric($body['y'])?max(0.0,min(1.0,round((float)$body['y'],4))):null
 ];
 $events=ferrn_collection('analytics'); array_unshift($events,$record); if(count($events)>25000)$events=array_slice($events,0,25000); ferrn_save_collection('analytics',$events);
 ferrn_json_response(['ok'=>true]);

@@ -6,8 +6,8 @@ deployment:
     - /bin/chmod 750 /home/ferrmxud/ferrn_cms
     - /bin/mkdir -p $DEPLOYPATH/assets
     - /bin/rm -f $DEPLOYPATH/index.html $DEPLOYPATH/sitemap.xml
-    - /bin/rm -rf $DEPLOYPATH/admin $DEPLOYPATH/api $DEPLOYPATH/data $DEPLOYPATH/insights $DEPLOYPATH/lib $DEPLOYPATH/studio $DEPLOYPATH/work $DEPLOYPATH/procurement $DEPLOYPATH/rfp $DEPLOYPATH/team $DEPLOYPATH/policies $DEPLOYPATH/cron
+    - /bin/rm -rf $DEPLOYPATH/admin $DEPLOYPATH/api $DEPLOYPATH/data $DEPLOYPATH/insights $DEPLOYPATH/lib $DEPLOYPATH/studio $DEPLOYPATH/work $DEPLOYPATH/procurement $DEPLOYPATH/rfp $DEPLOYPATH/team $DEPLOYPATH/policies $DEPLOYPATH/cron $DEPLOYPATH/services $DEPLOYPATH/about $DEPLOYPATH/contact $DEPLOYPATH/careers $DEPLOYPATH/testimonials
     - /bin/cp index.php robots.txt sitemap.php manifest.webmanifest $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH
     - /bin/cp -R assets/. $DEPLOYPATH/assets/
-    - /bin/cp -R admin api data insights lib studio work procurement rfp team policies cron $DEPLOYPATH
+    - /bin/cp -R admin api data insights lib studio work procurement rfp team policies cron services about contact careers testimonials $DEPLOYPATH
