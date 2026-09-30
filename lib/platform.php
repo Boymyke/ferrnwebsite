@@ -124,6 +124,7 @@ function ferrn_policies(): array {
             $original=$bySlug[$slug];
             $combined=array_replace($original,$p);
             foreach(['summary','content'] as $f){if(trim((string)($p[$f]??''))==='')$combined[$f]=$original[$f];}
+            if(trim((string)($p['summary']??''))==='' && trim((string)($p['content']??''))==='')$combined['published']=$original['published'];
             $bySlug[$slug]=$combined;
         }else $bySlug[$slug]=$p;
     }
