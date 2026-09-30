@@ -3,7 +3,7 @@
  const data=JSON.parse(root.querySelector('[data-heatmap-events]').textContent||'[]');
  const select=root.querySelector('[data-heatmap-page]'), device=root.querySelector('[data-heatmap-device]'),range=root.querySelector('[data-heatmap-range]'),
  frame=root.querySelector('[data-heatmap-frame]'),layer=root.querySelector('[data-heatmap-layer]'),report=root.querySelector('[data-heatmap-report]'),stats=root.querySelector('[data-heatmap-stats]');
- const pages=[...new Set(data.map(x=>x.path).filter(v=>typeof v==='string'&&v.startsWith('/')&&!v.startsWith('//')&&!v.includes('..')))].sort();
+ const safe=p=>typeof p==='string'&&/^\\/(?:$|(?:work|insights|services|about|contact|careers|testimonials|team|procurement|rfp|policies)(?:\\/[a-z0-9-]+)?\\/?)$/.test(p);const pages=[...new Set(['/', '/services/', '/work/', '/about/', '/contact/', '/testimonials/', '/careers/', '/insights/', '/team/', '/procurement/',...data.map(x=>x.path)].filter(safe))].sort();
  pages.forEach(p=>{let opt=new Option(p,p);select.add(opt)});if(pages.includes('/'))select.value='/';
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const now=Date.now();let page=select.value||'/';
@@ -21,7 +21,7 @@
  }
  select.addEventListener('change',()=>{frame.src=page+'?ferrn_preview=1';update()});
  device.addEventListener('change',update);range.addEventListener('change',update);
- frame.addEventListener('load',()=>{try{const doc=frame.contentDocument;if(!doc)return;const width=1440;const height=Math.min(12000,Math.max(900,doc.documentElement.scrollHeight));const scale=root.querySelector('.heatmap-preview').clientWidth/width;frame.style.width=width+'px';frame.style.height=height+'px';frame.style.transformOrigin='top left';frame.style.transform='scale('+scale+')';const wrapper=root.querySelector('.heatmap-preview');wrapper.style.height=(height*scale)+'px';layer.style.height='100%'}catch(_){}});
+ frame.addEventListener('load',()=>{try{const doc=frame.contentDocument;if(!doc)return;const css=doc.createElement('style');css.textContent='.reveal{opacity:1!important;visibility:visible!important;transform:none!important}.ferrn-chat,.cookie-banner,.page-loader{display:none!important}';doc.head.append(css);const width=1440;frame.style.width=width+'px';const height=Math.min(12000,Math.max(900,doc.documentElement.scrollHeight));const scale=root.querySelector('.heatmap-preview').clientWidth/width;frame.style.width=width+'px';frame.style.height=height+'px';frame.style.transformOrigin='top left';frame.style.transform='scale('+scale+')';const wrapper=root.querySelector('.heatmap-preview');wrapper.style.height=(height*scale)+'px';layer.style.height='100%'}catch(_){}});
  const resize=new ResizeObserver(()=>{try{const w=root.querySelector('.heatmap-preview').clientWidth,s=w/1440;frame.style.transform='scale('+s+')';root.querySelector('.heatmap-preview').style.height=(parseFloat(frame.style.height)||900)*s+'px'}catch(_){}});resize.observe(root.querySelector('.heatmap-preview'));
  if(pages.length){select.value=pages.includes('/')?'/':pages[0];page=select.value;frame.src=page+'?ferrn_preview=1';}
  update();
