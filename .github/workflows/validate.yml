@@ -13,6 +13,8 @@ jobs:
         run: find . -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Check JavaScript syntax
         run: find assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Smoke-test public routes, policies and login lockout
+        run: bash tests/smoke.sh
       - name: Confirm public page routes and admin modules
         run: |
           test -f services/index.php
