@@ -17,6 +17,10 @@
 
   const clone = original.cloneNode(true);
   clone.classList.add('hero-reveal-clone');
+  clone.setAttribute('aria-hidden','true');
+  clone.inert=true;
+  clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
+  clone.querySelectorAll('a,button,input,select,textarea').forEach(el=>{el.tabIndex=-1;el.setAttribute('aria-hidden','true');});
   back.appendChild(clone);
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
