@@ -7,7 +7,8 @@ if(empty($s['chatbot']['enabled'])) ferrn_json_response(['ok'=>false,'message'=>
 $body=json_decode(file_get_contents('php://input')?:'{}',true);
 $message=ferrn_safe_text((string)($body['message']??''),1800);
 if($message==='') ferrn_json_response(['ok'=>false,'message'=>'Write a message first.'],422);
-$key=(string)getenv('OPENAI_API_KEY');
+require_once __DIR__.'/../lib/private-secrets.php';
+$key=ferrn_get_api_key();
 if($key==='') ferrn_json_response(['ok'=>false,'message'=>'Chat is being configured. Email '.$s['contact']['email'].' instead.'],503);
 $knowledge=array_values(array_filter(ferrn_collection('knowledge'),fn($x)=>!empty($x['published'])));
 $kb='';
