@@ -16,6 +16,8 @@ html[data-theme="dark"] .procurement-item,html[data-theme="dark"] .credential-ca
 .footer .footer-v2{grid-template-columns:repeat(4,minmax(0,1fr))}
 .footer .footer-v2 a,.footer .footer-v2 button{transition:color .18s ease,opacity .18s ease}
 .footer .footer-v2 a:hover,.footer .footer-v2 button:hover,.footer .footer-links a:hover,.footer .social-link:hover{color:#ff4100!important;opacity:1!important}
+.blog-shell{padding-top:clamp(144px,15vw,220px)!important}.blog-shell>.container>.display{font-size:clamp(52px,7.3vw,116px)!important;font-weight:700!important;letter-spacing:-.07em!important;line-height:1.02!important;max-width:1270px!important;text-wrap:balance}
+.proposal-cta .btn{white-space:nowrap;min-width:max-content}
 .page-hero,.procurement-hero{padding:clamp(144px,15vw,220px) 0 clamp(82px,8vw,125px)!important}
 .page-hero h1,.procurement-hero h1{font-size:clamp(52px,7.3vw,116px)!important;font-weight:700!important;letter-spacing:-.07em!important;line-height:1.02!important;max-width:1270px!important;text-wrap:balance}
 .page-hero .lead,.procurement-hero .lead{margin-top:25px;max-width:840px;font-size:clamp(17px,1.6vw,22px);line-height:1.55}
