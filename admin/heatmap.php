@@ -2,7 +2,9 @@
 declare(strict_types=1);
 if(session_status()!==PHP_SESSION_ACTIVE)session_start();
 require_once __DIR__.'/../lib/platform.php';
-if(empty($_SESSION['ferrn_admin'])){header('Location:/admin/');exit;}
+require_once __DIR__.'/../lib/admin-users.php';
+ferrn_require_admin_permission('analytics');
+if(!empty(ferrn_current_admin()['must_change'])){header('Location:/admin/account.php?first=1');exit;}
 $events=array_slice(ferrn_collection('analytics'),0,15000);
 $events=array_map(static fn($e)=>array_intersect_key($e,array_flip(['type','path','target','device','session','created_at','x','y'])),$events);
 ?><!doctype html><html lang="en" data-admin-theme="dark"><head>
