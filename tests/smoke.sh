@@ -26,7 +26,7 @@ check_page /careers/ 'Current openings'
 check_page /policies/ 'Privacy Policy'
 check_page /procurement/ 'Download company profile'
 check_page /admin/ 'Sign in'
-check_page /proposal/ 'Proposal unavailable'
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/proposal/)" = "404"
 test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/404.php)" = "404"
 test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/500.php)" = "500"
 test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/admin/users.php)" = "403"
