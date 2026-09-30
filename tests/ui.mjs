@@ -28,6 +28,19 @@ try{
  ensure(footerOrder.slice(0,5).join('|')==='Our Work|Services|About|Testimonials|Insights','Primary footer links are not in the requested order');
  ensure(await p.locator('.hero-topline').count()===0,'Old Working globally line remains');
  await p.screenshot({path:'test-screenshots/home-desktop.png'});
+ // Verify high contrast on the two pages reported unreadable in light mode.
+ await p.goto(origin+'/procurement/',{waitUntil:'domcontentloaded'});
+ await p.evaluate(()=>{localStorage.setItem('ferrn-theme','light');document.documentElement.dataset.theme='light';});
+ await p.locator('.procurement-item strong').first().waitFor();
+ const vendor=await p.locator('.procurement-item').first().evaluate(el=>({background:getComputedStyle(el).backgroundColor,text:getComputedStyle(el.querySelector('strong')).color}));
+ ensure(vendor.background==='rgb(255, 255, 255)'&&vendor.text==='rgb(21, 21, 21)','Light-mode vendor cards are unreadable: '+JSON.stringify(vendor));
+ await p.screenshot({path:'test-screenshots/procurement-light.png'});
+ await p.goto(origin+'/policies/',{waitUntil:'domcontentloaded'});
+ await p.evaluate(()=>document.documentElement.dataset.theme='light');
+ const policy=await p.locator('.credential-card').first().evaluate(el=>({background:getComputedStyle(el).backgroundColor,text:getComputedStyle(el.querySelector('h3')).color}));
+ ensure(policy.background==='rgb(255, 255, 255)'&&policy.text==='rgb(21, 21, 21)','Light-mode policy cards are unreadable: '+JSON.stringify(policy));
+ await p.screenshot({path:'test-screenshots/policies-light.png'});
+
  for(const [url,selector] of [['/services/','.service-list'],['/about/','.career-steps'],['/contact/','#contactForm'],['/careers/','.career-list'],['/policies/','.credential-grid']]){
   await p.goto(origin+url,{waitUntil:'domcontentloaded'});
   ensure(await p.locator(selector).count()>0,'Missing '+url+' section '+selector);
@@ -49,6 +62,16 @@ try{
  const display=await m.locator('.testimonial-arrow-v2').first().evaluate(e=>getComputedStyle(e).display);
  ensure(display==='none','Mobile testimonial arrows are still visible');
  await m.locator('.testimonial-slider-v2').scrollIntoViewIfNeeded();
+ await m.waitForTimeout(350);
+ const centered=await m.evaluate(()=>{
+   const slider=document.querySelector('.testimonial-viewport-v2');
+   const card=slider?.querySelector('.testimonial-track-v2 .testimonial-card-v2:nth-child(2)');
+   if(!slider||!card)return null;
+   const view=slider.getBoundingClientRect(),item=card.getBoundingClientRect();
+   return {difference:Math.abs((view.left+view.width/2)-(item.left+item.width/2)),viewportWidth:view.width,cardWidth:item.width};
+ });
+ ensure(centered&&centered.difference<25&&centered.cardWidth>centered.viewportWidth*.9,'Mobile testimonial active card is not centered or full width: '+JSON.stringify(centered));
+
  await m.screenshot({path:'test-screenshots/testimonials-mobile.png'});
  const cookie=await browser.newContext({viewport:{width:1280,height:800},deviceScaleFactor:1});
  const c=await cookie.newPage();
