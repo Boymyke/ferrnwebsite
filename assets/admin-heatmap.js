@@ -7,6 +7,9 @@
  pages.forEach(p=>{let opt=new Option(p,p);select.add(opt)});if(pages.includes('/'))select.value='/';
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const now=Date.now();let page=select.value||'/';
+ const previewWidth=()=>device.value==='mobile'?390:device.value==='tablet'?820:1440;
+ const wrapper=root.querySelector('.heatmap-preview');
+ function sizePreview(){const width=previewWidth();wrapper.style.maxWidth=width+'px';frame.style.width=width+'px';const scale=Math.min(1,wrapper.clientWidth/width);frame.style.transformOrigin='top left';frame.style.transform='scale('+scale+')';wrapper.style.height=((parseFloat(frame.style.height)||900)*scale)+'px';}
  function update(){
   page=select.value||'/';
   const cutoff=Number(range.value)===0?0:now-Number(range.value)*86400000;
@@ -20,9 +23,9 @@
   Object.values(cells).forEach(cell=>{const d=document.createElement('div');d.className='heatmap-spot';d.style.left=(cell.x*100)+'%';d.style.top=(cell.y*100)+'%';d.style.opacity=String(Math.min(1,.25+cell.n*.19));d.style.width=d.style.height=(54+Math.min(cell.n,12)*8)+'px';d.title=cell.n+' clicks';const label=document.createElement('span');label.textContent=cell.n;d.append(label);layer.append(d)});
  }
  select.addEventListener('change',()=>{frame.src=page+'?ferrn_preview=1';update()});
- device.addEventListener('change',update);range.addEventListener('change',update);
- frame.addEventListener('load',()=>{try{const doc=frame.contentDocument;if(!doc)return;const css=doc.createElement('style');css.textContent='.reveal{opacity:1!important;visibility:visible!important;transform:none!important}.ferrn-chat,.cookie-banner,.page-loader{display:none!important}';doc.head.append(css);const width=1440;frame.style.width=width+'px';const height=Math.min(12000,Math.max(900,doc.documentElement.scrollHeight));const scale=root.querySelector('.heatmap-preview').clientWidth/width;frame.style.width=width+'px';frame.style.height=height+'px';frame.style.transformOrigin='top left';frame.style.transform='scale('+scale+')';const wrapper=root.querySelector('.heatmap-preview');wrapper.style.height=(height*scale)+'px';layer.style.height='100%'}catch(_){}});
- const resize=new ResizeObserver(()=>{try{const w=root.querySelector('.heatmap-preview').clientWidth,s=w/1440;frame.style.transform='scale('+s+')';root.querySelector('.heatmap-preview').style.height=(parseFloat(frame.style.height)||900)*s+'px'}catch(_){}});resize.observe(root.querySelector('.heatmap-preview'));
+ device.addEventListener('change',()=>{sizePreview();frame.src=page+'?ferrn_preview=1';update()});range.addEventListener('change',update);
+ frame.addEventListener('load',()=>{try{const doc=frame.contentDocument;if(!doc)return;const css=doc.createElement('style');css.textContent='.reveal{opacity:1!important;visibility:visible!important;transform:none!important}.ferrn-chat,.cookie-banner,.page-loader{display:none!important}';doc.head.append(css);const width=previewWidth();frame.style.width=width+'px';const height=Math.min(12000,Math.max(900,doc.documentElement.scrollHeight));const scale=Math.min(1,wrapper.clientWidth/width);frame.style.width=width+'px';frame.style.height=height+'px';frame.style.transformOrigin='top left';frame.style.transform='scale('+scale+')';wrapper.style.height=(height*scale)+'px';layer.style.height='100%'}catch(_){}});
+ const resize=new ResizeObserver(()=>{try{sizePreview()}catch(_){}});resize.observe(root.querySelector('.hm-stage')||wrapper);
  if(pages.length){select.value=pages.includes('/')?'/':pages[0];page=select.value;frame.src=page+'?ferrn_preview=1';}
  update();
 })();
