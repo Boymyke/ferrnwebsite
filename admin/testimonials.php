@@ -3,7 +3,9 @@ declare(strict_types=1);
 if(session_status()!==PHP_SESSION_ACTIVE)session_start();
 require_once __DIR__.'/../lib/storage.php';
 require_once __DIR__.'/../lib/testimonials.php';
-if(empty($_SESSION['ferrn_admin'])){header('Location:/admin/');exit;}
+require_once __DIR__.'/../lib/admin-users.php';
+ferrn_require_admin_permission('testimonials');
+if(!empty(ferrn_current_admin()['must_change'])){header('Location:/admin/account.php?first=1');exit;}
 function t_csrf():string{if(empty($_SESSION['csrf']))$_SESSION['csrf']=bin2hex(random_bytes(24));return (string)$_SESSION['csrf'];}
 function t_valid():void{if(!hash_equals((string)($_SESSION['csrf']??''),(string)($_POST['csrf']??''))){http_response_code(403);exit('Invalid request');}}
 $error='';
