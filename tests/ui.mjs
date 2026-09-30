@@ -105,6 +105,12 @@ try{
  await ad.goto(origin+'/admin/heatmap.php',{waitUntil:'domcontentloaded'});
  await ad.locator('[data-heatmap-page]').waitFor();
  ensure(await ad.locator('#toggleHeatmap').count()===1,'Full-screen heatmap toggle missing');
+ await ad.selectOption('[data-heatmap-page]','/services/');
+ await ad.waitForFunction(()=>document.querySelector('[data-heatmap-frame]')?.getAttribute('src')==='/services/?ferrn_preview=1');
+ await ad.locator('#toggleHeatmap').click();
+ ensure(await ad.locator('[data-heatmap-layer]').evaluate(x=>getComputedStyle(x).display)==='none','Heatmap toggle does not hide overlay');
+ await ad.locator('#toggleHeatmap').click();
+ ensure(await ad.locator('[data-heatmap-layer]').evaluate(x=>getComputedStyle(x).display)!=='none','Heatmap toggle does not restore overlay');
  await ad.screenshot({path:'test-screenshots/admin-heatmap.png'});
  await ad.goto(origin+'/admin/users.php',{waitUntil:'domcontentloaded'});
  ensure(await ad.locator('input[name="permissions[analytics]"]').count()>0,'Admin user permissions missing');
