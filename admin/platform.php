@@ -68,13 +68,13 @@ foreach($fs as $f):?><div class="field"><label><?=$f[1]?></label><input name="<?
 <?php elseif(in_array($tab,['team','certifications','awards','policies','careers','knowledge'],true)):$items=$collections[$tab];?>
 <?php if($tab==='knowledge'):?><section class="panel">
 <h2>Import chatbot knowledge</h2>
-<p class="admin-section-intro">Upload a PDF or import a public HTTPS webpage. Sources are extracted to private storage. Imported content remains unpublished until reviewed. PDF extraction requires Poppler pdftotext on the server.</p>
+<p class="admin-section-intro">Upload a PDF or import a public HTTPS webpage. Sources are extracted to private storage. Imported content remains unpublished until reviewed. Uses local Poppler extraction where available; otherwise, you may explicitly opt in to extraction through the configured AI provider.</p>
 <?php if($noticeError):?><div class="error"><?=htmlspecialchars($noticeError)?></div><?php endif;?>
 <form method="post" enctype="multipart/form-data">
 <input type="hidden" name="csrf" value="<?=v2_csrf()?>"><input type="hidden" name="action" value="import_knowledge">
 <div class="grid"><div class="field"><label>Source title</label><input name="title" required></div>
 <div class="field"><label>Source</label><select name="source_type" data-knowledge-type><option value="pdf">Upload PDF</option><option value="website">Import website URL</option></select></div>
-<div class="field full" data-knowledge-pdf><label>PDF file (8 MB max)</label><input type="file" name="pdf_document" accept=".pdf,application/pdf"></div>
+<div class="field full" data-knowledge-pdf><label>PDF file (8 MB max)</label><input type="file" name="pdf_document" accept=".pdf,application/pdf"><label class="check"><input type="checkbox" name="allow_ai_extraction" value="1"> If local PDF extraction is unavailable, allow secure transfer to the configured OpenAI account for text extraction. This uses API credits.</label></div>
 <div class="field full" data-knowledge-url hidden><label>Public HTTPS webpage</label><input type="url" name="website_url" placeholder="https://example.com/about"></div></div>
 <button class="btn" style="margin-top:14px">Import for review</button></form></section><?php endif;?>
 <section class="panel"><h2>Add / edit <?=htmlspecialchars($tab)?></h2><form method="post" data-edit-form><p class="admin-section-intro">Select Edit on an existing item to load its content here.</p><input type="hidden" name="csrf" value="<?=v2_csrf()?>"><input type="hidden" name="action" value="save_collection_item"><input type="hidden" name="collection" value="<?=$tab?>"><input type="hidden" name="id" value=""><div class="grid">
