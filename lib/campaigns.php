@@ -41,8 +41,16 @@ function ferrn_campaign_install(array $zip,string $slug):void {
    fclose($in);fclose($out);@chmod($target,0640);
   }
   if(!is_file($temp.'/index.html'))throw new RuntimeException('Your ZIP must contain index.html at its root.');
-  if(is_dir($dest))ferrn_campaign_delete_files($dest);
-  if(!rename($temp,$dest))throw new RuntimeException('Could not activate uploaded campaign.');
+  $backup=null;
+  if(is_dir($dest)){
+    $backup=$dest.'-backup-'.bin2hex(random_bytes(5));
+    if(!rename($dest,$backup))throw new RuntimeException('Could not prepare safe campaign replacement.');
+  }
+  if(!rename($temp,$dest)){
+    if($backup!==null)@rename($backup,$dest);
+    throw new RuntimeException('Could not activate uploaded campaign; existing version restored.');
+  }
+  if($backup!==null)ferrn_campaign_delete_files($backup);
  }finally{$archive->close();if(is_dir($temp))ferrn_campaign_delete_files($temp);}
 }
 function ferrn_campaign_delete_files(string $dir):void{
