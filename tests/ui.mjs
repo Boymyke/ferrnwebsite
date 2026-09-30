@@ -10,10 +10,10 @@ try{
  await desktop.addInitScript(()=>localStorage.setItem('ferrn-cookie-consent-v2','declined'));
  const p=await desktop.newPage();
  await p.goto(origin+'/',{waitUntil:'domcontentloaded'});
- await p.locator('.hero-editorial .hero-copy-block h1').waitFor();
+ await p.locator('.hero-editorial > .hero-inner .hero-copy-block h1').waitFor();
  await p.evaluate(()=>document.fonts?.ready);
  const layout=await p.evaluate(()=>{
-  const title=document.querySelector('.hero-editorial h1'),buttons=document.querySelector('.hero-editorial .hero-actions');
+  const title=document.querySelector('.hero-editorial > .hero-inner h1'),buttons=document.querySelector('.hero-editorial > .hero-inner .hero-actions');
   const a=title.getBoundingClientRect(),b=buttons.getBoundingClientRect();
   return {viewport:innerWidth,titleCenter:a.x+a.width/2,buttonsCenter:b.x+b.width/2,textAlign:getComputedStyle(title).textAlign};
  });
@@ -35,7 +35,7 @@ try{
  await m.goto(origin+'/',{waitUntil:'domcontentloaded'});
  await m.locator('.hero-editorial h1').waitFor();
  const mobileLayout=await m.evaluate(()=>{
-  const h=document.querySelector('.hero-editorial h1'),r=h.getBoundingClientRect();
+  const h=document.querySelector('.hero-editorial > .hero-inner h1'),r=h.getBoundingClientRect();
   return {viewport:innerWidth,center:r.x+r.width/2,textAlign:getComputedStyle(h).textAlign};
  });
  ensure(mobileLayout.textAlign==='center','Mobile hero text is not centered');
