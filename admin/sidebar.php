@@ -1,6 +1,6 @@
 <?php
 $adminMenu=[
-['Dashboard','dashboard'],['Leads','leads'],['Projects','projects'],['Posts','posts'],
+['Dashboard','dashboard'],['Leads','leads'],['Projects','projects'],['Posts','posts'],['Testimonials','testimonials'],
 ['Website settings','settings'],['Team','team'],['Certifications','certifications'],['Awards','awards'],
 ['Policies','policies'],['Careers','careers'],['RFP enquiries','rfps'],['Newsletter','newsletter'],
 ['Analytics & heatmap','analytics'],['Chatbot knowledge','knowledge']
