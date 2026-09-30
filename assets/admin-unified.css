@@ -17,6 +17,7 @@ html[data-admin-theme] .main{padding:36px clamp(18px,4vw,60px)}
 html[data-admin-theme] .card,html[data-admin-theme] .panel{background:var(--adm-panel)!important;border-color:var(--adm-border)!important;color:var(--adm-text)!important}
 html[data-admin-theme] .card span,html[data-admin-theme] .muted,html[data-admin-theme] .table th,html[data-admin-theme] .field label,html[data-admin-theme] .check{color:var(--adm-muted)!important}
 html[data-admin-theme] .table td,html[data-admin-theme] .table th{border-color:var(--adm-border)!important}
+html[data-admin-theme] .field[hidden]{display:none!important}
 html[data-admin-theme] .field input:not([type="checkbox"]),html[data-admin-theme] .field textarea,html[data-admin-theme] .field select,html[data-admin-theme] select{background:var(--adm-field)!important;border-color:var(--adm-border)!important;color:var(--adm-text)!important}
 html[data-admin-theme] .btn.secondary{background:var(--adm-hover)!important;border-color:var(--adm-border)!important;color:var(--adm-text)!important}
 html[data-admin-theme] .btn.danger{background:transparent!important;border:1px solid var(--adm-border)!important;color:var(--adm-danger)!important}
