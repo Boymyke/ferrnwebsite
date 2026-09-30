@@ -2,6 +2,7 @@
 declare(strict_types=1);
 if(session_status()!==PHP_SESSION_ACTIVE)session_start();
 require_once __DIR__.'/../lib/platform.php';
+require_once __DIR__.'/../lib/admin-users.php';
 if(empty($_SESSION['ferrn_admin'])){header('Location:/admin/');exit;}
 if(realpath($_SERVER['SCRIPT_FILENAME']??'')===__FILE__ && $_SERVER['REQUEST_METHOD']==='GET'){header('Location:/admin/?tab='.urlencode((string)($_GET['tab']??'overview')));exit;}
 if(empty($_SESSION['csrf']))$_SESSION['csrf']=bin2hex(random_bytes(24));
@@ -10,8 +11,13 @@ function v2_valid():void{if(!hash_equals((string)($_SESSION['csrf']??''),(string
 function v2_go(string $tab):never{header('Location:/admin/?tab='.urlencode($tab));exit;}
 $tabs=['overview','settings','team','certifications','awards','policies','careers','rfps','newsletter','analytics','knowledge','client_logos','chat_questions'];
 $tab=in_array((string)($_GET['tab']??'overview'),$tabs,true)?(string)($_GET['tab']??'overview'):'overview';
+ferrn_require_admin_permission($tab);
+if(!empty(ferrn_current_admin()['must_change'])){header('Location:/admin/account.php?first=1');exit;}
 $noticeError='';
 if($_SERVER['REQUEST_METHOD']==='POST'){v2_valid();$action=(string)($_POST['action']??'');
+ $required=match($action){'save_collection_item','delete_collection_item'=>(string)($_POST['collection']??''),'import_knowledge'=>'knowledge','upload_company_profile','save_settings','save_api_key'=>'settings','rfp_status'=>'rfps',default=>''};
+ if($required==='')exit('Unsupported action.');ferrn_require_admin_permission($required);
+ if(in_array($action,['upload_company_profile','save_api_key'],true)&&(ferrn_current_admin()['role']??'')!=='super'){http_response_code(403);exit('Super administrator only.');}
  if($action==='import_knowledge'){
     $title=trim((string)($_POST['title']??''));
     try{
