@@ -25,3 +25,29 @@ jobs:
           test -f admin/sidebar.php
           test -f lib/knowledge-import.php
           test -f lib/policy-defaults.php
+  browser:
+    if: github.event_name == 'pull_request'
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Check Ferrn desktop and mobile user experience
+        run: |
+          php -S 127.0.0.1:8766 -t . >/tmp/ferrn-ui-server.log 2>&1 &
+          sleep 1
+          node tests/ui.mjs
+      - name: Save inspection screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ferrn-layout-screenshots
+          path: test-screenshots/
+          if-no-files-found: ignore
