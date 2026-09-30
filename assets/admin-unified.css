@@ -25,3 +25,31 @@ html[data-admin-theme] .table a:not(.btn){color:var(--o)}
 .admin-section-intro{font-size:12px;color:var(--adm-muted);line-height:1.7}
 .heatmap-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px}.heatmap-controls select{padding:12px}.heatmap-preview{width:min(100%,1100px);position:relative;aspect-ratio:1440/900;border:1px solid var(--adm-border);border-radius:16px;overflow:hidden;background:#f8f8f8;color:#141414}.heatmap-preview iframe{border:0;width:100%;height:100%;pointer-events:none;background:white}.heatmap-layer{position:absolute;inset:0;pointer-events:none}.heatmap-spot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,68,0,.82),rgba(255,145,0,.45) 42%,transparent 73%);width:68px;height:68px;mix-blend-mode:multiply}.heatmap-spot span{position:absolute;left:45%;top:45%;background:#111;color:white;border-radius:999px;font-size:10px;padding:2px 5px}.heatmap-note{font-size:12px;color:var(--adm-muted);line-height:1.6}.heatmap-hotspot-table{min-width:620px}
 @media(max-width:950px){html[data-admin-theme] .app{grid-template-columns:minmax(0,1fr)}html[data-admin-theme] .side{width:100%;height:auto;position:relative;overflow:visible;display:block;border-bottom:1px solid var(--adm-border)!important}html[data-admin-theme] .side nav{display:flex;gap:2px;overflow:auto}html[data-admin-theme] .side nav a{flex-shrink:0}html[data-admin-theme] .admin-logo{margin:0 0 10px}html[data-admin-theme] .admin-sidebar-bottom{display:flex;gap:10px;align-items:center;overflow:auto;white-space:nowrap}html[data-admin-theme] .admin-theme-toggle{width:auto;white-space:nowrap}html[data-admin-theme] .admin-sidebar-bottom a{white-space:nowrap}}
+
+/* Unified dashboard metrics */
+.dashboard-main-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:15px;margin-top:20px}
+.dashboard-main-grid .panel{min-width:0}
+.dashboard-main-grid .panel-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}
+.dashboard-main-grid .panel-head h2{margin:0 0 3px}
+.traffic-graph{height:250px;display:flex;gap:5px;justify-content:space-between;align-items:stretch;padding-top:18px;border-bottom:1px solid var(--adm-border);margin-top:26px}
+.traffic-day{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.traffic-day[hidden]{display:none}
+.traffic-bars{height:calc(100% - 30px);width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+.traffic-views{width:40%;max-width:14px;min-height:2px;background:#ff4100;border-radius:5px 5px 0 0}
+.traffic-clicks{width:30%;max-width:9px;min-height:2px;background:#ffa280;border-radius:5px 5px 0 0}
+.traffic-label{font-size:9px;color:var(--adm-muted);height:29px;padding-top:9px}
+.graph-legend{display:flex;gap:18px;margin-top:18px;font-size:11px;color:var(--adm-muted)}
+.graph-legend span{display:flex;align-items:center;gap:6px}.graph-legend i{display:inline-block;width:10px;height:10px;border-radius:3px}
+.legend-view{background:#ff4100}.legend-click{background:#ffa280}
+.btn.graph-active{background:#ff4100!important;color:white!important;border-color:#ff4100!important}
+.stats-detail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:15px 0}
+.stats-detail>div{padding:18px;border:1px solid var(--adm-border);border-radius:12px}
+.stats-detail span{font-size:10px;color:var(--adm-muted);display:block}
+.stats-detail strong{font-size:28px;font-weight:600;display:block;margin-top:5px}
+.page-metric{margin:19px 0}.page-metric>div:first-child{display:flex;justify-content:space-between;gap:15px;align-items:baseline;font-size:11px}
+.page-metric strong{font-size:11px;color:var(--adm-muted)}.metric-track{height:7px;margin-top:8px;background:var(--adm-hover);border-radius:999px;overflow:hidden}
+.metric-track i{display:block;height:100%;background:#ff4100;border-radius:999px}
+.lead-summary{padding:15px 0;border-bottom:1px solid var(--adm-border);display:flex;justify-content:space-between;gap:15px;align-items:center}
+.lead-summary strong,.lead-summary span{display:block}.lead-summary span{font-size:11px;color:var(--adm-muted);margin-top:4px}.lead-summary a{color:#ff4100;text-decoration:none;font-size:11px}
+@media(max-width:1250px){.dashboard-main-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:620px){.traffic-label{font-size:7px}.traffic-graph{height:200px}.stats-detail{grid-template-columns:1fr 1fr}}
