@@ -13,4 +13,7 @@ ferrn_save_admin_users([
  'password_hash'=>password_hash('QA-limited-passphrase-2026',PASSWORD_DEFAULT),'active'=>true,
  'role'=>'admin','must_change'=>false,'permissions'=>['dashboard'=>true,'leads'=>true,'settings'=>false,'testimonials'=>false]]
 ]);
+ferrn_save_json('leads.json',[
+ ['id'=>'qa-seed','name'=>'QA Lead','email'=>'qa-lead@example.invalid','company'=>'Test','project'=>'Website','budget'=>'','timeline'=>'','message'=>'Synthetic test enquiry','status'=>'new','created_at'=>date(DATE_ATOM)]
+]);
 echo "Prepared disposable QA credentials.\n";
