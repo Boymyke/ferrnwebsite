@@ -118,18 +118,27 @@ function ferrn_policies(): array {
     $bySlug=[];
     foreach(ferrn_default_policies() as $p)$bySlug[$p['slug']]=$p;
     foreach($existing as $p){
-        $slug=(string)($p['slug']??'');
+        $slug=(string)($p['slug']??'');$id=(string)($p['id']??'');
         if($slug==='')continue;
-        if(isset($bySlug[$slug])){
-            $original=$bySlug[$slug];
+        $original=$bySlug[$id]??$bySlug[$slug]??null;
+        if($id!=='' && $id!==$slug && isset($bySlug[$id]))unset($bySlug[$id]);
+        if(!empty($p['deleted'])){unset($bySlug[$slug]);continue;}
+        if($original!==null){
             $combined=array_replace($original,$p);
-            foreach(['summary','content'] as $f){if(trim((string)($p[$f]??''))==='')$combined[$f]=$original[$f];}
-            if(trim((string)($p['summary']??''))==='' && trim((string)($p['content']??''))==='')$combined['published']=$original['published'];
+            foreach(['summary','content'] as $field){
+                if(trim((string)($p[$field]??''))==='')$combined[$field]=$original[$field];
+            }
+            // Old blank placeholders were never legally reviewed: publish only the basic
+            // factual notices built from current site behaviour; all other drafts stay hidden.
+            if(trim((string)($p['summary']??''))===''&&trim((string)($p['content']??''))===''){
+                $combined['published']=$original['published'];
+            }
             $bySlug[$slug]=$combined;
         }else $bySlug[$slug]=$p;
     }
     return array_values($bySlug);
 }
+
 function ferrn_safe_text(string $value,int $max=5000): string {
     $value=trim(preg_replace('/\s+/u',' ',$value)??'');
     return mb_substr($value,0,$max);
