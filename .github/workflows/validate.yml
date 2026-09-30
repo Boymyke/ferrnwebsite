@@ -1,0 +1,25 @@
+name: Ferrn PHP and JavaScript checks
+on:
+  push:
+    branches:
+      - feature/2026-company-profile
+  pull_request:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PHP syntax
+        run: find . -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Check JavaScript syntax
+        run: find assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Confirm public page routes and admin modules
+        run: |
+          test -f services/index.php
+          test -f about/index.php
+          test -f contact/index.php
+          test -f careers/index.php
+          test -f testimonials/index.php
+          test -f admin/sidebar.php
+          test -f lib/knowledge-import.php
+          test -f lib/policy-defaults.php
