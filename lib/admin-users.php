@@ -8,7 +8,7 @@ function ferrn_permission_keys():array {
   'settings'=>'Website settings','team'=>'Team','certifications'=>'Certifications','awards'=>'Awards','policies'=>'Policies',
   'careers'=>'Careers','rfps'=>'RFP enquiries','newsletter'=>'Newsletter','analytics'=>'Analytics & heatmap',
   'knowledge'=>'Chatbot knowledge','client_logos'=>'Client logos','chat_questions'=>'Chatbot questions',
-  'proposals'=>'Proposals','campaigns'=>'Campaign websites'
+  'proposals'=>'Proposals'
  ];
 }
 function ferrn_admin_users():array{return ferrn_load_json('admin-users.json',[]);}
