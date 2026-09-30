@@ -10,7 +10,24 @@ function v2_valid():void{if(!hash_equals((string)($_SESSION['csrf']??''),(string
 function v2_go(string $tab):never{header('Location:/admin/?tab='.urlencode($tab));exit;}
 $tabs=['overview','settings','team','certifications','awards','policies','careers','rfps','newsletter','analytics','knowledge'];
 $tab=in_array((string)($_GET['tab']??'overview'),$tabs,true)?(string)($_GET['tab']??'overview'):'overview';
+$noticeError='';
 if($_SERVER['REQUEST_METHOD']==='POST'){v2_valid();$action=(string)($_POST['action']??'');
+ if($action==='import_knowledge'){
+    $title=trim((string)($_POST['title']??''));
+    try{
+        if($title==='')throw new RuntimeException('Provide a source title.');
+        require_once __DIR__.'/../lib/knowledge-import.php';
+        $kind=(string)($_POST['source_type']??'');
+        if($kind==='pdf')$source=ferrn_import_knowledge_pdf($_FILES['pdf_document']??[]);
+        elseif($kind==='website')$source=ferrn_import_knowledge_url(trim((string)($_POST['website_url']??'')));
+        else throw new RuntimeException('Choose a source.');
+        $item=array_merge(['id'=>ferrn_item_id(),'title'=>ferrn_safe_text($title,220),'published'=>false,'updated_at'=>date(DATE_ATOM)],$source);
+        $items=ferrn_collection('knowledge');$items[]=$item;
+        if(!ferrn_save_collection('knowledge',$items))throw new RuntimeException('Could not save knowledge.');
+        v2_go('knowledge');
+    }catch(Throwable $e){$noticeError=$e->getMessage();}
+ }
+
  if($action==='save_settings'){
    $s=ferrn_settings();
    foreach(['legal_name','tagline'] as $k)$s['brand'][$k]=ferrn_safe_text((string)($_POST[$k]??$s['brand'][$k]),200);
