@@ -45,6 +45,7 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
        'balance'=>mb_substr(trim((string)($_POST['balance']??'')),0,160),
        'items'=>ferrn_proposal_items((string)($_POST['budget_lines']??'')),
        'terms'=>mb_substr(trim((string)($_POST['terms']??'')),0,4500),
+       'team'=>mb_substr(trim((string)($_POST['team']??'')),0,4000),
        'cta'=>mb_substr(trim((string)($_POST['cta']??'Ready to build what’s next?')),0,250),
        'contact_email'=>filter_var((string)($_POST['contact_email']??''),FILTER_VALIDATE_EMAIL)?trim((string)$_POST['contact_email']):'info@ferrnagency.com',
        'status'=>$status,'created_at'=>$old['created_at']??date(DATE_ATOM),'updated_at'=>date(DATE_ATOM)];
@@ -62,7 +63,7 @@ $fields=[
  ['budget_intro','05 · Budget overview','textarea'],['currency','Currency symbol','input'],
  ['total','Total project investment','input'],['deposit','Commitment / deposit terms','input'],
  ['balance','Final payment / balance terms','input'],['budget_lines','Budget line items — one per line: Workstream | Deliverables | Price','textarea'],
- ['terms','Terms, assumptions and exclusions','textarea'],['cta','Closing CTA','input'],['contact_email','Contact email','input']
+ ['terms','Terms, assumptions and exclusions','textarea'],['team','People responsible for delivery','textarea'],['cta','Closing CTA','input'],['contact_email','Contact email','input']
 ];
 $budgetText=$edit?implode("\n",array_map(fn($v)=>($v['name']??'').' | '.($v['description']??'').' | '.($v['price']??''),$edit['items']??[])):'';
 ?><!doctype html><html lang="en" data-admin-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Client proposals — Ferrn Admin</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="/assets/admin-unified.css"><script src="/assets/admin-unified.js" defer></script>
@@ -70,7 +71,7 @@ $budgetText=$edit?implode("\n",array_map(fn($v)=>($v['name']??'').' | '.($v['des
 <?php if($error):?><p style="color:#ff4100"><?=htmlspecialchars($error)?></p><?php endif;?>
 <section class="panel"><h2><?=$edit?'Edit proposal':'Create proposal'?></h2><form method="post"><input type="hidden" name="csrf" value="<?=htmlspecialchars($csrf)?>"><input type="hidden" name="action" value="save"><input type="hidden" name="id" value="<?=htmlspecialchars($edit['id']??'')?>">
 <div class="grid"><div class="field"><label>Proposal title *</label><input name="title" value="<?=htmlspecialchars($edit['title']??'')?>" required></div><div class="field"><label>Client / company *</label><input name="client" value="<?=htmlspecialchars($edit['client']??'')?>" required></div></div><div class="grid"><div class="field"><label>Client logo URL (optional)</label><input name="client_logo" type="url" value="<?=htmlspecialchars($edit['client_logo']??'')?>"></div><div class="field"><label>Status</label><select name="status"><?php foreach(['draft','published','archived'] as $s):?><option value="<?=$s?>" <?=($edit['status']??'draft')===$s?'selected':''?>><?=ucfirst($s)?></option><?php endforeach;?></select></div></div>
-<div class="grid"><?php foreach($fields as [$key,$label,$type]):?><div class="field" style="<?=in_array($key,['problem','approach','scope','timeline','budget_lines','terms','intro','budget_intro'])?'grid-column:1/-1':''?>"><label><?=htmlspecialchars($label)?></label><?php $value=$key==='budget_lines'?$budgetText:($edit[$key]??'');?><?php if($type==='textarea'):?><textarea name="<?=$key?>"><?=htmlspecialchars((string)$value)?></textarea><?php else:?><input name="<?=$key?>" value="<?=htmlspecialchars((string)$value)?>"><?php endif;?></div><?php endforeach;?></div>
+<div class="grid"><?php foreach($fields as [$key,$label,$type]):?><div class="field" style="<?=in_array($key,['problem','approach','scope','timeline','budget_lines','terms','team','intro','budget_intro'])?'grid-column:1/-1':''?>"><label><?=htmlspecialchars($label)?></label><?php $value=$key==='budget_lines'?$budgetText:($edit[$key]??'');?><?php if($type==='textarea'):?><textarea name="<?=$key?>"><?=htmlspecialchars((string)$value)?></textarea><?php else:?><input name="<?=$key?>" value="<?=htmlspecialchars((string)$value)?>"><?php endif;?></div><?php endforeach;?></div>
 <button class="btn">Save proposal</button><?php if($edit):?><a href="/admin/proposals.php" class="btn secondary">New proposal</a><?php endif;?></form></section>
 <section class="panel"><h2>All proposals (<?=count($items)?>)</h2>
 <?php foreach($items as $p):?><?php $link='/proposal/'.rawurlencode($p['id']).'/?key='.rawurlencode($p['share_key']);?>
