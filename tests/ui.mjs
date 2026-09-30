@@ -20,9 +20,12 @@ try{
  ensure(layout.textAlign==='center','Home headline must be centered');
  ensure(Math.abs(layout.titleCenter-layout.viewport/2)<40,'Home heading is not centered');
  ensure(Math.abs(layout.buttonsCenter-layout.viewport/2)<40,'Home CTA group is not centered');
- ensure(await p.locator('.nav-links a[href="/careers/"]').count()===1,'Careers must be in header');
+ ensure(await p.locator('.nav-links a[href="/careers/"]').count()===0,'Careers should not be in the main header');
+ ensure(await p.locator('footer a[href="/careers/"]').count()===1,'Careers must remain accessible in the footer');
  ensure(await p.locator('.nav-links a[href="/procurement/"]').count()===0,'Procurement should be footer-only');
  ensure(await p.locator('footer a[href="/procurement/"]').count()===1,'Procurement missing from footer');
+ const footerOrder=await p.locator('.footer-v2>div').first().locator('a').allTextContents();
+ ensure(footerOrder.slice(0,5).join('|')==='Our Work|Services|About|Testimonials|Insights','Primary footer links are not in the requested order');
  ensure(await p.locator('.hero-topline').count()===0,'Old Working globally line remains');
  await p.screenshot({path:'test-screenshots/home-desktop.png'});
  for(const [url,selector] of [['/services/','.service-list'],['/about/','.career-steps'],['/contact/','#contactForm'],['/careers/','.career-list'],['/policies/','.credential-grid']]){
