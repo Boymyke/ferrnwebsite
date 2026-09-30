@@ -10,18 +10,33 @@ function ferrn_import_knowledge_pdf(array $f): array {
     if($mime!=='application/pdf'||$head!=='%PDF-')throw new RuntimeException('Only real PDF documents are accepted.');
     $exe=null;
     foreach(['/usr/bin/pdftotext','/usr/local/bin/pdftotext'] as $path){if(is_executable($path)){$exe=$path;break;}}
-    if($exe===null)throw new RuntimeException('PDF extraction is not enabled on this hosting account. Install Poppler pdftotext or paste the approved content manually.');
+    $allowExternal=!empty($_POST['allow_ai_extraction']);
+    if($exe===null && !$allowExternal)throw new RuntimeException('Poppler PDF extraction is unavailable. Select the optional AI extraction checkbox or paste approved source text manually.');
     $dir=ferrn_storage_dir().'/knowledge-documents';
     if(!is_dir($dir) && !@mkdir($dir,0700,true))throw new RuntimeException('Private document directory unavailable.');
     $file=bin2hex(random_bytes(14)).'.pdf';$dest=$dir.'/'.$file;
     if(!move_uploaded_file((string)$f['tmp_name'],$dest))throw new RuntimeException('Could not store the PDF.');
     @chmod($dest,0600);
     try{
-        $pipes=[];$process=proc_open([$exe,'-layout','-nopgbrk',$dest,'-'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes,null,['PATH'=>'/usr/bin:/bin']);
-        if(!is_resource($process))throw new RuntimeException('PDF extraction did not start.');
-        fclose($pipes[0]);$txt=stream_get_contents($pipes[1],400000);fclose($pipes[1]);$err=stream_get_contents($pipes[2],300);fclose($pipes[2]);$code=proc_close($process);
-        $txt=trim((string)$txt);
-        if($code!==0||$txt==='')throw new RuntimeException('The PDF has no extractable text. A scanned document needs OCR before uploading.');
+        $txt='';
+        if($exe!==null){
+            try{
+                $pipes=[];
+                $process=proc_open([$exe,'-layout','-nopgbrk',$dest,'-'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes,null,['PATH'=>'/usr/bin:/bin']);
+                if(!is_resource($process))throw new RuntimeException('PDF extraction could not start.');
+                fclose($pipes[0]);$txt=(string)stream_get_contents($pipes[1],400000);fclose($pipes[1]);
+                stream_get_contents($pipes[2],300);fclose($pipes[2]);$code=proc_close($process);
+                $txt=trim($txt);if($code!==0||$txt==='')throw new RuntimeException('No extractable PDF text was found.');
+            }catch(Throwable $localError){
+                if(!$allowExternal)throw new RuntimeException($localError->getMessage().' You can enable AI extraction and try again.');
+                $txt='';
+            }
+        }
+        if($txt===''){
+            if(!$allowExternal)throw new RuntimeException('This PDF has no searchable text. Extract it manually or enable AI extraction.');
+            require_once __DIR__.'/pdf-ai-extract.php';
+            $txt=ferrn_extract_pdf_with_ai($dest,basename((string)($f['name']??'Document.pdf')));
+        }
         return ['content'=>mb_substr($txt,0,35000),'source_type'=>'pdf','source_name'=>basename((string)($f['name']??'Document.pdf')),'stored_file'=>$file];
     }catch(Throwable $e){@unlink($dest);throw $e;}
 }
