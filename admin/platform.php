@@ -54,7 +54,10 @@ if($_SERVER['REQUEST_METHOD']==='POST'){v2_valid();$action=(string)($_POST['acti
    $collection=(string)($_POST['collection']??'');$id=(string)($_POST['id']??'');if(!in_array($collection,['team','certifications','awards','policies','careers','knowledge'],true))exit('Invalid collection');
    $source=$collection==='policies'?ferrn_policies():ferrn_collection($collection);
    if($collection==='knowledge')foreach($source as $x)if(($x['id']??'')===$id&&!empty($x['stored_file'])){@unlink(ferrn_storage_dir().'/knowledge-documents/'.basename((string)$x['stored_file']));}
-   $items=array_values(array_filter($source,fn($x)=>($x['id']??'')!==$id));ferrn_save_collection($collection,$items);v2_go($collection);
+   if($collection==='policies'){
+       $items=array_map(static function(array $x)use($id):array{if(($x['id']??'')===$id){$x['deleted']=true;$x['published']=false;}return $x;},$source);
+   }else $items=array_values(array_filter($source,fn($x)=>($x['id']??'')!==$id));
+   ferrn_save_collection($collection,$items);v2_go($collection);
  }
  if($action==='rfp_status'){$items=ferrn_collection('rfps');$id=(string)($_POST['id']??'');$status=(string)($_POST['status']??'new');if(!in_array($status,['new','reviewing','qualified','proposal','won','lost','archived'],true))$status='new';foreach($items as &$x)if(($x['id']??'')===$id)$x['status']=$status;unset($x);ferrn_save_collection('rfps',$items);v2_go('rfps');}
 }
