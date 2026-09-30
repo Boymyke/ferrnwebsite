@@ -120,5 +120,12 @@ try{
  ensure(forbidden.status()===403,'Limited admin can still access denied settings');
  const forbiddenUsers=await limited.goto(origin+'/admin/users.php',{waitUntil:'domcontentloaded'});
  ensure(forbiddenUsers.status()===403,'Limited admin can access super administrator user management');
+ await limited.goto(origin+'/admin/?tab=leads',{waitUntil:'domcontentloaded'});
+ const csrf=await limited.locator('input[name="csrf"]').first().inputValue().catch(()=>null);
+ if(csrf){
+   const bypass=await limited.request.post(origin+'/admin/?tab=dashboard',{form:{csrf,action:'save_project',title:'Injected project',live:'https://example.invalid/'}});
+   ensure(bypass.status()===403,'Limited admin bypassed project permissions via dashboard POST');
+ }
+
  console.log('UI checks passed: centered desktop/mobile home, separate routes, nav/footer, mobile testimonials and cookie controls');
 }finally{await browser.close();}
