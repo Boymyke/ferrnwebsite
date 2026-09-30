@@ -32,6 +32,6 @@ function ferrn_auth_limits(string $email,bool $failed=false,bool $reset=false): 
     $email=strtolower(trim($email));
     $ip=(string)($_SERVER['REMOTE_ADDR']??'unknown');
     $a=ferrn_auth_counter('email',$email,$failed,$reset);
-    $b=ferrn_auth_counter('ip',$ip,$failed,$reset);
+    $b=ferrn_auth_counter('ip-email',$ip.'|'.$email,$failed,$reset);
     return max((int)$a['until'],(int)$b['until']);
 }
