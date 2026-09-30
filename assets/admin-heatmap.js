@@ -3,7 +3,7 @@
  const data=JSON.parse(root.querySelector('[data-heatmap-events]').textContent||'[]');
  const select=root.querySelector('[data-heatmap-page]'), device=root.querySelector('[data-heatmap-device]'),range=root.querySelector('[data-heatmap-range]'),
  frame=root.querySelector('[data-heatmap-frame]'),layer=root.querySelector('[data-heatmap-layer]'),report=root.querySelector('[data-heatmap-report]'),stats=root.querySelector('[data-heatmap-stats]');
- const safe=p=>typeof p==='string'&&/^\\/(?:$|(?:work|insights|services|about|contact|careers|testimonials|team|procurement|rfp|policies)(?:\\/[a-z0-9-]+)?\\/?)$/.test(p);const pages=[...new Set(['/', '/services/', '/work/', '/about/', '/contact/', '/testimonials/', '/careers/', '/insights/', '/team/', '/procurement/',...data.map(x=>x.path)].filter(safe))].sort();
+ const roots=new Set(['work','insights','services','about','contact','careers','testimonials','team','procurement','rfp','policies']);const safe=p=>{if(typeof p!=='string'||!p.startsWith('/')||p.startsWith('//')||p.includes('..')||p.includes('?')||p.includes('#'))return false;const seg=p.split('/').filter(Boolean);return !seg.length||(seg.length<=2&&roots.has(seg[0])&&seg.every(s=>/^[a-z0-9-]+$/.test(s)))};const pages=[...new Set(['/', '/services/', '/work/', '/about/', '/contact/', '/testimonials/', '/careers/', '/insights/', '/team/', '/procurement/',...data.map(x=>x.path)].filter(safe))].sort();
  pages.forEach(p=>{let opt=new Option(p,p);select.add(opt)});if(pages.includes('/'))select.value='/';
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const now=Date.now();let page=select.value||'/';
