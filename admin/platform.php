@@ -47,11 +47,14 @@ if($_SERVER['REQUEST_METHOD']==='POST'){v2_valid();$action=(string)($_POST['acti
    if($collection==='awards')$item+=['name'=>ferrn_safe_text((string)($_POST['name']??''),200),'issuer'=>ferrn_safe_text((string)($_POST['issuer']??''),200),'url'=>ferrn_safe_text((string)($_POST['url']??''),800),'year'=>ferrn_safe_text((string)($_POST['year']??''),20),'published'=>!empty($_POST['published'])];
    if($collection==='policies')$item+=['title'=>ferrn_safe_text((string)($_POST['title']??''),220),'slug'=>ferrn_slugify((string)($_POST['slug']??$_POST['title']??'')),'summary'=>ferrn_safe_text((string)($_POST['summary']??''),800),'content'=>ferrn_sanitize_html((string)($_POST['content']??'')),'published'=>!empty($_POST['published'])];
    if($collection==='careers')$item+=['title'=>ferrn_safe_text((string)($_POST['title']??''),160),'location'=>ferrn_safe_text((string)($_POST['location']??''),120),'employment'=>ferrn_safe_text((string)($_POST['employment']??''),120),'description'=>ferrn_safe_text((string)($_POST['description']??''),6000),'apply_url'=>ferrn_safe_text((string)($_POST['apply_url']??''),800),'published'=>!empty($_POST['published'])];
-   if($collection==='knowledge')$item+=['title'=>ferrn_safe_text((string)($_POST['title']??''),220),'content'=>ferrn_safe_text((string)($_POST['content']??''),12000),'published'=>!empty($_POST['published'])];
+   if($collection==='knowledge')$item+=['title'=>ferrn_safe_text((string)($_POST['title']??''),220),'content'=>mb_substr(trim((string)($_POST['content']??'')),0,35000),'published'=>!empty($_POST['published'])];
    $found=false;foreach($items as &$x){if(($x['id']??'')===$id){$x=array_merge($x,$item);$found=true;break;}}unset($x);if(!$found)$items[]=$item;ferrn_save_collection($collection,$items);v2_go($collection);
  }
  if($action==='delete_collection_item'){
-   $collection=(string)($_POST['collection']??'');$id=(string)($_POST['id']??'');if(!in_array($collection,['team','certifications','awards','policies','careers','knowledge'],true))exit('Invalid collection');$items=array_values(array_filter(ferrn_collection($collection),fn($x)=>($x['id']??'')!==$id));ferrn_save_collection($collection,$items);v2_go($collection);
+   $collection=(string)($_POST['collection']??'');$id=(string)($_POST['id']??'');if(!in_array($collection,['team','certifications','awards','policies','careers','knowledge'],true))exit('Invalid collection');
+   $source=$collection==='policies'?ferrn_policies():ferrn_collection($collection);
+   if($collection==='knowledge')foreach($source as $x)if(($x['id']??'')===$id&&!empty($x['stored_file'])){@unlink(ferrn_storage_dir().'/knowledge-documents/'.basename((string)$x['stored_file']));}
+   $items=array_values(array_filter($source,fn($x)=>($x['id']??'')!==$id));ferrn_save_collection($collection,$items);v2_go($collection);
  }
  if($action==='rfp_status'){$items=ferrn_collection('rfps');$id=(string)($_POST['id']??'');$status=(string)($_POST['status']??'new');if(!in_array($status,['new','reviewing','qualified','proposal','won','lost','archived'],true))$status='new';foreach($items as &$x)if(($x['id']??'')===$id)$x['status']=$status;unset($x);ferrn_save_collection('rfps',$items);v2_go('rfps');}
 }
