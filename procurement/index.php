@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/../lib/platform.php';
 $settings=ferrn_settings();
 $company=$settings['company']; $contact=$settings['contact'];
-$certs=ferrn_collection('certifications'); $policies=ferrn_collection('policies',ferrn_default_policies());
+$certs=ferrn_collection('certifications'); $policies=ferrn_policies();
 $pageTitle='Procurement & Vendor Information — Ferrn Agency';
 $pageDescription='Ferrn Agency procurement, vendor, capability, compliance and RFP information for organisations evaluating Ferrn as a digital delivery partner.';
 $canonical='https://www.ferrnagency.com/procurement/';
