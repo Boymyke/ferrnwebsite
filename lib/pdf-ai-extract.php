@@ -2,7 +2,8 @@
 declare(strict_types=1);
 /* Explicit opt-in alternative when Poppler is not installed on cPanel. */
 function ferrn_extract_pdf_with_ai(string $pdf,string $filename): string {
-    $key=(string)getenv('OPENAI_API_KEY');
+    require_once __DIR__.'/private-secrets.php';
+$key=ferrn_get_api_key();
     if($key==='' || !function_exists('curl_init')) throw new RuntimeException('AI PDF extraction requires a configured OpenAI key and PHP cURL.');
     $settings=ferrn_settings();
     $model=(string)(getenv('OPENAI_PDF_MODEL')?:($settings['ai']['text_model']??''));

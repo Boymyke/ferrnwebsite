@@ -87,6 +87,13 @@ function ferrn_save_collection(string $name,array $items): bool {
     return ferrn_save_json($name.'.json',array_values($items));
 }
 
+
+function ferrn_default_logos():array {
+    $logos=[['clientLogo1.svg','Gromzia'],['clientLogo2.svg','Synergix Africa'],['clientLogo3.svg','M-P Infrastructure'],['clientLogo5.svg','Aroda'],['clientLogo6.svg','Outbox Experience'],['clientLogo7.svg','Knomi'],['clientLogo12.svg','Padher']];
+    return array_map(static fn($l)=>['id'=>ferrn_slugify($l[1]),'image'=>'https://raw.githubusercontent.com/FERRN-AGENCY/ferrn-website/main/fern/src/assets/'.$l[0],'name'=>$l[1],'published'=>true],$logos);
+}
+function ferrn_client_logos():array{return ferrn_collection('client_logos',ferrn_default_logos());}
+
 function ferrn_item_id(): string { return bin2hex(random_bytes(8)); }
 
 function ferrn_public_collections(): array {

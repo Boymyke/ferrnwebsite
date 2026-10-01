@@ -41,6 +41,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Check Ferrn desktop and mobile user experience
         run: |
+          php tests/bootstrap-browser.php
           php -S 127.0.0.1:8766 -t . >/tmp/ferrn-ui-server.log 2>&1 &
           sleep 1
           node tests/ui.mjs

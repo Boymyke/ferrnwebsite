@@ -26,6 +26,21 @@ check_page /careers/ 'Current openings'
 check_page /policies/ 'Privacy Policy'
 check_page /procurement/ 'Download company profile'
 check_page /admin/ 'Sign in'
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/proposal/)" = "404"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/404.php)" = "404"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/500.php)" = "500"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/admin/users.php)" = "403"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/admin/proposals.php)" = "403"
+test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/admin/campaigns.php)" = "403"
+echo 'Error pages and private admin routes validated'
+# Private proposal must remain inaccessible until published and supplied with its share key.
+php -r '$_SERVER["DOCUMENT_ROOT"]=getcwd();require "lib/proposals.php";ferrn_save_collection("proposals",[["id"=>"0123456789abcdefabcd","share_key"=>str_repeat("a",40),"title"=>"CI proposal","client"=>"Test client","status"=>"published","headline"=>"Test proposal","eyebrow"=>"Proposal","intro"=>"Test","problem"=>"","approach"=>"","scope"=>"","timeline"=>"","budget_intro"=>"","currency"=>"$","total"=>"500","deposit"=>"","balance"=>"","items"=>[],"terms"=>"","team"=>"","cta"=>"Next step","contact_email"=>"test@example.invalid"]]);'
+good="$(curl -s -o /tmp/ferrn-proposal -w '%{http_code}' 'http://127.0.0.1:8765/proposal/index.php?id=0123456789abcdefabcd&key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')"
+test "$good" = "200" && grep -q 'Test proposal' /tmp/ferrn-proposal
+bad="$(curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:8765/proposal/index.php?id=0123456789abcdefabcd&key=wrong')"
+test "$bad" = "404"
+echo 'Proposal link publication, token gating and rejection validated'
+
 echo 'Testing three wrong login attempts and the 30-minute lockout'
 for n in 1 2 3; do
  curl -s -o /tmp/ferrn-smoke-login -X POST \

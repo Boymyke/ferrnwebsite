@@ -2,6 +2,8 @@ Options -Indexes
 DirectoryIndex index.php index.html
 RewriteEngine On
 RewriteBase /
+ErrorDocument 404 /404.php
+ErrorDocument 500 /500.php
 
 # Clean Ferrn routes
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -17,6 +19,14 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^policies/([a-z0-9-]+)/?$ policies/view.php?slug=$1 [L,QSA]
 
+# Unlisted client proposals with private share keys
+RewriteRule ^proposal/([a-f0-9]{20})/?$ proposal/index.php?id=$1 [L,QSA]
+
+# User-managed trusted static campaign pages (after all real file/folder routes)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([a-z][a-z0-9-]{2,58})(?:/(.*))?/?$ campaign/serve.php?slug=$1&path=$2 [L,QSA]
+
 # Legacy admin naming always resolves to the Ferrn Digital Agency admin
 RewriteRule ^studio(?:/.*)?$ /admin/ [R=302,L]
 
@@ -24,7 +34,7 @@ RewriteRule ^studio(?:/.*)?$ /admin/ [R=302,L]
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set X-Frame-Options "SAMEORIGIN"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Permissions-Policy "camera=(), microphone=(self), geolocation=()"
 </IfModule>
 
 <IfModule mod_expires.c>
