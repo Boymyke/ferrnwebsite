@@ -53,7 +53,7 @@ function ferrn_default_settings(): array {
             'enabled'=>false,
             'articles_per_day'=>10,
             'trend_region'=>'NG',
-            'text_model'=>'gpt-5.6-terra',
+            'text_model'=>'gpt-6-luna',
             'image_model'=>'gpt-image-2.5-flare',
             'auto_publish'=>false
         ],
@@ -63,7 +63,9 @@ function ferrn_default_settings(): array {
 }
 
 function ferrn_settings(): array {
-    return array_replace_recursive(ferrn_default_settings(), ferrn_load_json('settings.json', []));
+    $settings=array_replace_recursive(ferrn_default_settings(), ferrn_load_json('settings.json', []));
+    if(($settings['ai']['text_model']??'')==='gpt-5.6-terra')$settings['ai']['text_model']='gpt-6-luna';
+    return $settings;
 }
 
 function ferrn_save_settings(array $settings): bool {
@@ -86,7 +88,6 @@ function ferrn_collection(string $name, array $default=[]): array {
 function ferrn_save_collection(string $name,array $items): bool {
     return ferrn_save_json($name.'.json',array_values($items));
 }
-
 
 function ferrn_default_logos():array {
     $logos=[['clientLogo1.svg','Gromzia'],['clientLogo2.svg','Synergix Africa'],['clientLogo3.svg','M-P Infrastructure'],['clientLogo5.svg','Aroda'],['clientLogo6.svg','Outbox Experience'],['clientLogo7.svg','Knomi'],['clientLogo12.svg','Padher']];
@@ -135,8 +136,6 @@ function ferrn_policies(): array {
             foreach(['summary','content'] as $field){
                 if(trim((string)($p[$field]??''))==='')$combined[$field]=$original[$field];
             }
-            // Old blank placeholders were never legally reviewed: publish only the basic
-            // factual notices built from current site behaviour; all other drafts stay hidden.
             if(trim((string)($p['summary']??''))===''&&trim((string)($p['content']??''))===''){
                 $combined['published']=$original['published'];
             }
