@@ -33,7 +33,6 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^insights/([a-z0-9-]+)/?$ insights/post.php?slug=$1 [L,QSA]
 
-
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^policies/([a-z0-9-]+)/?$ policies/view.php?slug=$1 [L,QSA]
@@ -54,6 +53,11 @@ RewriteRule ^studio(?:/.*)?$ /admin/ [R=302,L]
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Permissions-Policy "camera=(), microphone=(self), geolocation=()"
+  <FilesMatch "^admin-(unified|heatmap)\.(css|js)$">
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header always set Pragma "no-cache"
+    Header always set Expires "0"
+  </FilesMatch>
 </IfModule>
 
 <IfModule mod_expires.c>
