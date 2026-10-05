@@ -14,7 +14,29 @@ $groups=[
   ['RFP enquiries','rfps'],['Newsletter','newsletter'],['Analytics & heatmap','analytics'],['Chatbot knowledge','knowledge'],['Chatbot questions','chat_questions'],['Client logos','client_logos'],
  ],
 ];
-?><aside class="side admin-navigation">
+?>
+<script>
+/* Critical theme bootstrap: some admin pages intentionally share this sidebar but
+   their HTML root is emitted before admin-unified.js runs. Apply the saved theme
+   before the navigation or page content is parsed so there is no flash of the
+   legacy/default anchor styling during every tab change. */
+(function(){
+  var theme='dark';
+  try{theme=localStorage.getItem('ferrn-admin-theme')||'dark';}catch(e){}
+  document.documentElement.dataset.adminTheme=theme;
+})();
+</script>
+<style>
+/* Critical navigation paint. Keep this tiny and colocated with the shared shell
+   so every admin route paints the same navigation on the first frame. */
+.admin-navigation a{text-decoration:none!important;-webkit-user-select:none;user-select:none}
+.admin-navigation nav a,.admin-navigation .admin-sidebar-bottom a{transition:background .12s ease,color .12s ease,transform .12s ease!important}
+.admin-navigation nav a:not(.active),.admin-navigation .admin-sidebar-bottom a:not(.active){border-color:transparent!important;box-shadow:none!important}
+.admin-navigation a:focus{outline:none}
+.admin-navigation a:focus-visible{outline:2px solid #ff4100!important;outline-offset:2px}
+html{scrollbar-gutter:stable}
+</style>
+<aside class="side admin-navigation">
  <div class="admin-logo"><img src="/assets/ferrn-mark.svg" alt="Ferrn"><span>FERRN ADMIN</span></div>
  <nav aria-label="Admin dashboard">
   <?php foreach($groups as $group=>$entries):
