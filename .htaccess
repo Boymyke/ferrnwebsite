@@ -5,6 +5,25 @@ RewriteBase /
 ErrorDocument 404 /404.php
 ErrorDocument 500 /500.php
 
+# Admin sub-pages own their POST actions. Route form submissions directly to
+# the correct handler instead of letting admin/index.php reject them as
+# "Unsupported action." GET navigation still goes through /admin/?tab=...
+RewriteCond %{REQUEST_METHOD} =POST
+RewriteCond %{QUERY_STRING} (^|&)tab=(overview|settings|team|certifications|awards|policies|careers|rfps|newsletter|analytics|knowledge|client_logos|chat_questions)(&|$) [NC]
+RewriteRule ^admin/?$ admin/platform.php [L,QSA]
+
+RewriteCond %{REQUEST_METHOD} =POST
+RewriteCond %{QUERY_STRING} (^|&)tab=testimonials(&|$) [NC]
+RewriteRule ^admin/?$ admin/testimonials.php [L,QSA]
+
+RewriteCond %{REQUEST_METHOD} =POST
+RewriteCond %{QUERY_STRING} (^|&)tab=proposals(&|$) [NC]
+RewriteRule ^admin/?$ admin/proposals.php [L,QSA]
+
+RewriteCond %{REQUEST_METHOD} =POST
+RewriteCond %{QUERY_STRING} (^|&)tab=campaigns(&|$) [NC]
+RewriteRule ^admin/?$ admin/campaigns.php [L,QSA]
+
 # Clean Ferrn routes
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
