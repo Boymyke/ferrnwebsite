@@ -18,7 +18,6 @@ $routes=[
  'about'=>['/about/','Learn about Ferrn'],'blog'=>['/insights/','Read our insights']
 ];
 $hint=null;foreach($routes as $word=>$route){if(str_contains(mb_strtolower($message),$word)){$hint=$route;break;}}
-/* Store only a short question and its time. Never log API keys or generated answers. */
 $questions=ferrn_collection('chat_questions');
 array_unshift($questions,['id'=>ferrn_item_id(),'question'=>mb_substr($message,0,450),'created_at'=>date(DATE_ATOM),'path'=>preg_replace('/[^a-z0-9\/\-]/i','',substr((string)($body['path']??'/'),0,150))]);
 ferrn_save_collection('chat_questions',array_slice($questions,0,2000));
@@ -35,13 +34,23 @@ Official email: ".$s['contact']['email']."
 Booking link: ".$s['contact']['booking_url']."
 Ferrn positioning: We design and build conversion-focused websites, custom web applications, portals, dashboards, digital systems and practical AI automation.
 Approved knowledge:".$kb;
-$payload=['model'=>$s['ai']['text_model']?:'gpt-5.6-terra','input'=>[['role'=>'system','content'=>$system],['role'=>'user','content'=>$message]],'reasoning'=>['effort'=>'low'],'max_output_tokens'=>700];
+$allowedModels=['gpt-6-luna','gpt-6-sol','gpt-6-astra','gpt-5.6-sol'];
+$model=(string)($s['ai']['text_model']??'gpt-6-luna');
+if(!in_array($model,$allowedModels,true))$model='gpt-6-luna';
+$payload=['model'=>$model,'input'=>[['role'=>'system','content'=>$system],['role'=>'user','content'=>$message]],'max_output_tokens'=>700];
 $ch=curl_init('https://api.openai.com/v1/responses');
-curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$key,'Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode($payload),CURLOPT_TIMEOUT=>45]);
-$raw=curl_exec($ch);$status=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);curl_close($ch);
+if(!$ch) ferrn_json_response(['ok'=>false,'message'=>'Chat is temporarily unavailable.'],503);
+curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$key,'Content-Type: application/json'],CURLOPT_POSTFIELDS=>json_encode($payload),CURLOPT_TIMEOUT=>45,CURLOPT_CONNECTTIMEOUT=>10]);
+$raw=curl_exec($ch);$curlError=curl_error($ch);$status=(int)curl_getinfo($ch,CURLINFO_RESPONSE_CODE);curl_close($ch);
 $data=json_decode((string)$raw,true);
-if($status>=400||!is_array($data)) ferrn_json_response(['ok'=>false,'message'=>'I could not answer that right now. Please email '.$s['contact']['email'].'.'],502);
+if($raw===false||$curlError!=='') ferrn_json_response(['ok'=>false,'message'=>'Chat is temporarily unavailable. Please email '.$s['contact']['email'].'.'],502);
+if($status>=400||!is_array($data)){
+ $detail=(string)($data['error']['message']??'');
+ error_log('Ferrn chatbot OpenAI error '.$status.': '.$detail);
+ ferrn_json_response(['ok'=>false,'message'=>'I could not answer that right now. Please email '.$s['contact']['email'].'.'],502);
+}
 $text='';
-foreach(($data['output']??[]) as $o){foreach(($o['content']??[]) as $c){if(($c['type']??'')==='output_text')$text.=(string)($c['text']??'');}}
+if(!empty($data['output_text'])&&is_string($data['output_text']))$text=$data['output_text'];
+if($text==='')foreach(($data['output']??[]) as $o){foreach(($o['content']??[]) as $c){if(($c['type']??'')==='output_text')$text.=(string)($c['text']??'');}}
 if(trim($text)==='')$text='I do not have enough confirmed information for that yet. Please email '.$s['contact']['email'].'.';
 ferrn_json_response(['ok'=>true,'message'=>$text,'booking_url'=>$s['contact']['booking_url'],'suggested_url'=>$hint[0]??null,'suggested_label'=>$hint[1]??null]);
