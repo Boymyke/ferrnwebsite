@@ -64,6 +64,40 @@ if(sourceSelector){
  });
 })();
 
+/* API key form: validate against OpenAI, save securely, and show persistent state. */
+(()=>{
+ const actionInput=document.querySelector('form input[name="action"][value="save_api_key"]');
+ if(!actionInput)return;
+ const form=actionInput.form;if(!form)return;
+ const button=form.querySelector('button[type="submit"],button');
+ const status=document.createElement('div');
+ status.className='api-key-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+ form.appendChild(status);
+ const render=(kind,message,meta='')=>{
+  status.className='api-key-status '+(kind||'');
+  status.innerHTML='<strong>'+message+'</strong>'+(meta?'<span>'+meta+'</span>':'');
+ };
+ fetch('/admin/api-key.php',{credentials:'same-origin',cache:'no-store'})
+  .then(r=>r.json()).then(data=>{
+    if(!data.ok)return;
+    render(data.configured?'ok':'muted',data.configured?'API key configured':'API key not configured',data.configured?(data.source_label+' · Active model: '+data.model):'Save and verify a key to enable the website chatbot.');
+  }).catch(()=>{});
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const original=button?button.textContent:'';
+  if(button){button.disabled=true;button.textContent='Verifying…';}
+  render('loading','Checking your key with OpenAI…','This normally takes a few seconds.');
+  try{
+    const response=await fetch('/admin/api-key.php',{method:'POST',body:new FormData(form),credentials:'same-origin',cache:'no-store'});
+    const data=await response.json().catch(()=>({ok:false,message:'The server returned an unreadable response.'}));
+    if(!response.ok||!data.ok)throw new Error(data.message||'Could not save the API key.');
+    const keyField=form.querySelector('input[name="api_key"]');if(keyField)keyField.value='';
+    render('ok','Saved and verified',data.message+(data.source_label?' · '+data.source_label:''));
+  }catch(error){render('error','API key was not saved',error.message||'Unknown error.');}
+  finally{if(button){button.disabled=false;button.textContent=original||'Save secure key';}}
+ });
+})();
+
 /* Dependency-free bounded canvas line chart for the dashboard. */
 (()=>{
  const host=document.querySelector('.traffic-graph');
