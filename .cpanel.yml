@@ -9,5 +9,9 @@ deployment:
     - /bin/rm -rf $DEPLOYPATH/admin $DEPLOYPATH/api $DEPLOYPATH/data $DEPLOYPATH/insights $DEPLOYPATH/lib $DEPLOYPATH/studio $DEPLOYPATH/work $DEPLOYPATH/procurement $DEPLOYPATH/rfp $DEPLOYPATH/team $DEPLOYPATH/policies $DEPLOYPATH/cron $DEPLOYPATH/services $DEPLOYPATH/about $DEPLOYPATH/contact $DEPLOYPATH/careers $DEPLOYPATH/testimonials $DEPLOYPATH/media $DEPLOYPATH/campaign $DEPLOYPATH/proposal
     - /bin/cp index.php 404.php 500.php robots.txt sitemap.php manifest.webmanifest $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH
+    - /bin/rm -f /home/ferrmxud/.ferrn-company-profile-deploy.pdf
+    - /bin/cp $DEPLOYPATH/assets/Ferrn-Agency-Company-Profile.pdf /home/ferrmxud/.ferrn-company-profile-deploy.pdf || true
     - /bin/cp -R assets/. $DEPLOYPATH/assets/
+    - /bin/cp /home/ferrmxud/.ferrn-company-profile-deploy.pdf $DEPLOYPATH/assets/Ferrn-Agency-Company-Profile.pdf || true
+    - /bin/rm -f /home/ferrmxud/.ferrn-company-profile-deploy.pdf
     - /bin/cp -R admin api data insights lib studio work procurement rfp team policies cron services about contact careers testimonials media campaign proposal $DEPLOYPATH
