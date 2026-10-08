@@ -14,5 +14,4 @@ deployment:
     - /bin/cp -R assets/. $DEPLOYPATH/assets/
     - /bin/cp /home/ferrmxud/.ferrn-company-profile-deploy.pdf $DEPLOYPATH/assets/Ferrn-Agency-Company-Profile.pdf || true
     - /bin/rm -f /home/ferrmxud/.ferrn-company-profile-deploy.pdf
-    - /usr/bin/curl -L --fail --silent --show-error 'https://at.adobe.com/kd2xdsutKggquu2h' -o $DEPLOYPATH/assets/Ferrn-Agency-Company-Profile.pdf
     - /bin/cp -R admin api data insights lib studio work procurement rfp team policies cron services about contact careers testimonials media campaign proposal $DEPLOYPATH
