@@ -260,3 +260,24 @@ td .badge:first-child, .list .badge:first-child { margin-left: 0; }
   .auth { grid-template-columns: 1fr; } .auth-art { display: none; }
   .stack-item { flex-direction: column; }
 }
+
+/* WhatsApp inbox */
+.wa-kpis { grid-template-columns: repeat(4, 1fr); }
+.wa-layout { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 16px; align-items: start; }
+.wa-list { max-height: calc(100vh - 330px); overflow: auto; }
+.wa-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 10px 4px; cursor: pointer; }
+.wa-row:hover, .wa-row.on { background: var(--panel2); }
+.wa-row .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(37,211,102,.15); color: #25d366; font-weight: 600; }
+.wa-row-main { display: grid; min-width: 0; } .wa-row-main b { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; font-weight: 600; }
+.wa-row-main small { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-thread { display: flex; flex-direction: column; min-height: 520px; }
+.wa-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; } .wa-meta .badge { margin-left: 0; }
+.wa-messages { flex: 1; display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow: auto; padding: 14px; border-radius: 12px; background: var(--panel2); }
+.wa-msg { max-width: 76%; padding: 8px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); align-self: flex-start; }
+.wa-msg.out { align-self: flex-end; background: rgba(37,211,102,.12); border-color: rgba(37,211,102,.3); }
+.wa-msg p { margin: 0 0 4px; white-space: pre-wrap; } .wa-msg small { color: var(--muted); font-size: 11px; }
+.wa-queue { margin-top: 10px; display: grid; gap: 4px; font-size: 13px; }
+.wa-compose { margin-top: 12px; display: grid; gap: 10px; }
+.wa-compose .row { display: flex; gap: 8px; align-items: flex-end; } .wa-compose .wrap { flex-wrap: wrap; } .wa-compose select { max-width: 280px; }
+.row.gap { display: flex; gap: 8px; align-items: center; }
+@media (max-width: 900px) { .wa-layout { grid-template-columns: 1fr; } .wa-kpis { grid-template-columns: 1fr 1fr; } }

@@ -38,3 +38,4 @@ npm run deploy           # build + wrangler deploy (normally done by Workers Bui
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how the pieces fit, with a diagram.
 - [docs/I18N.md](docs/I18N.md): how the 8 languages work and what still needs a native speaker.
 - [docs/CONTENT.md](docs/CONTENT.md): the content workflow for X, Instagram and TikTok.
+- [docs/WHATSAPP.md](docs/WHATSAPP.md): the WhatsApp bot and how to connect it.

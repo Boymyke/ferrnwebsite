@@ -96,6 +96,7 @@ export function ContactForm({ lang, type = 'contact', product }: { lang: Lang; t
           </select>
         </label>
         <label class="field field-wide">{t(lang, 'form.message')}<textarea name="message" rows={5} maxlength={4000}></textarea></label>
+        <label class="field-check field-wide"><input type="checkbox" name="wa_consent" /> <span>{t(lang, 'form.wa_consent')}</span></label>
       </div>
       <button class="btn btn-primary" type="submit">{t(lang, 'form.send')} ↗</button>
       <p class="form-status" role="status"></p>

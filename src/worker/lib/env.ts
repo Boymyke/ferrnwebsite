@@ -27,6 +27,12 @@ export type Bindings = {
   PAYSTACK_PUBLIC_KEY?: string;
   GOOGLE_MAPS_API_KEY?: string;
   BOOTSTRAP_SECRET?: string;
+  // WhatsApp Cloud API (Meta)
+  WHATSAPP_TOKEN?: string;
+  WHATSAPP_PHONE_NUMBER_ID?: string;
+  WHATSAPP_VERIFY_TOKEN?: string;
+  WHATSAPP_APP_SECRET?: string;
+  WHATSAPP_TEMPLATE_LANG?: string;
 };
 
 export type SessionUser = {

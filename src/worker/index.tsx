@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { whatsappWebhook } from './routes/whatsapp';
+import { processQueue } from './lib/wa-automations';
 import { secureHeaders } from 'hono/secure-headers';
 import type { AppEnv, Bindings } from './lib/env';
 import { loadUser } from './lib/auth';
@@ -28,6 +30,7 @@ app.use('*', async (c, next) => { c.set('lang', 'en'); await next(); });
 /* API */
 app.route('/api/auth', authApi);
 app.route('/api/studio', studioApi);
+app.route('/api/whatsapp', whatsappWebhook);
 app.route('/api', publicApi);
 
 /* Studio (installable PWA) */
@@ -100,6 +103,7 @@ export default {
   async scheduled(_event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     ctx.waitUntil((async () => {
       try { await syncEngine(env); } catch (e) { console.warn('engine sync failed', e); }
+      try { await processQueue(env); } catch (e) { console.warn('whatsapp queue failed', e); }
       await env.DB.prepare("DELETE FROM sessions WHERE expires_at < datetime('now')").run();
     })());
   },

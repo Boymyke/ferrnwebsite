@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { onMeetingBooked, onQuoteSent } from '../lib/wa-automations';
+import { TEMPLATES, inServiceWindow, sendTemplate, sendText, waConfigured } from '../lib/whatsapp';
 import type { AppEnv, SessionUser } from '../lib/env';
 import { all, clamp, first, getSetting, isEmail, newId, parseJson, randomToken, run, setSetting } from '../lib/db';
 import { requireUser, sha256 } from '../lib/auth';
@@ -169,6 +171,7 @@ studio.post('/r/:res', async (c): Promise<Response> => {
   await run(c.env.DB, `INSERT INTO ${res.table} (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`, ...cols.map((k) => data[k]));
   await audit(c, res.table, id, 'create', `${u.name} created ${res.label} “${String(data[res.title] ?? id).slice(0, 80)}”`, null, data);
   if (res.public) await bumpContentVersion(c.env);
+  if (key === 'meetings') c.executionCtx.waitUntil(onMeetingBooked(c.env, { id, lead_id: data.lead_id as string, starts_at: String(data.starts_at), location_url: data.location_url as string }).catch(() => null));
   return c.json({ ok: true, row: await first(c.env.DB, `SELECT * FROM ${res.table} WHERE id = ?`, id) });
 });
 
@@ -197,7 +200,10 @@ studio.patch('/r/:res/:id', async (c): Promise<Response> => {
     c.executionCtx.waitUntil(engineCall(c.env, 'dashAction', ['setStatus', { lead_id: id, status: data.status }]).catch(() => null));
   }
   if (res.public) await bumpContentVersion(c.env);
-  return c.json({ ok: true, row: await first(c.env.DB, `SELECT * FROM ${res.table} WHERE id = ?`, id) });
+  const after = await first<Record<string, any>>(c.env.DB, `SELECT * FROM ${res.table} WHERE id = ?`, id);
+  if (key === 'meetings' && after && ('starts_at' in data || 'lead_id' in data)) c.executionCtx.waitUntil(onMeetingBooked(c.env, after as any).catch(() => null));
+  if (key === 'quotes' && after && data.status === 'sent' && before.status !== 'sent') c.executionCtx.waitUntil(onQuoteSent(c.env, after as any).catch(() => null));
+  return c.json({ ok: true, row: after });
 });
 
 studio.delete('/r/:res/:id', async (c): Promise<Response> => {
@@ -456,6 +462,7 @@ studio.get('/settings', async (c): Promise<Response> => {
     engine: engineConfigured(e) ? 'Connected' : 'Not connected — set ENGINE_URL + ENGINE_KEY',
     maps: e.GOOGLE_MAPS_API_KEY ? 'Connected' : 'Add GOOGLE_MAPS_API_KEY',
     payments: e.PAYSTACK_SECRET_KEY ? 'Paystack live' : 'Paystack not connected (orders become invoice requests)',
+    whatsapp: waConfigured(e) ? `Connected (number ID ${e.WHATSAPP_PHONE_NUMBER_ID})` : 'Not connected — set WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID',
   } });
 });
 studio.put('/settings/:key', async (c): Promise<Response> => {
@@ -469,3 +476,62 @@ studio.put('/settings/:key', async (c): Promise<Response> => {
 });
 
 export default studio;
+
+/* ── WhatsApp inbox ── */
+studio.get('/wa/contacts', async (c): Promise<Response> => {
+  const rows = await all(c.env.DB, `SELECT c.*, l.company AS lead_company,
+      (SELECT body FROM wa_messages m WHERE m.wa_id = c.wa_id ORDER BY created_at DESC LIMIT 1) AS last_body,
+      (SELECT created_at FROM wa_messages m WHERE m.wa_id = c.wa_id ORDER BY created_at DESC LIMIT 1) AS last_at,
+      (SELECT COUNT(*) FROM wa_queue q WHERE q.wa_id = c.wa_id AND q.status = 'pending') AS queued
+    FROM wa_contacts c LEFT JOIN leads l ON l.id = c.lead_id
+    ORDER BY c.needs_human DESC, COALESCE(last_at, c.created_at) DESC LIMIT 300`);
+  const stats = await first(c.env.DB, `SELECT
+      (SELECT COUNT(*) FROM wa_messages WHERE direction = 'out' AND created_at >= datetime('now','-7 days')) AS sent_7d,
+      (SELECT COUNT(*) FROM wa_messages WHERE direction = 'in' AND created_at >= datetime('now','-7 days')) AS received_7d,
+      (SELECT COUNT(*) FROM wa_queue WHERE status = 'pending') AS queued,
+      (SELECT COUNT(*) FROM wa_contacts WHERE needs_human = 1) AS needs_human`);
+  return c.json({ ok: true, rows, stats, connected: waConfigured(c.env), templates: TEMPLATES });
+});
+studio.get('/wa/contacts/:id', async (c): Promise<Response> => {
+  const id = c.req.param('id');
+  const [contact, messages, queue] = await Promise.all([
+    first(c.env.DB, 'SELECT * FROM wa_contacts WHERE wa_id = ?', id),
+    all(c.env.DB, 'SELECT * FROM wa_messages WHERE wa_id = ? ORDER BY created_at ASC LIMIT 500', id),
+    all(c.env.DB, "SELECT * FROM wa_queue WHERE wa_id = ? ORDER BY send_after ASC", id),
+  ]);
+  if (!contact) return c.json({ ok: false, error: 'Not found' }, 404);
+  return c.json({ ok: true, contact, messages, queue, window_open: await inServiceWindow(c.env, id) });
+});
+studio.post('/wa/contacts/:id/send', async (c): Promise<Response> => {
+  const u = c.get('user')!; const id = c.req.param('id');
+  if (!can(u, 'sales')) return c.json({ ok: false, error: 'No access' }, 403);
+  const b = (await c.req.json().catch(() => ({}))) as { text?: string; template?: string; params?: string[] };
+  const contact = await first<{ opted_out_at: string | null }>(c.env.DB, 'SELECT opted_out_at FROM wa_contacts WHERE wa_id = ?', id);
+  if (!contact) return c.json({ ok: false, error: 'Not found' }, 404);
+  let r;
+  if (b.template) {
+    if (!TEMPLATES[b.template]) return c.json({ ok: false, error: 'Unknown template' }, 422);
+    if (contact.opted_out_at) return c.json({ ok: false, error: 'This person replied STOP. Only reply if they message you first.' }, 422);
+    r = await sendTemplate(c.env, id, b.template, (b.params ?? []).map(String), u.name);
+  } else {
+    const text = clamp(b.text, 4000);
+    if (!text) return c.json({ ok: false, error: 'Write a message first.' }, 422);
+    if (!(await inServiceWindow(c.env, id))) return c.json({ ok: false, error: 'More than 24 hours since they last messaged, so WhatsApp only allows an approved template. Pick one below.' }, 422);
+    r = await sendText(c.env, id, text, u.name);
+  }
+  if (!r.ok) return c.json({ ok: false, error: r.error }, 502);
+  await run(c.env.DB, "UPDATE wa_contacts SET needs_human = 0, last_outbound_at = datetime('now') WHERE wa_id = ?", id);
+  await audit(c, 'whatsapp', id, 'send', `${u.name} sent a WhatsApp ${b.template ? 'template' : 'message'} to +${id}`);
+  return c.json({ ok: true });
+});
+studio.patch('/wa/contacts/:id', async (c): Promise<Response> => {
+  const u = c.get('user')!; const id = c.req.param('id');
+  if (!can(u, 'sales')) return c.json({ ok: false, error: 'No access' }, 403);
+  const b = (await c.req.json().catch(() => ({}))) as { bot_paused?: boolean; needs_human?: boolean; lead_id?: string | null; cancel_queue?: boolean };
+  if (typeof b.bot_paused === 'boolean') await run(c.env.DB, 'UPDATE wa_contacts SET bot_paused = ? WHERE wa_id = ?', b.bot_paused ? 1 : 0, id);
+  if (typeof b.needs_human === 'boolean') await run(c.env.DB, 'UPDATE wa_contacts SET needs_human = ? WHERE wa_id = ?', b.needs_human ? 1 : 0, id);
+  if (b.lead_id !== undefined) await run(c.env.DB, 'UPDATE wa_contacts SET lead_id = ? WHERE wa_id = ?', b.lead_id || null, id);
+  if (b.cancel_queue) await run(c.env.DB, "UPDATE wa_queue SET status = 'cancelled' WHERE wa_id = ? AND status = 'pending'", id);
+  await audit(c, 'whatsapp', id, 'update', `${u.name} updated WhatsApp chat +${id}`, null, b);
+  return c.json({ ok: true });
+});
