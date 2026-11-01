@@ -79,6 +79,11 @@ app.route('/', siteRoutes('en'));
 app.notFound(async (c) => {
   const asset = await c.env.ASSETS.fetch(c.req.raw);
   if (asset.status !== 404) return asset;
+  // Old PHP URLs used folder-style paths (/work/, /services/): send them to the clean URL.
+  if (c.req.method === 'GET' && c.req.path.length > 1 && c.req.path.endsWith('/') && !c.req.path.startsWith('/api/')) {
+    const u = new URL(c.req.url); u.pathname = u.pathname.replace(/\/+$/, '');
+    return c.redirect(u.pathname + u.search, 301);
+  }
   const seg = c.req.path.split('/')[1];
   const lang = (LANGS.find((l) => l.code === seg)?.code ?? 'en') as any;
   return c.html(<NotFound lang={lang} />, 404);

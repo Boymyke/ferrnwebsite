@@ -105,6 +105,11 @@ export function siteRoutes(lang: Lang) {
   // Legacy URLs from the PHP site.
   app.get('/testimonials', (c) => c.redirect(lang === 'en' ? '/#testimonials' : `/${lang}/#testimonials`, 301));
   app.get('/admin', (c) => c.redirect('/studio', 302));
+  const base = lang === 'en' ? '' : `/${lang}`;
+  for (const [from, to] of [['/careers', '/about'], ['/procurement', '/contact'], ['/rfp', '/contact'], ['/proposal', '/contact'], ['/index.php', '/']] as const) {
+    app.get(from, (c) => c.redirect(base + to, 301));
+  }
+  app.get('/campaign/*', (c) => c.redirect(base + '/', 302));
 
   return app;
 }
