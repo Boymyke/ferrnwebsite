@@ -280,8 +280,102 @@ function chat() {
   });
 }
 
+/* ── first-party analytics: no cookies, no IPs; honours Do Not Track and GPC ── */
+function track() {
+  const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+  const path = (location.pathname.replace(/\/+$/, '') || '/').slice(0, 200);
+  if (/^\/(?:studio|api)(?:\/|$)|^\/(?:q|p|i|demos)\//.test(path + '/') || /[?&]__noTrack=1(?:&|$)/.test(location.search)) return;
+  if (nav.doNotTrack === '1' || (window as any).doNotTrack === '1' || nav.globalPrivacyControl === true) return;
+  const rid = () => { const a = new Uint8Array(15); crypto.getRandomValues(a); return Array.from(a, (b) => (b % 36).toString(36)).join(''); };
+  // Session: per tab, ends after 30 min of inactivity. Visitor: anonymous, long-lived.
+  let sid = '', vid = '';
+  try {
+    const [s, at] = (sessionStorage.getItem('ferrn-a-s') || '').split('.');
+    sid = s && Date.now() - Number(at) < 30 * 60_000 ? s : rid();
+    vid = localStorage.getItem('ferrn-a-v') || rid();
+    localStorage.setItem('ferrn-a-v', vid);
+  } catch { sid = sid || rid(); vid = vid || sid; }
+  const touch = () => { try { sessionStorage.setItem('ferrn-a-s', `${sid}.${Date.now()}`); } catch {} };
+  const bucket = () => (innerWidth < 640 ? 'mobile' : innerWidth < 1024 ? 'tablet' : 'desktop');
+  const ua = navigator.userAgent;
+  const deviceType = /iPad|Tablet|Silk|Kindle/.test(ua) || (/Android/.test(ua) && !/Mobile/.test(ua)) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
+    ? 'tablet' : /Mobi|iPhone|iPod|Android/.test(ua) ? 'mobile' : 'desktop';
+
+  type Ev = Record<string, unknown> & { at: number };
+  const queue: Ev[] = [];
+  let timer = 0;
+  const flush = () => {
+    clearTimeout(timer); timer = 0;
+    while (queue.length) {
+      const t = Date.now();
+      const body = JSON.stringify({ s: sid, v: vid, e: queue.splice(0, 40).map(({ at, ...e }) => ({ ...e, a: t - at })) });
+      let sent = false;
+      try { sent = !!navigator.sendBeacon?.('/api/a/collect', new Blob([body], { type: 'text/plain' })); } catch {}
+      if (!sent) fetch('/api/a/collect', { method: 'POST', body, keepalive: true, headers: { 'content-type': 'text/plain' } }).catch(() => {});
+    }
+    touch();
+  };
+  const push = (e: Record<string, unknown>, now = false) => {
+    queue.push({ ...e, p: path, d: bucket(), at: Date.now() });
+    if (now || queue.length >= 20) flush();
+    else if (!timer) timer = window.setTimeout(flush, 5000);
+  };
+
+  const pageview = () => {
+    let r = '';
+    try { const h = document.referrer ? new URL(document.referrer).hostname : ''; r = h && h !== location.hostname ? h : ''; } catch {}
+    const q = new URLSearchParams(location.search);
+    const u: Record<string, string> = {};
+    for (const k of ['source', 'medium', 'campaign']) { const v = q.get('utm_' + k); if (v) u[k] = v.slice(0, 120); }
+    push({ t: 'pv', r, u, l: navigator.language, w: innerWidth, h: innerHeight, dt: deviceType }, true);
+  };
+  pageview();
+  addEventListener('pageshow', (e) => { if ((e as PageTransitionEvent).persisted) { maxDepth = 0; sentDepth = -1; pageview(); } });
+
+  // Clicks: position as a fraction of the whole document, plus a short label for the element.
+  const label = (el: Element) => {
+    const hit = el.closest('a,button,[role=button],summary,label,input,select,textarea,[data-track]') || el;
+    const tag = hit.tagName.toLowerCase();
+    let sel = tag + (hit.id ? '#' + hit.id : typeof (hit as HTMLElement).className === 'string' && (hit as HTMLElement).className.trim() ? '.' + (hit as HTMLElement).className.trim().split(/\s+/)[0] : '');
+    if (/^(input|select|textarea)$/.test(tag)) sel += (hit as HTMLInputElement).name ? `[name=${(hit as HTMLInputElement).name}]` : '';
+    else if (hit !== el || /^(a|button|summary|label)$/.test(tag)) {
+      const text = ((hit as HTMLElement).dataset?.track || (hit as HTMLElement).innerText || hit.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
+      if (text) sel = `${tag} "${text.slice(0, 40)}"`;
+    }
+    return sel.slice(0, 60);
+  };
+  document.addEventListener('click', (e) => {
+    // Keyboard-activated clicks have no position; clicks on the intro overlay say nothing about the page.
+    if (!e.isTrusted || e.detail === 0 || html.classList.contains('play-intro')) return;
+    const doc = document.documentElement;
+    const w = Math.max(doc.scrollWidth, innerWidth), h = Math.max(doc.scrollHeight, innerHeight);
+    push({ t: 'c', x: +(e.pageX / w).toFixed(4), y: +(e.pageY / h).toFixed(4), s: e.target instanceof Element ? label(e.target) : '' });
+  }, { capture: true, passive: true });
+
+  // Scroll depth: the deepest point seen, sent when the page is hidden or left.
+  let maxDepth = 0, sentDepth = -1, ticking = false;
+  const measure = () => {
+    ticking = false;
+    const h = document.documentElement.scrollHeight;
+    maxDepth = Math.max(maxDepth, Math.min(100, Math.round(((scrollY + innerHeight) / Math.max(1, h)) * 100)));
+  };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(measure); } }, { passive: true });
+  setTimeout(measure, 800);
+  const leave = () => {
+    measure();
+    if (maxDepth > sentDepth) { sentDepth = maxDepth; push({ t: 's', m: maxDepth }); }
+    flush();
+  };
+  addEventListener('pagehide', leave);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') leave(); });
+
+  // Heartbeat while the tab is visible, so Live shows who is still reading.
+  setInterval(() => { if (document.visibilityState === 'visible') push({ t: 'hb' }, true); }, 20_000);
+}
+
 /* ── boot ── */
 html.classList.remove('no-js');
+try { track(); } catch {}
 chrome(); forms(); chat();
 const writeOns = $$<HTMLElement>('[data-writeon]');
 Promise.all(writeOns.map(prepareWriteOn)).then(() => {

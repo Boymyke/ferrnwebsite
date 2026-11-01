@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Activity } from 'lucide-react';
 import { api, can, type User } from './api';
 import { Link, RouterCtx, ToastHost, UserCtx, useRoute, useUser } from './ui';
 import { AcceptInvite, Login, Setup } from './pages/auth';
@@ -13,9 +14,10 @@ import { Content } from './pages/content';
 import { CarouselStudio } from './pages/carousel';
 import { WhatsApp } from './pages/whatsapp';
 import { Settings, TeamAccess } from './pages/team';
+import { Analytics } from './pages/analytics';
 
-const NAV: { group: string; items: [string, string, string, User['role']?][] }[] = [
-  { group: 'Main', items: [['/', 'Dashboard', '▦'], ['/leads', 'Leads', '◎'], ['/prospect', 'Find leads', '⌕'], ['/outreach', 'Outreach', '✉'], ['/whatsapp', 'WhatsApp', '✆'], ['/meetings', 'Meetings', '◷'], ['/quotes', 'Quotes', '₦']] },
+const NAV: { group: string; items: [string, string, React.ReactNode, User['role']?][] }[] = [
+  { group: 'Main', items: [['/', 'Dashboard', '▦'], ['/analytics', 'Analytics', <Activity size={17} strokeWidth={1.8} />], ['/leads', 'Leads', '◎'], ['/prospect', 'Find leads', '⌕'], ['/outreach', 'Outreach', '✉'], ['/whatsapp', 'WhatsApp', '✆'], ['/meetings', 'Meetings', '◷'], ['/quotes', 'Quotes', '₦']] },
   { group: 'Marketing', items: [['/content', 'Content', '✎'], ['/ads', 'Ads', '◆']] },
   { group: 'Marketplace', items: [['/marketplace/products', 'Products', '▤'], ['/marketplace/orders', 'Orders', '◫'], ['/marketplace/requests', 'Enquiries', '✦']] },
   { group: 'Website', items: [['/website/team', 'Team page', '☺'], ['/website/testimonials', 'Testimonials', '❝'], ['/website/posts', 'Insights', '¶'], ['/website/knowledge', 'Chatbot knowledge', '◐']] },
@@ -26,6 +28,7 @@ function Router() {
   const { path } = useRoute();
   const p = path.split('?')[0];
   if (p === '/') return <Dashboard />;
+  if (p.startsWith('/analytics')) return <Analytics />;
   if (p.startsWith('/leads')) return <Leads />;
   if (p.startsWith('/prospect')) return <Prospect />;
   if (p.startsWith('/outreach')) return <Outreach />;
