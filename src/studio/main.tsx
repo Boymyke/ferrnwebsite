@@ -55,7 +55,7 @@ function Shell({ onSignOut }: { onSignOut: () => void }) {
     const k = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); document.getElementById('global-search')?.focus(); } };
     addEventListener('keydown', k); return () => removeEventListener('keydown', k);
   }, []);
-  const crumb = NAV.flatMap((g) => g.items).find(([to]) => to !== '/' && path.startsWith(to))?.[1] ?? 'Dashboard';
+  const crumb = NAV.flatMap((g) => g.items).find(([to]) => to !== '/' && path.startsWith(to))?.[1] ?? (path.startsWith('/carousel') ? 'Carousel slides' : 'Dashboard');
   return (
     <div className={`app ${menu ? 'menu-open' : ''}`}>
       <aside className="side">
