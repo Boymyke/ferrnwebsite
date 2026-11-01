@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>BrightPath Academy · Admissions Portal (Ferrn demo)</title>
+<meta name="description" content="Interactive demo: parents apply online, pay the form fee and book an entrance exam; the admissions office tracks every applicant from application to enrolment. Fictional school.">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<style>
+:root{
+  --blue:#1e3a8a;--blue-700:#172f70;--blue-600:#2747a8;--blue-50:#eef2fc;--blue-100:#dbe4f8;
+  --yel:#f5b30b;--yel-600:#d99a00;--yel-50:#fff7df;--yel-ink:#6b4a00;
+  --ink:#111a33;--ink-2:#36405a;--muted:#626d86;--line:#e4e8f1;--line-2:#d3d9e6;--bg:#f5f7fb;--card:#fff;
+  --green:#15803d;--green-bg:#e8f7ee;--red:#b91c1c;--red-bg:#fdecec;--violet:#6d28d9;--violet-bg:#f1ebff;
+  --slate:#475569;--slate-bg:#eef1f6;
+  --sh:0 1px 2px rgba(17,26,51,.05),0 8px 24px -10px rgba(17,26,51,.14);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.5;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #5b8def;outline-offset:2px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+h1,h2,h3{margin:0;letter-spacing:-.015em}
+.muted{color:var(--muted)}
+.fade{animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.top{background:var(--blue);color:#fff}
+.top .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-height:68px;padding-top:10px;padding-bottom:10px}
+.brand{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
+.logo{width:42px;height:42px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none}
+.logo svg{width:26px;height:26px}
+.brand b{display:block;font-size:16px;font-weight:600;white-space:nowrap}
+.brand small{display:block;font-size:12px;color:#c7d3f3}
+.seg{display:inline-flex;background:rgba(255,255,255,.12);border-radius:12px;padding:4px;gap:2px}
+.seg button{border:0;background:transparent;color:#dfe6fb;padding:8px 14px;border-radius:9px;font-weight:500;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;transition:background .2s,color .2s}
+.seg button:hover{color:#fff}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--blue)}
+.badge{min-width:19px;height:19px;padding:0 6px;border-radius:99px;background:var(--yel);color:#3b2a00;font-size:11px;font-weight:700;display:inline-grid;place-items:center}
+.badge[hidden]{display:none}
+.linkbtn{border:0;background:none;color:#fff;font-weight:500;font-size:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 4px;opacity:.9}
+.linkbtn:hover{opacity:1;text-decoration:underline}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh)}
+.btn{border:1px solid transparent;border-radius:10px;padding:10px 16px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .1s,box-shadow .15s;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-700)}
+.btn-yel{background:var(--yel);color:#2b1f00}
+.btn-yel:hover{background:#e9a800}
+.btn-ghost{background:#fff;border-color:var(--line-2);color:var(--ink-2)}
+.btn-ghost:hover{background:var(--blue-50)}
+.btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-wa{background:#128c4a;color:#fff}
+.btn-wa:hover{background:#0f7a40}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:600;color:#fff;flex:none}
+main{padding:24px 0 80px}
+.view[hidden]{display:none}
+
+/* parent */
+.p-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;align-items:start}
+.intro{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.intro h1{font-size:25px;font-weight:600}
+.intro p{margin:4px 0 0;color:var(--muted);max-width:600px}
+.session{display:inline-flex;align-items:center;gap:7px;background:var(--yel-50);color:var(--yel-ink);border:1px solid #f6e0a0;border-radius:99px;padding:5px 12px;font-size:12.5px;font-weight:500}
+.app{overflow:hidden;scroll-margin-top:52px}
+#doneBox{scroll-margin-top:52px}
+.prog{padding:18px 22px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fbfcff,#fff)}
+.prog-top{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:9px}
+.prog-top b{color:var(--ink);font-weight:600}
+.bar{height:8px;border-radius:99px;background:var(--blue-50);overflow:hidden}
+.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),#3f63c9);border-radius:99px;transition:width .4s ease}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:12px;list-style:none;padding:0;margin-bottom:0}
+.steps li{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;min-width:0}
+.steps li span{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;font-size:10.5px;font-weight:600;flex:none;background:#fff}
+.steps li em{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.steps li.on{color:var(--blue);font-weight:600}
+.steps li.on span{border-color:var(--blue);color:var(--blue)}
+.steps li.ok span{background:var(--blue);border-color:var(--blue);color:#fff}
+.pane{padding:22px}
+.pane[hidden]{display:none}
+.pane h2{font-size:18px;font-weight:600}
+.pane > p.lead{margin:4px 0 18px;color:var(--muted);font-size:13px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label,.flabel{display:block;font-weight:500;font-size:13px;margin-bottom:6px}
+.field input,.field select{width:100%;border:1.5px solid var(--line-2);border-radius:10px;padding:10px 12px;background:#fff;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue-600);box-shadow:0 0 0 3px rgba(39,71,168,.15)}
+.field input[aria-invalid="true"],.field select[aria-invalid="true"]{border-color:#e48c8c}
+.field .err{font-size:12px;color:var(--red);margin-top:4px}
+.field .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+.full{grid-column:1/-1}
+.radios{display:flex;gap:8px}
+.radios button{flex:1;border:1.5px solid var(--line-2);background:#fff;border-radius:10px;padding:9px 10px;font-weight:500}
+.radios button[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-50);color:var(--blue)}
+.suggest{display:flex;gap:10px;align-items:center;background:var(--yel-50);border:1px solid #f6e0a0;color:var(--yel-ink);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+.cls-group{margin-bottom:16px}
+.cls-group h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:8px}
+.cls{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.cls button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;text-align:left;transition:all .15s;position:relative}
+.cls button:hover:not(:disabled){border-color:#9db0e4}
+.cls button b{display:block;font-weight:600;font-size:13.5px}
+.cls button small{display:block;font-size:11.5px;color:var(--muted)}
+.cls button small.low{color:#b45309}
+.cls button[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-50);box-shadow:0 0 0 3px rgba(30,58,138,.1)}
+.cls button:disabled{background:#f6f7fa;color:#9aa3b5;cursor:not-allowed}
+.cls button .star{position:absolute;top:8px;right:8px;font-size:10px;background:var(--yel);color:#3b2a00;border-radius:6px;padding:0 5px;font-weight:600}
+.note{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:flex-start}
+.docs{display:grid;gap:10px}
+.doc{display:flex;align-items:center;gap:14px;border:1.5px dashed var(--line-2);border-radius:14px;padding:14px 16px;background:#fff;transition:all .2s;width:100%;text-align:left}
+.doc:hover:not(:disabled){border-color:#9db0e4;background:#fbfcff}
+.doc .d-ic{width:42px;height:42px;border-radius:11px;background:var(--blue-50);color:var(--blue);display:grid;place-items:center;flex:none}
+.doc .d-tx{flex:1;min-width:0}
+.doc b{display:block;font-weight:600;font-size:13.5px}
+.doc small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc .d-st{font-size:12px;font-weight:500;color:var(--blue);white-space:nowrap}
+.doc.up{border-style:solid;border-color:#bfe5cd;background:#f6fcf8}
+.doc.up .d-ic{background:var(--green-bg);color:var(--green)}
+.doc.up .d-st{color:var(--green)}
+.doc.na{opacity:.6}
+.doc.busy .d-st::before{content:"";display:inline-block;width:12px;height:12px;border:2px solid var(--blue-100);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fee{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:18px;background:linear-gradient(135deg,#fbfcff,#f5f8ff)}
+.fee b.amt{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.fee ul{margin:8px 0 0;padding-left:18px;color:var(--ink-2);font-size:13px}
+.paid{display:flex;gap:12px;align-items:center;background:var(--green-bg);border:1px solid #bfe5cd;border-radius:14px;padding:14px 16px;margin-top:14px;color:#14532d}
+.paid .ok{width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;flex:none}
+.sats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:18px}
+.sat{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px;text-align:left;transition:all .15s}
+.sat b{display:block;font-weight:600}
+.sat small{display:block;font-size:11.5px;color:var(--muted)}
+.sat[aria-pressed="true"]{border-color:var(--blue);background:var(--blue);color:#fff}
+.sat[aria-pressed="true"] small{color:#d0dbf7}
+.toggle{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff}
+.toggle input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--blue)}
+.toggle b{font-weight:600;display:block}
+.toggle small{color:var(--muted);font-size:12.5px}
+.tours{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tours button{border:1.5px solid var(--line-2);background:#fff;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:500}
+.tours button[aria-pressed="true"]{background:var(--yel);border-color:var(--yel);color:#2b1f00}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid var(--line);background:#fbfcfe}
+.foot .err{color:var(--red);font-size:12.5px;flex:1;text-align:right}
+.review{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin:16px 0 0;padding:14px 16px;background:var(--bg);border-radius:12px;font-size:13px}
+.review dt{color:var(--muted);font-size:12px}
+.review dd{margin:0;font-weight:500}
+/* done */
+.done{padding:28px}
+.done-top{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.done-ic{width:56px;height:56px;border-radius:16px;background:var(--yel);display:grid;place-items:center;flex:none;color:#2b1f00}
+.done-ic svg{width:28px;height:28px;stroke-width:2.4}
+.done h2{font-size:22px;font-weight:600}
+.appno{display:inline-flex;flex-direction:column;background:var(--blue);color:#fff;border-radius:14px;padding:12px 18px;margin:18px 0}
+.appno small{font-size:11.5px;color:#c7d3f3}
+.appno b{font-size:22px;letter-spacing:.05em;font-weight:600}
+.tl{list-style:none;margin:6px 0 22px;padding:0;position:relative}
+.tl li{position:relative;padding:0 0 16px 34px;font-size:13px;color:var(--ink-2)}
+.tl li::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::before{display:none}
+.tl li span{position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--blue-50);color:var(--blue);display:grid;place-items:center;font-size:11px;font-weight:600}
+.tl li.ok span{background:var(--green);color:#fff}
+.tl b{color:var(--ink);font-weight:600;display:block}
+/* side */
+.side{display:grid;gap:18px}
+.ph{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}
+.ph h2{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.post{padding:14px 18px;border-bottom:1px solid var(--line)}
+.post:last-child{border-bottom:0}
+.post .tag{display:inline-block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:6px;margin-bottom:6px}
+.post b{display:block;font-weight:600;font-size:13.5px;line-height:1.4}
+.post p{margin:4px 0 6px;font-size:12.5px;color:var(--ink-2)}
+.post small{font-size:11.5px;color:var(--muted)}
+.post.pin{background:linear-gradient(90deg,var(--yel-50),#fff)}
+.kd{list-style:none;margin:0;padding:8px 18px 14px}
+.kd li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.kd li:last-child{border-bottom:0}
+.kd li span{color:var(--muted)}
+.kd li b{font-weight:500;text-align:right}
+.help{padding:16px 18px;display:flex;gap:12px;align-items:center;background:var(--blue);color:#fff;border:0}
+.help .hic{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:none}
+.help small{display:block;color:#c7d3f3;font-size:12px}
+
+/* office */
+.o-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.o-head h1{font-size:24px;font-weight:600}
+.o-head p{margin:2px 0 0;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{padding:16px 18px}
+.kpi .k-h{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12.5px;font-weight:500}
+.kpi .k-ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center}
+.kpi b{display:block;font-size:27px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-top:4px}
+.kpi small{font-size:12px;color:var(--muted)}
+.kpi .meter{height:6px;background:var(--blue-50);border-radius:9px;margin-top:8px;overflow:hidden}
+.kpi .meter span{display:block;height:100%;background:var(--yel);border-radius:9px;transition:width .4s}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.fchips{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{border:1px solid var(--line-2);background:#fff;border-radius:99px;padding:6px 13px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.fchip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.search{margin-left:auto;position:relative}
+.search input{border:1.5px solid var(--line-2);border-radius:10px;padding:8px 12px 8px 34px;width:230px;background:#fff}
+.search input:focus{outline:none;border-color:var(--blue-600)}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);width:16px;height:16px}
+.board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:12px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x mandatory}
+.col{background:#eceff6;border-radius:14px;padding:10px;min-height:300px;min-width:0;scroll-snap-align:start;transition:background .15s,box-shadow .15s}
+.col.over{background:#e1e8fa;box-shadow:inset 0 0 0 2px #9db0e4}
+.col-h{display:flex;align-items:center;gap:8px;padding:4px 4px 10px;font-weight:600;font-size:13px}
+.col-h .dot{width:9px;height:9px;border-radius:50%}
+.col-h .cnt{margin-left:auto;background:#fff;color:var(--ink-2);font-size:11.5px;padding:1px 8px;border-radius:99px;font-weight:600}
+.cards{display:grid;gap:9px;grid-template-columns:minmax(0,1fr)}
+.ac{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 1px 2px rgba(17,26,51,.05);transition:box-shadow .15s,transform .15s;cursor:grab}
+.ac:hover{box-shadow:0 6px 16px -8px rgba(17,26,51,.25)}
+.ac.dragging{opacity:.5}
+.ac.flash{animation:flash 1.8s ease}
+@keyframes flash{0%,45%{background:#fff6d8;border-color:#f5d36b}100%{background:#fff}}
+.ac-top{display:flex;gap:9px;align-items:center}
+.ac-top .av{width:32px;height:32px;font-size:11.5px}
+.ac-open{border:0;background:none;padding:0;text-align:left;min-width:0;flex:1}
+.ac-open b{display:block;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-open:hover b{color:var(--blue);text-decoration:underline}
+.ac-open small{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-meta{display:flex;flex-wrap:wrap;gap:5px;margin:9px 0}
+.pill{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--slate-bg);color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.pill.cls{background:var(--blue-50);color:var(--blue);font-weight:600}
+.pill.ok{background:var(--green-bg);color:var(--green)}
+.pill.warn{background:var(--yel-50);color:var(--yel-ink)}
+.pill.bad{background:var(--red-bg);color:var(--red)}
+.pill.new{background:var(--yel);color:#2b1f00;font-weight:700}
+.ac .btn{width:100%}
+.ac .end{font-size:12px;color:var(--green);display:flex;align-items:center;gap:6px}
+.col-empty{border:1.5px dashed #cfd6e6;border-radius:12px;padding:16px;text-align:center;color:var(--muted);font-size:12px}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(12,20,45,.45);z-index:10000;animation:fade .2s}
+.scrim[hidden]{display:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;z-index:10001;display:flex;flex-direction:column;box-shadow:-20px 0 40px -20px rgba(0,0,0,.3);transform:translateX(100%);transition:transform .28s ease;visibility:hidden}
+.drawer.open{transform:none;visibility:visible}
+.dr-h{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.dr-h .av{width:46px;height:46px;font-size:15px}
+.dr-h h2{font-size:17px;font-weight:600}
+.dr-h small{color:var(--muted);font-size:12.5px;display:block}
+.dr-h .x{margin-left:auto;border:0;background:var(--slate-bg);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none}
+.dr-b{flex:1;overflow:auto;padding:6px 20px 20px}
+.sec{padding:14px 0;border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:500;word-break:break-word}
+.chk{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px}
+.chk .c{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none}
+.chk .c.y{background:var(--green-bg);color:var(--green)}
+.chk .c.n{background:var(--red-bg);color:var(--red)}
+.chk .c svg{width:13px;height:13px;stroke-width:3}
+.chk span.t{flex:1}
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.score div{background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.score small{display:block;font-size:11px;color:var(--muted)}
+.score b{font-size:20px;font-weight:600}
+.score .avg{background:var(--blue);color:#fff}
+.score .avg small{color:#c7d3f3}
+.log{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.log li{font-size:12.5px;color:var(--ink-2);display:flex;gap:8px}
+.log li time{color:var(--muted);flex:none;width:50px;font-size:11.5px;padding-top:1px}
+.dr-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;background:#fbfcfe}
+.dr-f .btn{flex:1}
+.wa{border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:10px}
+.wa-h{background:#075e54;color:#fff;padding:9px 12px;font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:8px}
+.wa-b{padding:12px;background:#ece5dd;background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px}
+.bub{background:#dcf8c6;border-radius:10px 10px 2px 10px;padding:8px 10px;font-size:13px;line-height:1.45;margin-left:auto;max-width:92%;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.bub time{display:block;text-align:right;font-size:10.5px;color:#6b7b6b}
+.wa-a{display:flex;gap:8px;padding:10px 12px;background:#fff;justify-content:flex-end}
+/* modal */
+.mscrim{position:fixed;inset:0;background:rgba(12,20,45,.5);display:grid;place-items:center;padding:16px;z-index:10010;animation:fade .2s}
+.mscrim[hidden]{display:none}
+.modal{width:min(420px,100%);max-height:92vh;overflow:auto}
+.modal .m-b{padding:22px}
+.modal h2{font-size:17px;font-weight:600}
+.modal p.sub{margin:4px 0 16px;color:var(--muted);font-size:13px}
+.modal .row-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.ps-h{background:#0d1b2a;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0}
+.ps-h b{font-weight:600}
+.ps-h small{display:block;font-size:11.5px;color:#9fb1c7}
+.ps-tabs{display:flex;gap:6px;margin-bottom:14px}
+.ps-tabs span{flex:1;text-align:center;font-size:12.5px;padding:7px;border-radius:8px;background:var(--slate-bg);color:var(--ink-2)}
+.ps-tabs span.on{background:#e6f6fb;color:#0b6e8f;font-weight:600;box-shadow:inset 0 0 0 1.5px #3bb3d9}
+.fake{border:1.5px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--ink-2);background:#fafbfd;letter-spacing:.04em}
+.ps-pay{width:100%;margin-top:16px;padding:13px;background:#0ba360;color:#fff;border:0;border-radius:10px;font-weight:600}
+.ps-pay:hover{background:#08914f}
+.ps-note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px;display:flex;justify-content:center;gap:6px;align-items:center}
+.spin{width:44px;height:44px;border:4px solid #d9f1e6;border-top-color:#0ba360;border-radius:50%;animation:spin .8s linear infinite;margin:24px auto 12px}
+.center{text-align:center}
+.toasts{position:fixed;left:16px;bottom:16px;display:grid;gap:8px;z-index:10020;max-width:min(380px,calc(100% - 32px))}
+.toast{background:var(--ink);color:#fff;padding:11px 14px;border-radius:12px;font-size:13px;display:flex;gap:9px;align-items:flex-start;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);animation:fade .25s}
+.toast svg{color:var(--yel);margin-top:1px}
+
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.board{grid-template-columns:repeat(5,minmax(230px,260px))}}
+@media (max-width:980px){.p-grid{grid-template-columns:minmax(0,1fr)}.steps li em{display:none}.steps{grid-template-columns:repeat(6,auto);justify-content:space-between}}
+@media (max-width:620px){
+  .wrap{padding:0 14px}
+  .seg{width:100%;order:3}
+  .seg button{flex:1;justify-content:center;padding:9px 6px}
+  .seg button svg{display:none}
+  .intro h1,.o-head h1{font-size:21px}
+  .pane{padding:18px 16px}.prog{padding:16px}
+  .fields,.review{grid-template-columns:1fr}
+  .foot{padding:14px 16px}
+  .fee{grid-template-columns:1fr}
+  .kpi{padding:13px 14px}.kpi b{font-size:22px}
+  .search{margin-left:0;width:100%}.search input{width:100%}
+  .board{grid-template-columns:repeat(5,82%)}
+  .done{padding:20px}
+  .kv{grid-template-columns:100px 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="concept" style="position:sticky;top:0;z-index:9999;background:#0b0b0b;color:#fff;font:500 13px/1.4 Poppins,system-ui,sans-serif;padding:9px 14px;text-align:center">Ferrn template demo · fictional business · <a style="color:#ff4100;font-weight:600" href="/marketplace/school-admissions-portal" target="_top">Get this app →</a></div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3 5 7v8c0 7 4.8 11.6 11 14 6.2-2.4 11-7 11-14V7z" fill="#1e3a8a"/><path d="m16 9 1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#f5b30b"/></svg></div>
+      <div><b>BrightPath Academy</b><small>Lekki · Nursery to Secondary</small></div>
+    </div>
+    <div class="seg" role="group" aria-label="Switch view">
+      <button type="button" id="tabParent" aria-pressed="true" data-act="view" data-v="parent"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9.5" r="2.5"/><path d="M16 14.2a5 5 0 0 1 6 4.8"/></svg>Parent view</button>
+      <button type="button" id="tabOffice" aria-pressed="false" data-act="view" data-v="office"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Admissions office <span class="badge" id="newBadge" hidden>0</span></button>
+    </div>
+    <button type="button" class="linkbtn" data-act="reset"><svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reset demo</button>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+  <!-- PARENT -->
+  <section class="view" id="viewParent" aria-label="Parent application">
+    <div class="intro">
+      <div><h1>Apply to BrightPath Academy</h1><p>Takes about 8 minutes. You can pay the form fee online and pick an entrance assessment date in the same sitting.</p></div>
+      <span class="session"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>2027/28 session · September entry</span>
+    </div>
+    <div class="p-grid">
+      <div id="appWrap">
+        <div class="card app" id="appCard">
+          <div class="prog">
+            <div class="prog-top"><span>Step <b id="stepNo">1</b> of 6 · <span id="stepName">Child details</span></span><span id="stepPct">0% complete</span></div>
+            <div class="bar" role="progressbar" aria-label="Application progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><span style="width:0%"></span></div>
+            <ol class="steps" id="stepList"></ol>
+          </div>
+
+          <form id="appForm" novalidate>
+          <div class="pane" data-pane="0">
+            <h2>About your child</h2><p class="lead">As written on the birth certificate.</p>
+            <div class="fields">
+              <div class="field"><label for="cFirst">First name</label><input id="cFirst" autocomplete="off" placeholder="e.g. Tobiloba"><div class="err" id="cFirstErr"></div></div>
+              <div class="field"><label for="cLast">Surname</label><input id="cLast" autocomplete="off" placeholder="e.g. Adebayo"><div class="err" id="cLastErr"></div></div>
+              <div class="field"><label for="cDob">Date of birth</label><input id="cDob" type="date"><div class="err" id="cDobErr"></div></div>
+              <div class="field"><span class="flabel" id="gLbl">Gender</span><div class="radios" role="group" aria-labelledby="gLbl" id="gender"><button type="button" data-act="gender" data-id="Female" aria-pressed="false">Girl</button><button type="button" data-act="gender" data-id="Male" aria-pressed="false">Boy</button></div><div class="err" id="genderErr"></div></div>
+              <div class="field full"><label for="cSchool">Current school <span class="muted" style="font-weight:400">(optional)</span></label><input id="cSchool" placeholder="e.g. Little Acorns Nursery, Ajah"></div>
+            </div>
+          </div>
+
+          <div class="pane" data-pane="1" hidden>
+            <h2>Which class are you applying for?</h2><p class="lead">Seats shown are for September 2027. JSS3 and SS3 are exam classes, so we don't take new students into them.</p>
+            <div id="suggest"></div>
+            <div id="classPick"></div>
+            <div class="err" id="classErr" style="color:var(--red);font-size:12.5px"></div>
+          </div>
+
+          <div class="pane" data-pane="2" hidden>
+            <h2>Parent or guardian</h2><p class="lead">We'll send updates to this WhatsApp number and email.</p>
+            <div class="fields">
+              <div class="field"><label for="pTitle">Title</label><select id="pTitle"><option value="">Select</option><option>Mrs.</option><option>Mr.</option><option>Ms.</option><option>Dr.</option></select><div class="err" id="pTitleErr"></div></div>
+              <div class="field"><label for="pRel">Relationship to child</label><select id="pRel"><option>Mother</option><option>Father</option><option>Guardian</option></select></div>
+              <div class="field full"><label for="pName">Full name</label><input id="pName" autocomplete="name" placeholder="e.g. Funke Adebayo"><div class="err" id="pNameErr"></div></div>
+              <div class="field"><label for="pPhone">WhatsApp number</label><input id="pPhone" inputmode="tel" autocomplete="tel" placeholder="0803 000 0000"><div class="err" id="pPhoneErr"></div></div>
+              <div class="field"><label for="pEmail">Email</label><input id="pEmail" type="email" autocomplete="email" placeholder="you@example.com"><div class="err" id="pEmailErr"></div></div>
+              <div class="field full"><label for="pArea">Where do you live?</label><select id="pArea"><option>Lekki Phase 1</option><option>Chevron / Ikota</option><option>Ajah</option><option>Sangotedo</option><option>Victoria Island</option><option>Ikoyi</option><option>Other</option></select><div class="hint">Helps us plan school bus routes. We run buses from Ajah, Chevron and Lekki Phase 1.</div></div>
+            </div>
+          </div>
+
+          <div class="pane" data-pane="3" hidden>
+            <h2>Upload documents</h2><p class="lead">Photos from your phone are fine. In this demo, tap each one to simulate an upload.</p>
+            <div class="docs" id="docList"></div>
+            <div class="err" id="docErr" style="color:var(--red);font-size:12.5px;margin-top:8px"></div>
+          </div>
+
+          <div class="pane" data-pane="4" hidden>
+            <h2>Application form fee</h2><p class="lead">Paid once per child. It covers the entrance assessment and the admissions interview.</p>
+            <div class="fee">
+              <div><span class="muted" style="font-size:12.5px">Amount due</span><br><b class="amt">₦25,000</b>
+                <ul><li>Non-refundable</li><li>Receipt sent to your email</li><li>Card, bank transfer or USSD</li></ul></div>
+              <div id="payBox"></div>
+            </div>
+            <div id="paidBox"></div>
+            <div class="err" id="payErr" style="color:var(--red);font-size:12.5px;margin-top:8px"></div>
+          </div>
+
+          <div class="pane" data-pane="5" hidden>
+            <h2>Book the entrance assessment</h2><p class="lead" id="examLead">Assessments hold on Saturdays at our Lekki campus, 9:00 AM. Allow about 2 hours.</p>
+            <span class="flabel" id="satLbl">Choose a Saturday</span>
+            <div class="sats" role="group" aria-labelledby="satLbl" id="satList"></div>
+            <div class="err" id="satErr" style="color:var(--red);font-size:12.5px;margin:-10px 0 12px"></div>
+            <label class="toggle"><input type="checkbox" id="tourOn"><span><b>Add a school tour (optional)</b><small>Walk the classrooms, labs and sports field with an admissions officer. 45 minutes.</small><span class="tours" id="tourList" hidden></span></span></label>
+            <div id="reviewBox"></div>
+          </div>
+          </form>
+
+          <div class="foot">
+            <button type="button" class="btn btn-ghost" data-act="back" id="backBtn">Back</button>
+            <span class="err" id="footErr" role="alert"></span>
+            <button type="button" class="btn btn-primary" data-act="next" id="nextBtn">Continue</button>
+          </div>
+        </div>
+        <div id="doneBox" hidden></div>
+      </div>
+
+      <aside class="side">
+        <div class="card" style="overflow:hidden">
+          <div class="ph"><h2><svg class="i" viewBox="0 0 24 24" style="color:var(--yel-600)"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>Announcements</h2><span class="muted" style="font-size:12px">Parent portal</span></div>
+          <div id="posts"></div>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div class="ph"><h2>Key dates</h2></div>
+          <ul class="kd" id="keyDates"></ul>
+        </div>
+        <div class="card help"><div class="hic"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><b style="font-weight:600">Questions? WhatsApp admissions</b><small>0809 000 2027 · Mon–Fri, 8am–4pm</small></div></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- OFFICE -->
+  <section class="view" id="viewOffice" aria-label="Admissions office" hidden>
+    <div class="o-head">
+      <div><h1>Admissions pipeline</h1><p>2027/28 intake · First term recruitment</p></div>
+      <span class="session"><svg class="i" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Signed in as Mrs. Ngozi Okafor, Admissions</span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="toolbar">
+      <div class="fchips" role="group" aria-label="Filter by class" id="clsFilter"></div>
+      <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><label for="q" class="sr">Search applicants</label><input id="q" placeholder="Search child or parent" autocomplete="off"></div>
+    </div>
+    <div class="board" id="board"></div>
+    <p class="muted" style="font-size:12px;margin-top:6px">Tip: drag cards between columns on desktop, or use the buttons on each card.</p>
+  </section>
+</div>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drTitle"></aside>
+<div class="mscrim" id="mscrim" hidden><div class="card modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal"></div></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var naira=function(n){return "₦"+n.toLocaleString("en-NG")};
+var IC={
+  check:'<path d="M20 6 9 17l-5-5"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  img:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+  report:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/>',
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  users:'<circle cx="9" cy="7" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 3.5a3.5 3.5 0 0 1 0 7M22 20a6.5 6.5 0 0 0-4-6"/>',
+  cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  send:'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+  trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  wa:'<path d="M3 21l1.7-5A9 9 0 1 1 8 19.3z"/><path d="M9 10c.5 2 2 3.5 4 4l1.2-1.2 2 1-.6 1.7c-3.5.3-7.4-3.6-7.1-7.1l1.7-.6 1 2z"/>',
+  cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  star:'<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>'
+};
+function ic(n,st){return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"'+(st?' style="'+st+'"':'')+'>'+IC[n]+'</svg>'}
+var PAL=["#1e3a8a","#7c3aed","#0369a1","#be185d","#b45309","#4d7c0f","#0f766e","#c2410c","#9333ea","#2563eb"];
+function colFor(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return PAL[h%PAL.length]}
+function initials(n){var p=n.replace(/^(Mrs?\.|Ms\.|Dr\.)\s*/,"").trim().split(/\s+/);return ((p[0]||"?")[0]+((p[1]||"")[0]||"")).toUpperCase()}
+function avatar(n,cls){return '<span class="av'+(cls?" "+cls:"")+'" style="background:'+colFor(n)+'" aria-hidden="true">'+esc(initials(n))+'</span>'}
+
+/* dates */
+var DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var today=new Date();today.setHours(0,0,0,0);
+function add(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x}
+function nice(d){return DAYS[d.getDay()]+" "+d.getDate()+" "+MON[d.getMonth()]}
+function niceY(d){return d.getDate()+" "+MON[d.getMonth()]+" "+d.getFullYear()}
+function nextDow(from,dow){var d=new Date(from);d.setDate(d.getDate()+((dow-d.getDay()+7)%7||7));return d}
+var SAT1=nextDow(add(today,1),6);if((SAT1-today)/864e5<2)SAT1=add(SAT1,7);
+var SATS=[0,1,2,3].map(function(i){return add(SAT1,i*7)});
+var PAST_SAT=add(SAT1,-7),PAST_SAT2=add(SAT1,-14);
+
+/* classes */
+var CLASSES=[
+  {g:"Nursery",items:[["Nursery 1",3,6],["Nursery 2",4,4]]},
+  {g:"Primary",items:[["Primary 1",5,8],["Primary 2",6,3],["Primary 3",7,5],["Primary 4",8,2],["Primary 5",9,4],["Primary 6",10,0]]},
+  {g:"Junior Secondary",items:[["JSS1",11,22],["JSS2",12,3]]},
+  {g:"Senior Secondary",items:[["SS1",14,9],["SS2",15,1]]}
+];
+function groupOf(c){return /^Nursery/.test(c)?"Nursery":/^Primary/.test(c)?"Primary":/^JSS/.test(c)?"JSS":"SS"}
+var STAGES=[["Applied","#64748b"],["Exam booked","#2747a8"],["Tested","#6d28d9"],["Offered","#d99a00"],["Enrolled","#15803d"]];
+var FEE=25000;
+
+/* state */
+var S,seq;
+function A(no,child,cls,gender,dobAge,parent,rel,phone,area,stage,opt){
+  opt=opt||{};
+  var dob=new Date(2027-dobAge-1,(no*5)%12,(no*7)%27+1);
+  var a={id:"A"+no,no:"BPA-2027-0"+no,child:child,cls:cls,gender:gender,dob:dob,parent:parent,rel:rel,phone:phone,email:parent.replace(/^(Mrs?\.|Ms\.|Dr\.)\s*/,"").toLowerCase().split(" ")[0]+"@example.com",area:area,stage:stage,
+    docs:opt.docs||{birth:true,report:!/^Nursery/.test(cls),photo:true},paid:opt.paid!==false,payRef:"PSK_"+(48213+no*37),exam:opt.exam||null,score:opt.score||null,tour:opt.tour||null,school:opt.school||"",
+    applied:add(today,-(opt.ago||3)),log:[]};
+  if(/^Nursery/.test(cls)&&!opt.docs)a.docs.report=null;
+  a.log.push([a.applied,"Application submitted online"]);
+  if(a.paid)a.log.push([a.applied,"Form fee "+naira(FEE)+" paid via Paystack"]);
+  if(a.exam)a.log.push([add(a.applied,1),"Assessment booked for "+nice(a.exam)]);
+  if(a.score)a.log.push([add(a.exam,0),"Score recorded: "+avg(a.score)+"%"]);
+  if(stage==="Offered"||stage==="Enrolled")a.log.push([add(today,-4),"Offer letter sent"]);
+  if(stage==="Enrolled")a.log.push([add(today,-2),"Acceptance fee received · enrolled"]);
+  return a;
+}
+function avg(s){return Math.round((s.eng+s.maths)/2)}
+function seed(){
+  seq=142;
+  return {view:S?S.view:"parent",step:0,filter:"All",q:"",newIds:{},drawer:null,form:{gender:null,cls:null,docs:{birth:false,report:false,photo:false},paid:false,payRef:null,sat:null,tour:null},
+  apps:[
+    A(128,"Tobiloba Adebayo","Primary 3","Male",7,"Mrs. Funke Adebayo","Mother","0803 000 4521","Lekki Phase 1","Applied",{ago:1,school:"Greenfield Primary, Ikota"}),
+    A(129,"Zainab Yusuf","Nursery 1","Female",3,"Mr. Abubakar Yusuf","Father","0805 000 1187","Chevron / Ikota","Applied",{ago:1,paid:false,docs:{birth:true,report:null,photo:false}}),
+    A(130,"Chidera Okeke","JSS1","Female",11,"Dr. Uche Okeke","Father","0816 000 3390","Ajah","Applied",{ago:2,docs:{birth:true,report:false,photo:true}}),
+    A(131,"Daniel Eze","JSS1","Male",11,"Mrs. Nkechi Eze","Mother","0703 000 8821","Sangotedo","Exam booked",{exam:SAT1,ago:5,tour:"Same day, 11:30 AM"}),
+    A(132,"Fiyinfoluwa Ogunbiyi","Primary 1","Female",5,"Mrs. Bukola Ogunbiyi","Mother","0809 000 1264","Lekki Phase 1","Exam booked",{exam:SAT1,ago:6}),
+    A(133,"Aisha Lawal","SS1","Female",14,"Mr. Kunle Lawal","Father","0812 000 5530","Victoria Island","Exam booked",{exam:add(SAT1,7),ago:4}),
+    A(134,"Kamsiyochukwu Nwankwo","JSS1","Male",11,"Mrs. Adaora Nwankwo","Mother","0806 000 7721","Chevron / Ikota","Tested",{exam:PAST_SAT,score:{eng:74,maths:82},ago:12}),
+    A(135,"Toluwani Bankole","Primary 5","Female",9,"Mr. Seyi Bankole","Father","0802 000 6619","Lekki Phase 1","Tested",{exam:PAST_SAT,score:{eng:66,maths:61},ago:11}),
+    A(136,"Ifeanyi Obi","SS1","Male",14,"Mrs. Chioma Obi","Mother","0814 000 2207","Ajah","Tested",{exam:PAST_SAT,score:{eng:52,maths:41},ago:13}),
+    A(137,"Amarachi Udeh","Nursery 2","Female",4,"Mrs. Ebere Udeh","Mother","0807 000 3341","Sangotedo","Offered",{exam:PAST_SAT2,score:{eng:80,maths:76},ago:18}),
+    A(138,"Oreoluwa Smith","JSS1","Female",11,"Mr. Femi Smith","Father","0810 000 9902","Ikoyi","Offered",{exam:PAST_SAT2,score:{eng:88,maths:83},ago:19}),
+    A(139,"Sadiq Bello","Primary 2","Male",6,"Mrs. Hadiza Bello","Mother","0803 000 6658","Lekki Phase 1","Enrolled",{exam:PAST_SAT2,score:{eng:71,maths:79},ago:24}),
+    A(140,"Ebube Okafor","JSS1","Male",11,"Mr. Emeka Okafor","Father","0806 000 4410","Chevron / Ikota","Enrolled",{exam:PAST_SAT2,score:{eng:69,maths:90},ago:26}),
+    A(141,"Morenike Alabi","Nursery 1","Female",3,"Mrs. Tola Alabi","Mother","0815 000 1735","Ajah","Enrolled",{exam:PAST_SAT2,score:{eng:84,maths:78},ago:27})
+  ]};
+}
+S=seed();
+
+/* ---------- views ---------- */
+function setView(v){
+  S.view=v;$("tabParent").setAttribute("aria-pressed",v==="parent");$("tabOffice").setAttribute("aria-pressed",v==="office");
+  $("viewParent").hidden=v!=="parent";$("viewOffice").hidden=v!=="office";
+  var el=v==="parent"?$("viewParent"):$("viewOffice");el.classList.remove("fade");void el.offsetWidth;el.classList.add("fade");
+  if(v==="office"){renderOffice();}
+}
+function paint(el,html){var a=document.activeElement,k=a&&el.contains(a)?a.getAttribute("data-k"):null;el.innerHTML=html;if(k){var n=el.querySelector('[data-k="'+k+'"]');if(n)n.focus()}}
+
+/* ---------- parent ---------- */
+var STEP_NAMES=["Child details","Class","Parent details","Documents","Form fee","Assessment"];
+function renderSteps(){
+  var st=S.step,pct=Math.round(st/6*100);
+  $("stepNo").textContent=st+1;$("stepName").textContent=STEP_NAMES[st];$("stepPct").textContent=pct+"% complete";
+  $("bar").firstElementChild.style.width=Math.max(pct,4)+"%";$("bar").setAttribute("aria-valuenow",pct);
+  $("stepList").innerHTML=STEP_NAMES.map(function(n,i){return '<li class="'+(i<st?"ok":i===st?"on":"")+'"'+(i===st?' aria-current="step"':'')+'><span>'+(i<st?ic("check","width:11px;height:11px;stroke-width:3"):i+1)+'</span><em>'+n+'</em></li>'}).join("");
+  document.querySelectorAll(".pane").forEach(function(p){p.hidden=+p.getAttribute("data-pane")!==st});
+  $("backBtn").style.visibility=st===0?"hidden":"visible";
+  $("nextBtn").innerHTML=st===5?ic("send")+"Submit application":st===4&&!S.form.paid?"Continue":"Continue";
+  $("footErr").textContent="";
+  if(st===1)renderClasses();if(st===3)renderDocs();if(st===4)renderPay();if(st===5)renderExam();
+}
+function ageAt(dob){var ref=new Date(2027,8,1),a=ref.getFullYear()-dob.getFullYear();if(ref<new Date(ref.getFullYear(),dob.getMonth(),dob.getDate()))a--;return a}
+function suggested(){var v=$("cDob").value;if(!v)return null;var p=v.split("-"),age=ageAt(new Date(+p[0],+p[1]-1,+p[2])),best=null;
+  CLASSES.forEach(function(g){g.items.forEach(function(c){if(c[1]===age)best=c[0]})});return best?{cls:best,age:age}:{cls:null,age:age}}
+function renderClasses(){
+  var sg=suggested(),f=S.form,name=esc($("cFirst").value.trim()||"your child");
+  $("suggest").innerHTML=sg&&sg.cls?'<div class="suggest">'+ic("star")+'<span>'+name+' will be '+sg.age+' in September 2027. Most children that age join <b>'+sg.cls+'</b>.</span></div>':"";
+  paint($("classPick"),CLASSES.map(function(g){return '<div class="cls-group"><h3>'+g.g+'</h3><div class="cls">'+g.items.map(function(c){var full=c[2]===0;
+    return '<button type="button" data-act="cls" data-id="'+c[0]+'" data-k="c-'+c[0]+'" aria-pressed="'+(f.cls===c[0])+'"'+(full?' disabled':'')+'>'+(sg&&sg.cls===c[0]&&!full?'<span class="star">Suggested</span>':'')+'<b>'+c[0]+'</b><small class="'+(c[2]&&c[2]<=3?"low":"")+'">'+(full?"Waiting list only":c[2]+" seat"+(c[2]>1?"s":"")+" left")+'</small></button>'}).join("")+'</div></div>'}).join("")+
+    '<p class="note">'+ic("file","width:15px;height:15px")+'Primary 1 and above sit English and Maths papers. Nursery applicants have a short play-based assessment with a parent present.</p>');
+}
+var DOCS=[["birth","Birth certificate","PDF or photo · max 5 MB","file","birth-certificate.pdf","312 KB"],["report","Last report card","Most recent term","report","report-card-3rd-term.pdf","1.1 MB"],["photo","Passport photograph","White background, taken in the last 6 months","img","passport.jpg","186 KB"]];
+function nurseryApp(){return /^Nursery/.test(S.form.cls||"")}
+function renderDocs(){
+  var f=S.form;
+  paint($("docList"),DOCS.map(function(d){var na=d[0]==="report"&&nurseryApp(),up=f.docs[d[0]],busy=f.docs[d[0]]==="busy";
+    return '<button type="button" class="doc'+(up===true?" up":"")+(na?" na":"")+(busy?" busy":"")+'" data-act="doc" data-id="'+d[0]+'" data-k="d-'+d[0]+'"'+(na?" disabled":"")+' aria-label="'+d[1]+(up===true?", uploaded":na?", not needed":", tap to upload")+'"><span class="d-ic">'+ic(up===true?"check":d[3])+'</span><span class="d-tx"><b>'+d[1]+'</b><small>'+(up===true?d[4]+" · "+d[5]:na?"Not needed for Nursery applicants":d[2])+'</small></span><span class="d-st">'+(na?"Skip":busy?"Uploading…":up===true?"Uploaded":ic("upload","width:15px;height:15px;vertical-align:-3px")+" Upload")+'</span></button>'}).join(""));
+}
+function uploadDoc(id){
+  var f=S.form;if(f.docs[id]===true||f.docs[id]==="busy")return;
+  f.docs[id]="busy";renderDocs();$("docErr").textContent="";
+  setTimeout(function(){if(f!==S.form)return;f.docs[id]=true;renderDocs()},650);
+}
+function renderPay(){
+  var f=S.form;
+  $("payBox").innerHTML=f.paid?'':'<button type="button" class="btn btn-yel" data-act="pay" style="padding:13px 20px">'+ic("lock")+'Pay with Paystack</button>';
+  $("paidBox").innerHTML=f.paid?'<div class="paid"><span class="ok">'+ic("check")+'</span><div><b style="font-weight:600">Payment successful · '+naira(FEE)+'</b><div style="font-size:12.5px">Ref '+f.payRef+' · receipt sent to '+esc($("pEmail").value.trim())+'</div></div></div>':"";
+}
+function openPaystack(){
+  openModal('<div class="ps-h"><div><b>Paystack</b><small>Simulated checkout · no real payment</small></div><div style="text-align:right"><small>'+esc($("pEmail").value.trim())+'</small><b>'+naira(FEE)+'</b></div></div>'+
+   '<div class="m-b" id="psBody"><h2 id="mTitle" class="sr">Pay application fee</h2><p class="sub" style="margin-top:0">BrightPath Academy · Application form, '+esc($("cFirst").value.trim()+" "+$("cLast").value.trim())+'</p>'+
+   '<div class="ps-tabs"><span class="on">Card</span><span>Transfer</span><span>USSD</span></div>'+
+   '<div class="flabel">Card number</div><div class="fake">5399 •••• •••• 0000</div>'+
+   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><div><div class="flabel">Expiry</div><div class="fake">09 / 29</div></div><div><div class="flabel">CVV</div><div class="fake">•••</div></div></div>'+
+   '<button type="button" class="ps-pay" data-act="psPay">Pay '+naira(FEE)+'</button>'+
+   '<button type="button" class="btn btn-ghost" data-act="closeModal" style="width:100%;margin-top:8px">Cancel</button>'+
+   '<div class="ps-note">'+ic("lock","width:13px;height:13px")+'Demo card details · nothing is charged</div></div>');
+}
+function psPay(){
+  $("psBody").innerHTML='<div class="center" role="status"><div class="spin"></div><b>Processing payment…</b><p class="sub">Talking to your bank (simulated)</p></div>';
+  setTimeout(function(){
+    S.form.paid=true;S.form.payRef="PSK_"+(Math.floor(Math.random()*90000)+10000)+"BPA";
+    if(!$("psBody"))return;
+    $("psBody").innerHTML='<div class="center"><div style="width:56px;height:56px;border-radius:50%;background:#0ba360;color:#fff;display:grid;place-items:center;margin:16px auto 10px">'+ic("check","width:28px;height:28px;stroke-width:3")+'</div><h2 id="mTitle" style="font-size:18px">Payment successful</h2><p class="sub">'+naira(FEE)+' · Ref '+S.form.payRef+'</p><button type="button" class="ps-pay" data-act="psDone">Continue to booking</button></div>';
+    $("psBody").querySelector("button").focus();renderPay();
+  },1300);
+}
+function renderExam(){
+  var f=S.form,nurs=nurseryApp();
+  $("examLead").textContent=nurs?"Nursery assessments are play-based, about 40 minutes, with a parent present. Saturdays at our Lekki campus.":"Assessments hold on Saturdays at our Lekki campus, 9:00 AM. English and Maths, about 2 hours. Bring a pencil and eraser.";
+  var seats=[14,9,18,22];
+  paint($("satList"),SATS.map(function(d,i){var k=d.toDateString();return '<button type="button" class="sat" data-act="sat" data-id="'+i+'" data-k="s-'+i+'" aria-pressed="'+(f.sat===i)+'"><b>'+nice(d)+'</b><small>'+(nurs?"10:00 AM":"9:00 AM")+' · '+seats[i]+' seats left</small></button>'}).join(""));
+  var tue=nextDow(today,2),thu=nextDow(today,4),opts=[f.sat!=null?"Same day, 11:30 AM":"Exam day, 11:30 AM",nice(tue)+", 10:00 AM",nice(thu)+", 2:00 PM"];
+  $("tourList").hidden=!$("tourOn").checked;
+  paint($("tourList"),opts.map(function(o,i){return '<button type="button" data-act="tour" data-id="'+i+'" data-k="tr-'+i+'" aria-pressed="'+(f.tour===i)+'">'+o+'</button>'}).join(""));
+  f.tourOpts=opts;
+  var cf=$("cFirst").value.trim(),cl=$("cLast").value.trim();
+  $("reviewBox").innerHTML='<dl class="review"><div><dt>Child</dt><dd>'+esc(cf+" "+cl)+'</dd></div><div><dt>Class</dt><dd>'+esc(f.cls)+' · 2027/28</dd></div><div><dt>Parent</dt><dd>'+esc($("pTitle").value+" "+$("pName").value.trim())+'</dd></div><div><dt>Form fee</dt><dd style="color:var(--green)">Paid · '+naira(FEE)+'</dd></div></dl>';
+}
+function setErr(id,msg){var e=$(id+"Err");if(e)e.textContent=msg||"";var i=$(id);if(i&&i.tagName!=="DIV"){if(msg)i.setAttribute("aria-invalid","true");else i.removeAttribute("aria-invalid")}return !msg}
+function phoneOk(v){var d=v.replace(/\D/g,"");return (d.length===11&&d[0]==="0")||(d.length===13&&d.indexOf("234")===0)}
+function validateStep(st){
+  var ok=true,f=S.form,first=null;
+  function chk(id,cond,msg){var r=setErr(id,cond?"":msg);if(!r){ok=false;if(!first)first=id}}
+  if(st===0){
+    chk("cFirst",$("cFirst").value.trim().length>1,"Enter your child's first name.");
+    chk("cLast",$("cLast").value.trim().length>1,"Enter your child's surname.");
+    var v=$("cDob").value,okd=false;if(v){var age=ageAt(new Date(v));okd=age>=3&&age<=16}
+    chk("cDob",okd,v?"Children must be 3–16 by September 2027.":"Enter date of birth.");
+    $("genderErr").textContent=f.gender?"":"Select one.";if(!f.gender){ok=false}
+  }
+  if(st===1){$("classErr").textContent=f.cls?"":"Choose a class to continue.";if(!f.cls)ok=false}
+  if(st===2){
+    chk("pTitle",!!$("pTitle").value,"Select a title.");
+    chk("pName",$("pName").value.trim().split(/\s+/).length>1,"Enter first name and surname.");
+    chk("pPhone",phoneOk($("pPhone").value),"Enter an 11-digit number, e.g. 0803 000 0000.");
+    chk("pEmail",/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("pEmail").value.trim()),"Enter a valid email address.");
+  }
+  if(st===3){var miss=DOCS.filter(function(d){return !(d[0]==="report"&&nurseryApp())&&f.docs[d[0]]!==true});$("docErr").textContent=miss.length?"Still needed: "+miss.map(function(d){return d[1].toLowerCase()}).join(", ")+".":"";if(miss.length)ok=false}
+  if(st===4){$("payErr").textContent=f.paid?"":"Pay the form fee to book an assessment date.";if(!f.paid)ok=false}
+  if(st===5){$("satErr").textContent=f.sat!=null?"":"Pick a Saturday.";if(f.sat==null)ok=false;if($("tourOn").checked&&f.tour==null){ok=false;$("satErr").textContent=$("satErr").textContent||"Pick a tour time, or untick the tour box."}}
+  if(!ok){$("footErr").textContent="Please fix the highlighted fields.";if(first)$(first).focus()}
+  return ok;
+}
+function next(){
+  if(!validateStep(S.step))return;
+  if(S.step===5){submit();return}
+  S.step++;renderSteps();$("appCard").scrollIntoView({behavior:"smooth",block:"start"});
+  var h=document.querySelector('.pane[data-pane="'+S.step+'"] h2');if(h){h.setAttribute("tabindex","-1");h.focus({preventScroll:true})}
+}
+function back(){if(S.step>0){S.step--;renderSteps()}}
+function fmtPhone(v){var d=v.replace(/\D/g,"");if(d.indexOf("234")===0)d="0"+d.slice(3);return d.slice(0,4)+" "+d.slice(4,7)+" "+d.slice(7,11)}
+function submit(){
+  var f=S.form,no=seq++;
+  var a={id:"A"+no+"_"+Date.now(),no:"BPA-2027-0"+no,child:$("cFirst").value.trim()+" "+$("cLast").value.trim(),cls:f.cls,gender:f.gender,dob:new Date($("cDob").value),
+    parent:$("pTitle").value+" "+$("pName").value.trim(),rel:$("pRel").value,phone:fmtPhone($("pPhone").value),email:$("pEmail").value.trim(),area:$("pArea").value,stage:"Applied",
+    docs:{birth:true,report:nurseryApp()?null:true,photo:true},paid:true,payRef:f.payRef,exam:SATS[f.sat],score:null,tour:$("tourOn").checked?f.tourOpts[f.tour]:null,school:$("cSchool").value.trim(),applied:new Date(today),log:[],isNew:true};
+  a.log.push([new Date(today),"Application submitted online"],[new Date(today),"Form fee "+naira(FEE)+" paid via Paystack · "+f.payRef],[new Date(today),"Parent chose assessment on "+nice(a.exam)+(a.tour?" · tour: "+a.tour:"")]);
+  S.apps.push(a);S.newIds[a.id]=1;updateBadge();
+  showDone(a);toast("Application "+a.no+" received");
+}
+function showDone(a){
+  $("appCard").hidden=true;var b=$("doneBox");b.hidden=false;
+  var first=esc(a.child.split(" ")[0]);
+  b.innerHTML='<div class="card done fade"><div class="done-top"><div class="done-ic">'+ic("check")+'</div><div style="flex:1;min-width:220px"><h2 tabindex="-1">Application submitted for '+first+'</h2><p class="muted" style="margin:4px 0 0">We\'ve sent a copy to '+esc(a.email)+' and a WhatsApp confirmation to '+esc(a.phone)+'.</p></div></div>'+
+   '<div class="appno"><small>Application number</small><b>'+a.no+'</b></div>'+
+   '<h3 style="font-size:15px;font-weight:600;margin-bottom:12px">What happens next</h3><ol class="tl">'+
+   '<li class="ok"><span>'+ic("check","width:12px;height:12px;stroke-width:3")+'</span><b>Form fee paid</b>'+naira(FEE)+' · Ref '+esc(a.payRef)+'</li>'+
+   '<li><span>2</span><b>Entrance assessment · '+nice(a.exam)+'</b>Arrive by '+(/^Nursery/.test(a.cls)?"9:45":"8:30")+' AM at the Lekki campus gate. Bring this application number'+(/^Nursery/.test(a.cls)?".":", a pencil and an eraser.")+'</li>'+
+   (a.tour?'<li><span>3</span><b>School tour · '+esc(a.tour)+'</b>An admissions officer will meet you at reception.</li>':'')+
+   '<li><span>'+(a.tour?4:3)+'</span><b>Results within 5 working days</b>Sent by WhatsApp and email. Successful applicants get an offer letter with fees and the acceptance deadline.</li>'+
+   '<li><span>'+(a.tour?5:4)+'</span><b>Accept and enrol</b>Pay the acceptance fee within 14 days to hold '+first+'\'s seat in '+esc(a.cls)+'.</li></ol>'+
+   '<div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-primary" data-act="view" data-v="office">'+ic("users")+'See it in the admissions office</button><button type="button" class="btn btn-ghost" data-act="again">Start another application</button></div></div>';
+  window.scrollTo({top:0,behavior:"smooth"});b.querySelector("h2").focus({preventScroll:true});
+}
+function resetForm(){
+  S.form={gender:null,cls:null,docs:{birth:false,report:false,photo:false},paid:false,payRef:null,sat:null,tour:null};S.step=0;
+  ["cFirst","cLast","cDob","cSchool","pName","pPhone","pEmail"].forEach(function(i){$(i).value="";$(i).removeAttribute("aria-invalid")});
+  $("pTitle").value="";$("pRel").value="Mother";$("pArea").value="Lekki Phase 1";$("tourOn").checked=false;
+  document.querySelectorAll(".err").forEach(function(e){e.textContent=""});
+  document.querySelectorAll("#gender button").forEach(function(b){b.setAttribute("aria-pressed","false")});
+  $("appCard").hidden=false;$("doneBox").hidden=true;renderSteps();
+}
+function renderSide(){
+  var posts=[
+    ["pin","Entrance assessments now open","Saturdays from "+nice(SATS[0])+" to "+nice(SATS[3])+". Book when you apply; you can move your date once at no cost.",add(today,-2),"Admissions","#fff3c4","#7a5600"],
+    ["","Open day: "+nice(SATS[1])+", 10am–1pm","Meet the class teachers, see the new science lab and try the school bus route from Ajah. No booking needed.",add(today,-5),"Events","#e3ebff","#1e3a8a"],
+    ["","Sibling discount for 2027/28","10% off tuition for a second child and 15% for a third, when siblings attend in the same session.",add(today,-9),"Fees","#e6f6ec","#15803d"]
+  ];
+  $("posts").innerHTML=posts.map(function(p){return '<article class="post '+p[0]+'"><span class="tag" style="background:'+p[5]+';color:'+p[6]+'">'+p[4]+'</span><b>'+p[1]+'</b><p>'+p[2]+'</p><small>'+niceY(p[3])+' · Admissions team</small></article>'}).join("");
+  $("keyDates").innerHTML=[["First assessment",nice(SATS[0])],["Open day",nice(SATS[1])],["Offers sent","Within 5 working days"],["Acceptance deadline","14 days after offer"],["Resumption","Mon 6 Sep 2027"]].map(function(k){return '<li><span>'+k[0]+'</span><b>'+k[1]+'</b></li>'}).join("");
+}
+
+/* ---------- office ---------- */
+function stageColor(s){return STAGES.filter(function(x){return x[0]===s})[0][1]}
+function visible(a){if(S.filter!=="All"&&groupOf(a.cls)!==S.filter)return false;if(S.q){var q=S.q.toLowerCase();return (a.child+" "+a.parent+" "+a.no).toLowerCase().indexOf(q)>-1}return true}
+function docCount(a){var n=0,t=0;["birth","report","photo"].forEach(function(k){if(a.docs[k]===null)return;t++;if(a.docs[k])n++});return [n,t]}
+function renderOffice(){
+  var apps=S.apps.filter(function(a){return S.filter==="All"||groupOf(a.cls)===S.filter});
+  var paid=apps.filter(function(a){return a.paid}).length,off=apps.filter(function(a){return a.stage==="Offered"||a.stage==="Enrolled"}).length,enr=apps.filter(function(a){return a.stage==="Enrolled"}).length;
+  var conv=apps.length?Math.round(enr/apps.length*100):0,newc=apps.filter(function(a){return (today-a.applied)/864e5<=7}).length;
+  var K=[["Applications this term",apps.length,newc+" in the last 7 days","users","var(--blue-50)","var(--blue)"],["Form fees collected",naira(paid*FEE),paid+" of "+apps.length+" paid via Paystack","cash","var(--green-bg)","var(--green)"],["Offers sent",off,enr+" accepted · "+(off-enr)+" awaiting reply","send","var(--yel-50)","var(--yel-600)"],["Conversion",conv+"%","Applied → enrolled","trend","var(--violet-bg)","var(--violet)",conv]];
+  $("kpis").innerHTML=K.map(function(k){return '<div class="card kpi"><div class="k-h">'+k[0]+'<span class="k-ic" style="background:'+k[4]+';color:'+k[5]+'">'+ic(k[3])+'</span></div><b>'+k[1]+'</b><small>'+k[2]+'</small>'+(k[6]!=null?'<div class="meter"><span style="width:'+k[6]+'%"></span></div>':'')+'</div>'}).join("");
+  paint($("clsFilter"),["All","Nursery","Primary","JSS","SS"].map(function(f){var n=S.apps.filter(function(a){return f==="All"||groupOf(a.cls)===f}).length;return '<button type="button" class="fchip" data-act="filter" data-id="'+f+'" data-k="f-'+f+'" aria-pressed="'+(S.filter===f)+'">'+(f==="All"?"All classes":f)+' · '+n+'</button>'}).join(""));
+  var html=STAGES.map(function(st){var list=S.apps.filter(function(a){return a.stage===st[0]&&visible(a)}).sort(function(a,b){return (S.newIds[b.id]?1:0)-(S.newIds[a.id]?1:0)||b.applied-a.applied});
+    return '<section class="col" data-stage="'+st[0]+'" aria-label="'+st[0]+'"><div class="col-h"><span class="dot" style="background:'+st[1]+'"></span>'+st[0]+'<span class="cnt">'+list.length+'</span></div><div class="cards">'+(list.length?list.map(cardHtml).join(""):'<div class="col-empty">No applicants here'+(S.filter!=="All"||S.q?" for this filter":"")+'</div>')+'</div></section>'}).join("");
+  paint($("board"),html);S.flash=null;
+}
+function cardHtml(a){
+  var dc=docCount(a),act="";
+  switch(a.stage){
+    case "Applied":act='<button type="button" class="btn btn-primary btn-sm" data-act="bookExam" data-id="'+a.id+'" data-k="k-'+a.id+'">'+ic("cal","width:14px;height:14px")+'Book exam</button>';break;
+    case "Exam booked":act='<button type="button" class="btn btn-primary btn-sm" data-act="score" data-id="'+a.id+'" data-k="k-'+a.id+'">'+ic("pen","width:14px;height:14px")+'Record score</button>';break;
+    case "Tested":act='<button type="button" class="btn btn-yel btn-sm" data-act="offer" data-id="'+a.id+'" data-k="k-'+a.id+'">'+ic("send","width:14px;height:14px")+'Send offer</button>';break;
+    case "Offered":act='<button type="button" class="btn btn-primary btn-sm" data-act="enrol" data-id="'+a.id+'" data-k="k-'+a.id+'" style="background:var(--green)">'+ic("check","width:14px;height:14px")+'Mark enrolled</button>';break;
+    default:act='<div class="end">'+ic("check","width:14px;height:14px")+'Acceptance fee paid</div>';
+  }
+  var pills='<span class="pill cls">'+esc(a.cls)+'</span>'+(S.newIds[a.id]?'<span class="pill new">NEW</span>':'')+
+    (a.paid?'<span class="pill ok">Fee paid</span>':'<span class="pill bad">Fee unpaid</span>')+
+    '<span class="pill '+(dc[0]===dc[1]?"ok":"warn")+'">Docs '+dc[0]+'/'+dc[1]+'</span>'+
+    (a.score?'<span class="pill '+(avg(a.score)>=50?"":"bad")+'">Score '+avg(a.score)+'%</span>':a.exam?'<span class="pill">'+ic("cal","width:11px;height:11px")+nice(a.exam)+'</span>':'');
+  return '<article class="ac'+(S.flash===a.id?" flash":"")+'" draggable="true" data-drag="'+a.id+'"><div class="ac-top">'+avatar(a.child)+'<button type="button" class="ac-open" data-act="open" data-id="'+a.id+'" data-k="o-'+a.id+'"><b>'+esc(a.child)+'</b><small>'+esc(a.parent)+' · '+esc(a.no.slice(-4))+'</small></button></div><div class="ac-meta">'+pills+'</div>'+act+'</article>';
+}
+function byId(id){return S.apps.filter(function(a){return a.id===id})[0]}
+function move(a,stage,msg){a.stage=stage;delete S.newIds[a.id];a.isNew=false;a.log.push([new Date(),msg]);S.flash=a.id;updateBadge();refresh();toast(msg+" · "+a.child.split(" ")[0])}
+function refresh(){renderOffice();if(S.drawer)renderDrawer()}
+function bookExam(a){if(!a.paid){a.paid=true;a.log.push([new Date(),"Form fee marked paid (bank transfer)"])}if(!a.exam)a.exam=SATS[0];move(a,"Exam booked","Assessment confirmed for "+nice(a.exam)+", WhatsApp sent")}
+function scoreModal(a){
+  openModal('<div class="m-b"><h2 id="mTitle">Record assessment score</h2><p class="sub">'+esc(a.child)+' · '+esc(a.cls)+' · '+(a.exam?nice(a.exam):"")+'</p>'+
+   '<div class="fields"><div class="field"><label for="sEng">'+(/^Nursery/.test(a.cls)?"Language & literacy":"English")+' (%)</label><input id="sEng" type="number" min="0" max="100" value="'+(a.score?a.score.eng:"")+'" placeholder="0–100"></div><div class="field"><label for="sMat">'+(/^Nursery/.test(a.cls)?"Numbers & play":"Maths")+' (%)</label><input id="sMat" type="number" min="0" max="100" value="'+(a.score?a.score.maths:"")+'" placeholder="0–100"></div></div>'+
+   '<p class="note" style="margin-top:10px">Pass mark is 50%. Applicants below it can still be offered a place after an interview.</p><div class="err" id="sErr" style="color:var(--red);font-size:12.5px"></div>'+
+   '<div class="row-btns"><button type="button" class="btn btn-ghost" data-act="closeModal">Cancel</button><button type="button" class="btn btn-primary" data-act="saveScore" data-id="'+a.id+'">Save score</button></div></div>');
+}
+function saveScore(a){
+  var e=+$("sEng").value,m=+$("sMat").value;
+  if($("sEng").value===""||$("sMat").value===""||e<0||e>100||m<0||m>100){$("sErr").textContent="Enter both scores between 0 and 100.";return}
+  a.score={eng:Math.round(e),maths:Math.round(m)};closeModal();move(a,"Tested","Score recorded: "+avg(a.score)+"%");
+}
+
+/* drawer */
+var drawerReturn=null;
+function openDrawer(id){drawerReturn=document.activeElement;S.drawer=id;S.waOpen=false;renderDrawer();$("scrim").hidden=false;var d=$("drawer");d.classList.add("open");setTimeout(function(){var x=d.querySelector(".x");if(x)x.focus()},50)}
+function closeDrawer(){S.drawer=null;$("drawer").classList.remove("open");$("scrim").hidden=true;if(drawerReturn&&document.body.contains(drawerReturn))drawerReturn.focus()}
+function salutation(a){var p=a.parent.split(/\s+/);return /^(Mrs?\.|Ms\.|Dr\.)$/.test(p[0])?p[0]+" "+p[p.length-1]:p[0]}
+function waText(a){
+  var c=a.child.split(" ")[0],h="Good afternoon "+salutation(a)+", ";
+  switch(a.stage){
+    case "Applied":return h+"thank you for applying to BrightPath Academy for "+c+" ("+a.cls+"). Application no. "+a.no+". "+(a.exam?"Entrance assessment: "+nice(a.exam)+", 9:00 AM at our Lekki campus.":"We'll share an assessment date shortly.");
+    case "Exam booked":return h+"a reminder that "+c+"'s entrance assessment is on "+nice(a.exam)+" at 9:00 AM. Please arrive by 8:30 with "+a.no+". Reply 1 to confirm or 2 to move the date.";
+    case "Tested":return h+c+" has completed the entrance assessment. We'll share the outcome within 5 working days. Thank you for your patience.";
+    case "Offered":return "Good news, "+salutation(a)+"! We're pleased to offer "+c+" a place in "+a.cls+" for the 2027/28 session. The offer letter and fee schedule are in your email. Please accept within 14 days to hold the seat.";
+    default:return "Welcome to the BrightPath family, "+salutation(a)+"! "+c+"'s enrolment in "+a.cls+" is complete. Resumption is Mon 6 Sep 2027. Uniform list and bus form will follow by email.";
+  }
+}
+function fmtD(d){return d.getDate()+" "+MON[d.getMonth()]}
+function renderDrawer(){
+  var a=byId(S.drawer);if(!a)return closeDrawer();
+  var dc=docCount(a),age=ageAt(a.dob);
+  var chk=function(ok,label,extra){return '<div class="chk"><span class="c '+(ok?"y":"n")+'">'+ic(ok?"check":"x")+'</span><span class="t">'+label+'</span>'+(extra||"")+'</div>'};
+  var docs=[["birth","Birth certificate"],["report","Last report card"],["photo","Passport photograph"]].map(function(d){if(a.docs[d[0]]===null)return '<div class="chk"><span class="c" style="background:var(--slate-bg);color:var(--muted)">–</span><span class="t muted">'+d[1]+' · not needed for Nursery</span></div>';return chk(a.docs[d[0]],d[1],a.docs[d[0]]?'<span class="muted" style="font-size:12px">Verified</span>':'<button type="button" class="btn btn-ghost btn-sm" data-act="reqDoc" data-id="'+a.id+'" data-doc="'+d[1]+'">Request</button>')}).join("");
+  var action={"Applied":['bookExam','Book exam'],"Exam booked":['score','Record score'],"Tested":['offer','Send offer'],"Offered":['enrol','Mark enrolled']}[a.stage];
+  $("drawer").innerHTML='<div class="dr-h">'+avatar(a.child)+'<div style="min-width:0"><h2 id="drTitle">'+esc(a.child)+'</h2><small>'+esc(a.cls)+' · '+a.no+'</small><span class="pill" style="margin-top:6px;background:'+stageColor(a.stage)+'1a;color:'+stageColor(a.stage)+';font-weight:600">'+a.stage+'</span></div><button type="button" class="x" data-act="closeDrawer" aria-label="Close details">'+ic("x")+'</button></div>'+
+   '<div class="dr-b">'+
+   '<div class="sec"><h3>Child</h3><dl class="kv"><dt>Age (Sept 2027)</dt><dd>'+age+' years · '+(a.gender==="Female"?"Girl":"Boy")+'</dd><dt>Date of birth</dt><dd>'+niceY(a.dob)+'</dd><dt>Current school</dt><dd>'+(esc(a.school)||'<span class="muted">Not given</span>')+'</dd><dt>Applied</dt><dd>'+niceY(a.applied)+'</dd></dl></div>'+
+   '<div class="sec"><h3>Parent</h3><dl class="kv"><dt>Name</dt><dd>'+esc(a.parent)+' ('+esc(a.rel)+')</dd><dt>WhatsApp</dt><dd>'+esc(a.phone)+'</dd><dt>Email</dt><dd>'+esc(a.email)+'</dd><dt>Area</dt><dd>'+esc(a.area)+'</dd></dl></div>'+
+   '<div class="sec"><h3>Documents <span class="pill '+(dc[0]===dc[1]?"ok":"warn")+'">'+dc[0]+' of '+dc[1]+'</span></h3>'+docs+'</div>'+
+   '<div class="sec"><h3>Form fee</h3>'+chk(a.paid,a.paid?naira(FEE)+" paid · "+esc(a.payRef):naira(FEE)+" not yet paid",a.paid?"":'<button type="button" class="btn btn-ghost btn-sm" data-act="markPaid" data-id="'+a.id+'">Mark paid</button>')+'</div>'+
+   '<div class="sec"><h3>Entrance assessment</h3>'+(a.score?'<div class="score"><div><small>'+(/^Nursery/.test(a.cls)?"Literacy":"English")+'</small><b>'+a.score.eng+'</b></div><div><small>'+(/^Nursery/.test(a.cls)?"Numbers":"Maths")+'</small><b>'+a.score.maths+'</b></div><div class="avg"><small>Average</small><b>'+avg(a.score)+'%</b></div></div>':'<p style="margin:0;font-size:13px">'+(a.exam?nice(a.exam)+", "+(/^Nursery/.test(a.cls)?"10:00":"9:00")+" AM":"Not booked yet")+' · <span class="muted">score not recorded</span></p>')+(a.tour?'<p style="margin:10px 0 0;font-size:13px">'+ic("cal","width:14px;height:14px;vertical-align:-2px;color:var(--blue)")+' School tour: '+esc(a.tour)+'</p>':'')+'</div>'+
+   '<div class="sec"><h3>WhatsApp update</h3>'+(S.waOpen?'<div class="wa"><div class="wa-h">'+ic("wa","width:15px;height:15px")+'To '+esc(a.parent)+' · '+esc(a.phone)+'</div><div class="wa-b"><div class="bub">'+esc(waText(a))+'<time>now · preview</time></div></div><div class="wa-a"><button type="button" class="btn btn-ghost btn-sm" data-act="waCancel">Cancel</button><button type="button" class="btn btn-wa btn-sm" data-act="waSend" data-id="'+a.id+'">'+ic("send","width:14px;height:14px")+'Send</button></div></div>':'<p class="muted" style="margin:0;font-size:12.5px">The message adapts to the applicant\'s stage. Nothing is actually sent in this demo.</p>')+'</div>'+
+   '<div class="sec"><h3>Activity</h3><ul class="log">'+a.log.slice().reverse().map(function(l){return '<li><time>'+fmtD(l[0])+'</time><span>'+esc(l[1])+'</span></li>'}).join("")+'</ul></div>'+
+   '</div><div class="dr-f"><button type="button" class="btn btn-wa" data-act="waOpen">'+ic("wa")+'Send WhatsApp update</button>'+(action?'<button type="button" class="btn '+(action[0]==="offer"?"btn-yel":"btn-primary")+'" data-act="'+action[0]+'" data-id="'+a.id+'">'+action[1]+'</button>':'')+'</div>';
+}
+
+/* modal + toast */
+var modalReturn=null;
+function openModal(html){modalReturn=document.activeElement;$("modal").innerHTML=html;$("mscrim").hidden=false;var f=$("modal").querySelector("input,button.ps-pay,button");if(f)f.focus()}
+function closeModal(){$("mscrim").hidden=true;$("modal").innerHTML="";if(modalReturn&&document.body.contains(modalReturn))modalReturn.focus()}
+function toast(m){var t=document.createElement("div");t.className="toast";t.innerHTML=ic("check")+"<span>"+esc(m)+"</span>";$("toasts").appendChild(t);while($("toasts").children.length>3)$("toasts").firstChild.remove();setTimeout(function(){t.style.transition="opacity .3s";t.style.opacity="0";setTimeout(function(){t.remove()},300)},3500)}
+function updateBadge(){var n=Object.keys(S.newIds).length;$("newBadge").textContent=n;$("newBadge").hidden=!n}
+
+/* events */
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-act]");if(!b)return;var act=b.getAttribute("data-act"),id=b.getAttribute("data-id"),a=id?byId(id):null;
+  switch(act){
+    case "view":setView(b.getAttribute("data-v"));window.scrollTo({top:0});break;
+    case "next":next();break;
+    case "back":back();break;
+    case "gender":S.form.gender=id;document.querySelectorAll("#gender button").forEach(function(x){x.setAttribute("aria-pressed",x===b)});$("genderErr").textContent="";break;
+    case "cls":S.form.cls=id;$("classErr").textContent="";renderClasses();break;
+    case "doc":uploadDoc(id);break;
+    case "pay":openPaystack();break;
+    case "psPay":psPay();break;
+    case "psDone":closeModal();toast("Form fee paid · receipt emailed");next();break;
+    case "sat":S.form.sat=+id;$("satErr").textContent="";renderExam();break;
+    case "tour":S.form.tour=+id;renderExam();break;
+    case "again":resetForm();break;
+    case "filter":S.filter=id;renderOffice();break;
+    case "open":openDrawer(id);break;
+    case "closeDrawer":closeDrawer();break;
+    case "bookExam":bookExam(a);break;
+    case "score":scoreModal(a);break;
+    case "saveScore":saveScore(a);break;
+    case "offer":move(a,"Offered","Offer letter sent by email and WhatsApp");break;
+    case "enrol":move(a,"Enrolled","Acceptance fee received, enrolled");break;
+    case "markPaid":a.paid=true;a.payRef="Bank transfer";a.log.push([new Date(),"Form fee marked paid (bank transfer)"]);refresh();toast("Form fee marked as paid");break;
+    case "reqDoc":var dn=b.getAttribute("data-doc");a.log.push([new Date(),"Requested "+dn.toLowerCase()+" from parent"]);renderDrawer();toast("WhatsApp request sent for "+dn.toLowerCase());break;
+    case "waOpen":S.waOpen=true;renderDrawer();var s=$("drawer").querySelector(".btn-wa.btn-sm");if(s){s.focus();s.scrollIntoView({block:"nearest"})}break;
+    case "waCancel":S.waOpen=false;renderDrawer();break;
+    case "waSend":S.waOpen=false;a.log.push([new Date(),"WhatsApp update sent to "+salutation(a)]);renderDrawer();toast("WhatsApp update sent to "+a.phone);break;
+    case "closeModal":closeModal();break;
+    case "reset":var v=S.view;closeModal();closeDrawer();S=seed();S.view=v;$("q").value="";resetForm();renderSide();renderOffice();updateBadge();setView(v);toast("Demo reset to sample data");break;
+  }
+});
+$("scrim").addEventListener("click",closeDrawer);
+$("mscrim").addEventListener("click",function(e){if(e.target===$("mscrim"))closeModal()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){if(!$("mscrim").hidden)closeModal();else if(S.drawer)closeDrawer()}});
+$("tourOn").addEventListener("change",function(){if(!this.checked)S.form.tour=null;renderExam()});
+$("q").addEventListener("input",function(){S.q=this.value.trim();renderOffice()});
+$("appForm").addEventListener("submit",function(e){e.preventDefault();next()});
+["cFirst","cLast","cDob","pName","pPhone","pEmail","pTitle"].forEach(function(i){$(i).addEventListener("input",function(){if($(i).getAttribute("aria-invalid"))setErr(i,"")})});
+/* drag and drop */
+var dragId=null;
+$("board").addEventListener("dragstart",function(e){var c=e.target.closest("[data-drag]");if(!c)return;dragId=c.getAttribute("data-drag");c.classList.add("dragging");e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain",dragId)}catch(_){}});
+$("board").addEventListener("dragend",function(e){var c=e.target.closest("[data-drag]");if(c)c.classList.remove("dragging");document.querySelectorAll(".col.over").forEach(function(x){x.classList.remove("over")})});
+$("board").addEventListener("dragover",function(e){var col=e.target.closest(".col");if(!col||!dragId)return;e.preventDefault();document.querySelectorAll(".col.over").forEach(function(x){if(x!==col)x.classList.remove("over")});col.classList.add("over")});
+$("board").addEventListener("drop",function(e){var col=e.target.closest(".col");if(!col||!dragId)return;e.preventDefault();var a=byId(dragId),st=col.getAttribute("data-stage");dragId=null;col.classList.remove("over");if(!a||a.stage===st)return;
+  if(st==="Tested"&&!a.score){if(!a.exam)a.exam=SATS[0];a.stage="Exam booked";refresh();scoreModal(a);return}
+  if(st==="Exam booked"&&!a.exam)a.exam=SATS[0];
+  move(a,st,"Moved to "+st);
+});
+
+renderSide();resetForm();renderOffice();updateBadge();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>AI Website Assistant · live demo · Ferrn</title>
+<meta name="description" content="Talk to Ferrn's real AI website assistant — multilingual, voice-enabled, shown on a sample real-estate website.">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<style>
+:root{--or:#ff4100;--or2:#ff6a33;--orbg:#fff1eb;--ink:#121212;--muted:#5f6368;--line:#e6e3df;--bg:#f5f3f0;--card:#fff;--teal:#0f4c4a;--teal2:#16706b;--sand:#efe6d8;--r:16px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Poppins,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--or);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ic{flex:none;vertical-align:middle}
+[hidden]{display:none!important}
+/* page header */
+.ph{max-width:1280px;margin:0 auto;padding:18px 20px 6px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ph h1{margin:0;font-size:clamp(18px,2.2vw,22px);font-weight:600;letter-spacing:-.02em}
+.ph p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.ph .sp{margin-right:auto}
+.live{display:inline-flex;align-items:center;gap:7px;background:#e8f6ee;color:#11653d;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600}
+.live:before{content:"";width:8px;height:8px;border-radius:50%;background:#1aa35a;box-shadow:0 0 0 0 rgba(26,163,90,.5);animation:ping 1.8s infinite}
+.live.off{background:#fff4e0;color:#8a5300}.live.off:before{background:#f5a524;animation:none}
+@keyframes ping{70%{box-shadow:0 0 0 7px rgba(26,163,90,0)}100%{box-shadow:0 0 0 0 rgba(26,163,90,0)}}
+.btn-l{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
+.btn-l:hover{border-color:#cfc9c2}
+.wrap{max-width:1280px;margin:0 auto;padding:12px 20px 28px;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:22px;align-items:start}
+.lbl{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.lbl b{color:var(--or)}
+/* browser mock */
+.browser{background:#fff;border-radius:var(--r);border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.04),0 24px 50px -28px rgba(0,0,0,.3);overflow:hidden}
+.bbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f1efec;border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:6px}.dots i{width:10px;height:10px;border-radius:50%;background:#e0dbd5}
+.dots i:nth-child(1){background:#ff6058}.dots i:nth-child(2){background:#ffbd2e}.dots i:nth-child(3){background:#28c941}
+.url{flex:1;background:#fff;border-radius:8px;padding:5px 12px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;max-width:420px;margin:0 auto}
+.site{position:relative;font-size:13.5px}
+.snav{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid #eee9e2}
+.slogo{display:flex;align-items:center;gap:9px;font-weight:600;color:var(--teal);margin-right:auto;letter-spacing:-.01em}
+.slogo span{width:30px;height:30px;border-radius:8px;background:var(--teal);color:#f3d9a4;display:grid;place-items:center;font-size:12px;font-weight:700}
+.snav a{color:#3c4a49;text-decoration:none;font-size:13px}
+.snav .cta{background:var(--teal);color:#fff;padding:7px 13px;border-radius:999px;font-weight:500}
+.shero{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;padding:28px 22px 22px;background:linear-gradient(160deg,#f7f1e7,#fff 70%)}
+.shero h2{margin:0 0 8px;font-size:clamp(20px,2.4vw,30px);line-height:1.15;color:var(--teal);letter-spacing:-.02em;font-weight:600}
+.shero p{margin:0 0 16px;color:#556362}
+.search{display:grid;grid-template-columns:1fr 1fr auto;background:#fff;border:1px solid #e5ddd1;border-radius:12px;padding:6px;gap:4px;box-shadow:0 10px 24px -18px rgba(15,76,74,.5)}
+.search div{padding:4px 10px;border-right:1px solid #eee7dc}
+.search div:nth-child(2){border:0}
+.search small{display:block;font-size:10.5px;color:#8a9493;text-transform:uppercase;letter-spacing:.05em}
+.search b{font-weight:500;font-size:13px}
+.search span{background:var(--teal);color:#fff;border-radius:9px;display:grid;place-items:center;padding:0 14px;font-weight:500}
+.art{position:relative;border-radius:14px;overflow:hidden;min-height:190px;background:linear-gradient(180deg,#bfe1e4 0%,#e9f4f1 60%,#d9c9ad 60.5%,#cfbd9e 100%)}
+.art svg{position:absolute;inset:auto 0 0 0;width:100%;height:auto}
+.art .tag{position:absolute;z-index:2;left:12px;top:12px;background:rgba(255,255,255,.92);border-radius:10px;padding:7px 10px;font-size:11.5px;box-shadow:0 6px 16px -8px rgba(0,0,0,.3)}
+.art .tag b{display:block;color:var(--teal);font-size:13px}
+.slist{padding:6px 22px 22px}
+.slist h3{margin:10px 0 12px;font-size:15px;font-weight:600;color:var(--teal);display:flex;justify-content:space-between}
+.slist h3 small{font-weight:400;color:#7b8786;font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.home{border:1px solid #eee7dc;border-radius:12px;overflow:hidden;background:#fff}
+.home .ph2{height:96px;position:relative}
+.home .ph2 svg{position:absolute;bottom:0;left:0;width:100%;height:100%}
+.home .ph2 em{position:absolute;top:8px;left:8px;background:#fff;border-radius:6px;font-style:normal;font-size:10.5px;font-weight:600;padding:2px 7px;color:var(--teal)}
+.home div.i{padding:10px 12px}
+.home b{display:block;font-size:14px}
+.home small{color:#6c7877;font-size:12px;display:block}
+.launcher{position:absolute;right:18px;bottom:15px;width:54px;height:54px;border-radius:50%;background:var(--or);color:#fff;display:grid;place-items:center;box-shadow:0 12px 28px -8px rgba(255,65,0,.6);border:0}
+.launcher:after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(255,65,0,.35);animation:ring 2s infinite}
+@keyframes ring{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.25);opacity:0}}
+.hint{position:absolute;right:84px;bottom:27px;background:#121212;color:#fff;font-size:12px;border-radius:10px;padding:6px 10px;white-space:nowrap}
+.hint:after{content:"";position:absolute;right:-5px;top:50%;margin-top:-5px;border:5px solid transparent;border-right:0;border-left-color:#121212}
+/* chat */
+.chat{background:#fff;border-radius:20px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.04),0 30px 60px -30px rgba(0,0,0,.35);display:flex;flex-direction:column;height:min(720px,calc(100vh - 140px));min-height:520px;overflow:hidden;position:sticky;top:52px}
+.ch{background:#0b0b0b;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:11px}
+.av{width:38px;height:38px;border-radius:12px;background:var(--or);display:grid;place-items:center;font-weight:700;font-size:16px;flex:none;position:relative}
+.av:after{content:"";position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:#1fc66b;border:2px solid #0b0b0b}
+.ch b{display:block;font-weight:600;font-size:15px}
+.ch small{display:block;font-size:12px;color:#bdbdbd}
+.ch .sp{margin-right:auto;min-width:0}
+.tools{display:flex;gap:6px;align-items:center}
+.sel{position:relative}
+.sel select{appearance:none;-webkit-appearance:none;background:#1e1e1e;border:1px solid #333;color:#fff;border-radius:10px;padding:7px 26px 7px 10px;font-size:12.5px;max-width:118px}
+.sel:after{content:"";position:absolute;right:10px;top:50%;margin-top:-3px;border:4px solid transparent;border-top:5px solid #aaa;border-bottom:0}
+.icb{width:36px;height:36px;border-radius:10px;border:1px solid #333;background:#1e1e1e;color:#fff;display:grid;place-items:center;transition:background .2s,border-color .2s}
+.icb[aria-pressed=true]{background:var(--or);border-color:var(--or)}
+.log{flex:1;overflow-y:auto;padding:16px 14px 8px;background:#faf8f6;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.m{max-width:86%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.55;word-wrap:break-word;overflow-wrap:anywhere;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.m.bot{background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px;align-self:flex-start}
+.m.me{background:var(--or);color:#fff;border-bottom-right-radius:5px;align-self:flex-end}
+.m a{color:var(--or);font-weight:500;text-underline-offset:2px}
+.m.me a{color:#fff}
+.m.me .foot{color:rgba(255,255,255,.85)}
+.ch small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sfoot{display:flex;gap:18px;align-items:center;padding:16px 22px;background:var(--teal);color:#d6ebe8;font-size:12px;min-height:84px;padding-right:110px;flex-wrap:wrap}
+.sfoot b{color:#fff;font-weight:600}
+.m .foot{display:flex;gap:10px;align-items:center;margin-top:6px;font-size:11px;color:#8a8a8a}
+.m .say{border:0;background:var(--orbg);color:#b8320a;border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:500;display:inline-flex;gap:4px;align-items:center}
+.m .tagx{background:#fff4e0;color:#8a5300;border-radius:999px;padding:1px 7px;font-weight:600}
+.sys{align-self:center;font-size:11.5px;color:var(--muted);background:#efece8;border-radius:999px;padding:4px 11px;text-align:center}
+.typing{display:inline-flex;gap:4px;align-items:center;padding:13px 15px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#b9b3ad;animation:bounce 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:none;opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+.chips{display:flex;gap:6px;overflow-x:auto;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);padding:8px 14px 2px;background:#faf8f6;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid #f0c8b8;background:#fff;color:#a52d06;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:500;transition:background .2s}
+.chip:hover{background:var(--orbg)}
+.composer{display:flex;gap:8px;padding:10px 12px 12px;background:#faf8f6;border-top:1px solid #efebe6;align-items:center}
+.composer input{flex:1;min-width:0;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:11px 16px;min-height:46px}
+.composer input:focus{outline:none;border-color:var(--or);box-shadow:0 0 0 3px rgba(255,65,0,.15)}
+.send,.mic{width:46px;height:46px;border-radius:50%;border:0;display:grid;place-items:center;flex:none;transition:transform .15s,background .2s}
+.send{background:var(--or);color:#fff}
+.send:disabled{background:#f3b39b;cursor:not-allowed}
+.mic{background:#fff;border:1.5px solid var(--line);color:#333}
+.mic.rec{background:#ffe5dc;border-color:var(--or);color:var(--or);animation:recp 1.2s infinite}
+@keyframes recp{50%{box-shadow:0 0 0 6px rgba(255,65,0,.15)}}
+.note{font-size:12px;color:var(--muted);text-align:center;margin:10px 0 0;display:flex;gap:6px;justify-content:center;align-items:center}
+.feat{max-width:1280px;margin:0 auto;padding:0 20px 34px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.feat div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.feat b{display:flex;gap:8px;align-items:center;font-weight:600;font-size:13.5px}
+.feat b svg{color:var(--or)}
+.feat p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+@media (max-width:1020px){.wrap{grid-template-columns:minmax(0,1fr)}.chatcol{order:-1}.chat{position:relative;top:0;height:600px}.feat{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.ph{padding:14px 14px 4px}.wrap{padding:10px 12px 22px}.shero{grid-template-columns:1fr;padding:20px 16px}.art{min-height:150px}.cards{grid-template-columns:1fr 1fr}.cards .home:nth-child(3){display:none}.snav{padding:12px 16px}.snav a:not(.cta){display:none}.slist{padding:4px 16px 20px}.search{grid-template-columns:1fr 1fr}.search span{grid-column:1 / -1;padding:8px}.search div:nth-child(2){border:0}.chat{height:560px;min-height:0;border-radius:18px}.sel select{max-width:96px}.feat{padding:0 12px 22px}.hint{display:none}}
+@media (max-width:380px){.ch small{display:none}.feat{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="concept" style="position:sticky;top:0;z-index:9999;background:#0b0b0b;color:#fff;font:500 13px/1.4 Poppins,system-ui,sans-serif;padding:9px 14px;text-align:center">Ferrn template demo · fictional business · <a style="color:#ff4100;font-weight:600" href="/marketplace/ai-website-assistant" target="_top">Get this →</a></div>
+
+<div class="ph">
+  <div class="sp"><h1>AI Website Assistant</h1><p>Answers customers 24/7 in eight languages — and can talk back.</p></div>
+  <span class="live" id="liveBadge">Live assistant</span>
+  <button type="button" class="btn-l" id="reset"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reset demo</button>
+</div>
+
+<div class="wrap">
+  <section aria-label="Sample website">
+    <p class="lbl"><b>①</b> Your website</p>
+    <div class="browser">
+      <div class="bbar"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="url"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>harbourlinehomes.example</div></div>
+      <div class="site">
+        <div class="snav"><div class="slogo"><span>HH</span>Harbourline Homes</div><a href="#" onclick="return false">Buy</a><a href="#" onclick="return false">Rent</a><a href="#" onclick="return false">Shortlets</a><a href="#" onclick="return false" class="cta">Book a viewing</a></div>
+        <div class="shero">
+          <div>
+            <h2>Homes in Lekki, Ikoyi &amp; Ikeja — verified, inspected, no wahala.</h2>
+            <p>Every listing is visited by our team and every title document checked before it goes live.</p>
+            <div class="search" aria-hidden="true"><div><small>Location</small><b>Lekki Phase 1</b></div><div><small>Budget</small><b>₦8m / year</b></div><span>Search</span></div>
+          </div>
+          <div class="art" aria-hidden="true">
+            <div class="tag"><b>₦185,000,000</b>4-bed terrace · Lekki</div>
+            <svg viewBox="0 0 320 150" preserveAspectRatio="xMidYMax slice"><circle cx="262" cy="34" r="18" fill="#ffe2a8"/><rect x="0" y="118" width="320" height="32" fill="#cdbb99"/><path d="M40 118V62l60-34 60 34v56z" fill="#f6f1e8"/><path d="M30 66 100 24l70 42" fill="none" stroke="#0f4c4a" stroke-width="8" stroke-linejoin="round"/><rect x="60" y="74" width="26" height="22" rx="2" fill="#7ab8bb"/><rect x="114" y="74" width="26" height="22" rx="2" fill="#7ab8bb"/><rect x="88" y="92" width="24" height="26" rx="2" fill="#0f4c4a"/><path d="M160 118V78h110v40z" fill="#ece3d3"/><path d="M152 80h126l-12-22H170z" fill="#16706b"/><rect x="176" y="88" width="30" height="18" rx="2" fill="#7ab8bb"/><rect x="222" y="88" width="30" height="18" rx="2" fill="#7ab8bb"/><circle cx="296" cy="104" r="14" fill="#3f8f5f"/><rect x="294" y="104" width="4" height="14" fill="#6b4f2a"/><circle cx="22" cy="100" r="12" fill="#3f8f5f"/><rect x="20" y="100" width="4" height="18" fill="#6b4f2a"/></svg>
+          </div>
+        </div>
+        <div class="slist">
+          <h3>Featured this week <small>32 verified listings</small></h3>
+          <div class="cards" aria-hidden="true">
+            <div class="home"><div class="ph2" style="background:linear-gradient(#cde7ea,#eef6f3)"><svg viewBox="0 0 200 96" preserveAspectRatio="xMidYMax slice"><rect y="80" width="200" height="16" fill="#d8c8aa"/><path d="M40 80V44h120v36z" fill="#fff"/><path d="M32 46h136l-14-18H46z" fill="#0f4c4a"/><rect x="56" y="54" width="22" height="14" fill="#7ab8bb"/><rect x="122" y="54" width="22" height="14" fill="#7ab8bb"/><rect x="90" y="56" width="20" height="24" fill="#16706b"/></svg><em>For sale</em></div><div class="i"><b>₦95,000,000</b><small>3-bed flat · Ikate, Lekki</small><small>3 bed · 3 bath · BQ</small></div></div>
+            <div class="home"><div class="ph2" style="background:linear-gradient(#f3dfc2,#fbf3e6)"><svg viewBox="0 0 200 96" preserveAspectRatio="xMidYMax slice"><rect y="80" width="200" height="16" fill="#d8c8aa"/><rect x="58" y="22" width="84" height="58" fill="#fff"/><rect x="66" y="30" width="16" height="10" fill="#7ab8bb"/><rect x="92" y="30" width="16" height="10" fill="#7ab8bb"/><rect x="118" y="30" width="16" height="10" fill="#7ab8bb"/><rect x="66" y="48" width="16" height="10" fill="#7ab8bb"/><rect x="92" y="48" width="16" height="10" fill="#7ab8bb"/><rect x="118" y="48" width="16" height="10" fill="#7ab8bb"/><rect x="92" y="64" width="16" height="16" fill="#16706b"/></svg><em>To let</em></div><div class="i"><b>₦7,500,000 / yr</b><small>2-bed apartment · Ikoyi</small><small>2 bed · 2 bath · gym</small></div></div>
+            <div class="home"><div class="ph2" style="background:linear-gradient(#d6e3f3,#f1f5fb)"><svg viewBox="0 0 200 96" preserveAspectRatio="xMidYMax slice"><rect y="80" width="200" height="16" fill="#d8c8aa"/><path d="M50 80V48l50-26 50 26v32z" fill="#fff"/><path d="M42 50 100 18l58 32" fill="none" stroke="#0f4c4a" stroke-width="6"/><rect x="66" y="54" width="18" height="14" fill="#7ab8bb"/><rect x="116" y="54" width="18" height="14" fill="#7ab8bb"/><rect x="90" y="58" width="20" height="22" fill="#16706b"/></svg><em>Shortlet</em></div><div class="i"><b>₦120,000 / night</b><small>Studio · Ikeja GRA</small><small>Sleeps 2 · 24h power</small></div></div>
+          </div>
+        </div>
+        <div class="sfoot" aria-hidden="true"><span><b>Harbourline Homes</b> · 12 Admiralty Way, Lekki</span><span>0803 000 0000</span><span>Mon–Sat, 9am–6pm</span></div>
+        <div class="hint" aria-hidden="true">Your assistant lives here →</div>
+        <button type="button" class="launcher" id="launcher" aria-label="Focus the chat"><svg class="ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20l1.2-4.2A8.5 8.5 0 1 1 20.5 11.5z"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="chatcol" aria-label="AI assistant">
+    <p class="lbl"><b>②</b> Your AI assistant — try it</p>
+    <div class="chat">
+      <div class="ch">
+        <div class="av" aria-hidden="true">F</div>
+        <div class="sp"><b>Ferrn Assistant</b><small id="status">Online · replies in seconds</small></div>
+        <div class="tools">
+          <div class="sel"><label for="lang" class="sr">Reply language</label>
+            <select id="lang">
+              <option value="en">English</option><option value="yo">Yorùbá</option><option value="ig">Igbo</option><option value="ha">Hausa</option>
+              <option value="fr">Français</option><option value="de">Deutsch</option><option value="es">Español</option><option value="zh">中文</option>
+            </select></div>
+          <button type="button" class="icb" id="spk" aria-pressed="false" aria-label="Read replies aloud" title="Read replies aloud"></button>
+        </div>
+      </div>
+      <div class="log" id="log" role="log" aria-live="polite" aria-label="Conversation"></div>
+      <div class="chips" id="chips" role="group" aria-label="Suggested questions"></div>
+      <form class="composer" id="form" autocomplete="off">
+        <button type="button" class="mic" id="mic" aria-label="Speak your question" title="Speak your question"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
+        <label for="q" class="sr">Your message</label>
+        <input id="q" placeholder="Ask anything about Ferrn…" maxlength="600">
+        <button type="submit" class="send" id="send" aria-label="Send"><svg class="ic" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+    </div>
+    <p class="note"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1aa35a" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg><span id="noteTxt">This demo is connected to Ferrn's real assistant.</span></p>
+  </section>
+</div>
+
+<div class="feat">
+  <div><b><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>Eight languages</b><p>English, Yorùbá, Igbo, Hausa, French, German, Spanish and Chinese.</p></div>
+  <div><b><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 19V5L7.5 9.5zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>Talks and listens</b><p>Turn on the speaker or tap the mic — handy for customers on the move.</p></div>
+  <div><b><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>Trained on your business</b><p>Your prices, services, opening hours and FAQs — not generic answers.</p></div>
+  <div><b><svg class="ic" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Hands off to you</b><p>Books calls, collects leads and passes hot ones to your WhatsApp.</p></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var log=$('#log'),form=$('#form'),input=$('#q'),send=$('#send'),langSel=$('#lang'),spk=$('#spk'),mic=$('#mic');
+var OFFLINE=location.protocol==='file:';
+var LANGS={en:'English',yo:'Yorùbá',ig:'Igbo',ha:'Hausa',fr:'Français',de:'Deutsch',es:'Español',zh:'中文'};
+var BCP={en:'en-NG',yo:'yo-NG',ig:'ig-NG',ha:'ha-NG',fr:'fr-FR',de:'de-DE',es:'es-ES',zh:'zh-CN'};
+var CHIPS=['What does Ferrn build?','How much is the Clinic Front Desk?','Can you build me a school website?','Do you speak Pidgin?'];
+var WELCOME='Hi, I’m Ferrn’s assistant. Ask me about websites, AI assistants, automations or what a project might cost — in English, Pidgin or any language in the menu.';
+var history=[],session,busy=false,speakOn=false,audio=null;
+function newSession(){session='demo-'+(window.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,10))}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function linkify(t){
+ var s=esc(t);
+ s=s.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g,function(u){return '<a href="'+u+'" target="_blank" rel="noopener">'+u.replace(/^https?:\/\//,'')+'</a>'});
+ s=s.replace(/(^|[\s(])([\w.+-]+@[\w-]+\.[\w.-]*\w)/g,'$1<a href="mailto:$2">$2</a>');
+ s=s.replace(/(^|[\s(])(\/(?:marketplace|work|services|contact|team|insights|demos)(?:\/[\w\-]+)*\/?)/g,'$1<a href="$2" target="_top">$2</a>');
+ s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+ return s;
+}
+function now(){var d=new Date();return (d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes()}
+var SPK_ON='<svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 19V5L7.5 9.5z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
+var SPK_OFF='<svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 19V5L7.5 9.5z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/></svg>';
+function scroll(){log.scrollTop=log.scrollHeight}
+function add(role,text,opts){
+ opts=opts||{};var d=document.createElement('div');d.className='m '+role;
+ d.innerHTML=linkify(text);
+ var f=document.createElement('div');f.className='foot';f.innerHTML='<span>'+now()+'</span>';
+ if(role==='bot'){
+  var b=document.createElement('button');b.type='button';b.className='say';b.innerHTML=SPK_ON.replace(/18/g,'12')+'Listen';b.setAttribute('aria-label','Listen to this reply');
+  b.addEventListener('click',function(){speak(text)});f.appendChild(b);
+  if(opts.canned){var t=document.createElement('span');t.className='tagx';t.textContent='offline preview';f.appendChild(t)}
+ }
+ d.appendChild(f);log.appendChild(d);scroll();return d;
+}
+function sys(text){var d=document.createElement('div');d.className='sys';d.textContent=text;log.appendChild(d);scroll()}
+function chips(){var c=$('#chips');c.innerHTML='';CHIPS.forEach(function(q){var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=q;b.addEventListener('click',function(){ask(q)});c.appendChild(b)})}
+
+/* canned replies for file:// testing */
+function canned(q){
+ var s=q.toLowerCase();
+ if(/pidgin/.test(s))return 'Yes o! I fit yarn you for Pidgin, English or any of the languages for the menu. Wetin you wan build — website, AI assistant or automation?';
+ if(/clinic/.test(s))return 'The **Clinic Front Desk** is a ready-made website for clinics: services, doctors, online booking and WhatsApp reminders. Current pricing and what’s included are on /marketplace — or I can book you a quick call.';
+ if(/school/.test(s))return 'Yes — we build school websites with admissions forms, fee information, a news page and a parent portal option. Have a look at the school template on /marketplace, or tell me your school’s name and city and I’ll suggest a starting point.';
+ if(/build|do you|what/.test(s))return 'Ferrn builds websites, AI assistants (like me) and WhatsApp automations for Nigerian businesses — clinics, schools, logistics companies, estate agents and more. Ready-made options are on /marketplace, and custom projects start with a free call: https://cal.com/ferrn-agency';
+ if(/price|cost|how much/.test(s))return 'It depends on the scope. Templates on /marketplace have fixed prices; custom builds are quoted after a short call. Want me to book one?';
+ return 'You’re viewing this demo offline, so I’m answering with a sample reply. Open it on Ferrn’s website to chat with the real assistant — or email info@ferrnagency.com.';
+}
+
+function typing(){var d=document.createElement('div');d.className='m bot typing';d.setAttribute('aria-label','Assistant is typing');d.innerHTML='<i></i><i></i><i></i>';log.appendChild(d);scroll();return d}
+function setBusy(b){busy=b;send.disabled=b;$('#status').textContent=b?'Typing…':'Online · replies in seconds'}
+
+function ask(q){
+ q=String(q||'').trim();if(!q||busy)return;
+ input.value='';add('me',q);setBusy(true);var t=typing();
+ var lang=langSel.value,hist=history.slice(-12);
+ var done=function(msg,c){t.remove();setBusy(false);add('bot',msg,{canned:c});
+  history.push({role:'user',content:q},{role:'assistant',content:msg});history=history.slice(-12);
+  if(speakOn)speak(msg)};
+ if(OFFLINE){setTimeout(function(){done(canned(q),true)},700+Math.random()*500);return}
+ fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:q,history:hist,lang:lang,path:'/demos/assistant/',session:session})})
+ .then(function(r){return r.json()})
+ .then(function(j){if(!j||typeof j.message!=='string'||!j.message)throw new Error('bad');done(j.message,false)})
+ .catch(function(){t.remove();setBusy(false);add('bot','Sorry — I couldn’t reach the assistant just now. Please try again in a moment, or email info@ferrnagency.com and the team will reply.')});
+}
+form.addEventListener('submit',function(e){e.preventDefault();ask(input.value)});
+
+/* speech out */
+function pickVoice(lang){
+ if(!('speechSynthesis' in window))return null;var v=speechSynthesis.getVoices()||[];
+ function f(p){p=p.toLowerCase();return v.filter(function(x){return (x.lang||'').replace('_','-').toLowerCase().indexOf(p)===0})[0]}
+ return f('en-NG')||f(BCP[lang]||lang)||f(lang)||null;
+}
+function browserSpeak(text,lang){
+ if(!('speechSynthesis' in window))return;
+ try{var u=new SpeechSynthesisUtterance(text);var v=pickVoice(lang);if(v){u.voice=v;u.lang=v.lang}else{u.lang=BCP[lang]||'en-NG'}u.rate=1;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
+}
+function stopSpeech(){try{if(audio){audio.pause();audio=null}if('speechSynthesis' in window)speechSynthesis.cancel()}catch(e){}}
+function speak(text){
+ var plain=String(text).replace(/https?:\/\/\S+/g,'').replace(/[*#_`]/g,'').trim(),lang=langSel.value;if(!plain)return;
+ stopSpeech();
+ if(OFFLINE){browserSpeak(plain,lang);return}
+ fetch('/api/tts',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text:plain,lang:lang})})
+ .then(function(r){var ct=r.headers.get('content-type')||'';if(r.ok&&ct.indexOf('audio/')===0)return r.blob();throw new Error('no audio')})
+ .then(function(b){audio=new Audio(URL.createObjectURL(b));return audio.play()})
+ .catch(function(){browserSpeak(plain,lang)});
+}
+function paintSpk(){spk.innerHTML=speakOn?SPK_ON:SPK_OFF;spk.setAttribute('aria-pressed',speakOn);spk.title=speakOn?'Speaker on — replies are read aloud':'Read replies aloud'}
+spk.addEventListener('click',function(){speakOn=!speakOn;paintSpk();if(!speakOn)stopSpeech();sys(speakOn?'Speaker on — I’ll read my replies aloud.':'Speaker off.')});
+if('speechSynthesis' in window&&speechSynthesis.addEventListener){speechSynthesis.addEventListener('voiceschanged',function(){})}
+
+/* speech in */
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null;
+if(!SR){mic.hidden=true}else{
+ mic.addEventListener('click',function(){
+  if(rec){try{rec.stop()}catch(e){}return}
+  try{rec=new SR();rec.lang=BCP[langSel.value]||'en-NG';rec.interimResults=false;rec.maxAlternatives=1}catch(e){mic.hidden=true;return}
+  mic.classList.add('rec');mic.setAttribute('aria-label','Listening — tap to stop');
+  rec.onresult=function(ev){var t=ev.results[0][0].transcript;if(t){if(!speakOn){speakOn=true;paintSpk()}ask(t)}};
+  rec.onerror=function(ev){if(ev&&ev.error==='not-allowed')sys('Microphone access was blocked — you can still type.')};
+  rec.onend=function(){mic.classList.remove('rec');mic.setAttribute('aria-label','Speak your question');rec=null};
+  try{rec.start()}catch(e){mic.classList.remove('rec');rec=null}
+ });
+}
+
+langSel.addEventListener('change',function(){sys('Language set to '+LANGS[langSel.value]+' — replies will follow.');input.focus()});
+$('#launcher').addEventListener('click',function(){input.focus();$('.chat').scrollIntoView({behavior:'smooth',block:'center'})});
+function reset(){stopSpeech();if(rec){try{rec.abort()}catch(e){}}history=[];newSession();busy=false;setBusy(false);speakOn=false;paintSpk();langSel.value='en';log.innerHTML='';add('bot',WELCOME);input.value=''}
+$('#reset').addEventListener('click',function(){reset();sys('Demo reset — new conversation.')});
+if(OFFLINE){var lb=$('#liveBadge');lb.classList.add('off');lb.textContent='Offline preview';$('#noteTxt').textContent='This demo is connected to Ferrn\u2019s real assistant. (Opened from a file, so replies here are samples.)'}
+chips();reset();
+})();
+</script>
+</body>
+</html>

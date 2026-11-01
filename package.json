@@ -1,0 +1,32 @@
+{
+  "name": "ferrn-platform",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ferrn Agency platform: public website, marketplace, AI assistant and the Ferrn Studio (leads, outreach, meetings, quotes, content, team) on Cloudflare Workers.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply ferrn-db --local",
+    "db:migrate": "wrangler d1 migrations apply ferrn-db --remote",
+    "db:seed": "python3 scripts/import_command_centre.py exports/command-centre.txt > migrations/seed/leads.sql && wrangler d1 execute ferrn-db --remote --file=migrations/seed/leads.sql",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json && tsc -p tsconfig.studio.json",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "hono": "^4.13.16"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261101.1",
+    "@fontsource/pinyon-script": "^5.3.0",
+    "@fontsource/poppins": "^5.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.25.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^5.9.0",
+    "wrangler": "^4.156.0"
+  }
+}

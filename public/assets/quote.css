@@ -1,0 +1,26 @@
+:root { --o: #ff4100; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #ecebe8; font: 400 14px/1.6 Poppins, system-ui, sans-serif; color: #151515; }
+.toolbar { position: sticky; top: 0; display: flex; gap: 10px; justify-content: center; align-items: center; padding: 12px; background: #111; z-index: 2; }
+.toolbar button { border: 1px solid #333; background: #222; color: #fff; padding: 9px 18px; border-radius: 999px; font: inherit; cursor: pointer; }
+.toolbar button.primary { background: var(--o); border-color: var(--o); }
+.toolbar .ok { color: #4ade80; }
+.sheet { width: 210mm; min-height: 297mm; margin: 24px auto; background: #fff; padding: 18mm 18mm 14mm; box-shadow: 0 20px 60px rgba(0,0,0,.12); position: relative; }
+.sheet::before { content: ''; position: absolute; left: 0; top: 0; right: 0; height: 6px; background: var(--o); }
+header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
+.meta { text-align: right; } .meta h1 { margin: 0; font-size: 30px; letter-spacing: -.02em; } .meta p { margin: 0; color: #666; }
+.parties { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 16px 0; border-block: 1px solid #eee; margin-bottom: 22px; }
+h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--o); }
+h2 { font-size: 20px; margin: 0 0 14px; letter-spacing: -.01em; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #888; border-bottom: 2px solid #111; padding: 8px 6px; }
+td { padding: 10px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+.r { text-align: right; white-space: nowrap; }
+.totals { margin-left: auto; width: 60%; }
+.totals p { display: flex; justify-content: space-between; margin: 4px 0; }
+.totals .grand { font-size: 18px; font-weight: 600; border-top: 2px solid #111; padding-top: 8px; margin-top: 8px; }
+.totals .rec { color: #555; }
+section { margin-top: 22px; } .pre { white-space: pre-wrap; margin: 0; color: #333; }
+footer { margin-top: 40px; font-size: 12px; color: #999; text-align: center; }
+@media print { body { background: #fff; } .toolbar { display: none; } .sheet { margin: 0; box-shadow: none; width: auto; min-height: 0; } @page { size: A4; margin: 0; } }
+@media (max-width: 800px) { .sheet { width: auto; margin: 0; padding: 24px; } .parties { grid-template-columns: 1fr; } .totals { width: 100%; } }

@@ -1,0 +1,41 @@
+export const CLIENT_LOGOS = [
+  ['clientLogo1.svg', 'Gromzia'], ['clientLogo2.svg', 'Synergix Africa'], ['clientLogo3.svg', 'M-P Infrastructure'],
+  ['clientLogo5.svg', 'Aroda'], ['clientLogo6.svg', 'Outbox Experience'], ['clientLogo7.svg', 'Knomi'], ['clientLogo12.svg', 'Padher'],
+].map(([file, name]) => ({ name, src: `https://raw.githubusercontent.com/FERRN-AGENCY/ferrn-website/main/fern/src/assets/${file}` }));
+
+export const STATS = [
+  { value: 50, suffix: '+', label: 'projects across websites, web applications and AI systems' },
+  { value: 99, suffix: '%', label: 'project completion rate and client satisfaction' },
+  { value: 10, suffix: '+', label: 'industries served, from healthcare to energy' },
+  { value: 25, suffix: '+', label: 'years of combined team experience' },
+];
+
+export const PROCESS = [
+  ['01 / Discover', 'Understand', 'We find the commercial problem, users, constraints and what success should mean.'],
+  ['02 / Define', 'Scope', 'We turn the problem into a focused website, application or automation roadmap.'],
+  ['03 / Design', 'Shape', 'We make the experience visible early so important decisions happen before expensive build work.'],
+  ['04 / Build', 'Develop', 'Frontend, backend, integrations and content systems are implemented and tested.'],
+  ['05 / Launch', 'Ship', 'We deploy, hand over, support and improve using real business feedback.'],
+];
+
+export const FAQS = [
+  ['What kinds of projects do you take on?', 'Conversion-focused websites, custom web applications, portals, dashboards and practical AI automation. If a project will not clearly improve trust, revenue, efficiency or visibility, we will say so before we build anything.'],
+  ['How much does a project cost?', 'Marketplace products have published prices — a setup fee plus a monthly plan, or a one-off code purchase. Custom websites, applications and AI systems are scoped first, then we recommend the smallest useful solution.'],
+  ['How long does a typical project take?', 'Marketplace products go live in 5–14 days. Custom websites take a few weeks; larger applications are delivered in milestones so you can review progress early.'],
+  ['Do I own my website?', 'Your content, domain and data are always yours. On managed plans we host and maintain the software; you can buy the code outright at any time, and you can export your data whenever you like.'],
+  ['Can you work with our existing team?', 'Yes. We can be the full strategy-design-development team or plug into an existing internal team where design, frontend, backend or AI support is needed.'],
+  ['Do you provide support after launch?', 'Yes. Managed plans include hosting, security updates, backups and support. Custom projects can add a maintenance plan.'],
+];
+
+export const SERVICES_DETAIL = [
+  { key: 's1', icon: 'monitor', items: ['Positioning & copy', 'UI/UX design', 'Fast, SEO-ready build', 'Booking, quote & enquiry flows', 'Analytics & Search Console', 'Hosting & care plans'] },
+  { key: 's2', icon: 'layout', items: ['Client & patient portals', 'Admin dashboards', 'Workflow & approvals', 'Payments (Paystack, Stripe)', 'Role-based access & audit logs', 'Integrations & APIs'] },
+  { key: 's3', icon: 'sparkles', items: ['Website & WhatsApp assistants', 'Document intelligence', 'Lead follow-up automation', 'Voice assistants (Nigerian voices)', 'Internal AI copilots', 'Reporting automations'] },
+];
+
+export const SOCIALS = [
+  ['Instagram', 'https://www.instagram.com/ferrn.agency/'],
+  ['X', 'https://x.com/ferrn_agency'],
+  ['LinkedIn', 'https://www.linkedin.com/company/109135329/'],
+  ['TikTok', 'https://www.tiktok.com/@ferrnagency'],
+];

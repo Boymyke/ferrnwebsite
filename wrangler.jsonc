@@ -1,0 +1,51 @@
+// Ferrn platform — one Worker serves the website, marketplace, API and Studio.
+// Deploy: connect this repo in Cloudflare (Workers & Pages → ferrn → Settings → Builds),
+// build command `npm run build`, deploy command `npx wrangler deploy`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ferrn",
+  "main": "src/worker/index.tsx",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "none"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ferrn-db",
+      "database_id": "f83f0e82-ff71-4218-8aec-3f4ffae76474",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "a6cccea666134dc7bb2e86243635e58d" }
+  ],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "ferrn-media" }
+  ],
+  "ai": { "binding": "AI" },
+  "triggers": {
+    // Every 10 min: sync LeadsHunter engine snapshot, publish due content, renew caches.
+    "crons": ["*/10 * * * *"]
+  },
+  "observability": { "enabled": true },
+  "vars": {
+    "SITE_URL": "https://www.ferrnagency.com",
+    "SITE_NAME": "Ferrn Digital Agency",
+    "CONTACT_EMAIL": "info@ferrnagency.com",
+    "BOOKING_URL": "https://cal.com/ferrn-agency",
+    "WHATSAPP_NUMBER": "",
+    "OPENAI_MODEL": "gpt-6-luna",
+    "WORKERS_AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "TTS_PROVIDER": "azure",
+    "AZURE_SPEECH_REGION": "westeurope",
+    "AZURE_VOICE": "en-NG-EzinneNeural",
+    "ELEVENLABS_VOICE_ID": "U7wWSnxIJwCjioxt86mk",
+    "ENGINE_URL": ""
+  }
+  // Secrets (wrangler secret put NAME): OPENAI_API_KEY, AZURE_SPEECH_KEY, ELEVENLABS_API_KEY,
+  // ENGINE_KEY, PAYSTACK_SECRET_KEY, GOOGLE_MAPS_API_KEY, BOOTSTRAP_SECRET, SESSION_PEPPER
+}
