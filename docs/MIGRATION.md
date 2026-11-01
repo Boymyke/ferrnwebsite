@@ -22,7 +22,8 @@ Time needed: about 30 minutes of clicking, then up to 24 hours for nameservers t
    - MX, TXT, and any `mail`, `autodiscover` or Zoho CNAMEs: **DNS only (grey cloud)**. Email must never be proxied.
    - `@` and `www`: leave as they are for now. Step 3 changes them.
 4. Add the fallback record: `A` · `legacy` · *your cPanel IP* · **DNS only**.
-5. If SSL errors appear on `legacy.ferrnagency.com` later, run cPanel → **SSL/TLS Status → Run AutoSSL**.
+5. Add the Google Search Console verification record (it's still pending from the SEO setup): `TXT` · `@` · `google-site-verification=P_KMkBhbtGBMo-cQvsJXeKk58BQkBJMDrSvUxFiFcFs`. Once DNS is active, click **Verify** in Search Console.
+6. If SSL errors appear on `legacy.ferrnagency.com` later, run cPanel → **SSL/TLS Status → Run AutoSSL**.
 
 ## Step 2: Switch nameservers at Namecheap
 
@@ -45,7 +46,7 @@ Time needed: about 30 minutes of clicking, then up to 24 hours for nameservers t
    - The old URLs redirect: `/admin`, `/testimonials`, and the old case-study links.
    - `/sitemap.xml` loads.
    - Email still works.
-5. In Google Search Console, resubmit `https://www.ferrnagency.com/sitemap.xml`.
+5. In Google Search Console, submit `https://www.ferrnagency.com/sitemap.xml`. Google Analytics 4 (G-XYT9F1DHSF) is already built into the new site and starts counting as soon as the domain points at it, so there's no header tag to add.
 
 **Rollback** (if something is badly wrong): in Workers → Domains, remove the two custom domains, then add back `A @ <cPanel IP>` and `CNAME www ferrnagency.com` (proxied). The PHP site is live again within a minute.
 

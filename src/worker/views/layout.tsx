@@ -53,6 +53,8 @@ export function Layout(p: LayoutProps) {
         <link rel="preload" href="/fonts/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="preload" href="/fonts/pinyon-script-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="stylesheet" href="/fonts/fonts.css" />
+        {/* Google Analytics 4 (property "Ferrn Digital Agency"). Only loads on the real domain, so test deploys don't skew numbers. */}
+        {raw(`<script>(function(){if(!/(^|\\.)ferrnagency\\.com$/.test(location.hostname))return;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-XYT9F1DHSF';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-XYT9F1DHSF',{anonymize_ip:true});})();</script>`)}
         <link rel="stylesheet" href={`/assets/site.css?v=${ASSET_V}`} />
         {raw(`<script>(function(){try{var d=document.documentElement,t=localStorage.getItem('ferrn-theme');if(t)d.dataset.theme=t;${p.intro ? "if(!sessionStorage.getItem('ferrn-intro')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('play-intro');" : ''}}catch(e){}})();</script>`)}
         {p.schema ? raw(`<script type="application/ld+json">${JSON.stringify(p.schema).replace(/</g, '\\u003c')}</script>`) : null}
