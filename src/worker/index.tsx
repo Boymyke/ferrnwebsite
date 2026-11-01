@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { whatsappWebhook } from './routes/whatsapp';
 import { processQueue } from './lib/wa-automations';
+import { runSocial } from './lib/social';
+import { socialPublic } from './routes/social';
 import { secureHeaders } from 'hono/secure-headers';
 import type { AppEnv, Bindings } from './lib/env';
 import { loadUser } from './lib/auth';
@@ -37,6 +39,7 @@ app.use('*', async (c, next) => { c.set('lang', 'en'); await next(); });
 app.route('/api/auth', authApi);
 app.route('/api/studio', studioApi);
 app.route('/api/whatsapp', whatsappWebhook);
+app.route('/api/social', socialPublic); // OAuth return for TikTok / Instagram connect
 app.route('/api', publicApi);
 
 /* Studio (installable PWA) */
@@ -106,10 +109,11 @@ app.onError((err, c) => {
 
 export default {
   fetch: app.fetch,
-  async scheduled(_event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
+  async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     ctx.waitUntil((async () => {
       try { await syncEngine(env); } catch (e) { console.warn('engine sync failed', e); }
       try { await processQueue(env); } catch (e) { console.warn('whatsapp queue failed', e); }
+      try { await runSocial(env, event.scheduledTime); } catch (e) { console.warn('social autopost/metrics failed', e); }
       await env.DB.prepare("DELETE FROM sessions WHERE expires_at < datetime('now')").run();
     })());
   },
