@@ -28,6 +28,7 @@ Workers & Pages → `ferrn` → **Settings → Variables and Secrets** → add e
 | `ENGINE_KEY` | LeadsHunter outreach in Studio | The `API_KEY` value in the LeadsHunter sheet's **Settings** tab. Also set the `ENGINE_URL` variable (step 4). |
 | `GOOGLE_MAPS_API_KEY` | **Find leads** (Google Maps prospecting) | Google Cloud console → enable **Places API (New)** → Credentials → API key, restricted to Places API. |
 | `PAYSTACK_SECRET_KEY` | Marketplace card payments | Paystack dashboard → Settings → API Keys & Webhooks. Set the webhook URL to `https://www.ferrnagency.com/api/paystack/webhook`. Without it, checkout sends an invoice request instead. |
+| `RESEND_API_KEY` | Proposal and invoice emails (link, separate access-code email, signing and receipt alerts to `CONTACT_EMAIL`, payment reminders), sent from `proposals@ferrnagency.com` | resend.com → Domains → add and verify `ferrnagency.com` (DNS records in Cloudflare) → API Keys → create a **Sending access** key. Without it, Studio shows the link and code to copy or share on WhatsApp. |
 | `AZURE_SPEECH_KEY` | Nigerian voice for the assistant (Ezinne, en-NG) | Azure portal → Speech service (region `westeurope`, the free tier is enough). |
 | `ELEVENLABS_API_KEY` | Optional alternative voice (Lagos accent) | elevenlabs.io → Profile → API key, then set the variable `TTS_PROVIDER` to `elevenlabs`. |
 

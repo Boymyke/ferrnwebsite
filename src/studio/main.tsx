@@ -8,14 +8,16 @@ import { Leads, Prospect } from './pages/leads';
 import { Outreach } from './pages/outreach';
 import { Meetings } from './pages/meetings';
 import { Quotes } from './pages/quotes';
+import { Proposals } from './pages/proposals';
+import { FileSignature } from 'lucide-react';
 import { Ads, Knowledge, Orders, Posts, Products, Requests, Testimonials, TeamMembers } from './pages/catalog';
 import { Content } from './pages/content';
 import { CarouselStudio } from './pages/carousel';
 import { WhatsApp } from './pages/whatsapp';
 import { Settings, TeamAccess } from './pages/team';
 
-const NAV: { group: string; items: [string, string, string, User['role']?][] }[] = [
-  { group: 'Main', items: [['/', 'Dashboard', '▦'], ['/leads', 'Leads', '◎'], ['/prospect', 'Find leads', '⌕'], ['/outreach', 'Outreach', '✉'], ['/whatsapp', 'WhatsApp', '✆'], ['/meetings', 'Meetings', '◷'], ['/quotes', 'Quotes', '₦']] },
+const NAV: { group: string; items: [string, string, React.ReactNode, User['role']?][] }[] = [
+  { group: 'Main', items: [['/', 'Dashboard', '▦'], ['/leads', 'Leads', '◎'], ['/prospect', 'Find leads', '⌕'], ['/outreach', 'Outreach', '✉'], ['/whatsapp', 'WhatsApp', '✆'], ['/meetings', 'Meetings', '◷'], ['/quotes', 'Quotes', '₦'], ['/proposals', 'Proposals', <FileSignature size={16} strokeWidth={1.9} />]] },
   { group: 'Marketing', items: [['/content', 'Content', '✎'], ['/ads', 'Ads', '◆']] },
   { group: 'Marketplace', items: [['/marketplace/products', 'Products', '▤'], ['/marketplace/orders', 'Orders', '◫'], ['/marketplace/requests', 'Enquiries', '✦']] },
   { group: 'Website', items: [['/website/team', 'Team page', '☺'], ['/website/testimonials', 'Testimonials', '❝'], ['/website/posts', 'Insights', '¶'], ['/website/knowledge', 'Chatbot knowledge', '◐']] },
@@ -32,6 +34,7 @@ function Router() {
   if (p.startsWith('/whatsapp')) return <WhatsApp />;
   if (p.startsWith('/meetings')) return <Meetings />;
   if (p.startsWith('/quotes')) return <Quotes />;
+  if (p.startsWith('/proposals')) return <Proposals />;
   if (p.startsWith('/content')) return <Content />;
   if (p.startsWith('/carousel')) return <CarouselStudio />;
   if (p.startsWith('/ads')) return <Ads />;

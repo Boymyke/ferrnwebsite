@@ -10,6 +10,8 @@ import { siteRoutes, NotFound } from './routes/site';
 import publicApi from './routes/api-public';
 import authApi from './routes/auth';
 import studioApi from './routes/studio-api';
+import proposalsApi from './routes/proposals';
+import clientDocs from './routes/client-docs';
 import { studioShell } from './routes/studio-shell';
 import { QuoteDocument, type QuoteRow } from './views/quote';
 import { LANGS } from './content/i18n';
@@ -35,6 +37,7 @@ app.use('*', async (c, next) => { c.set('lang', 'en'); await next(); });
 
 /* API */
 app.route('/api/auth', authApi);
+app.route('/api/studio/proposals', proposalsApi);
 app.route('/api/studio', studioApi);
 app.route('/api/whatsapp', whatsappWebhook);
 app.route('/api', publicApi);
@@ -51,9 +54,14 @@ app.get('/q/:key', async (c) => {
   return c.html(<QuoteDocument q={q} />);
 });
 
-/* R2 media (team photos, content assets) */
+/* Proposals (/p/:token) and invoices (/i/:token) for clients, behind an access code */
+app.route('/', clientDocs);
+
+/* R2 media (team photos, content assets). private/ holds signatures and receipts: never public. */
 app.get('/media/*', async (c) => {
   const key = c.req.path.replace(/^\/media\//, '');
+  let plain = key; try { plain = decodeURIComponent(key); } catch { /* keep raw */ }
+  if (/^\/*private(\/|$)/i.test(plain)) return c.notFound();
   const obj = await c.env.MEDIA.get(key);
   if (!obj) return c.notFound();
   const h = new Headers();
