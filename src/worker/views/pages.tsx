@@ -256,7 +256,9 @@ export function ProductPage({ lang, p, related, note }: { lang: Lang; p: Product
               <p class="plan-price" data-ngn={money(tier.ngn, 'NGN')} data-usd={money(tier.usd, 'USD')}>{money(tier.ngn, 'NGN')} <small>{tier.unit}</small></p>
               {tier.extra ? <p class="muted">{tier.extra}</p> : null}
               <p class="plan-own"><strong>{t(lang, 'market.own')}:</strong> {tier.own}</p>
-              <button class="btn btn-primary" type="button" data-checkout={p.slug} data-tier={tier.key}>{t(lang, 'market.buy')}</button>
+              {p.demo_url
+                ? <button class="btn btn-primary" type="button" data-checkout={p.slug} data-tier={tier.key}>{t(lang, 'market.buy')}</button>
+                : <a class="btn btn-ghost" href="#early-access">Reserve a founding slot</a>}
             </article>
           ))}
         </div>
@@ -274,9 +276,11 @@ export function ProductPage({ lang, p, related, note }: { lang: Lang; p: Product
             <p class="form-status" role="status"></p>
           </form>
         </dialog>
-        <section class="customise">
-          <h2>{t(lang, 'market.customise')}</h2>
-          <p>Need a feature that isn’t listed, another language, or an integration? Tell us and we’ll send a fixed quote.</p>
+        <section class="customise" id="early-access">
+          <h2>{p.demo_url ? t(lang, 'market.customise') : 'Early access: founding clients'}</h2>
+          <p>{p.demo_url
+            ? 'Need a feature that isn’t listed, another language, or an integration? Tell us and we’ll send a fixed quote.'
+            : 'We’re building this with our first five clients. Tell us about your business and we’ll call you: founding clients lock in launch pricing and help decide what gets built first.'}</p>
           <ContactForm lang={lang} type="customise" product={p.slug} />
         </section>
         {related.length ? <><h2>More in the marketplace</h2><div class="product-grid">{related.map((r) => <ProductCard p={r} lang={lang} />)}</div></> : null}
