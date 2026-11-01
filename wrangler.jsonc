@@ -29,6 +29,9 @@
   "ai": { "binding": "AI" },
   // ferrnagency.com runs through Worker routes on the existing proxied DNS records
   // (legacy.ferrnagency.com stays DNS-only and still reaches the old cPanel site).
+  // Keep the workers.dev address and preview URLs on even though routes are set.
+  "workers_dev": true,
+  "preview_urls": true,
   "routes": [
     { "pattern": "www.ferrnagency.com/*", "zone_name": "ferrnagency.com" },
     { "pattern": "ferrnagency.com/*", "zone_name": "ferrnagency.com" }
