@@ -27,6 +27,12 @@
     { "binding": "MEDIA", "bucket_name": "ferrn-media" }
   ],
   "ai": { "binding": "AI" },
+  // ferrnagency.com runs through Worker routes on the existing proxied DNS records
+  // (legacy.ferrnagency.com stays DNS-only and still reaches the old cPanel site).
+  "routes": [
+    { "pattern": "www.ferrnagency.com/*", "zone_name": "ferrnagency.com" },
+    { "pattern": "ferrnagency.com/*", "zone_name": "ferrnagency.com" }
+  ],
   "triggers": {
     // Every 10 min: sync LeadsHunter engine snapshot, publish due content, renew caches.
     "crons": ["*/10 * * * *"]

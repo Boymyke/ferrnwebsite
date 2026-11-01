@@ -24,6 +24,12 @@ app.use('*', secureHeaders({
   permissionsPolicy: { camera: [], microphone: ['self'], geolocation: [] },
   contentSecurityPolicy: undefined, // inline JSON-LD + demo iframes; revisit with nonces once stable
 }));
+// One canonical address: ferrnagency.com → www.ferrnagency.com (keeps path and query).
+app.use('*', async (c, next) => {
+  const u = new URL(c.req.url);
+  if (u.hostname === 'ferrnagency.com') { u.hostname = 'www.ferrnagency.com'; return c.redirect(u.toString(), 301); }
+  await next();
+});
 app.use('*', loadUser);
 app.use('*', async (c, next) => { c.set('lang', 'en'); await next(); });
 
