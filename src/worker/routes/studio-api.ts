@@ -13,6 +13,7 @@ import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, type AutoConfig } from
 import { CORE_FLOW, NICHE_PRODUCT, NICHE_QUESTIONS, OBJECTIONS, nicheKey } from '../content/meeting-playbook';
 import { quoteTotals, type QuoteItem } from '../views/quote';
 import { NOVEMBER_CALENDAR } from '../content/november-calendar';
+import { WEEK_MEDIA, mediaKey } from '../content/week-media';
 import { socialStudio } from './social';
 import { rearmAfterEdit } from '../lib/social';
 
@@ -457,16 +458,21 @@ studio.post('/content/generate', async (c): Promise<Response> => {
 studio.post('/content/import-calendar', async (c): Promise<Response> => {
   const u = c.get('user')!;
   if (!can(u, 'editor')) return c.json({ ok: false, error: 'No access' }, 403);
-  let added = 0;
+  let added = 0, attached = 0;
   for (const p of NOVEMBER_CALENDAR) {
-    const exists = await first(c.env.DB, 'SELECT id FROM content_posts WHERE platform = ? AND scheduled_at = ? AND title = ?', p.platform, p.scheduled_at, p.title);
-    if (exists) continue;
-    await run(c.env.DB, `INSERT INTO content_posts (id, platform, format, theme, goal, audience, title, body, hashtags, scheduled_at, status, created_by, updated_by)
-      VALUES (?,?,?,?,?,?,?,?,?,?, 'approved', ?, ?)`, newId('c_'), p.platform, p.format, p.theme, p.goal, p.audience, p.title, p.body, p.hashtags, p.scheduled_at, u.name, u.name);
+    const media = WEEK_MEDIA[mediaKey(p.scheduled_at, p.platform)];
+    const exists = await first<{ id: string; media_json: string | null }>(c.env.DB, 'SELECT id, media_json FROM content_posts WHERE platform = ? AND scheduled_at = ? AND title = ?', p.platform, p.scheduled_at, p.title);
+    if (exists) {
+      // Already imported: just attach the ready-made media if the post has none yet.
+      if (media && (!exists.media_json || exists.media_json === '[]')) { await run(c.env.DB, 'UPDATE content_posts SET media_json = ? WHERE id = ?', JSON.stringify(media), exists.id); attached++; }
+      continue;
+    }
+    await run(c.env.DB, `INSERT INTO content_posts (id, platform, format, theme, goal, audience, title, body, hashtags, scheduled_at, status, media_json, created_by, updated_by)
+      VALUES (?,?,?,?,?,?,?,?,?,?, 'approved', ?, ?, ?)`, newId('c_'), p.platform, p.format, p.theme, p.goal, p.audience, p.title, p.body, p.hashtags, p.scheduled_at, media ? JSON.stringify(media) : '[]', u.name, u.name);
     added++;
   }
-  await audit(c, 'content_posts', null, 'import', `${u.name} imported ${added} posts from the November content calendar`);
-  return c.json({ ok: true, added });
+  await audit(c, 'content_posts', null, 'import', `${u.name} imported ${added} posts from the November content calendar${attached ? ` and attached media to ${attached}` : ''}`);
+  return c.json({ ok: true, added, attached });
 });
 
 studio.get('/content/performance', async (c): Promise<Response> => {

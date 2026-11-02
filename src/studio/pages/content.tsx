@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, ExternalLink, Eye, Heart, MousePointerClick, Plus, Send, Sparkles, Users } from 'lucide-react';
 import { api, can, create, fmtDate, fromLocalInput, getOne, list, remove, toLocalInput, update } from '../api';
-import { Badge, Card, Confirm, Drawer, EditedBy, Empty, Fields, History, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
+import { Badge, Card, Confirm, copy, Drawer, EditedBy, Empty, Fields, History, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
 import { PenSquare } from 'lucide-react';
+import { Track, trackedLink } from '../track';
 import { BarList, HeatGrid, KpiTile, LineChart, PLATFORM_META, SeriesToggles, SocialStyles, Sparkline, fmtNum, fmtPct } from '../social-charts';
 import { AutopostPanel, CalFlag, ConnectionsCard, ManualKit, MediaPicker, PostMetricsChart, PublishBadge } from '../social-panels';
 
@@ -32,17 +33,17 @@ export function Content() {
   return (
     <Page title="Content" sub="Plan, write, schedule, auto-post and measure posts for X, Instagram and TikTok."
       actions={<>
-        {can(user, 'editor') ? <button className="btn ghost" onClick={async () => { try { const r = await api('/content/import-calendar', { body: {} }); toast(`${r.added} posts imported`); reload(); } catch (x: any) { toast(x.message, 'err'); } }}>Import November calendar</button> : null}
+        {can(user, 'editor') ? <button className="btn ghost" onClick={async () => { try { const r = await api('/content/import-calendar', { body: {} }); toast(`${r.added} posts imported${r.attached ? `, media added to ${r.attached}` : ''}`); reload(); } catch (x: any) { toast(x.message, 'err'); } }}>Import November calendar</button> : null}
         <button className="btn ghost" onClick={() => setGen(true)}><Sparkles size={15} strokeWidth={2} />Generate with AI</button>
         <button className="btn primary" onClick={() => setOpen({ platform: 'instagram', status: 'draft', scheduled_at: '' })}><Plus size={15} strokeWidth={2.2} />New post</button>
       </>}>
       <SocialStyles />
       <div className="toolbar">
-        <Tabs tabs={[['calendar', 'Calendar'], ['list', 'All posts'], ['performance', 'Performance']]} value={tab} onChange={setTab} />
+        <Tabs tabs={[['calendar', 'Calendar'], ['list', 'All posts'], ['track', 'Track results'], ['performance', 'Performance']]} value={tab} onChange={setTab} />
         <select value={platform} onChange={(e) => setPlatform(e.target.value)}><option value="">All platforms</option>{PLATFORMS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         {tab === 'calendar' ? <div className="month-nav"><button className="icon" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} aria-label="Previous month"><ChevronLeft size={16} /></button><strong>{label}</strong><button className="icon" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} aria-label="Next month"><ChevronRight size={16} /></button></div> : null}
       </div>
-      {tab === 'performance' ? <Performance platform={platform} onOpen={setOpen} /> : loading ? <Loading /> : tab === 'calendar' ? (
+      {tab === 'track' ? <Track platform={platform} onOpen={setOpen} /> : tab === 'performance' ? <Performance platform={platform} onOpen={setOpen} /> : loading ? <Loading /> : tab === 'calendar' ? (
         <Calendar month={month} posts={data ?? []} onOpen={setOpen} onNew={(d) => setOpen({ platform: 'instagram', status: 'draft', scheduled_at: d })} />
       ) : !data?.length ? <Empty icon={PenSquare} title="No posts yet">Import the November calendar or generate drafts with AI.</Empty> : (
         <div className="table-wrap"><table className="table clickable">
@@ -137,6 +138,7 @@ function PostEditor({ post: initial, onClose }: { post: any; onClose: () => void
           ]} />
           <div className="row-actions">
             <ManualKit caption={v.platform === 'x' ? textToCopy : caption} assets={assets} toast={toast} />
+            {!isNew ? <button className="btn sm ghost" title={trackedLink({ ...post, ...v })} onClick={() => copy(trackedLink({ ...post, ...v }), toast, 'Tracked link copied')}>Tracked link</button> : null}
             <a className="btn sm ghost" href={v.platform === 'x' ? `https://x.com/intent/post?text=${encodeURIComponent(textToCopy.slice(0, 280))}` : POST_LINKS[v.platform]} target="_blank" rel="noreferrer"><ExternalLink size={14} strokeWidth={2} />Open {v.platform}</a>
             {v.platform === 'instagram' && /Slide \d/i.test(v.body ?? '') ? <a className="btn sm ghost" href={`/studio/carousel?post=${post.id}`} target="_blank" rel="noreferrer">Render carousel slides</a> : null}
           </div>
