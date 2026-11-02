@@ -3,17 +3,23 @@ export type User = { id: string; email: string; name: string; role: 'owner' | 'a
 export class ApiError extends Error { constructor(msg: string, public status: number) { super(msg); } }
 
 export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; form?: FormData } = {}): Promise<T> {
-  const res = await fetch(path.startsWith('/api') ? path : `/api/studio${path}`, {
-    method: opts.method ?? (opts.body || opts.form ? 'POST' : 'GET'),
-    headers: opts.form ? undefined : { 'content-type': 'application/json' },
-    body: opts.form ?? (opts.body !== undefined ? JSON.stringify(opts.body) : undefined),
-    credentials: 'same-origin',
-  });
+  let res: Response;
+  try {
+    res = await fetch(path.startsWith('/api') ? path : `/api/studio${path}`, {
+      method: opts.method ?? (opts.body || opts.form ? 'POST' : 'GET'),
+      headers: opts.form ? undefined : { 'content-type': 'application/json' },
+      body: opts.form ?? (opts.body !== undefined ? JSON.stringify(opts.body) : undefined),
+      credentials: 'same-origin',
+    });
+  } catch {
+    throw new ApiError('You seem to be offline', 0);
+  }
   let data: any = null;
   try { data = await res.json(); } catch { /* empty */ }
   if (!res.ok || data?.ok === false) {
     if (res.status === 401) window.dispatchEvent(new Event('ferrn:signed-out'));
-    throw new ApiError(data?.error || `Request failed (${res.status})`, res.status);
+    const fallback = res.status >= 500 ? 'Something went wrong on our side' : res.status === 404 ? 'Not found' : res.status === 403 ? 'You don’t have access to do that' : `Request failed (${res.status})`;
+    throw new ApiError(data?.error || fallback, res.status);
   }
   return data as T;
 }

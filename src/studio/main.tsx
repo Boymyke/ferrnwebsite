@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, MailOpen } from 'lucide-react';
-import { api, can, type User } from './api';
-import { Link, RouterCtx, ToastHost, UserCtx, useRoute, useUser } from './ui';
+import { Activity, MailOpen, Bell, CheckCheck, BellOff } from 'lucide-react';
+import { ago, api, can, type User } from './api';
+import { Link, RouterCtx, ToastHost, UserCtx, useRoute, useUser, useToast } from './ui';
+
 import { AcceptInvite, Login, Setup } from './pages/auth';
 import { Dashboard } from './pages/dashboard';
 import { Leads, Prospect } from './pages/leads';
@@ -63,6 +64,71 @@ function Router() {
   return <Dashboard />;
 }
 
+type Notice = { id: string; kind: string; title: string; detail: string | null; at: string; href: string; tone: 'ok' | 'info' | 'warn' | 'money' };
+
+function Notifications() {
+  const { go } = useRoute();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<Notice[]>([]);
+  const [seen, setSeen] = useState<string>(new Date(0).toISOString());
+  const [unread, setUnread] = useState(0);
+  const [lastSeen, setLastSeen] = useState<string>(new Date(0).toISOString()); // what "new" means while the panel is open
+  const box = useRef<HTMLDivElement>(null);
+  const load = useCallback(async () => {
+    try { const r = await api<{ items: Notice[]; seen: string; unread: number }>('/notifications'); setItems(r.items); setSeen(r.seen); setUnread(r.unread); }
+    catch { /* quiet: the bell is not worth an error toast */ }
+  }, []);
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 60_000);
+    const vis = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', vis);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', vis); };
+  }, [load]);
+  useEffect(() => { document.title = unread ? `(${unread}) Ferrn Studio` : 'Ferrn Studio'; }, [unread]);
+  useEffect(() => {
+    if (!open) return;
+    const down = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    addEventListener('mousedown', down); addEventListener('keydown', key);
+    return () => { removeEventListener('mousedown', down); removeEventListener('keydown', key); };
+  }, [open]);
+  const markSeen = async () => {
+    setLastSeen(seen); setUnread(0);
+    try { const r = await api<{ seen: string }>('/notifications/seen', { body: {} }); setSeen(r.seen); } catch { /* next poll fixes it */ }
+  };
+  const toggle = () => { const n = !open; setOpen(n); if (n) { load(); if (unread) markSeen(); else setLastSeen(seen); } };
+  return (
+    <div className="notif" ref={box}>
+      <button className={`icon notif-btn ${unread ? 'has' : ''}`} title="Notifications" aria-label={unread ? `${unread} new notifications` : 'Notifications'} aria-expanded={open} onClick={toggle}>
+        <Bell size={18} strokeWidth={1.8} />{unread ? <span className="notif-count">{unread > 99 ? '99+' : unread}</span> : null}
+      </button>
+      {open ? (
+        <div className="notif-panel" role="dialog" aria-label="Notifications">
+          <header><strong>Notifications</strong>
+            {items.length ? <button className="btn xs ghost" onClick={() => { markSeen(); toast('All caught up'); }}><CheckCheck size={13} /> Mark all read</button> : null}
+          </header>
+          {!items.length ? (
+            <div className="notif-empty"><BellOff size={22} strokeWidth={1.6} /><p>Nothing yet. New leads, enquiries, orders, proposal activity and WhatsApp messages show up here.</p></div>
+          ) : (
+            <ul>
+              {items.map((n) => (
+                <li key={n.id} className={`${n.at > lastSeen ? 'new' : ''} tone-${n.tone}`}>
+                  <button onClick={() => { setOpen(false); go(n.href); }}>
+                    <i />
+                    <div><strong>{n.title}</strong>{n.detail ? <p>{n.detail}</p> : null}<time title={n.at}>{ago(n.at)}</time></div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Shell({ onSignOut }: { onSignOut: () => void }) {
   const user = useUser()!;
   const { go, path } = useRoute();
@@ -94,6 +160,11 @@ function Shell({ onSignOut }: { onSignOut: () => void }) {
         </nav>
         <div className="side-foot">
           <a className="side-link" href="/" target="_blank" rel="noreferrer"><i>{I(ExternalLink)}</i>View website</a>
+          <div className="side-me">
+            <span className="me-avatar">{user.name.split(' ').map((x) => x[0]).slice(0, 2).join('')}</span>
+            <div className="side-me-text"><strong>{user.name}</strong><span>{user.title || user.role}</span></div>
+            <button className="icon" title="Sign out" aria-label="Sign out" onClick={onSignOut}><LogOut size={16} strokeWidth={2} /></button>
+          </div>
         </div>
       </aside>
       <div className="main">
@@ -105,11 +176,7 @@ function Shell({ onSignOut }: { onSignOut: () => void }) {
               const d = document.documentElement; const n = d.dataset.theme === 'light' ? 'dark' : 'light'; d.dataset.theme = n;
               try { localStorage.setItem('ferrn-studio-theme', n); } catch {}
             }}><SunMoon size={18} strokeWidth={1.8} /></button>
-            <div className="me">
-              <span className="me-avatar">{user.name.split(' ').map((x) => x[0]).slice(0, 2).join('')}</span>
-              <div><strong>{user.name}</strong><span>{user.title || user.role}</span></div>
-              <button className="btn sm ghost" onClick={onSignOut}><LogOut size={14} strokeWidth={2} />Sign out</button>
-            </div>
+            <Notifications />
           </div>
         </header>
         <main className="content"><Router /></main>

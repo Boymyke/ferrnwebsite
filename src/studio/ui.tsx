@@ -1,6 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ago, api, type User } from './api';
-import { ImagePlus, Inbox, Loader2, RefreshCw, Trash2, X, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ImagePlus, Inbox, Info, Loader2, RefreshCw, Trash2, X, XCircle, type LucideIcon } from 'lucide-react';
 
 /* ── routing (history API, /studio/...) ── */
 export const RouterCtx = createContext<{ path: string; go: (p: string) => void }>({ path: '/', go: () => {} });
@@ -16,20 +16,78 @@ export const UserCtx = createContext<User | null>(null);
 export const useUser = () => useContext(UserCtx);
 
 /* ── toasts ── */
-type Toast = { id: number; text: string; kind: 'ok' | 'err' };
-const ToastCtx = createContext<(text: string, kind?: Toast['kind']) => void>(() => {});
+export type ToastKind = 'ok' | 'err' | 'info' | 'warn';
+export type ToastOpts = { detail?: string; action?: { label: string; onClick: () => void }; duration?: number };
+type Toast = { id: number; title: string; kind: ToastKind; detail?: string; action?: ToastOpts['action']; duration: number; leaving?: boolean };
+export type ToastFn = (text: string, kind?: ToastKind, opts?: ToastOpts) => void;
+const ToastCtx = createContext<ToastFn>(() => {});
 export const useToast = () => useContext(ToastCtx);
+
+/** Turns a raw error into a sentence people understand. API errors already read well; network
+ *  and server failures get a plain explanation instead of "Failed to fetch". */
+export function friendlyError(e: unknown): { title: string; detail?: string } {
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  const status = (e as { status?: number })?.status;
+  if (status === 0 || /failed to fetch|networkerror|load failed|network request failed|seem to be offline/i.test(msg)) return { title: 'You seem to be offline', detail: 'Check your connection and try again.' };
+  if (status === 401 || /sign in required|session has ended/i.test(msg)) return { title: 'Your session has ended', detail: 'Sign in again to continue.' };
+  if (status === 403 || /don’t have access|do not have access/i.test(msg)) return { title: 'You don’t have access to do that', detail: status === 403 && msg && !/access/i.test(msg) ? msg : 'Ask an admin if you need this.' };
+  if (status === 404 || /^not found$/i.test(msg)) return { title: 'That no longer exists', detail: 'It may have been deleted. Refresh the page.' };
+  if (status === 409) return { title: msg || 'That clashes with something that already exists' };
+  if (status === 413 || /too large|payload/i.test(msg)) return { title: 'That file is too large', detail: /too large/i.test(msg) ? undefined : msg };
+  if (status === 429 || /too many requests|rate limit/i.test(msg)) return { title: 'Too many requests', detail: 'Wait a moment and try again.' };
+  if ((status && status >= 500) || /went wrong on our side|internal error|request failed \(5|D1_ERROR|SQLITE_|database (is )?locked/i.test(msg)) return { title: 'Something went wrong on our side', detail: 'Nothing was lost. Try again in a moment.' };
+  if (/unexpected token|unexpected end of json|is not valid json|typeerror|referenceerror|cannot read propert|is not a function|undefined is not/i.test(msg)) return { title: 'Something went wrong on this page', detail: 'Refresh the page and try again. If it keeps happening, tell Michael.' };
+  if (/^(error|failed|request failed)[:.]?\s*$/i.test(msg)) return { title: 'Something went wrong', detail: 'Try again in a moment.' };
+  return { title: msg || 'Something went wrong' };
+}
+
+const TOAST_ICON: Record<ToastKind, React.ReactNode> = {
+  ok: <CheckCircle2 size={18} strokeWidth={2} />, err: <XCircle size={18} strokeWidth={2} />, info: <Info size={18} strokeWidth={2} />, warn: <AlertTriangle size={18} strokeWidth={2} />,
+};
+
 export function ToastHost({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<Toast[]>([]);
-  const push = useCallback((text: string, kind: Toast['kind'] = 'ok') => {
-    const id = Date.now() + Math.random();
-    setItems((x) => [...x, { id, text, kind }]);
-    setTimeout(() => setItems((x) => x.filter((t) => t.id !== id)), 4200);
+  const timers = useRef(new Map<number, { t: ReturnType<typeof setTimeout>; left: number; started: number }>());
+  const dismiss = useCallback((id: number) => {
+    const tm = timers.current.get(id); if (tm) clearTimeout(tm.t); timers.current.delete(id);
+    setItems((x) => x.map((t) => (t.id === id ? { ...t, leaving: true } : t)));
+    setTimeout(() => setItems((x) => x.filter((t) => t.id !== id)), 180);
   }, []);
+  const arm = useCallback((id: number, ms: number) => {
+    timers.current.set(id, { t: setTimeout(() => dismiss(id), ms), left: ms, started: Date.now() });
+  }, [dismiss]);
+  const pause = (id: number) => { const tm = timers.current.get(id); if (!tm) return; clearTimeout(tm.t); tm.left = Math.max(800, tm.left - (Date.now() - tm.started)); };
+  const resume = (id: number) => { const tm = timers.current.get(id); if (!tm) return; tm.started = Date.now(); tm.t = setTimeout(() => dismiss(id), tm.left); };
+  const push = useCallback<ToastFn>((text, kind = 'ok', opts = {}) => {
+    const raw = kind === 'err' ? friendlyError(new Error(text)) : { title: text };
+    const title = raw.title, detail = opts.detail ?? raw.detail;
+    const duration = opts.duration ?? (kind === 'err' ? 8000 : kind === 'warn' ? 6000 : 4000);
+    const id = Date.now() + Math.random();
+    setItems((x) => {
+      const same = x.find((t) => t.title === title && t.detail === detail && !t.leaving);
+      if (same) { const tm = timers.current.get(same.id); if (tm) { clearTimeout(tm.t); arm(same.id, duration); } return x; }
+      return [...x.slice(-3), { id, title, kind, detail, action: opts.action, duration }];
+    });
+    arm(id, duration);
+  }, [arm]);
   return (
     <ToastCtx.Provider value={push}>
       {children}
-      <div className="toasts">{items.map((t) => <div key={t.id} className={`toast ${t.kind}`}>{t.text}</div>)}</div>
+      <div className="toasts" aria-live="polite">
+        {items.map((t) => (
+          <div key={t.id} className={`toast ${t.kind} ${t.leaving ? 'out' : ''}`} role={t.kind === 'err' ? 'alert' : 'status'}
+            onMouseEnter={() => pause(t.id)} onMouseLeave={() => resume(t.id)}>
+            <span className="toast-ic">{TOAST_ICON[t.kind]}</span>
+            <div className="toast-body">
+              <strong>{t.title}</strong>
+              {t.detail ? <p>{t.detail}</p> : null}
+              {t.action ? <button className="toast-action" onClick={() => { t.action!.onClick(); dismiss(t.id); }}>{t.action.label}</button> : null}
+            </div>
+            <button className="toast-x" onClick={() => dismiss(t.id)} aria-label="Dismiss"><X size={15} strokeWidth={2} /></button>
+            <i className="toast-bar" style={{ animationDuration: `${t.duration}ms` }} />
+          </div>
+        ))}
+      </div>
     </ToastCtx.Provider>
   );
 }
@@ -92,7 +150,16 @@ export const Empty = ({ title, children, icon: Icon = Inbox, action, compact }: 
 );
 
 export const Loading = () => <div className="loading"><span /><span /><span /></div>;
-export const ErrorNote = ({ error }: { error: string }) => <div className="error-note">{error}</div>;
+export const ErrorNote = ({ error, onRetry }: { error: string; onRetry?: () => void }) => {
+  const f = friendlyError(new Error(error));
+  return (
+    <div className="error-note" role="alert">
+      <AlertTriangle size={17} strokeWidth={2} />
+      <div><strong>{f.title}</strong>{f.detail ? <p>{f.detail}</p> : null}</div>
+      {onRetry ? <button className="btn sm ghost" onClick={onRetry}>Try again</button> : null}
+    </div>
+  );
+};
 
 export function EditedBy({ row }: { row: any }) {
   if (!row?.updated_by && !row?.created_by) return null;

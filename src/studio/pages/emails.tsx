@@ -81,7 +81,7 @@ export function Emails() {
         <Tabs tabs={[['all', 'All'], ['opened', 'Opened'], ['unopened', 'Not opened'], ['clicked', 'Clicked'], ['problems', 'Problems']]} value={view} onChange={setView} />
       </div>
 
-      {loading && !data ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.rows.length ? (
+      {loading && !data ? <Loading /> : error ? <ErrorNote error={error} onRetry={reload} /> : !data?.rows.length ? (
         <Empty icon={MailCheck} title={view === 'all' ? 'No emails yet' : 'Nothing here'}>
           {view === 'all' ? 'Send a proposal or invoice from Studio, or let LeadsHunter send outreach, and each email shows here with its opens and clicks.' : 'Try another tab or a longer date range.'}
         </Empty>

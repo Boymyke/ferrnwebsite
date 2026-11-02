@@ -13,9 +13,10 @@ const fill = (s: string, p: string[]) => s.replace(/\{\{(\d+)\}\}/g, (_, i) => p
 export function WhatsApp() {
   const toast = useToast();
   const { data, loading, reload } = useData(() => api('/wa/contacts'));
-  const [sel, setSel] = useState<string | null>(null);
+  const [sel, setSel] = useState<string | null>(() => new URLSearchParams(location.search).get('chat'));
   const [q, setQ] = useState('');
   useEffect(() => { const t = setInterval(reload, 20000); return () => clearInterval(t); }, []); // light polling for new messages
+  useEffect(() => { const c = new URLSearchParams(location.search).get('chat'); if (c) setSel(c); }, [location.search]); // opened from a notification
   if (loading && !data) return <Loading />;
   const rows: Contact[] = (data?.rows ?? []).filter((r: Contact) => !q || `${r.name} ${r.wa_id} ${r.lead_company}`.toLowerCase().includes(q.toLowerCase()));
   const s = data?.stats ?? {};
