@@ -13,6 +13,8 @@ import studioApi from './routes/studio-api';
 import { demoSite, demosApi } from './routes/demos';
 import { runAutoProspect } from './lib/autoprospect';
 import { analyticsCollect, analyticsStudio, pruneAnalytics } from './routes/analytics';
+import proposalsApi from './routes/proposals';
+import clientDocs from './routes/client-docs';
 import { studioShell } from './routes/studio-shell';
 import { QuoteDocument, type QuoteRow } from './views/quote';
 import { LANGS } from './content/i18n';
@@ -41,6 +43,7 @@ app.route('/api/auth', authApi);
 app.route('/api/studio/demos', demosApi);
 app.route('/api/a', analyticsCollect);
 app.route('/api/studio/analytics', analyticsStudio);
+app.route('/api/studio/proposals', proposalsApi);
 app.route('/api/studio', studioApi);
 app.route('/api/whatsapp', whatsappWebhook);
 app.route('/api', publicApi);
@@ -60,11 +63,15 @@ app.get('/q/:key', async (c) => {
   return c.html(<QuoteDocument q={q} />);
 });
 
-/* R2 media (team photos, content assets) */
+/* Proposals (/p/:token) and invoices (/i/:token) for clients, behind an access code */
+app.route('/', clientDocs);
+
+/* R2 media (team photos, content assets). private/ holds signatures and receipts: never public. */
 app.get('/media/*', async (c) => {
   const key = c.req.path.replace(/^\/media\//, '');
-  // demo sites are only served through /demos/u/ (sandboxed), never raw from the main origin
-  if (/^demos\//i.test(decodeURIComponent(key))) return c.notFound();
+  // private/ (signatures, receipts) and demos/ (served sandboxed via /demos/u/) are never served raw
+  let plain = key; try { plain = decodeURIComponent(key); } catch { /* keep raw */ }
+  if (/^\/*(private|demos)(\/|$)/i.test(plain)) return c.notFound();
   const obj = await c.env.MEDIA.get(key);
   if (!obj) return c.notFound();
   const h = new Headers();

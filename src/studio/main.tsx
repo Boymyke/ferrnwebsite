@@ -9,6 +9,8 @@ import { Leads, Prospect } from './pages/leads';
 import { Outreach } from './pages/outreach';
 import { Meetings } from './pages/meetings';
 import { Quotes } from './pages/quotes';
+import { Proposals } from './pages/proposals';
+import { FileSignature } from 'lucide-react';
 import { Ads, Knowledge, Orders, Posts, Products, Requests, Testimonials, TeamMembers } from './pages/catalog';
 import { Content } from './pages/content';
 import { CarouselStudio } from './pages/carousel';
@@ -24,7 +26,7 @@ import {
 const I = (C: React.ComponentType<any>) => <C size={17} strokeWidth={1.8} aria-hidden="true" />;
 
 const NAV: { group: string; items: [string, string, React.ReactNode, User['role']?][] }[] = [
-  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)]] },
+  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)]] },
   { group: 'Marketing', items: [['/content', 'Content', I(PenSquare)], ['/ads', 'Ads', I(Megaphone)]] },
   { group: 'Marketplace', items: [['/marketplace/products', 'Products', I(Package)], ['/marketplace/demos', 'Demos', I(MonitorPlay)], ['/marketplace/orders', 'Orders', I(ShoppingBag)], ['/marketplace/requests', 'Enquiries', I(Inbox)]] },
   { group: 'Website', items: [['/website/team', 'Team page', I(UserSquare2)], ['/website/testimonials', 'Testimonials', I(Quote)], ['/website/posts', 'Insights', I(Newspaper)], ['/website/knowledge', 'Chatbot knowledge', I(BrainCircuit)]] },
@@ -42,6 +44,7 @@ function Router() {
   if (p.startsWith('/whatsapp')) return <WhatsApp />;
   if (p.startsWith('/meetings')) return <Meetings />;
   if (p.startsWith('/quotes')) return <Quotes />;
+  if (p.startsWith('/proposals')) return <Proposals />;
   if (p.startsWith('/content')) return <Content />;
   if (p.startsWith('/carousel')) return <CarouselStudio />;
   if (p.startsWith('/ads')) return <Ads />;

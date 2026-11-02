@@ -7,6 +7,7 @@ import { initTransaction, validSignature, verifyTransaction } from '../lib/payst
 import { LANGS, isLang } from '../content/i18n';
 import { assistantSystemPrompt } from '../lib/assistant';
 import { onEnquiry, onPayment } from '../lib/wa-automations';
+import { settleInvoiceFromPaystack } from '../lib/docs';
 
 const api = new Hono<AppEnv>();
 
@@ -154,7 +155,9 @@ api.post('/paystack/webhook', async (c) => {
   const raw = await c.req.text();
   if (!(await validSignature(c.env, raw, c.req.header('x-paystack-signature')))) return c.json({ ok: false }, 401);
   const evt = JSON.parse(raw);
-  if (evt.event === 'charge.success') {
+  if (evt.event === 'charge.success' && String(evt.data?.reference ?? '').startsWith('INV-')) {
+    await settleInvoiceFromPaystack(c.env, evt.data.reference, evt.data); // proposal invoices
+  } else if (evt.event === 'charge.success') {
     const r = await c.env.DB.prepare("UPDATE orders SET status = 'paid', paid_at = datetime('now') WHERE provider_ref = ? AND status != 'paid'").bind(evt.data?.reference).run();
     if (r.meta.changes) c.executionCtx.waitUntil(notifyPaid(c.env, evt.data?.reference));
   }

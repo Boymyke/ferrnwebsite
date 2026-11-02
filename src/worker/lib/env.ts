@@ -25,6 +25,7 @@ export type Bindings = {
   ENGINE_KEY?: string;
   PAYSTACK_SECRET_KEY?: string;
   PAYSTACK_PUBLIC_KEY?: string;
+  RESEND_API_KEY?: string;
   GOOGLE_MAPS_API_KEY?: string;
   BOOTSTRAP_SECRET?: string;
   // WhatsApp Cloud API (Meta)
