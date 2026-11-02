@@ -147,7 +147,8 @@ function parseCsv(text: string): string[][] {
 }
 const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 const pick = (h: string[], r: string[], ...names: string[]) => { for (const n of names) { const i = h.findIndex((x) => x === n || x.includes(n)); if (i >= 0 && r[i]?.trim()) return r[i].trim(); } return ''; };
-const STATUS: Record<string, string> = { done: 'launched', completed: 'launched', complete: 'launched', live: 'launched', launched: 'launched', delivered: 'launched', 'in progress': 'build', ongoing: 'build', building: 'build', development: 'build', design: 'design', review: 'review', paused: 'paused', 'on hold': 'paused', cancelled: 'cancelled', canceled: 'cancelled', discovery: 'discovery', planning: 'discovery', support: 'support', maintenance: 'support' };
+const toIso = (s: string) => { if (!s || s === '-') return ''; if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10); const d = new Date(s); return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10); };
+const STATUS: Record<string, string> = { suspended: 'paused', done: 'launched', completed: 'launched', complete: 'launched', live: 'launched', launched: 'launched', delivered: 'launched', 'in progress': 'build', ongoing: 'build', building: 'build', development: 'build', design: 'design', review: 'review', paused: 'paused', 'on hold': 'paused', cancelled: 'cancelled', canceled: 'cancelled', discovery: 'discovery', planning: 'discovery', support: 'support', maintenance: 'support' };
 const CATEGORY = (s: string) => /app|portal|dashboard|platform|system|software/i.test(s) ? 'webapp' : /ai|assistant|automation|bot/i.test(s) ? 'ai' : /brand|logo|identity/i.test(s) ? 'branding' : 'website';
 
 siteStudio.post('/projects/import', async (c) => {
@@ -184,8 +185,11 @@ siteStudio.post('/projects/import', async (c) => {
     const expenses = Number(pick(h, r, 'expense', 'cost', 'spent').replace(/[^\d.]/g, '')) || null;
     const revenue = Number(pick(h, r, 'paid', 'received', 'revenue').replace(/[^\d.]/g, '')) || null;
     const lead = pick(h, r, 'lead', 'owner', 'pm', 'manager');
-    const team = pick(h, r, 'team', 'developer', 'developers', 'designer', 'people').split(/[,;/]/).map((x) => x.trim()).filter(Boolean);
-    const start = pick(h, r, 'start', 'began', 'kickoff'), due = pick(h, r, 'due', 'deadline', 'end', 'delivery');
+    const team = pick(h, r, 'team', 'freelancer', 'developer', 'developers', 'designer', 'people').split(/[,;/]/).map((x) => x.trim()).filter(Boolean);
+    const start = toIso(pick(h, r, 'start', 'began', 'kickoff')), due = toIso(pick(h, r, 'due', 'deadline', 'end', 'delivery'));
+    const figma = pick(h, r, 'figma', 'design link'), repo = pick(h, r, 'repo', 'github'), brief = pick(h, r, 'brief', 'proposal'), assets = pick(h, r, 'assets', 'drive');
+    const priorityRaw = pick(h, r, 'priority').toLowerCase(); const priority = /high|urgent/.test(priorityRaw) ? 'high' : /low/.test(priorityRaw) ? 'low' : 'normal';
+    const extraLinks: Record<string, string> = {}; for (const [k, v] of [['figma', figma], ['repo', repo], ['brief', brief], ['assets', assets]] as const) if (v && /^https?:\/\//.test(v)) extraLinks[k] = v;
     const notes = pick(h, r, 'notes', 'description', 'summary', 'details', 'brief');
     const currency = /\$|usd/i.test(pick(h, r, 'currency', 'budget', 'price')) ? 'USD' : 'NGN';
     let slug = slugify(name) || newId('p');
@@ -197,16 +201,19 @@ siteStudio.post('/projects/import', async (c) => {
       const fill = (col: string, v: unknown) => { if (v != null && v !== '' && (cur[col] == null || cur[col] === '' || cur[col] === '[]' || cur[col] === '{}')) { sets.push(`${col} = ?`); vals.push(v); } };
       fill('client', client); fill('type', type); fill('industry', industry); fill('year', year); fill('budget', budget); fill('expenses', expenses); fill('revenue', revenue);
       fill('lead', lead); fill('start_date', start); fill('due_date', due); fill('description', notes); if (team.length) fill('team_json', JSON.stringify(team));
-      const links = JSON.parse(cur.links_json || '{}'); if (live && !links.live) { links.live = live; sets.push('links_json = ?'); vals.push(JSON.stringify(links)); }
+      const links = JSON.parse(cur.links_json || '{}'); let linksChanged = false;
+      if (live && !links.live) { links.live = live; linksChanged = true; }
+      for (const [k, v] of Object.entries(extraLinks)) if (!links[k]) { links[k] = v; linksChanged = true; }
+      if (linksChanged) { sets.push('links_json = ?'); vals.push(JSON.stringify(links)); }
       if (sets.length) { await run(c.env.DB, `UPDATE projects SET ${sets.join(', ')}, updated_by = ?, updated_at = datetime('now') WHERE id = ?`, ...vals, u.name, found.id); updated++; } else skipped++;
       continue;
     }
     while (bySlug.has(slug)) slug = `${slug}-${Math.random().toString(36).slice(2, 5)}`;
     const id = newId('pj_');
-    await run(c.env.DB, `INSERT INTO projects (id, slug, name, client, category, type, industry, description, status, lead, team_json, start_date, due_date, currency, budget, expenses, revenue, links_json, public, year, summary, updated_by)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      id, slug, name, client || null, CATEGORY(type + ' ' + name), type || null, industry || null, notes || null, status, lead || null, JSON.stringify(team), start || null, due || null,
-      currency, budget, expenses, revenue, JSON.stringify(live ? { live: /^https?:/.test(live) ? live : `https://${live}` } : {}), b.makePublic && status === 'launched' ? 1 : 0, year || null, notes ? notes.slice(0, 200) : null, u.name);
+    await run(c.env.DB, `INSERT INTO projects (id, slug, name, client, category, type, industry, description, status, priority, lead, team_json, start_date, due_date, currency, budget, expenses, revenue, links_json, public, year, summary, updated_by)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      id, slug, name, client || null, CATEGORY(type + ' ' + name), type || null, industry || null, notes || null, status, priority, lead || null, JSON.stringify(team), start || null, due || null,
+      currency, budget, expenses, revenue, JSON.stringify({ ...(live ? { live: /^https?:/.test(live) ? live : `https://${live}` } : {}), ...extraLinks }), b.makePublic && status === 'launched' ? 1 : 0, year || (due || start).slice(0, 4) || null, notes ? notes.slice(0, 200) : null, u.name);
     bySlug.set(slug, { id, slug, name, links_json: '{}' }); byName.set(name.toLowerCase(), { id, slug, name, links_json: '{}' });
     added++;
   }
