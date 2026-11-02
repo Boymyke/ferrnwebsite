@@ -26,8 +26,11 @@ var HEADERS = {
     'classification', 'handled_at'],
   Suppression: ['email', 'reason', 'added'],
   Settings: ['key', 'value', 'help'],
-  Log: ['time', 'level', 'event', 'detail']
+  Log: ['time', 'level', 'event', 'detail'],
+  RFPs: ['id', 'found', 'title', 'buyer', 'country', 'url', 'source', 'deadline', 'budget', 'scope', 'fit_score',
+    'fit_reasons', 'requirements', 'risks', 'next_step', 'status', 'notes', 'updated']
 };
+var RFP_STATUSES = ['new', 'reviewing', 'bidding', 'submitted', 'won', 'lost', 'skipped'];
 
 var DEFAULT_SETTINGS = [
   ['AUTO_SEND', 'TRUE', 'TRUE = queued emails send on their own. FALSE = nothing sends until you press Send in the dashboard.'],
@@ -256,8 +259,54 @@ function processBatch_(data) {
       updateRow_(inT, r, ch);
     });
   }
+  var rfpAdded = (data.rfps && data.rfps.length) ? addRfps_(data.rfps) : 0;
   if (data.log) log_('info', 'ai-run', String(data.log).slice(0, 4000));
-  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs;
+  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.rfps ? ', rfps +' + rfpAdded : '');
+}
+
+// ───────────────────────────── RFPs ─────────────────────────────
+// Written by the RFP scout routine (rfps-<date>.json in the inbox). Michael reviews them in Studio → RFPs.
+function ensureSheet_(name) {
+  var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName(name);
+  if (sh) return sh;
+  sh = ss.insertSheet(name);
+  sh.getRange(1, 1, 1, HEADERS[name].length).setValues([HEADERS[name]]);
+  sh.setFrozenRows(1);
+  sh.getRange(1, 1, 1, HEADERS[name].length).setFontWeight('bold').setBackground('#0b1b2b').setFontColor('#ffffff');
+  return sh;
+}
+function rfpKey_(r) {
+  var u = String(r.url || '').trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/[?#].*$/, '').replace(/\/+$/, '');
+  return u || (norm_(r.title) + '|' + norm_(r.buyer));
+}
+function addRfps_(list) {
+  ensureSheet_('RFPs');
+  var t = table_('RFPs');
+  var seen = {};
+  t.rows.forEach(function (r) { seen[rfpKey_(r)] = true; seen[norm_(r.title) + '|' + norm_(r.buyer)] = true; });
+  var now = new Date(), rows = [];
+  list.slice(0, 40).forEach(function (r) {
+    if (!r || !r.title || !r.url) return;
+    var k = rfpKey_(r), k2 = norm_(r.title) + '|' + norm_(r.buyer);
+    if (seen[k] || seen[k2]) return;
+    seen[k] = seen[k2] = true;
+    var dl = r.deadline ? new Date(r.deadline) : null;
+    rows.push({
+      id: 'R-' + shortId_(), found: now, title: String(r.title).slice(0, 300), buyer: String(r.buyer || '').slice(0, 200),
+      country: String(r.country || '').slice(0, 60), url: String(r.url).slice(0, 500), source: String(r.source || '').slice(0, 200),
+      deadline: dl && !isNaN(dl) ? dl : '', budget: String(r.budget || '').slice(0, 120), scope: String(r.scope || '').slice(0, 1500),
+      fit_score: Math.max(0, Math.min(100, Number(r.fit_score) || 0)), fit_reasons: String(r.fit_reasons || '').slice(0, 1500),
+      requirements: String(r.requirements || '').slice(0, 2000), risks: String(r.risks || '').slice(0, 1500),
+      next_step: String(r.next_step || '').slice(0, 500), status: 'new', notes: String(r.notes || '').slice(0, 2000), updated: now
+    });
+  });
+  if (rows.length) appendObjects_('RFPs', rows);
+  return rows.length;
+}
+function rfpRows_() {
+  var sh = SpreadsheetApp.getActive().getSheetByName('RFPs');
+  return sh ? table_('RFPs').rows : [];
 }
 
 function findDuplicate_(rows, L) {
@@ -598,6 +647,12 @@ function writeBrief_() {
   });
   out.push('');
 
+  out.push('== RFPS ALREADY FOUND (for de-duplication) ==');
+  var rf = rfpRows_();
+  if (!rf.length) out.push('(none)');
+  rf.slice(-300).forEach(function (r) { out.push([r.id, r.title, r.buyer, r.url, r.status].join(' | ')); });
+  out.push('');
+
   out.push('== ALL LEADS (for de-duplication) ==');
   out.push('id | company | domain | email | phone | niche | city | status | tier');
   lT.rows.forEach(function (r) {
@@ -721,7 +776,12 @@ function getDashboardData() {
       sentWeek: sentWeek, wonMonth: wonMonth, pipelineValue: pipelineValue },
     statusCounts: statusCounts,
     needsYou: needsYou, held: held, sendingSoon: sendingSoon, whatsapp: whatsapp, recentSent: recentSent,
-    inbox: inbox, leads: lT.rows.slice().reverse().map(lite), logs: logs
+    inbox: inbox, leads: lT.rows.slice().reverse().map(lite), logs: logs,
+    rfps: rfpRows_().slice(-150).reverse().map(function (r) {
+      return { id: r.id, found: iso_(r.found), title: r.title, buyer: r.buyer, country: r.country, url: r.url, source: r.source,
+        deadline: iso_(r.deadline), budget: r.budget, scope: r.scope, fit_score: Number(r.fit_score) || 0, fit_reasons: r.fit_reasons,
+        requirements: r.requirements, risks: r.risks, next_step: r.next_step, status: r.status || 'new', notes: r.notes, updated: iso_(r.updated) };
+    })
   };
 }
 
@@ -804,6 +864,17 @@ function dashAction(action, p) {
       var inT = table_('Inbox');
       var r = indexBy_(inT.rows, 'id')[p.id];
       if (r) updateRow_(inT, r, { status: 'handled', classification: r.classification || 'handled by you', handled_at: new Date() });
+      break;
+    case 'rfpStatus':
+      if (RFP_STATUSES.indexOf(p.status) > -1 || p.note) {
+        var rt = table_('RFPs'), rr = indexBy_(rt.rows, 'id')[p.id];
+        if (rr) {
+          var rch = { updated: new Date() };
+          if (RFP_STATUSES.indexOf(p.status) > -1) rch.status = p.status;
+          if (p.note) rch.notes = (rr.notes ? rr.notes + '\n' : '') + stamp_() + ' ' + String(p.note).slice(0, 1000);
+          updateRow_(rt, rr, rch);
+        }
+      }
       break;
     case 'addLeads':
       // From the Studio autopilot: leads with a published email, ready for the morning routine to write to.

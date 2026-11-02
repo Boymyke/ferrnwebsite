@@ -347,7 +347,7 @@ studio.post('/engine/action', async (c): Promise<Response> => {
   const u = c.get('user')!;
   if (!can(u, 'sales')) return c.json({ ok: false, error: 'No access' }, 403);
   const b = (await c.req.json().catch(() => ({}))) as { action?: string; params?: Record<string, unknown> };
-  const allowed = ['approve', 'hold', 'cancel', 'edit', 'sendNow', 'waSent', 'resolve', 'setStatus', 'note', 'markInbox', 'setSetting', 'runNow'];
+  const allowed = ['approve', 'hold', 'cancel', 'edit', 'sendNow', 'waSent', 'resolve', 'setStatus', 'note', 'markInbox', 'setSetting', 'runNow', 'rfpStatus'];
   if (!allowed.includes(String(b.action))) return c.json({ ok: false, error: 'Unknown action' }, 400);
   if (b.action === 'setSetting' && !can(u, 'admin')) return c.json({ ok: false, error: 'Only admins change engine settings.' }, 403);
   try {

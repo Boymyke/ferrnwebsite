@@ -277,4 +277,26 @@ console.log('14. leads from the Studio autopilot');
   ok(E.ctx.DEFAULT_SETTINGS.find((x) => x[0] === 'CITIES')[1].startsWith('Lagos,London'), 'default cities are Lagos plus abroad');
 }
 
+console.log('15. RFPs from the RFP scout');
+{
+  E.dropFile('rfps-2026-11-03-0917.json', { rfps: [
+    { title: 'Website Redevelopment', buyer: 'Firstport Housing Trust', country: 'UK', url: 'https://www.contractsfinder.service.gov.uk/Notice/abc?x=1', source: 'Contracts Finder', deadline: '2026-11-20T12:00:00Z', budget: '£20,000', scope: 'New WordPress site', fit_score: 86, fit_reasons: 'Open to non-UK suppliers; web redesign', requirements: 'Proposal PDF, 3 references', risks: 'Needs £1m PI insurance', next_step: 'Ask about insurance at the clarification stage' },
+    { title: 'Website Redevelopment', buyer: 'Firstport Housing Trust', url: 'http://contractsfinder.service.gov.uk/Notice/abc/' },
+    { title: 'No URL tender', buyer: 'X' },
+  ], log: 'RFP scout: 1 new' });
+  E.ctx.tick();
+  const R = E.rows('RFPs');
+  ok(R.length === 1 && R[0].status === 'new' && Number(R[0].fit_score) === 86, 'RFP batch creates the RFPs tab and adds one new RFP (duplicate and no-URL skipped)');
+  E.ctx.dashAction('rfpStatus', { id: R[0].id, status: 'bidding', note: 'Going for it' });
+  const R2 = E.rows('RFPs')[0];
+  ok(R2.status === 'bidding' && /Going for it/.test(R2.notes), 'status and notes can be changed from Studio');
+  const dash = E.ctx.getDashboardData();
+  ok(dash.rfps.length === 1 && dash.rfps[0].title === 'Website Redevelopment' && dash.rfps[0].deadline, 'dashboard snapshot carries RFPs');
+  E.ctx.writeBrief_();
+  ok(/== RFPS ALREADY FOUND[\s\S]*Website Redevelopment \| Firstport Housing Trust/.test(Object.values(E.docs).pop()), 'brief lists found RFPs so the scout skips them');
+  E.dropFile('rfps-2026-11-04-0917.json', { rfps: [{ title: 'website redevelopment', buyer: 'FIRSTPORT HOUSING TRUST', url: 'https://other.example/x' }] });
+  E.ctx.tick();
+  ok(E.rows('RFPs').length === 1, 'same title and buyer from another site is a duplicate');
+}
+
 console.log(`\nALL ${passed} CHECKS PASSED`);

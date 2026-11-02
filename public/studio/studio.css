@@ -717,3 +717,13 @@ td .badge:first-child, .list .badge:first-child { margin-left: 0; }
 @media (max-width: 700px) { .pp-inv-head { grid-template-columns: 1fr 1fr; } }
 .pp-layout .table.items select { min-width: 112px; }
 .pp-layout .table.items td.nowrap { padding-top: 14px; }
+
+/* RFPs */
+.rfp-head { display: grid; gap: 10px; margin-bottom: 18px; }
+.rfp-badges { display: flex; flex-wrap: wrap; gap: 6px; } .rfp-badges .badge { margin-left: 0; }
+.rfp-head .btn { justify-self: start; }
+.rfp-sec { border-top: 1px solid var(--line); padding: 14px 0; }
+.rfp-sec h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 600; display: flex; gap: 8px; align-items: center; }
+.rfp-sec p { margin: 0; line-height: 1.6; font-size: 14px; }
+.rfp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+.rfp-note { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }

@@ -68,6 +68,15 @@ notificationsApi.get('/', async (c) => {
   for (const m of wa) items.push({ id: `wa:${m.id}`, kind: 'whatsapp', tone: 'ok', at: norm(m.created_at), href: `/whatsapp?chat=${m.wa_id}`,
     title: `WhatsApp from ${m.name || '+' + m.wa_id}`, detail: m.body ? String(m.body).slice(0, 90) : null });
 
+  // New RFPs worth a look (from the LeadsHunter snapshot the 10-minute sync keeps in KV).
+  const snap = await c.env.CACHE.get('engine:snapshot', 'json').catch(() => null) as { rfps?: any[] } | null;
+  const cutoff = new Date(Date.now() - 14 * 86400000).toISOString();
+  for (const r of (snap?.rfps ?? []).filter((x) => x.status === 'new' && x.found >= cutoff && Number(x.fit_score) >= 65).slice(0, 15)) {
+    const due = r.deadline ? new Date(r.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Africa/Lagos' }) : null;
+    items.push({ id: `rfp:${r.id}`, kind: 'rfp', tone: Number(r.fit_score) >= 80 ? 'money' : 'info', at: norm(r.found), href: `/rfps?id=${r.id}`,
+      title: `New RFP: ${r.title}`, detail: [r.buyer, r.country, `fit ${r.fit_score}`, due ? `due ${due}` : null].filter(Boolean).join(' · ') });
+  }
+
   items.sort((a, b) => (a.at < b.at ? 1 : -1));
   const top = items.slice(0, 40);
   return c.json({ ok: true, items: top, seen, unread: top.filter((i) => i.at > seen).length });
