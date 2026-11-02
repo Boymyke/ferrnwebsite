@@ -36,6 +36,7 @@ npm run deploy           # build + wrangler deploy (normally done by Workers Bui
 - [docs/SETUP.md](docs/SETUP.md): first deploy, secrets, creating the owner account, inviting the co-founder, connecting LeadsHunter, Paystack, Google Maps, voices.
 - [docs/MIGRATION.md](docs/MIGRATION.md): moving ferrnagency.com from Namecheap to Cloudflare without breaking email.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how the pieces fit, with a diagram.
+- [docs/WEBSITE.md](docs/WEBSITE.md): the v4 site — design system, Bob (grounding, reading aloud, voice), idle and seasonal modes, Studio website modules, deploy and rollback.
 - [docs/I18N.md](docs/I18N.md): how the 8 languages work and what still needs a native speaker.
 - [docs/CONTENT.md](docs/CONTENT.md): the content workflow for X, Instagram and TikTok.
 - [docs/WHATSAPP.md](docs/WHATSAPP.md): the WhatsApp bot and how to connect it.
