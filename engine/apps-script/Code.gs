@@ -809,7 +809,7 @@ function dashAction(action, p) {
       // From the Studio autopilot: leads with a published email, ready for the morning routine to write to.
       return processBatch_({ leads: (p.leads || []).slice(0, 50) });
     case 'setSetting':
-      if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value));
+      if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET', 'CITIES', 'NICHES', 'LEADS_PER_RUN', 'TRACK_EMAILS'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value).slice(0, 500));
       break;
     case 'runNow':
       tick();

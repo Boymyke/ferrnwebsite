@@ -108,9 +108,10 @@ async function getText(url: string, ms: number): Promise<{ html: string; finalUr
 function emailsIn(html: string) {
   const text = html.replace(/&#64;|&#x40;|\s*\[\s*at\s*\]\s*|\s+\(at\)\s+/gi, '@').replace(/&#46;|\s*\[\s*dot\s*\]\s*/gi, '.');
   const found = new Set<string>();
-  for (const m of text.matchAll(/mailto:([^"'?<>\s]+)/gi)) found.add(decodeURIComponent(m[1]).toLowerCase());
+  for (const m of text.matchAll(/mailto:([^"'?<>]+)/gi)) { try { found.add(decodeURIComponent(m[1]).toLowerCase()); } catch { found.add(m[1].toLowerCase()); } }
   for (const m of text.matchAll(/[a-z0-9][a-z0-9._%+-]{0,60}@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,10}/gi)) found.add(m[0].toLowerCase());
-  return [...found].map((e) => e.replace(/[.,;:]+$/, '')).filter((e) => e.length < 80 && !JUNK_MAIL.test(e));
+  return [...found].map((e) => e.replace(/\s+/g, '').replace(/[.,;:]+$/, '').replace(/^mailto:/, ''))
+    .filter((e) => e.length < 80 && /^[a-z0-9][a-z0-9._%+-]*@[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,10}$/.test(e) && !JUNK_MAIL.test(e));
 }
 
 /** Visits a business's own website (home page + its contact page) and returns the business emails it
