@@ -233,4 +233,32 @@ ok(/running/.test(E2.ctx.doGet().getContent()), 'GET shows a plain status page (
 ok(!/API_KEY/.test(Object.values(E2.docs)[0]), 'access key never written into the brief');
 module.exports.E2 = E2;
 
+console.log('13. email tracking (opens + clicks, shown in Studio → Emails)');
+{
+  const crypto = require('crypto');
+  const S1 = E.ctx.settings_();
+  const parts = E.sent[0].raw.split('Content-Transfer-Encoding: base64\r\n\r\n');
+  const text0 = Buffer.from(parts[1].split('\r\n--')[0].replace(/\r\n/g, ''), 'base64').toString();
+  const html0 = Buffer.from(parts[2].split('\r\n--')[0].replace(/\r\n/g, ''), 'base64').toString();
+  const px = html0.match(/\/api\/e\/o\/(lh-[A-Za-z0-9_-]+)\.gif\?t=(\d+)&amp;s=([a-f0-9]{20})/);
+  ok(!!px && html0.startsWith('<div') && /https:\/\/www\.ferrnagency\.com\/api\/e\/o\//.test(html0), 'HTML part carries the open pixel on ferrnagency.com');
+  const want = crypto.createHmac('sha256', S1.API_KEY).update(`${px[1]}|${px[2]}`).digest('hex').slice(0, 20);
+  ok(px[3] === want, 'pixel signature matches the website (HMAC-SHA256 with the shared key)');
+  ok(!/api\/e\//.test(text0), 'plain-text part has no tracking');
+  const linked = E.ctx.trackHtml_(E.ctx.toHtml_('See https://www.ferrnagency.com/work?a=1&b=2 for examples.'), { id: 'lh-abc', t: 1761724800000 }, S1);
+  const lm = linked.match(/href="https:\/\/www\.ferrnagency\.com\/api\/e\/c\/lh-abc\/0\?t=1761724800000&amp;u=([^&]+)&amp;s=([a-f0-9]{20})"/);
+  ok(!!lm && decodeURIComponent(lm[1]) === 'https://www.ferrnagency.com/work?a=1&b=2', 'links go through the website with the real address kept');
+  ok(lm[2] === crypto.createHmac('sha256', S1.API_KEY).update('lh-abc|1761724800000|https://www.ferrnagency.com/work?a=1&b=2').digest('hex').slice(0, 20), 'link signature covers the destination');
+  const dash = E.ctx.getDashboardData();
+  const sentRow = dash.recentSent.find((m) => m.channel === 'email' && m.status === 'sent');
+  ok(sentRow && sentRow.tracked === true, 'snapshot marks tracked emails so the website lists them');
+  ok(dash.settings.FROM_OK === true && dash.settings.FROM_ACTUAL === 'michael@ferrnagency.com', 'snapshot confirms Gmail can send as michael@ferrnagency.com');
+  ok(!E.ctx.trackingOn_({ TRACK_EMAILS: 'FALSE', API_KEY: 'k' }) && E.ctx.trackingOn_({ API_KEY: 'k' }), 'TRACK_EMAILS=FALSE switches tracking off (on by default)');
+  const saved = E.ctx.GmailApp.getAliases;
+  E.ctx.GmailApp.getAliases = () => [];
+  const fc = E.ctx.fromCheck_(S1);
+  ok(fc.ok === false && fc.address === fc.me, 'without a verified "Send mail as" alias it reports the real sending address');
+  E.ctx.GmailApp.getAliases = saved;
+}
+
 console.log(`\nALL ${passed} CHECKS PASSED`);

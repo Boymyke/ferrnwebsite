@@ -166,7 +166,7 @@ export async function clientAudit(db: D1Database, who: string, entity: string, i
 export async function notifyFerrn(env: Bindings, subject: string, paragraphs: string[], link?: { label: string; path: string }, rows?: [string, string][]) {
   if (!emailConfigured(env) || !env.CONTACT_EMAIL) return;
   await sendEmail(env, {
-    to: env.CONTACT_EMAIL, subject,
+    to: env.CONTACT_EMAIL, subject, track: false,
     html: brandEmail(env, { heading: subject, paragraphs, rows, button: link ? { label: link.label, url: env.SITE_URL + link.path } : undefined }),
   }).catch(() => null);
 }

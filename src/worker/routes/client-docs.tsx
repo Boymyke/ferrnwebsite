@@ -168,6 +168,7 @@ docs.post('/p/:token/sign', async (c) => {
     if (emailConfigured(c.env) && p.client_email) {
       await sendEmail(c.env, {
         to: p.client_email, subject: `Thank you — ${p.number} is signed`,
+        track: { kind: 'signed', proposalId: p.id, invoiceId: inv.id, company: p.client_company },
         html: brandEmail(c.env, {
           heading: 'Thank you for signing', preheader: `Your invoice ${inv.number} is ready.`,
           paragraphs: [`Hi ${name.split(' ')[0]}, thank you for signing “${p.title}”. Your invoice is ready below. It opens with the same access code as your proposal.`],

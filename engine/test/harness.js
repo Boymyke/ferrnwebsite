@@ -72,6 +72,8 @@ function makeEnv(opts = {}) {
     base64Encode: (s) => Buffer.from(s, 'utf8').toString('base64'),
     base64EncodeWebSafe: (s) => Buffer.from(s, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
     Charset: { UTF_8: 'utf8' },
+    // Apps Script returns Java bytes (-128..127)
+    computeHmacSha256Signature: (value, key) => [...crypto.createHmac('sha256', key).update(value, 'utf8').digest()].map((b) => (b > 127 ? b - 256 : b)),
     sleep: () => {},
   };
 
@@ -102,6 +104,7 @@ function makeEnv(opts = {}) {
     },
   };
   const GmailApp = {
+    getAliases: () => ['michael@ferrnagency.com'],
     search: () => inboundThreads.map(t => ({
       getId: () => t.id,
       getMessages: () => t.messages.map(m => ({

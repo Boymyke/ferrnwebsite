@@ -169,7 +169,7 @@ api.post('/invoices/:id/payments', async (c) => {
   await audit(c, 'invoices', id, 'payment', `${u.name} recorded ${fmtMoney(amount, inv.currency)} on ${inv.number} (${r.status === 'paid' ? 'paid in full' : 'part paid'})`);
   if (r.status === 'paid' && emailConfigured(c.env) && inv.client_email && b.notify !== false) {
     c.executionCtx.waitUntil(sendEmail(c.env, {
-      to: inv.client_email, subject: `Payment received — ${inv.number}`,
+      to: inv.client_email, subject: `Payment received — ${inv.number}`, track: { kind: 'receipt', proposalId: inv.proposal_id, invoiceId: inv.id, company: inv.client_company },
       html: brandEmail(c.env, { heading: 'Payment received — thank you', paragraphs: [`We’ve received your payment for ${inv.number}. Your invoice now shows as paid.`],
         rows: [['Invoice', inv.number], ['Amount received', fmtMoney(amount, inv.currency)]], button: { label: 'View invoice', url: `${origin(c)}/i/${inv.token}` } }),
     }).catch(() => null));
@@ -200,6 +200,7 @@ async function share(c: C, kind: 'proposal' | 'invoice', row: Record<string, any
       : [['Invoice', row.number], ['Amount due', fmtMoney(round2(row.amount_due - row.amount_paid), row.currency)], ...(row.due_date ? [['Due', fmtDate(row.due_date)] as [string, string]] : [])];
     const main = await sendEmail(c.env, {
       to, subject: kind === 'proposal' ? `Your proposal from Ferrn: ${row.title || row.number}` : `Invoice ${row.number} from Ferrn Digital Agency`,
+      track: { kind, proposalId: kind === 'proposal' ? row.id : row.proposal_id, invoiceId: kind === 'invoice' ? row.id : null, company: row.client_company },
       html: brandEmail(c.env, {
         heading: kind === 'proposal' ? (row.title || 'Your proposal') : `Invoice ${row.number}`,
         preheader: `Your ${docName} is ready to view.`,
@@ -214,6 +215,7 @@ async function share(c: C, kind: 'proposal' | 'invoice', row: Record<string, any
     if (main.ok && separate) {
       const second = await sendEmail(c.env, {
         to, subject: `Access code for your ${docName}`,
+        track: { kind: 'access_code', proposalId: kind === 'proposal' ? row.id : row.proposal_id, invoiceId: kind === 'invoice' ? row.id : null, company: row.client_company },
         html: brandEmail(c.env, { heading: 'Your access code', preheader: 'Use this code to open your document.', paragraphs: [`Hi ${first}, here is the code to open your ${docName}. It works with the link in our other email.`], code, small: 'Never share this code. Ferrn will never ask you for it by phone.' }),
       });
       if (!second.ok) { emailed = false; emailError = `Link sent, but the code email failed: ${second.error}`; }
@@ -247,6 +249,7 @@ api.post('/invoices/:id/remind', async (c) => {
   if (emailConfigured(c.env) && isEmail(inv.client_email ?? '')) {
     const r = await sendEmail(c.env, {
       to: inv.client_email, subject: `${overdue ? 'Overdue' : 'Reminder'}: invoice ${inv.number}`,
+      track: { kind: 'reminder', proposalId: inv.proposal_id, invoiceId: inv.id, company: inv.client_company },
       html: brandEmail(c.env, {
         heading: overdue ? `Invoice ${inv.number} is overdue` : `A friendly reminder about ${inv.number}`,
         paragraphs: [`Hi ${(inv.client_name || '').split(' ')[0] || 'there'},`, `This is a quick reminder that ${fmtMoney(due, inv.currency)} is ${overdue ? 'now overdue' : 'due'} on invoice ${inv.number}. If you’ve already paid, please upload your receipt on the invoice page, or just reply to this email.`],

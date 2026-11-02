@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ago, api, can, fmtDate } from '../api';
 import { Badge, Card, Drawer, Empty, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
-import { MailOpen, RefreshCw } from 'lucide-react';
+import { AlertTriangle, MailOpen, RefreshCw } from 'lucide-react';
 
 export function Outreach() {
   const user = useUser();
@@ -34,12 +34,16 @@ export function Outreach() {
   const k = snap?.kpis ?? {};
   const s = snap?.settings ?? {};
   return (
-    <Page title="Outreach" sub={<>Engine snapshot {ago(snap?.generated_at)} · sending as {s.FROM_ALIAS || 'your Gmail'} · {s.AUTO_SEND ? 'auto-send on' : 'auto-send off'}</>}
+    <Page title="Outreach" sub={<>Engine snapshot {ago(snap?.generated_at)} · sending as {s.FROM_ACTUAL || s.FROM_ALIAS || 'your Gmail'} · {s.AUTO_SEND ? 'auto-send on' : 'auto-send off'}{s.TRACK_EMAILS ? ' · opens tracked' : ''}</>}
       actions={<>
         <button className="btn ghost" onClick={refresh}><RefreshCw size={15} strokeWidth={2} />Sync now</button>
         {can(user, 'admin') ? <button className="btn ghost" onClick={() => act('setSetting', { key: 'AUTO_SEND', value: s.AUTO_SEND ? 'FALSE' : 'TRUE' }, 'Auto-send updated')}>{s.AUTO_SEND ? 'Pause sending' : 'Resume sending'}</button> : null}
         <button className="btn primary" onClick={() => act('runNow', {}, 'Engine run complete')}>Run engine now</button>
       </>}>
+      {s.FROM_OK === false ? (
+        <div className="callout"><AlertTriangle size={15} /> <strong>Outreach is going out as {s.FROM_ACTUAL}, not {s.FROM_ALIAS}.</strong> Gmail ({s.GMAIL_ACCOUNT}) can only send as {s.FROM_ALIAS} once
+          it’s added under Gmail → Settings → Accounts → “Send mail as”, using Zoho’s mail server (smtp.zoho.com, port 465, SSL). Studio picks it up at the next sync.</div>
+      ) : null}
       <div className="kpi-row five">
         <div className="kpi"><h4>Sent today</h4><strong>{k.sentToday ?? 0}</strong><span className="muted">cap {s.DAILY_CAP_TOTAL}</span></div>
         <div className="kpi"><h4>This week</h4><strong>{k.sentWeek ?? 0}</strong></div>

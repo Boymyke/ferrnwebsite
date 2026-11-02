@@ -8,6 +8,8 @@ export type Bindings = {
   SITE_URL: string;
   SITE_NAME: string;
   CONTACT_EMAIL: string;
+  EMAIL_FROM?: string;              // var: "Name <address>" for site emails (default Michael | Ferrn <michael@ferrnagency.com>)
+  EMAIL_REPLY_TO?: string;          // var: where client replies go (default michael@ferrnagency.com)
   BOOKING_URL: string;
   WHATSAPP_NUMBER?: string;
   OPENAI_MODEL?: string;

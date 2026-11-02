@@ -17,6 +17,7 @@ import { runAutoProspect } from './lib/autoprospect';
 import { analyticsCollect, analyticsStudio, pruneAnalytics } from './routes/analytics';
 import proposalsApi from './routes/proposals';
 import clientDocs from './routes/client-docs';
+import { emailStudio, emailTrack, syncEmailStatus } from './routes/email-track';
 import { studioShell } from './routes/studio-shell';
 import { QuoteDocument, type QuoteRow } from './views/quote';
 import { LANGS } from './content/i18n';
@@ -25,12 +26,24 @@ import { POLICIES } from './content/policies';
 
 const app = new Hono<AppEnv>();
 
-app.use('*', secureHeaders({
+const securityHeaders = secureHeaders({
   xFrameOptions: 'SAMEORIGIN',
   referrerPolicy: 'strict-origin-when-cross-origin',
   permissionsPolicy: { camera: [], microphone: ['self'], geolocation: [] },
   contentSecurityPolicy: undefined, // inline JSON-LD + demo iframes; revisit with nonces once stable
-}));
+});
+// Email open pixels and click redirects are loaded by mail apps on other origins, so they skip
+// Cross-Origin-Resource-Policy: same-origin (the pixel would be blocked in webmail otherwise).
+app.use('*', async (c, next) => {
+  if (c.req.path.startsWith('/api/e/')) {
+    await next();
+    c.res.headers.set('cross-origin-resource-policy', 'cross-origin');
+    c.res.headers.set('x-content-type-options', 'nosniff');
+    c.res.headers.set('referrer-policy', 'no-referrer');
+    return;
+  }
+  return securityHeaders(c, next);
+});
 // One canonical address: ferrnagency.com → www.ferrnagency.com (keeps path and query).
 app.use('*', async (c, next) => {
   const u = new URL(c.req.url);
@@ -46,6 +59,8 @@ app.route('/api/studio/demos', demosApi);
 app.route('/api/a', analyticsCollect);
 app.route('/api/studio/analytics', analyticsStudio);
 app.route('/api/studio/proposals', proposalsApi);
+app.route('/api/studio/emails', emailStudio);
+app.route('/api/e', emailTrack); // email open pixel, click redirects, LeadsHunter send log
 app.route('/api/studio', studioApi);
 app.route('/api/whatsapp', whatsappWebhook);
 app.route('/api/social', socialPublic); // OAuth return for TikTok / Instagram connect
@@ -133,6 +148,7 @@ export default {
       try { await processQueue(env); } catch (e) { console.warn('whatsapp queue failed', e); }
       try { await runAutoProspect(env); } catch (e) { console.warn('autoprospect failed', e); }
       try { await pruneAnalytics(env); } catch (e) { console.warn('analytics prune failed', e); }
+      try { await syncEmailStatus(env); } catch (e) { console.warn('email status sync failed', e); }
       try { await runSocial(env, event.scheduledTime); } catch (e) { console.warn('social autopost/metrics failed', e); }
       await env.DB.prepare("DELETE FROM sessions WHERE expires_at < datetime('now')").run();
     })());

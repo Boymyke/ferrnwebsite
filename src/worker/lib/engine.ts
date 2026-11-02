@@ -1,3 +1,4 @@
+import { syncOutreachEmails } from '../routes/email-track';
 import type { Bindings } from './env';
 
 /**
@@ -48,5 +49,6 @@ export async function syncEngine(env: Bindings): Promise<{ leads: number } | nul
     ),
   );
   for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
+  await syncOutreachEmails(env, dash).catch((e) => console.warn('outreach email sync', e));
   return { leads: leads.length };
 }

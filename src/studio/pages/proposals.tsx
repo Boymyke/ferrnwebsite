@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown, ArrowLeft, ArrowUp, Ban, Banknote, Bell, CircleCheck, Copy, CreditCard, ExternalLink, Eye, FileSignature, FileText, Globe, Hourglass,
   Image as ImageIcon, KeyRound, Landmark, Lock, LockOpen, Mail, MessageCircle, Monitor, Pencil, Plus, Receipt, RefreshCw, Save, Send, ShieldCheck,
-  Smartphone, Sparkles, Trash2, Wallet, X,
+  Smartphone, Sparkles, Trash2, Wallet, X, MailOpen, MousePointerClick, AlertTriangle,
 } from 'lucide-react';
 import { ago, api, can, fmtDate, list, money } from '../api';
 import { Badge, Card, copy, Drawer, Empty, ErrorNote, History, Loading, Page, Tabs, useData, useRoute, useToast, useUser, waLink } from '../ui';
@@ -426,6 +426,7 @@ const EVENT_ICON: Record<string, React.ReactNode> = {
   created: <Plus {...I} />, sent: <Send {...I} />, viewed: <Eye {...I} />, signed: <FileSignature {...I} />, declined: <Ban {...I} />, changes: <MessageCircle {...I} />,
   code: <KeyRound {...I} />, revoked: <Lock {...I} />, restored: <LockOpen {...I} />, invoice: <Receipt {...I} />, invoice_sent: <Mail {...I} />, receipt: <ImageIcon {...I} />,
   payment: <Banknote {...I} />, paid: <CircleCheck {...I} />, reminder: <Bell {...I} />, expired: <Hourglass {...I} />, status: <RefreshCw {...I} />, void: <Ban {...I} />, reopened: <RefreshCw {...I} />,
+  email_opened: <MailOpen {...I} />, email_clicked: <MousePointerClick {...I} />, email_bounced: <AlertTriangle {...I} />,
 };
 function Timeline({ events }: { events: any[] }) {
   if (!events.length) return <Card><Empty title="Nothing yet" /></Card>;

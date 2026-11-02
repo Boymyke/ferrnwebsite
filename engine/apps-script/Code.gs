@@ -34,6 +34,8 @@ var DEFAULT_SETTINGS = [
   ['HOLD_MINUTES', '30', 'A brand-new first email waits this long in "Sending soon" so you can stop it. 0 = no wait.'],
   ['FROM_ALIAS', 'michael@ferrnagency.com', 'Send-from address. Must be this Google account or a verified Gmail "Send mail as" address. Blank = this account.'],
   ['SENDER_NAME', 'Michael | Ferrn Digital Agency', 'Name people see.'],
+  ['TRACK_EMAILS', 'TRUE', 'TRUE = record opens and link clicks (Studio → Emails). FALSE = plain emails, no tracking.'],
+  ['TRACKING_BASE', 'https://www.ferrnagency.com', 'Website that records opens and clicks.'],
   ['DAILY_CAP_FIRST', '25', 'Max first-touch emails per day. Keeps your domain out of spam.'],
   ['DAILY_CAP_TOTAL', '60', 'Max emails of any kind per day.'],
   ['SEND_DAYS', '1,2,3,4,5', 'Days to send: 1=Mon ... 7=Sun.'],
@@ -330,8 +332,10 @@ function deliver_(m, lead, mT, lT, s) {
     if (meta && !/^re:/i.test(subject)) subject = 'Re: ' + meta.subject.replace(/^re:\s*/i, '');
     var body = m.body + '\n\n' + (s.SIGNATURE || '');
     if (!isReply && s.OPT_OUT_LINE) body += '\n\n' + s.OPT_OUT_LINE;
-    var res = sendRaw_(m.to, subject, body, threadId, meta ? meta.lastMessageId : '', s);
+    var track = trackingOn_(s) ? { id: 'lh-' + String(m.id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60), t: Date.now() } : null;
+    var res = sendRaw_(m.to, subject, body, threadId, meta ? meta.lastMessageId : '', s, track);
     var now = new Date();
+    if (track && !s.TRACKING_SINCE) { setSetting_('TRACKING_SINCE', new Date(track.t).toISOString()); s.TRACKING_SINCE = new Date(track.t).toISOString(); }
     updateRow_(mT, m, { status: 'sent', sent_at: now, thread_id: res.threadId, gmail_id: res.id, error: '' });
     var ch = { last_contact: now };
     if (!lead.thread_id) ch.thread_id = res.threadId;
@@ -362,11 +366,11 @@ function scheduleFollowUps_(leadId, from, mT) {
   });
 }
 
-function sendRaw_(to, subject, text, threadId, inReplyTo, s) {
-  var me = Session.getEffectiveUser().getEmail();
-  var fromAddr = s.FROM_ALIAS || me;
+function sendRaw_(to, subject, text, threadId, inReplyTo, s, track) {
+  var fromAddr = fromCheck_(s).address;
   var from = (s.SENDER_NAME ? encodeWord_(s.SENDER_NAME) + ' ' : '') + '<' + fromAddr + '>';
   var html = toHtml_(text);
+  if (track) html = trackHtml_(html, track, s);
   var boundary = 'ferrn_' + Utilities.getUuid().replace(/-/g, '');
   var head = [
     'From: ' + from,
@@ -385,6 +389,36 @@ function sendRaw_(to, subject, text, threadId, inReplyTo, s) {
   var resource = { raw: Utilities.base64EncodeWebSafe(raw, Utilities.Charset.UTF_8) };
   if (threadId) resource.threadId = threadId;
   return Gmail.Users.Messages.send(resource, 'me');
+}
+
+// ───────────────────────────── tracking ─────────────────────────────
+// Opens: a 1x1 image. Clicks: links go through the website, which records them and forwards.
+// Both are signed with API_KEY (the same key the website has as ENGINE_KEY), so they can't be faked.
+function trackingOn_(s) { return String(s.TRACK_EMAILS || 'TRUE').toUpperCase() !== 'FALSE' && !!s.API_KEY; }
+function sign_(data, key) {
+  var mac = Utilities.computeHmacSha256Signature(data, key, Utilities.Charset.UTF_8);
+  return mac.map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('').slice(0, 20);
+}
+function trackHtml_(html, track, s) {
+  var base = String(s.TRACKING_BASE || 'https://www.ferrnagency.com').replace(/\/$/, '');
+  var id = track.id, t = String(track.t), n = 0;
+  html = html.replace(/href="(https?:\/\/[^"]+)"/g, function (_, url) {
+    var u = url.replace(/&amp;/g, '&');
+    return 'href="' + base + '/api/e/c/' + id + '/' + (n++) + '?t=' + t + '&amp;u=' + encodeURIComponent(u) + '&amp;s=' + sign_(id + '|' + t + '|' + u, s.API_KEY) + '"';
+  });
+  return html + '<img src="' + base + '/api/e/o/' + id + '.gif?t=' + t + '&amp;s=' + sign_(id + '|' + t, s.API_KEY) +
+    '" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0">';
+}
+/** Which address Gmail will really send from. FROM_ALIAS only works once Gmail has it under
+ *  Settings → Accounts → "Send mail as"; otherwise Gmail would silently use this account's address. */
+function fromCheck_(s) {
+  var me = Session.getEffectiveUser().getEmail();
+  var want = String(s.FROM_ALIAS || '').trim();
+  if (!want || want.toLowerCase() === me.toLowerCase()) return { address: me, ok: true, me: me, wanted: want || me };
+  var aliases = [];
+  try { aliases = GmailApp.getAliases().map(function (a) { return String(a).toLowerCase(); }); } catch (e) { aliases = []; }
+  var ok = aliases.indexOf(want.toLowerCase()) > -1;
+  return { address: ok ? want : me, ok: ok, me: me, wanted: want };
 }
 
 function threadMeta_(threadId) {
@@ -588,6 +622,7 @@ function doPost(e) {
 
 function getDashboardData() {
   var s = settings_();
+  var fromInfo = fromCheck_(s);
   var lT = table_('Leads'), mT = table_('Messages'), inT = table_('Inbox');
   var leads = indexBy_(lT.rows, 'id');
   var now = new Date();
@@ -629,7 +664,8 @@ function getDashboardData() {
     return {
       id: m.id, lead_id: m.lead_id, company: L.company || '', step: String(m.step), channel: m.channel, to: m.to,
       subject: m.subject, body: m.body, status: m.status, send_at: iso_(sendAt), sent_at: iso_(m.sent_at),
-      error: m.error, wa_link: m.channel === 'whatsapp' ? waLink_(m.to, m.body) : ''
+      error: m.error, wa_link: m.channel === 'whatsapp' ? waLink_(m.to, m.body) : '',
+      tracked: !!(m.channel === 'email' && s.TRACKING_SINCE && m.sent_at && new Date(m.sent_at) >= new Date(s.TRACKING_SINCE))
     };
   };
 
@@ -663,6 +699,7 @@ function getDashboardData() {
     settings: {
       AUTO_SEND: isTrue_(s.AUTO_SEND), HOLD_MINUTES: Number(s.HOLD_MINUTES || 0), DAILY_CAP_FIRST: Number(s.DAILY_CAP_FIRST || 0),
       DAILY_CAP_TOTAL: Number(s.DAILY_CAP_TOTAL || 0), FROM_ALIAS: s.FROM_ALIAS, MONTHLY_TARGET: Number(s.MONTHLY_TARGET || 30000000),
+      FROM_ACTUAL: fromInfo.address, FROM_OK: fromInfo.ok, GMAIL_ACCOUNT: fromInfo.me, TRACK_EMAILS: trackingOn_(s),
       PREVIEW_BASE_URL: s.PREVIEW_BASE_URL, SEND_START_HOUR: s.SEND_START_HOUR, SEND_END_HOUR: s.SEND_END_HOUR,
       sheet_url: SpreadsheetApp.getActive().getUrl()
     },

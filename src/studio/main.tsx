@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity } from 'lucide-react';
+import { Activity, MailOpen } from 'lucide-react';
 import { api, can, type User } from './api';
 import { Link, RouterCtx, ToastHost, UserCtx, useRoute, useUser } from './ui';
 import { AcceptInvite, Login, Setup } from './pages/auth';
@@ -18,6 +18,7 @@ import { WhatsApp } from './pages/whatsapp';
 import { Settings, TeamAccess } from './pages/team';
 import { Demos } from './pages/demos';
 import { Analytics } from './pages/analytics';
+import { Emails } from './pages/emails';
 import {
   LayoutDashboard, Users, Radar, Send, MessageCircle, CalendarClock, Receipt, PenSquare, Megaphone, Package, ShoppingBag, Inbox,
   UserSquare2, Quote, Newspaper, BrainCircuit, ShieldCheck, Settings as SettingsIcon, ExternalLink, Menu, MonitorPlay, SunMoon, Search, LogOut,
@@ -26,7 +27,7 @@ import {
 const I = (C: React.ComponentType<any>) => <C size={17} strokeWidth={1.8} aria-hidden="true" />;
 
 const NAV: { group: string; items: [string, string, React.ReactNode, User['role']?][] }[] = [
-  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)]] },
+  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/emails', 'Emails', I(MailOpen)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)]] },
   { group: 'Marketing', items: [['/content', 'Content', I(PenSquare)], ['/ads', 'Ads', I(Megaphone)]] },
   { group: 'Marketplace', items: [['/marketplace/products', 'Products', I(Package)], ['/marketplace/demos', 'Demos', I(MonitorPlay)], ['/marketplace/orders', 'Orders', I(ShoppingBag)], ['/marketplace/requests', 'Enquiries', I(Inbox)]] },
   { group: 'Website', items: [['/website/team', 'Team page', I(UserSquare2)], ['/website/testimonials', 'Testimonials', I(Quote)], ['/website/posts', 'Insights', I(Newspaper)], ['/website/knowledge', 'Chatbot knowledge', I(BrainCircuit)]] },
@@ -41,6 +42,7 @@ function Router() {
   if (p.startsWith('/leads')) return <Leads />;
   if (p.startsWith('/prospect')) return <Prospect />;
   if (p.startsWith('/outreach')) return <Outreach />;
+  if (p.startsWith('/emails')) return <Emails />;
   if (p.startsWith('/whatsapp')) return <WhatsApp />;
   if (p.startsWith('/meetings')) return <Meetings />;
   if (p.startsWith('/quotes')) return <Quotes />;

@@ -2,36 +2,74 @@ import type { Bindings } from './env';
 
 /** Transactional email through Resend (https://resend.com). Optional: without RESEND_API_KEY
  *  every caller falls back to showing links in Studio, so nothing breaks. */
-export const FROM = 'Ferrn Digital Agency <proposals@ferrnagency.com>';
+export const FROM_ADDR = 'michael@ferrnagency.com';
+export const FROM = `Michael | Ferrn Digital Agency <${FROM_ADDR}>`;
+const fromOf = (env: Bindings) => env.EMAIL_FROM || FROM;
+const replyOf = (env: Bindings) => env.EMAIL_REPLY_TO || FROM_ADDR;
 
 export const emailConfigured = (env: Bindings) => !!env.RESEND_API_KEY;
 
 export const esc = (s: unknown) =>
   String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
 
+/** What the email is about, so Studio can show it next to the right proposal or invoice. */
+export type EmailTrack = { kind: string; proposalId?: string | null; invoiceId?: string | null; company?: string | null } | false;
+
+const trackId = () => 'e' + crypto.randomUUID().replace(/-/g, '').slice(0, 20);
+const siteOf = (env: Bindings) => (env.SITE_URL || 'https://www.ferrnagency.com').replace(/\/$/, '');
+
+/** Adds the open pixel and routes every http(s) link through /api/e/c/<id>/<n>. */
+export function trackHtml(site: string, id: string, html: string) {
+  const links: string[] = [];
+  let out = html.replace(/href="(https?:\/\/[^"]+)"/gi, (_m, url: string) => {
+    const raw = url.replace(/&amp;/g, '&');
+    let n = links.indexOf(raw);
+    if (n < 0) { n = links.length; links.push(raw); }
+    return `href="${site}/api/e/c/${id}/${n}"`;
+  });
+  const pixel = `<img src="${site}/api/e/o/${id}.gif" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;outline:none;opacity:0">`;
+  out = /<\/body>/i.test(out) ? out.replace(/<\/body>/i, `${pixel}</body>`) : out + pixel;
+  return { html: out, links };
+}
+
 export async function sendEmail(env: Bindings, m: {
-  to: string | string[]; subject: string; html: string; text?: string; replyTo?: string;
+  to: string | string[]; subject: string; html: string; text?: string; replyTo?: string; track?: EmailTrack;
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   if (!env.RESEND_API_KEY) return { ok: false, error: 'Email is not configured (RESEND_API_KEY).' };
+  const to = Array.isArray(m.to) ? m.to : [m.to];
+  const internal = to.every((a) => a.toLowerCase() === String(env.CONTACT_EMAIL || '').toLowerCase());
+  // Internal notifications to Ferrn are not tracked; everything a client gets is.
+  const tracked = m.track !== false && !internal && !!env.DB && to.length === 1;
+  const tid = tracked ? trackId() : '';
+  const t = tracked ? trackHtml(siteOf(env), tid, m.html) : { html: m.html, links: [] as string[] };
+  let result: { ok: boolean; id?: string; error?: string };
   try {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
       body: JSON.stringify({
-        from: FROM,
-        to: Array.isArray(m.to) ? m.to : [m.to],
+        from: fromOf(env),
+        to,
         subject: m.subject,
-        html: m.html,
-        text: m.text ?? htmlToText(m.html),
-        reply_to: m.replyTo ?? env.CONTACT_EMAIL,
+        html: t.html,
+        text: m.text ?? htmlToText(m.html), // plain-text part keeps the original links
+        reply_to: m.replyTo ?? replyOf(env),
       }),
     });
     const data = (await r.json().catch(() => ({}))) as { id?: string; message?: string };
-    if (!r.ok) return { ok: false, error: data.message || `Resend error ${r.status}` };
-    return { ok: true, id: data.id };
+    result = r.ok ? { ok: true, id: data.id } : { ok: false, error: data.message || `Resend error ${r.status}` };
   } catch (e) {
-    return { ok: false, error: (e as Error).message };
+    result = { ok: false, error: (e as Error).message };
   }
+  if (tracked) {
+    const tr = m.track || { kind: 'email' };
+    await env.DB.prepare(`INSERT INTO email_log (id, source, kind, from_addr, to_addr, subject, company, proposal_id, invoice_id, provider_id, status, error, links_json)
+      VALUES (?, 'site', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .bind(tid, tr.kind.slice(0, 40), fromOf(env).slice(0, 200), to[0].slice(0, 200), m.subject.slice(0, 300), tr.company ?? null, tr.proposalId ?? null, tr.invoiceId ?? null,
+        result.id ?? null, result.ok ? 'sent' : 'failed', result.error?.slice(0, 500) ?? null, JSON.stringify(t.links))
+      .run().catch((e) => console.warn('email_log insert', e)); // never block sending on the log
+  }
+  return result;
 }
 
 const htmlToText = (html: string) =>
