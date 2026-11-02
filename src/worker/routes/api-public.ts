@@ -113,6 +113,7 @@ api.post('/chat', async (c) => {
 
 /** Thumbs up/down on an answer (by session + question), for the Studio Bob analytics. */
 api.post('/chat/rate', async (c) => {
+  if (await limited(c, 'chat-rate', 60, 3600)) return c.json({ ok: false }, 429);
   const b = (await c.req.json().catch(() => ({}))) as { session?: string; question?: string; rating?: number };
   const rating = b.rating === 1 ? 1 : b.rating === -1 ? -1 : 0;
   if (!rating || !b.session) return c.json({ ok: false }, 422);

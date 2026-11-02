@@ -156,7 +156,8 @@ siteStudio.post('/projects/import', async (c) => {
   const b = (await c.req.json().catch(() => ({}))) as { csv?: string; sheet?: string; gid?: string; makePublic?: boolean };
   let csv = b.csv ?? '';
   if (!csv && b.sheet) {
-    const id = b.sheet.match(/\/d\/([\w-]+)/)?.[1] ?? b.sheet.trim();
+    const id = b.sheet.match(/\/d\/([\w-]+)/)?.[1] ?? (/^[\w-]{20,}$/.test(b.sheet.trim()) ? b.sheet.trim() : '');
+    if (!id) return c.json({ ok: false, error: 'That doesn’t look like a Google Sheet link.' }, 422);
     const url = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv${b.gid ? `&gid=${encodeURIComponent(b.gid)}` : ''}`;
     const r = await fetch(url, { redirect: 'follow' });
     if (!r.ok) return c.json({ ok: false, error: `Could not read the sheet (${r.status}). Share it as “Anyone with the link can view”, or paste the CSV.` }, 400);

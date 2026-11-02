@@ -89,7 +89,7 @@ function motion() {
 
 /* ── idle storytelling: after N seconds without input, full-screen lines; any input dismisses ── */
 function idle() {
-  const el = $('[data-idle]'); if (!el) return;
+  const el = $('.idle[data-idle]'); if (!el) return;
   const cfg = document.body.dataset.idle || '45';
   if (cfg === '0') return;
   let off = false; try { off = localStorage.getItem('ferrn-idle-off') === '1'; } catch {}
@@ -149,7 +149,7 @@ function chrome() {
   });
   const menuBtn = $('[data-menu-toggle]'), panel = $('[data-mobile-panel]');
   const setMenu = (open: boolean) => {
-    panel?.classList.toggle('open', open); panel?.setAttribute('aria-hidden', String(!open));
+    panel?.classList.toggle('open', open); if (panel) { if (open) panel.removeAttribute('inert'); else panel.setAttribute('inert', ''); }
     menuBtn?.setAttribute('aria-expanded', String(open)); document.body.classList.toggle('menu-open', open);
     menuBtn && (menuBtn.innerHTML = open
       ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'

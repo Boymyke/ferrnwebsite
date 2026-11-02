@@ -220,7 +220,7 @@ export function HomePage(p: {
       {p.testimonials.length ? (
         <Section n="05" label="Clients" title={ctx.get('home.testimonials.title')} id="testimonials" class="section-dark">
           <div class="quotes" data-quotes>
-            <div class="quotes-track">{p.testimonials.map((x, i) => <Testimonial x={x} i={i} />)}</div>
+            <div class="quotes-track" tabindex={0} aria-label="Client testimonials, scroll sideways">{p.testimonials.map((x, i) => <Testimonial x={x} i={i} />)}</div>
             <div class="quotes-nav"><button type="button" data-prev aria-label="Previous">{icon('arrow-left', { size: 18 })}</button><span data-quotes-pos>1 / {p.testimonials.length}</span><button type="button" data-next aria-label="Next">{icon('arrow-right', { size: 18 })}</button></div>
           </div>
         </Section>

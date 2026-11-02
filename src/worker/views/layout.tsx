@@ -113,7 +113,7 @@ function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
           <button class="icon-btn menu-btn" type="button" data-menu-toggle aria-label="Menu" aria-expanded="false">{icon('menu', { size: 20 })}</button>
         </div>
       </nav>
-      <div class="menu" data-mobile-panel aria-hidden="true">
+      <div class="menu" data-mobile-panel inert>
         <div class="menu-inner">
           <div class="menu-links">
             {[...links, ['/contact', 'nav.contact'] as [string, string]].map(([p, k], i) => <a href={href(lang, p)} style={`--i:${i}`}><small>0{i + 1}</small>{t(lang, k)}</a>)}
