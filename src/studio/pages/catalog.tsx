@@ -106,15 +106,6 @@ export function TeamMembers() {
   );
 }
 
-export function Testimonials() {
-  return (
-    <ResourcePage res="testimonials" entity="testimonials" title="Testimonials" sub="Only real client quotes, with their permission."
-      columns={[{ key: 'name', label: 'Client', render: (r) => <><strong>{r.name}</strong><div className="muted small">{r.role}</div></> }, { key: 'quote', label: 'Quote', render: (r) => <span className="small">{r.quote.slice(0, 120)}</span> }, { key: 'published', label: 'Shown', render: (r) => (r.published ? 'yes' : 'no') }]}
-      defaults={{ published: 1, sort: 100 }}
-      fields={[{ name: 'name', label: 'Name' }, { name: 'role', label: 'Role, company' }, { name: 'quote', label: 'Quote', type: 'textarea' }, { name: 'avatar', label: 'Photo URL', wide: true }, { name: 'sort', label: 'Order', type: 'number' }, { name: 'published', label: 'Show', type: 'checkbox' }]} />
-  );
-}
-
 export function Posts() {
   return (
     <ResourcePage res="posts" entity="posts" title="Insights (blog)" sub="Articles at /insights. Write in HTML (paragraphs, h2, lists, links)."

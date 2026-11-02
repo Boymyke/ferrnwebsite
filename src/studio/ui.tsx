@@ -203,8 +203,10 @@ export function Drawer({ open, onClose, title, children, wide }: { open: boolean
 
 /* ── forms ── */
 export type FieldDef = {
-  name: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'date' | 'datetime' | 'email' | 'url' | 'checkbox' | 'html' | 'tags' | 'image';
+  name: string; label: string; type?: 'text' | 'textarea' | 'number' | 'select' | 'date' | 'datetime' | 'email' | 'url' | 'checkbox' | 'html' | 'tags' | 'image' | 'file';
   options?: (string | [string, string])[]; wide?: boolean; placeholder?: string; help?: string; rows?: number;
+  /** file fields: accepted MIME prefix, e.g. "audio/" or "application/pdf" */
+  accept?: string;
   /** image fields: R2 folder and output size (square crop when `square`) */
   folder?: string; square?: boolean; maxPx?: number;
 };
@@ -263,6 +265,32 @@ export function ImageField({ value, onChange, folder = 'uploads', square, maxPx 
   );
 }
 
+/** Any upload (audio, PDF, video) to R2; stores the key. Audio gets an inline player. */
+export function FileField({ value, onChange, folder = 'uploads', accept = '', disabled }: { value?: string; onChange: (key: string) => void; folder?: string; accept?: string; disabled?: boolean }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const input = React.useRef<HTMLInputElement>(null);
+  const url = mediaUrl(value);
+  const take = async (f?: File | null) => {
+    if (!f || disabled) return;
+    if (accept && !f.type.startsWith(accept)) return toast(`Choose a ${accept.replace('/', '')} file`, 'err');
+    if (f.size > 25 * 1024 * 1024) return toast('Max 25 MB', 'err');
+    setBusy(true);
+    try { const fd = new FormData(); fd.append('file', f); fd.append('folder', folder); const r = await api<{ key: string }>('/media', { form: fd }); onChange(r.key); toast('Uploaded'); }
+    catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); }
+  };
+  return (
+    <div className="filefield">
+      {url ? (accept.startsWith('audio') ? <audio controls src={url} preload="metadata" /> : <a href={url} target="_blank" rel="noreferrer" className="small">{value}</a>) : <span className="muted small">Nothing uploaded yet</span>}
+      {!disabled ? <div className="imgfield-bar">
+        <button type="button" className="btn sm ghost" disabled={busy} onClick={() => input.current?.click()}>{busy ? <Loader2 className="spin" size={14} /> : <ImagePlus size={14} strokeWidth={2} />}{url ? 'Replace' : 'Upload'}</button>
+        {url ? <button type="button" className="btn sm ghost danger" onClick={() => onChange('')}><Trash2 size={14} strokeWidth={2} />Remove</button> : null}
+      </div> : null}
+      <input ref={input} type="file" accept={accept ? (accept.endsWith("/") ? accept + "*" : accept) : undefined} hidden onChange={(e) => { take(e.target.files?.[0]); e.target.value = ''; }} />
+    </div>
+  );
+}
+
 export function Fields({ fields, value, onChange, disabled }: { fields: FieldDef[]; value: Record<string, any>; onChange: (v: Record<string, any>) => void; disabled?: boolean }) {
   const set = (k: string, v: any) => onChange({ ...value, [k]: v });
   return (
@@ -279,12 +307,13 @@ export function Fields({ fields, value, onChange, disabled }: { fields: FieldDef
           </select>
         );
         else if (f.type === 'image') input = <ImageField value={v} onChange={(x) => set(f.name, x)} folder={f.folder} square={f.square} maxPx={f.maxPx} disabled={disabled} />;
+        else if (f.type === 'file') input = <FileField value={v} onChange={(x) => set(f.name, x)} folder={f.folder} accept={f.accept} disabled={disabled} />;
         else if (f.type === 'checkbox') input = <input {...common} type="checkbox" checked={!!Number(v)} onChange={(e) => set(f.name, e.target.checked ? 1 : 0)} />;
         else if (f.type === 'datetime') input = <input {...common} type="datetime-local" value={v} onChange={(e) => set(f.name, e.target.value)} />;
         else input = <input {...common} type={f.type ?? 'text'} value={v} onChange={(e) => set(f.name, f.type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value)} />;
-        const Tag: any = f.type === 'image' ? 'div' : 'label';
+        const Tag: any = f.type === 'image' || f.type === 'file' ? 'div' : 'label';
         return (
-          <Tag key={f.name} className={`field ${f.wide || f.type === 'textarea' || f.type === 'html' || f.type === 'image' ? 'wide' : ''} ${f.type === 'checkbox' ? 'check' : ''}`} htmlFor={`f-${f.name}`}>
+          <Tag key={f.name} className={`field ${f.wide || f.type === 'textarea' || f.type === 'html' || f.type === 'image' || f.type === 'file' ? 'wide' : ''} ${f.type === 'checkbox' ? 'check' : ''}`} htmlFor={`f-${f.name}`}>
             <span>{f.label}</span>{input}{f.help ? <small>{f.help}</small> : null}
           </Tag>
         );
