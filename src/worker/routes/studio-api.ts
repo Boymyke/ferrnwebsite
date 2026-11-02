@@ -16,6 +16,7 @@ import { quoteTotals, type QuoteItem } from '../views/quote';
 import { NOVEMBER_CALENDAR } from '../content/november-calendar';
 import { WEEK_MEDIA, mediaKey } from '../content/week-media';
 import { socialStudio } from './social';
+import { siteStudio } from './site-studio';
 import { rearmAfterEdit } from '../lib/social';
 
 type Resource = {
@@ -60,7 +61,22 @@ const R: Record<string, Resource> = {
   posts: { table: 'posts', label: 'article', title: 'title', idPrefix: 'b_', order: 'COALESCE(published_at, updated_at) DESC', writeRole: 'editor', public: true,
     writable: ['slug', 'title', 'category', 'excerpt', 'content_html', 'cover', 'status', 'published_at'], search: ['title', 'excerpt'], filters: ['status'] },
   testimonials: { table: 'testimonials', label: 'testimonial', title: 'name', idPrefix: 'tm_', order: 'sort', writeRole: 'editor', public: true,
-    writable: ['name', 'role', 'quote', 'avatar', 'published', 'sort'] },
+    writable: ['name', 'role', 'company', 'logo', 'quote', 'avatar', 'audio', 'transcript', 'featured', 'published', 'sort'] },
+  projects: { table: 'projects', label: 'project', title: 'name', idPrefix: 'pj_', order: 'featured DESC, sort, COALESCE(due_date, updated_at) DESC', writeRole: 'editor', public: true,
+    writable: ['slug', 'name', 'client', 'category', 'type', 'industry', 'description', 'status', 'priority', 'lead', 'team_json', 'start_date', 'due_date', 'completed_date',
+      'currency', 'budget', 'expenses', 'revenue', 'calc_json', 'links_json', 'public', 'featured', 'sort', 'year', 'cover', 'gallery_json', 'services_json', 'tech_json',
+      'summary', 'context', 'challenge', 'approach', 'solution', 'results_json', 'testimonial_id', 'meta_title', 'meta_description', 'accent'],
+    json: ['team_json', 'calc_json', 'links_json', 'gallery_json', 'services_json', 'tech_json', 'results_json'],
+    search: ['name', 'client', 'industry', 'type'], filters: ['status', 'category', 'public', 'priority'] },
+  links: { table: 'links', label: 'link', title: 'title', idPrefix: 'lk_', order: 'sort, title', writeRole: 'editor', public: true,
+    writable: ['title', 'description', 'url', 'category', 'icon', 'visible', 'sort'], search: ['title', 'url'], filters: ['category', 'visible'] },
+  faqs: { table: 'faqs', label: 'FAQ', title: 'question', idPrefix: 'fq_', order: 'sort', writeRole: 'editor', public: true,
+    writable: ['question', 'answer', 'category', 'on_site', 'published', 'sort'], search: ['question', 'answer'], filters: ['category', 'published'] },
+  seasons: { table: 'seasons', label: 'seasonal theme', title: 'name', idPrefix: 'sn_', order: 'priority DESC, starts_at DESC', writeRole: 'admin', public: true,
+    writable: ['name', 'preset', 'enabled', 'starts_at', 'ends_at', 'priority', 'greeting', 'banner_text', 'banner_url', 'accent', 'effect', 'settings_json'],
+    json: ['settings_json'], filters: ['enabled', 'preset'] },
+  profile: { table: 'profile_sections', label: 'profile section', title: 'title', idPrefix: 'ps_', order: 'sort', writeRole: 'editor', public: true,
+    writable: ['key', 'title', 'body', 'items_json', 'image', 'published', 'sort'], json: ['items_json'] },
   team: { table: 'team_members', label: 'team member', title: 'name', idPrefix: 't_', order: 'sort', writeRole: 'editor', public: true,
     writable: ['name', 'role', 'bio', 'photo', 'linkedin', 'github', 'published', 'sort'] },
   knowledge: { table: 'knowledge', label: 'knowledge entry', title: 'title', idPrefix: 'k_', order: 'title', writeRole: 'editor',
@@ -70,6 +86,7 @@ const R: Record<string, Resource> = {
 const studio = new Hono<AppEnv>();
 studio.use('*', requireUser('viewer'));
 studio.route('/social', socialStudio); // auto-posting, connections, results dashboard (routes/social.ts)
+studio.route('/site', siteStudio);     // website content, Bob, projects import, screenshots (routes/site-studio.ts)
 
 const RANK: Record<string, number> = { viewer: 0, sales: 1, editor: 2, admin: 3, owner: 4 };
 const can = (u: SessionUser, role: SessionUser['role']) => RANK[u.role] >= RANK[role];

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createPortal } from 'react-dom';
-import { Activity, MailOpen, Bell, CheckCheck, BellOff, FileSearch } from 'lucide-react';
+import { Activity, MailOpen, Bell, CheckCheck, BellOff, FileSearch, FolderKanban, TextCursorInput, Bot, Link2, HelpCircle, Sun, BookUser } from 'lucide-react';
 import { ago, api, can, type User } from './api';
 import { Link, RouterCtx, ToastHost, UserCtx, useRoute, useUser, useToast } from './ui';
 
@@ -13,7 +13,8 @@ import { Meetings } from './pages/meetings';
 import { Quotes } from './pages/quotes';
 import { Proposals } from './pages/proposals';
 import { FileSignature } from 'lucide-react';
-import { Ads, Knowledge, Orders, Posts, Products, Requests, Testimonials, TeamMembers } from './pages/catalog';
+import { Ads, Knowledge, Orders, Posts, Products, Requests, TeamMembers } from './pages/catalog';
+import { BobPage, Faqs, Links, Profile, Projects, Seasons, SiteContent, Testimonials } from './pages/website';
 import { Content } from './pages/content';
 import { CarouselStudio } from './pages/carousel';
 import { WhatsApp } from './pages/whatsapp';
@@ -33,7 +34,8 @@ const NAV: { group: string; items: [string, string, React.ReactNode, User['role'
   { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/emails', 'Emails', I(MailOpen)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)], ['/rfps', 'RFPs', I(FileSearch)]] },
   { group: 'Marketing', items: [['/content', 'Content', I(PenSquare)], ['/ads', 'Ads', I(Megaphone)]] },
   { group: 'Marketplace', items: [['/marketplace/products', 'Products', I(Package)], ['/marketplace/demos', 'Demos', I(MonitorPlay)], ['/marketplace/orders', 'Orders', I(ShoppingBag)], ['/marketplace/requests', 'Enquiries', I(Inbox)]] },
-  { group: 'Website', items: [['/website/team', 'Team page', I(UserSquare2)], ['/website/testimonials', 'Testimonials', I(Quote)], ['/website/posts', 'Insights', I(Newspaper)], ['/website/knowledge', 'Chatbot knowledge', I(BrainCircuit)]] },
+  { group: 'Projects', items: [['/projects', 'Projects', I(FolderKanban)]] },
+  { group: 'Website', items: [['/website/content', 'Website copy', I(TextCursorInput)], ['/website/bob', 'Bob (assistant)', I(Bot)], ['/website/team', 'Team page', I(UserSquare2)], ['/website/testimonials', 'Testimonials', I(Quote)], ['/website/posts', 'Insights', I(Newspaper)], ['/website/faqs', 'FAQs', I(HelpCircle)], ['/website/knowledge', 'Bob knowledge notes', I(BrainCircuit)], ['/website/profile', 'Company profile', I(BookUser)], ['/website/links', 'Important links', I(Link2)], ['/website/seasons', 'Seasonal themes', I(Sun), 'admin']] },
   { group: 'Workspace', items: [['/team', 'Team & access', I(ShieldCheck)], ['/settings', 'Settings', I(SettingsIcon)]] },
 ];
 
@@ -58,6 +60,13 @@ function Router() {
   if (p.startsWith('/marketplace/demos')) return <Demos />;
   if (p.startsWith('/marketplace/orders')) return <Orders />;
   if (p.startsWith('/marketplace/requests')) return <Requests />;
+  if (p.startsWith('/projects')) return <Projects />;
+  if (p.startsWith('/website/content')) return <SiteContent />;
+  if (p.startsWith('/website/bob')) return <BobPage />;
+  if (p.startsWith('/website/faqs')) return <Faqs />;
+  if (p.startsWith('/website/profile')) return <Profile />;
+  if (p.startsWith('/website/links')) return <Links />;
+  if (p.startsWith('/website/seasons')) return <Seasons />;
   if (p.startsWith('/website/team')) return <TeamMembers />;
   if (p.startsWith('/website/testimonials')) return <Testimonials />;
   if (p.startsWith('/website/posts')) return <Posts />;
