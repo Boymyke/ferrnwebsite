@@ -282,7 +282,7 @@ td .badge:first-child, .list .badge:first-child { margin-left: 0; }
 .notif-btn { position: relative; }
 .notif-btn.has { border-color: color-mix(in srgb, var(--o) 50%, var(--line)); }
 .notif-count { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--o); color: #fff; font-size: 11px; font-weight: 600; display: grid; place-items: center; border: 2px solid var(--bg); }
-.notif-panel { position: absolute; right: 0; top: calc(100% + 10px); width: min(400px, calc(100vw - 32px)); max-height: min(70vh, 560px); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.45); z-index: 30; animation: toast-in .18s ease; overflow: hidden; }
+.notif-panel { position: fixed; width: min(400px, calc(100vw - 24px)); max-height: min(70vh, 560px); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.45); z-index: 90; animation: toast-in .18s ease; overflow: hidden; }
 .notif-panel header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .notif-panel header strong { font-size: 14px; }
 .notif-panel ul { list-style: none; margin: 0; padding: 6px; overflow-y: auto; }

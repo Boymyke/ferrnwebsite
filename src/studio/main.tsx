@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createPortal } from 'react-dom';
 import { Activity, MailOpen, Bell, CheckCheck, BellOff } from 'lucide-react';
 import { ago, api, can, type User } from './api';
 import { Link, RouterCtx, ToastHost, UserCtx, useRoute, useUser, useToast } from './ui';
@@ -75,6 +76,8 @@ function Notifications() {
   const [unread, setUnread] = useState(0);
   const [lastSeen, setLastSeen] = useState<string>(new Date(0).toISOString()); // what "new" means while the panel is open
   const box = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 60, right: 16 });
   const load = useCallback(async () => {
     try { const r = await api<{ items: Notice[]; seen: string; unread: number }>('/notifications'); setItems(r.items); setSeen(r.seen); setUnread(r.unread); }
     catch { /* quiet: the bell is not worth an error toast */ }
@@ -89,7 +92,7 @@ function Notifications() {
   useEffect(() => { document.title = unread ? `(${unread}) Ferrn Studio` : 'Ferrn Studio'; }, [unread]);
   useEffect(() => {
     if (!open) return;
-    const down = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const down = (e: MouseEvent) => { const t = e.target as Node; if (box.current?.contains(t) || panel.current?.contains(t)) return; setOpen(false); };
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     addEventListener('mousedown', down); addEventListener('keydown', key);
     return () => { removeEventListener('mousedown', down); removeEventListener('keydown', key); };
@@ -98,14 +101,21 @@ function Notifications() {
     setLastSeen(seen); setUnread(0);
     try { const r = await api<{ seen: string }>('/notifications/seen', { body: {} }); setSeen(r.seen); } catch { /* next poll fixes it */ }
   };
-  const toggle = () => { const n = !open; setOpen(n); if (n) { load(); if (unread) markSeen(); else setLastSeen(seen); } };
+  const toggle = () => {
+    const n = !open; setOpen(n);
+    if (n) {
+      const r = box.current?.getBoundingClientRect();
+      if (r) setPos({ top: r.bottom + 10, right: Math.max(12, innerWidth - r.right) });
+      load(); if (unread) markSeen(); else setLastSeen(seen);
+    }
+  };
   return (
     <div className="notif" ref={box}>
       <button className={`icon notif-btn ${unread ? 'has' : ''}`} title="Notifications" aria-label={unread ? `${unread} new notifications` : 'Notifications'} aria-expanded={open} onClick={toggle}>
         <Bell size={18} strokeWidth={1.8} />{unread ? <span className="notif-count">{unread > 99 ? '99+' : unread}</span> : null}
       </button>
-      {open ? (
-        <div className="notif-panel" role="dialog" aria-label="Notifications">
+      {open ? createPortal(
+        <div className="notif-panel" role="dialog" aria-label="Notifications" ref={panel} style={{ top: pos.top, right: pos.right }}>
           <header><strong>Notifications</strong>
             {items.length ? <button className="btn xs ghost" onClick={() => { markSeen(); toast('All caught up'); }}><CheckCheck size={13} /> Mark all read</button> : null}
           </header>
@@ -123,7 +133,7 @@ function Notifications() {
               ))}
             </ul>
           )}
-        </div>
+        </div>, document.body,
       ) : null}
     </div>
   );
