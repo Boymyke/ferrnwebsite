@@ -191,7 +191,7 @@ async function share(c: C, kind: 'proposal' | 'invoice', row: Record<string, any
   let emailed = false, emailError: string | undefined;
   if (wantEmail) {
     const first = (row.client_name || '').split(' ')[0] || 'there';
-    const separate = b.separate_code !== false;
+    const separate = b.separate_code === true; // default: link and code in one email
     const message = clamp(b.message, 2000);
     const docName = kind === 'proposal' ? `proposal ${row.number}` : `invoice ${row.number}`;
     const t = kind === 'proposal' ? computeTotals(normItems(row.items_json), row.discount_pct, row.vat) : null;
@@ -431,7 +431,7 @@ api.post('/:id/send', async (c) => {
   const s = await share(c, 'proposal', p, b);
   await run(c.env.DB, `UPDATE proposals SET status = CASE WHEN status IN ('draft','expired','declined') THEN 'sent' ELSE status END,
     sent_at = datetime('now'), updated_by = ?, updated_at = datetime('now') WHERE id = ?`, u.name, p.id);
-  await addEvent(c.env.DB, p.id, 'sent', u.name, s.emailed ? `Emailed to ${s.to}${b.separate_code !== false ? ' (code in a separate email)' : ''}` : 'Link and access code created for sharing');
+  await addEvent(c.env.DB, p.id, 'sent', u.name, s.emailed ? `Emailed to ${s.to}${b.separate_code === true ? ' (code in a separate email)' : ''}` : 'Link and access code created for sharing');
   await audit(c, 'proposals', p.id, 'send', `${u.name} ${s.emailed ? 'emailed' : 'shared'} proposal ${p.number}${s.emailed ? ` to ${s.to}` : ''}`);
   if (p.lead_id) await run(c.env.DB, "UPDATE leads SET status = 'Proposal sent', next_action = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ? AND status NOT IN ('Won','Lost')",
     `Proposal ${p.number} sent — follow up in 3 days`, u.name, p.lead_id).catch(() => null);

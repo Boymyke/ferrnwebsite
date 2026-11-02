@@ -63,7 +63,7 @@ export function brandEmail(env: Bindings, o: {
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(o.preheader ?? '')}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1efeb;padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.06)">
-<tr><td style="background:#0b0b0b;padding:22px 30px;border-bottom:4px solid #ff4100"><span style="font:700 24px/1 Poppins,'Segoe UI',Arial,sans-serif;color:#ffffff;letter-spacing:-.02em">ferrn<span style="color:#ff4100">.</span></span><span style="font:500 11px/1 Poppins,Arial,sans-serif;color:#9a978f;letter-spacing:.16em;text-transform:uppercase;padding-left:10px">Digital Agency</span></td></tr>
+<tr><td style="background:#0b0b0b;padding:24px 30px;border-bottom:4px solid #ff4100"><a href="${site}" style="text-decoration:none"><img src="${site}/brand/ferrn-logo-email.png" width="150" height="29" alt="Ferrn Digital Agency" style="display:block;border:0;outline:none;width:150px;height:29px"></a></td></tr>
 <tr><td style="padding:32px 30px 10px">
 <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#111;letter-spacing:-.01em">${esc(o.heading)}</h1>
 ${p}${code}${rows}${btn}

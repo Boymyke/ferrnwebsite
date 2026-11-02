@@ -447,7 +447,7 @@ function Timeline({ events }: { events: any[] }) {
 function SendForm({ kind, doc, email, path, onDone }: { kind: 'proposal' | 'invoice'; doc: any; email: boolean; path: string; onDone: (r: any) => void }) {
   const toast = useToast();
   const [to, setTo] = useState(doc.client_email ?? '');
-  const [separate, setSeparate] = useState(true);
+  const [separate, setSeparate] = useState(false);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   return (
@@ -458,7 +458,7 @@ function SendForm({ kind, doc, email, path, onDone }: { kind: 'proposal' | 'invo
           <div className="fields">
             <label className="field wide"><span>Client email</span><input type="email" value={to} onChange={(e) => setTo(e.target.value)} /></label>
             <label className="field wide"><span>Personal note (optional)</span><textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="e.g. Great speaking with you on Tuesday — here’s the plan we discussed." /></label>
-            <label className="field wide check"><span>Send the access code in a separate email (recommended)</span><input type="checkbox" checked={separate} onChange={(e) => setSeparate(e.target.checked)} /></label>
+            <label className="field wide check"><span>Send the access code in a separate email (extra security)</span><input type="checkbox" checked={separate} onChange={(e) => setSeparate(e.target.checked)} /></label>
           </div>
         </>
       ) : (
@@ -482,8 +482,7 @@ function ShareResult({ result: raw, name, phone, what }: { result: { code: strin
   const toast = useToast();
   const result = { ...raw, url: here(raw.url) };
   const first = (name || '').split(' ')[0] || 'there';
-  const linkText = `Hi ${first}, here is your ${what} from Ferrn Digital Agency: ${result.url}\nI’ll send the access code in a separate message.`;
-  const codeText = `Your access code for the ${what}: ${result.code}`;
+  const shareText = `Hi ${first}, here is your ${what} from Ferrn Digital Agency: ${result.url}\nAccess code: ${result.code}`;
   const wa = (text: string) => waLink(phone, text) || `https://wa.me/?text=${encodeURIComponent(text)}`;
   return (
     <div className="stack">
@@ -497,8 +496,8 @@ function ShareResult({ result: raw, name, phone, what }: { result: { code: strin
         <p className="muted small">The code is shown only now. Use “New code” if you need another one later.</p>
       </div>
       <div className="row gap">
-        <a className="btn wa" href={wa(linkText)} target="_blank" rel="noreferrer"><MessageCircle {...I} />WhatsApp the link</a>
-        <a className="btn wa" href={wa(codeText)} target="_blank" rel="noreferrer"><KeyRound {...I} />WhatsApp the code</a>
+        <a className="btn wa" href={wa(shareText)} target="_blank" rel="noreferrer"><MessageCircle {...I} />Send on WhatsApp</a>
+        <button className="btn" onClick={() => copy(shareText, toast, 'Message copied')}><Copy {...I} />Copy message</button>
       </div>
     </div>
   );
