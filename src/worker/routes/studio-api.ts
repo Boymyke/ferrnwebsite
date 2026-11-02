@@ -9,7 +9,8 @@ import { bumpContentVersion } from '../lib/cache';
 import { complete, extractJson } from '../lib/ai';
 import { engineCall, engineConfigured, syncEngine } from '../lib/engine';
 import { searchPlaces } from '../lib/maps';
-import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, type AutoConfig } from '../lib/autoprospect';
+import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, LAGOS_AND_ABROAD, type AutoConfig } from '../lib/autoprospect';
+import { enrichProspects, placeQuery } from '../lib/maps';
 import { CORE_FLOW, NICHE_PRODUCT, NICHE_QUESTIONS, OBJECTIONS, nicheKey } from '../content/meeting-playbook';
 import { quoteTotals, type QuoteItem } from '../views/quote';
 import { NOVEMBER_CALENDAR } from '../content/november-calendar';
@@ -140,9 +141,9 @@ studio.get('/leads/counts', async (c): Promise<Response> => {
 /* Autopilot prospecting settings */
 studio.get('/prospects/auto', async (c): Promise<Response> => {
   const cfg = await getAuto(c.env);
-  const recent = await all(c.env.DB, "SELECT id, company, niche, city, score, tier, phone, website, status, created FROM leads WHERE found_by IN ('auto','claude') ORDER BY created DESC, updated_at DESC LIMIT 30");
+  const recent = await all(c.env.DB, "SELECT id, company, niche, city, score, tier, phone, email, website, status, created FROM leads WHERE found_by IN ('auto','claude') ORDER BY created DESC, updated_at DESC LIMIT 30");
   const byDay = await all(c.env.DB, "SELECT created AS day, SUM(found_by='auto') AS auto, SUM(found_by='claude') AS claude FROM leads WHERE found_by IN ('auto','claude') AND created >= date('now','-29 day') GROUP BY created ORDER BY created");
-  return c.json({ ok: true, config: cfg, niches: Object.keys(NICHE_QUERY), hasKey: !!c.env.GOOGLE_MAPS_API_KEY, recent, byDay });
+  return c.json({ ok: true, config: cfg, niches: Object.keys(NICHE_QUERY), cities: LAGOS_AND_ABROAD, hasKey: !!c.env.GOOGLE_MAPS_API_KEY, recent, byDay });
 });
 studio.put('/prospects/auto', async (c): Promise<Response> => {
   const u = c.get('user')!;
@@ -151,7 +152,8 @@ studio.put('/prospects/auto', async (c): Promise<Response> => {
   const cur = await getAuto(c.env);
   const list = (x: unknown) => (Array.isArray(x) ? x.map((s) => clamp(s, 60)).filter(Boolean).slice(0, 20) : undefined);
   const next: AutoConfig = { ...cur, enabled: b.enabled ?? cur.enabled, niches: list(b.niches) ?? cur.niches, cities: list(b.cities) ?? cur.cities,
-    dailyCap: Math.max(1, Math.min(200, Number(b.dailyCap ?? cur.dailyCap) || 25)), minScore: Math.max(0, Math.min(100, Number(b.minScore ?? cur.minScore) || 0)) };
+    dailyCap: Math.max(1, Math.min(200, Number(b.dailyCap ?? cur.dailyCap) || 25)), minScore: Math.max(0, Math.min(100, Number(b.minScore ?? cur.minScore) || 0)),
+    whatsappShare: Math.max(0, Math.min(100, Number(b.whatsappShare ?? cur.whatsappShare ?? 20))) };
   await saveAuto(c.env, next, u.name);
   await audit(c, 'settings', 'autoprospect', 'update', `${u.name} ${next.enabled ? 'turned on' : 'updated'} lead autopilot (${next.niches.length} niches × ${next.cities.length} cities, ${next.dailyCap}/day)`);
   return c.json({ ok: true, config: next });
@@ -364,10 +366,11 @@ studio.post('/engine/sync', async (c): Promise<Response> => {
 studio.post('/prospects/search', async (c): Promise<Response> => {
   const u = c.get('user')!;
   const b = (await c.req.json().catch(() => ({}))) as { niche?: string; city?: string; query?: string; page?: string };
-  const query = clamp(b.query, 200) || `${clamp(b.niche, 60)} in ${clamp(b.city, 60)}, Nigeria`;
+  const query = clamp(b.query, 200) || placeQuery(NICHE_QUERY[clamp(b.niche, 60)] ?? clamp(b.niche, 60), clamp(b.city, 60) || 'Lagos');
   try {
     const r = await searchPlaces(c.env, query, b.page);
     const known = new Set((await all<{ maps_place_id: string }>(c.env.DB, 'SELECT maps_place_id FROM leads WHERE maps_place_id IS NOT NULL')).map((x) => x.maps_place_id));
+    await enrichProspects(r.results.filter((x) => !known.has(x.place_id)), 12);
     const results = r.results.map((x) => ({ ...x, already: known.has(x.place_id) }));
     await run(c.env.DB, 'INSERT INTO prospect_searches (id, query, niche, city, provider, results_json, created_by) VALUES (?,?,?,?,?,?,?)',
       newId('ps_'), query, clamp(b.niche, 60), clamp(b.city, 60), 'google_places', JSON.stringify(results).slice(0, 200_000), u.name);
@@ -384,9 +387,9 @@ studio.post('/prospects/add', async (c): Promise<Response> => {
     if (exists) continue;
     const tier = x.score >= 80 ? 'A' : x.score >= 65 ? 'B' : 'C';
     await run(c.env.DB,
-      `INSERT INTO leads (id, created, niche, company, website, phone, city, tier, score, gaps, status, source, origin, maps_place_id, rating, notes, updated_by)
-       VALUES (?, date('now'), ?, ?, ?, ?, ?, ?, ?, ?, 'New', ?, 'maps', ?, ?, ?, ?)`,
-      newId('L-'), clamp(b.niche, 60), clamp(x.name, 160), x.website ?? null, x.phone ?? null, clamp(b.city, 60), tier, x.score,
+      `INSERT INTO leads (id, created, niche, company, website, email, phone, city, tier, score, gaps, status, source, origin, maps_place_id, rating, notes, updated_by)
+       VALUES (?, date('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', ?, 'maps', ?, ?, ?, ?)`,
+      newId('L-'), clamp(b.niche, 60), clamp(x.name, 160), x.website ?? null, Array.isArray(x.emails) && x.emails[0] ? clamp(x.emails[0], 120).toLowerCase() : null, x.phone ?? null, clamp(b.city, 60), tier, x.score,
       (x.reasons ?? []).join('; '), x.maps_url ?? 'Google Maps', x.place_id, x.rating ?? null, clamp(x.address, 300), u.name);
     added++;
   }

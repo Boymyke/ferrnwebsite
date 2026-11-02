@@ -261,4 +261,20 @@ console.log('13. email tracking (opens + clicks, shown in Studio → Emails)');
   E.ctx.GmailApp.getAliases = saved;
 }
 
+console.log('14. leads from the Studio autopilot');
+{
+  const before = E.rows('Leads').length;
+  const res = E.ctx.dashAction('addLeads', { leads: [
+    { id: 'L-a1b2c3d4e5f6', company: 'Thames Dental Studio', website: 'https://thamesdental.co.uk', email: 'Hello@ThamesDental.co.uk', city: 'London', niche: 'dental', tier: 'A', score: 82, gaps: 'Not mobile-friendly; no booking form', source: 'Autopilot · Google Maps · dental clinics in London, UK' },
+    { id: 'L-zzzzzzzzzzzz', company: 'ACME FREIGHT', website: 'acmefreight.ng', email: 'x@acmefreight.ng', city: 'Lagos', source: 'Autopilot · Google Maps' },
+  ] });
+  ok(/leads \+1 \(dups 1\)/.test(res), 'adds new Studio leads and skips ones already in the sheet');
+  const L = E.rows('Leads').find((x) => x.id === 'L-a1b2c3d4e5f6');
+  ok(L && L.email === 'hello@thamesdental.co.uk' && E.rows('Leads').length === before + 1, 'keeps the Studio id and normalises the email');
+  E.ctx.writeBrief_();
+  const brief = Object.values(E.docs).pop();
+  ok(/== WAITING FOR OUTREACH[\s\S]*L-a1b2c3d4e5f6 \| Thames Dental Studio/.test(brief), 'brief lists autopilot leads waiting for their first email');
+  ok(E.ctx.DEFAULT_SETTINGS.find((x) => x[0] === 'CITIES')[1].startsWith('Lagos,London'), 'default cities are Lagos plus abroad');
+}
+
 console.log(`\nALL ${passed} CHECKS PASSED`);

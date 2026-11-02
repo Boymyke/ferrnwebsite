@@ -19,7 +19,7 @@ export function LeadOrigin({ l }: { l: any; full?: boolean }) {
 
 export const LEAD_STATUSES = ['New', 'Preview ready', 'Queued', 'WhatsApp ready', 'Contacted', 'Following up', 'Replied', 'Interested', 'Call booked', 'Proposal sent', 'Won', 'Lost', 'Opted out', 'Bounced'];
 export const NICHES = ['clinic', 'school', 'logistics', 'realestate', 'hospitality', 'solar', 'ngo', 'ecommerce', 'professional', 'other'];
-const CITIES = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano', 'Enugu', 'Benin City', 'Kaduna', 'Owerri', 'Uyo', 'London', 'Houston', 'Toronto'];
+const CITIES = ['Lagos', 'Lekki', 'Ikeja', 'Victoria Island', 'London', 'Manchester', 'Birmingham', 'Houston', 'Atlanta', 'Dallas', 'New York', 'Toronto', 'Dubai'];
 
 const LEAD_FIELDS: FieldDef[] = [
   { name: 'company', label: 'Company' }, { name: 'status', label: 'Status', type: 'select', options: LEAD_STATUSES },
@@ -209,20 +209,21 @@ export function Prospect() {
           <input className="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="…or a custom query, e.g. “fertility clinics in Lekki”" />
           <button className="btn primary" disabled={busy} onClick={() => search()}>{busy ? 'Searching…' : 'Search Maps'}</button>
         </div>
-        <p className="muted small">Score: +30 no website, +20 social/free page as website, +8 few reviews, +7 busy (100+ reviews). Other channels the AI routine already covers: Finelib, ConnectCiti, BusinessList, LinkedIn, Instagram bios and Google search.</p>
+        <p className="muted small">Each business’s own website is checked for a published email and visible gaps (no HTTPS, not mobile-friendly, outdated footer, no enquiry form, Gmail address). Businesses with an email come first. Score: +15 email found, up to +24 for website gaps, +20 no website or a social page, +8 busy (100+ reviews).</p>
       </Card>
       {results ? (
         <Card title={`${results.length} businesses`} actions={<button className="btn primary" disabled={!Object.values(picked).some(Boolean)} onClick={add}>Add {Object.values(picked).filter(Boolean).length} to leads</button>}>
           <div className="table-wrap"><table className="table">
-            <thead><tr><th></th><th>Business</th><th>Score</th><th>Why</th><th>Website</th><th>Phone</th><th>Rating</th></tr></thead>
+            <thead><tr><th></th><th>Business</th><th>Score</th><th>Reach by</th><th>Why</th><th>Website</th><th>Rating</th></tr></thead>
             <tbody>{results.map((x) => (
               <tr key={x.place_id} className={x.already ? 'dim' : ''}>
                 <td><input type="checkbox" disabled={x.already} checked={!!picked[x.place_id]} onChange={(e) => setPicked({ ...picked, [x.place_id]: e.target.checked })} /></td>
                 <td><strong>{x.name}</strong>{x.already ? <Badge>in leads</Badge> : null}<div className="muted small">{x.address}</div></td>
                 <td><Badge tone={x.score >= 80 ? 'green' : x.score >= 65 ? 'orange' : 'default'}>{x.score}</Badge></td>
-                <td className="small">{x.reasons.join(' · ')}</td>
+                <td className="small">{x.emails?.length ? <><Badge tone="green">Email</Badge><div>{x.emails[0]}</div></> : x.phone ? <><Badge>WhatsApp</Badge><div>{x.phone}</div></> : <span className="muted">—</span>}</td>
+                <td className="small">{x.reasons.filter((r: string) => r !== 'Email published on their site').join(' · ')}</td>
                 <td className="small">{x.website ? <a href={x.website} target="_blank" rel="noreferrer">{x.website.replace(/^https?:\/\/(www\.)?/, '').slice(0, 30)}</a> : <span className="muted">none</span>}</td>
-                <td className="small">{x.phone ?? '—'}</td><td className="small">{x.rating ? `${x.rating} (${x.reviews})` : '—'}</td>
+                <td className="small">{x.rating ? `${x.rating} (${x.reviews})` : '—'}</td>
               </tr>
             ))}</tbody>
           </table></div>
@@ -276,11 +277,12 @@ function Autopilot() {
       ) : null}
       <div className="ap-grid">
         <div className="ap-field"><span className="side-label">Niches</span><Chips value={c.niches} options={data?.niches} placeholder="niches" disabled={!admin} onChange={(v) => setCfg({ ...c, niches: v })} /></div>
-        <div className="ap-field"><span className="side-label">Cities</span><Chips value={c.cities} options={CITIES} placeholder="cities" disabled={!admin} onChange={(v) => setCfg({ ...c, cities: v })} /></div>
+        <div className="ap-field"><span className="side-label">Cities · Lagos + abroad</span><Chips value={c.cities} options={data?.cities ?? CITIES} placeholder="cities" disabled={!admin} onChange={(v) => setCfg({ ...c, cities: v })} /></div>
         <label className="ap-field"><span className="side-label">New leads per day</span><input type="number" min={1} max={200} disabled={!admin} value={c.dailyCap} onChange={(e) => setCfg({ ...c, dailyCap: Number(e.target.value) })} /></label>
         <label className="ap-field"><span className="side-label">Minimum score</span><input type="number" min={0} max={100} disabled={!admin} value={c.minScore} onChange={(e) => setCfg({ ...c, minScore: Number(e.target.value) })} /></label>
+        <label className="ap-field"><span className="side-label">WhatsApp-only leads (max %)</span><input type="number" min={0} max={100} disabled={!admin} value={c.whatsappShare ?? 20} onChange={(e) => setCfg({ ...c, whatsappShare: Number(e.target.value) })} /></label>
       </div>
-      <p className="muted small">{pairs} searches in rotation, one every 10 minutes, each at most once a day. {c.lastRun ? <>Last run {ago(c.lastRun.at)}: “{c.lastRun.query}” — {c.lastRun.seen} businesses seen, {c.lastRun.added} added{c.lastRun.error ? <span className="err"> · {c.lastRun.error}</span> : null}.</> : 'Not run yet.'}</p>
+      <p className="muted small">{pairs} searches in rotation, one every 10 minutes, each at most once a day. Email first: leads with a published email fill the day and go to LeadsHunter, where the morning routine writes and queues their emails. Phone-only leads are kept for Lagos only, up to {c.whatsappShare ?? 20}% of the day. {c.lastRun ? <>Last run {ago(c.lastRun.at)}: “{c.lastRun.query}” — {c.lastRun.seen} businesses seen{c.lastRun.emails != null ? `, ${c.lastRun.emails} with an email` : ''}, {c.lastRun.added} added{c.lastRun.error ? <span className="err"> · {c.lastRun.error}</span> : null}.</> : 'Not run yet.'}</p>
       {dirty && admin ? <div className="row-actions"><button className="btn sm primary" onClick={() => save()}>Save changes</button><button className="btn sm ghost" onClick={() => setCfg(null)}>Discard</button></div> : null}
       <div className="ap-bottom">
         <div className="ap-chart" aria-label="Leads found per day, last 30 days">
@@ -296,7 +298,7 @@ function Autopilot() {
           <span className="side-label">Latest found</span>
           {(data?.recent ?? []).slice(0, 6).map((l: any) => (
             <button key={l.id} className="ap-lead" onClick={() => go(`/leads/${l.id}`)}>
-              <strong>{l.company}</strong><span className="muted small">{l.niche} · {l.city}</span><Badge tone={l.score >= 80 ? 'green' : 'orange'}>{l.score ?? '—'}</Badge>
+              <strong>{l.company}</strong><span className="muted small">{l.niche} · {l.city} · {l.email ? 'email' : l.phone ? 'WhatsApp' : '—'}</span><Badge tone={l.score >= 80 ? 'green' : 'orange'}>{l.score ?? '—'}</Badge>
             </button>
           ))}
           {!data?.recent?.length ? <p className="muted small">Nothing yet.</p> : <button className="link small" onClick={() => go('/leads?kind=found')}>See all found leads</button>}

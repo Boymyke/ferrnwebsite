@@ -49,7 +49,7 @@ var DEFAULT_SETTINGS = [
   ['LEADS_PER_RUN', '15', 'New leads the morning routine should find each run.'],
   ['PREVIEWS_PER_RUN', '3', 'Concept websites the morning routine builds each run.'],
   ['NICHES', 'logistics,realestate,school,clinic', 'Niches the routine prospects, in rotation.'],
-  ['CITIES', 'Lagos,Abuja,Port Harcourt', 'Cities the routine prospects.'],
+  ['CITIES', 'Lagos,London,Manchester,Houston,Atlanta,Toronto', 'Cities the routine prospects: Lagos plus abroad markets.'],
   ['PREVIEWS_REPO', 'Boymyke/leadshunter', 'GitHub repo holding templates + preview sites (hosted on Cloudflare Pages).'],
   ['PREVIEW_BASE_URL', '', 'Where previews are live, e.g. https://leadshunter.pages.dev (your Cloudflare Pages address).'],
   ['ENGINE_FOLDER_ID', '', 'Set by setup().'],
@@ -187,7 +187,9 @@ function processBatch_(data) {
     if (dup || (L.email && suppressed[String(L.email).trim().toLowerCase()])) { dups++; keyToId[key] = null; return; }
     var row = {};
     HEADERS.Leads.forEach(function (h) { row[h] = L[h] !== undefined ? L[h] : ''; });
-    row.id = 'L-' + shortId_();
+    // Leads pushed from Studio keep their id, so the website and the sheet stay one record.
+    var keepId = L.id && /^L-[A-Za-z0-9-]{4,24}$/.test(String(L.id)) && !leadsT.rows.some(function (x) { return x.id === L.id; });
+    row.id = keepId ? String(L.id) : 'L-' + shortId_();
     row.created = now;
     row.email = String(row.email || '').trim().toLowerCase();
     row.status = L.status || (L.preview_url ? 'Preview ready' : 'New');
@@ -584,6 +586,18 @@ function writeBrief_() {
     });
   out.push('');
 
+  out.push('== WAITING FOR OUTREACH (found by the Studio autopilot, no messages yet) ==');
+  var hasMsg = {};
+  mT.rows.forEach(function (m) { hasMsg[m.lead_id] = true; });
+  var waiting = lT.rows.filter(function (r) {
+    return r.status === 'New' && r.email && !hasMsg[r.id] && /^Autopilot/i.test(String(r.source || ''));
+  }).slice(0, 40);
+  if (!waiting.length) out.push('(none)');
+  waiting.forEach(function (r) {
+    out.push([r.id, r.company, r.website || '-', r.email, r.city, r.niche, 'tier ' + (r.tier || '-'), 'gaps: ' + String(r.gaps || '').slice(0, 300)].join(' | '));
+  });
+  out.push('');
+
   out.push('== ALL LEADS (for de-duplication) ==');
   out.push('id | company | domain | email | phone | niche | city | status | tier');
   lT.rows.forEach(function (r) {
@@ -791,6 +805,9 @@ function dashAction(action, p) {
       var r = indexBy_(inT.rows, 'id')[p.id];
       if (r) updateRow_(inT, r, { status: 'handled', classification: r.classification || 'handled by you', handled_at: new Date() });
       break;
+    case 'addLeads':
+      // From the Studio autopilot: leads with a published email, ready for the morning routine to write to.
+      return processBatch_({ leads: (p.leads || []).slice(0, 50) });
     case 'setSetting':
       if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value));
       break;
