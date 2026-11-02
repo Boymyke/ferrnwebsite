@@ -42,7 +42,8 @@ demoSite.get('/demos/u/:slug', (c) => c.redirect(`/demos/u/${cleanSlug(c.req.par
 demoSite.get('/demos/u/:slug/*', async (c) => {
   const slug = cleanSlug(c.req.param('slug'));
   const row = await first<{ entry: string }>(c.env.DB, "SELECT entry FROM demos WHERE slug = ? AND kind = 'upload'", slug);
-  if (!row) return c.notFound();
+  // Answer directly: c.notFound() would hit the site's trailing-slash 301 and loop with the redirect above.
+  if (!row) return c.html('<!doctype html><meta charset="utf-8"><title>Demo not found · Ferrn</title><link rel="icon" href="/icons/favicon-32.png"><body style="font-family:system-ui;display:grid;place-items:center;min-height:90vh;color:#444"><div style="text-align:center"><h1 style="font-weight:600">This demo link isn’t active</h1><p>It may have been replaced by a newer version. <a href="/marketplace" style="color:#ff4100">See live demos</a></p></div></body>', 404, { 'x-robots-tag': 'noindex' });
   let rel = cleanPath(decodeURIComponent(c.req.path.slice(`/demos/u/${slug}/`.length)));
   const tries = !rel ? [row.entry] : rel.includes('.') ? [rel] : [rel + '/index.html', rel + '.html', row.entry]; // last = SPA fallback
   let obj: R2ObjectBody | null = null; let served = '';
