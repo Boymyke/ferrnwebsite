@@ -9,6 +9,7 @@ import { bumpContentVersion } from '../lib/cache';
 import { complete, extractJson } from '../lib/ai';
 import { engineCall, engineConfigured, syncEngine } from '../lib/engine';
 import { searchPlaces } from '../lib/maps';
+import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, type AutoConfig } from '../lib/autoprospect';
 import { CORE_FLOW, NICHE_PRODUCT, NICHE_QUESTIONS, OBJECTIONS, nicheKey } from '../content/meeting-playbook';
 import { quoteTotals, type QuoteItem } from '../views/quote';
 import { NOVEMBER_CALENDAR } from '../content/november-calendar';
@@ -30,8 +31,8 @@ type Resource = {
 const R: Record<string, Resource> = {
   leads: { table: 'leads', label: 'lead', title: 'company', idPrefix: 'L-', order: 'COALESCE(updated_at, created) DESC', writeRole: 'sales',
     writable: ['niche', 'company', 'website', 'email', 'phone', 'contact_name', 'role', 'city', 'country', 'tier', 'score', 'gaps', 'pitch',
-      'est_value', 'status', 'preview_url', 'next_action', 'needs_you', 'needs_you_reason', 'notes', 'source', 'origin', 'maps_place_id', 'rating'],
-    search: ['company', 'email', 'phone', 'city', 'contact_name', 'gaps'], filters: ['status', 'niche', 'city', 'tier', 'origin'] },
+      'est_value', 'status', 'preview_url', 'next_action', 'needs_you', 'needs_you_reason', 'notes', 'source', 'origin', 'maps_place_id', 'rating', 'found_by'],
+    search: ['company', 'email', 'phone', 'city', 'contact_name', 'gaps'], filters: ['status', 'niche', 'city', 'tier', 'origin', 'found_by'] },
   meetings: { table: 'meetings', label: 'meeting', title: 'title', idPrefix: 'm_', order: 'starts_at DESC', writeRole: 'sales',
     writable: ['lead_id', 'title', 'starts_at', 'duration_min', 'channel', 'location_url', 'attendees', 'status', 'agenda', 'notes', 'outcome', 'next_step'],
     search: ['title', 'notes'], filters: ['status', 'lead_id'] },
@@ -118,6 +119,48 @@ studio.get('/history/:entity/:id', async (c): Promise<Response> => {
   return c.json({ ok: true, rows });
 });
 
+/* Leads split: inbound (came to us) vs found (we went out and found them). */
+const LEAD_KINDS: Record<string, string> = {
+  inbound: "origin IN ('website','referral')",
+  found: "(origin IN ('engine','maps') OR found_by IN ('claude','auto'))",
+  team: "origin = 'studio' AND found_by IS NULL",
+};
+studio.get('/leads/counts', async (c): Promise<Response> => {
+  const row = await first<any>(c.env.DB, `SELECT COUNT(*) AS all_, ${Object.entries(LEAD_KINDS).map(([k, w]) => `SUM(CASE WHEN ${w} THEN 1 ELSE 0 END) AS ${k}`).join(', ')},
+    SUM(CASE WHEN found_by = 'claude' THEN 1 ELSE 0 END) AS claude, SUM(CASE WHEN found_by = 'auto' THEN 1 ELSE 0 END) AS auto,
+    SUM(CASE WHEN origin = 'engine' THEN 1 ELSE 0 END) AS engine, SUM(CASE WHEN origin IN ('website','referral') AND created >= date('now','-7 day') THEN 1 ELSE 0 END) AS inbound_week
+    FROM leads`);
+  return c.json({ ok: true, counts: { all: row?.all_ ?? 0, inbound: row?.inbound ?? 0, found: row?.found ?? 0, team: row?.team ?? 0, claude: row?.claude ?? 0, auto: row?.auto ?? 0, engine: row?.engine ?? 0, inbound_week: row?.inbound_week ?? 0 } });
+});
+
+/* Autopilot prospecting settings */
+studio.get('/prospects/auto', async (c): Promise<Response> => {
+  const cfg = await getAuto(c.env);
+  const recent = await all(c.env.DB, "SELECT id, company, niche, city, score, tier, phone, website, status, created FROM leads WHERE found_by IN ('auto','claude') ORDER BY created DESC, updated_at DESC LIMIT 30");
+  const byDay = await all(c.env.DB, "SELECT created AS day, SUM(found_by='auto') AS auto, SUM(found_by='claude') AS claude FROM leads WHERE found_by IN ('auto','claude') AND created >= date('now','-29 day') GROUP BY created ORDER BY created");
+  return c.json({ ok: true, config: cfg, niches: Object.keys(NICHE_QUERY), hasKey: !!c.env.GOOGLE_MAPS_API_KEY, recent, byDay });
+});
+studio.put('/prospects/auto', async (c): Promise<Response> => {
+  const u = c.get('user')!;
+  if (!can(u, 'admin')) return c.json({ ok: false, error: 'Only admins change the autopilot.' }, 403);
+  const b = (await c.req.json().catch(() => ({}))) as Partial<AutoConfig>;
+  const cur = await getAuto(c.env);
+  const list = (x: unknown) => (Array.isArray(x) ? x.map((s) => clamp(s, 60)).filter(Boolean).slice(0, 20) : undefined);
+  const next: AutoConfig = { ...cur, enabled: b.enabled ?? cur.enabled, niches: list(b.niches) ?? cur.niches, cities: list(b.cities) ?? cur.cities,
+    dailyCap: Math.max(1, Math.min(200, Number(b.dailyCap ?? cur.dailyCap) || 25)), minScore: Math.max(0, Math.min(100, Number(b.minScore ?? cur.minScore) || 0)) };
+  await saveAuto(c.env, next, u.name);
+  await audit(c, 'settings', 'autoprospect', 'update', `${u.name} ${next.enabled ? 'turned on' : 'updated'} lead autopilot (${next.niches.length} niches × ${next.cities.length} cities, ${next.dailyCap}/day)`);
+  return c.json({ ok: true, config: next });
+});
+studio.post('/prospects/auto/run', async (c): Promise<Response> => {
+  const u = c.get('user')!;
+  if (!can(u, 'sales')) return c.json({ ok: false, error: 'No access' }, 403);
+  const r = await runAutoProspect(c.env, { force: true, by: u.name });
+  if ('error' in r && r.error) return c.json({ ok: false, error: r.error }, 400);
+  if ('skipped' in r) return c.json({ ok: false, error: r.skipped === 'no GOOGLE_MAPS_API_KEY' ? 'Add a GOOGLE_MAPS_API_KEY secret in Cloudflare first.' : String(r.skipped) }, 400);
+  return c.json({ ok: true, result: r });
+});
+
 /* ── generic CRUD ── */
 studio.get('/r/:res', async (c): Promise<Response> => {
   const res = R[c.req.param('res')];
@@ -131,6 +174,10 @@ studio.get('/r/:res', async (c): Promise<Response> => {
   if (q && res.search?.length) {
     where.push('(' + res.search.map((s) => `${s} LIKE ?`).join(' OR ') + ')');
     for (const _ of res.search) params.push(`%${q}%`);
+  }
+  if (c.req.param('res') === 'leads') {
+    const kind = c.req.query('kind');
+    if (kind && LEAD_KINDS[kind]) where.push(LEAD_KINDS[kind]);
   }
   if (c.req.param('res') === 'content') {
     const from = c.req.query('from'), to = c.req.query('to');

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { api, can, create, fmtDate, fromLocalInput, list, remove, toLocalInput, update } from '../api';
 import { Badge, Card, Confirm, Drawer, EditedBy, Empty, Fields, History, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
+import { BarChart3, ExternalLink, PenSquare, Sparkles, X } from 'lucide-react';
 import { UploadButton } from './resource';
 
 const PLATFORMS = [['x', 'X'], ['instagram', 'Instagram'], ['tiktok', 'TikTok'], ['linkedin', 'LinkedIn']] as [string, string][];
@@ -26,7 +27,7 @@ export function Content() {
     <Page title="Content" sub="Plan, write, schedule and measure posts for X, Instagram and TikTok."
       actions={<>
         {can(user, 'editor') ? <button className="btn ghost" onClick={async () => { try { const r = await api('/content/import-calendar', { body: {} }); toast(`${r.added} posts imported`); reload(); } catch (x: any) { toast(x.message, 'err'); } }}>Import November calendar</button> : null}
-        <button className="btn ghost" onClick={() => setGen(true)}>✨ Generate with AI</button>
+        <button className="btn ghost" onClick={() => setGen(true)}><Sparkles size={15} strokeWidth={2} />Generate with AI</button>
         <button className="btn primary" onClick={() => setOpen({ platform: 'instagram', status: 'draft', scheduled_at: '' })}>+ New post</button>
       </>}>
       <div className="toolbar">
@@ -36,7 +37,7 @@ export function Content() {
       </div>
       {tab === 'performance' ? <Performance /> : loading ? <Loading /> : tab === 'calendar' ? (
         <Calendar month={month} posts={data ?? []} onOpen={setOpen} onNew={(d) => setOpen({ platform: 'instagram', status: 'draft', scheduled_at: d })} />
-      ) : !data?.length ? <Empty title="No posts yet">Import the November calendar or generate drafts with AI.</Empty> : (
+      ) : !data?.length ? <Empty icon={PenSquare} title="No posts yet">Import the November calendar or generate drafts with AI.</Empty> : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr><th>When</th><th>Platform</th><th>Post</th><th>Format</th><th>Status</th><th>By</th></tr></thead>
           <tbody>{data.map((p: any) => (
@@ -116,7 +117,7 @@ function PostEditor({ post, onClose }: { post: any; onClose: () => void }) {
           ]} />
           <div className="row-actions">
             <button className="btn sm ghost" onClick={() => navigator.clipboard.writeText(textToCopy).then(() => toast('Copied caption'))}>Copy caption</button>
-            <a className="btn sm ghost" href={v.platform === 'x' ? `https://x.com/intent/post?text=${encodeURIComponent(textToCopy.slice(0, 280))}` : POST_LINKS[v.platform]} target="_blank" rel="noreferrer">Open {v.platform} ↗</a>
+            <a className="btn sm ghost" href={v.platform === 'x' ? `https://x.com/intent/post?text=${encodeURIComponent(textToCopy.slice(0, 280))}` : POST_LINKS[v.platform]} target="_blank" rel="noreferrer"><ExternalLink size={14} strokeWidth={2} />Open {v.platform}</a>
             {v.platform === 'instagram' && /Slide \d/i.test(v.body ?? '') ? <a className="btn sm ghost" href={`/studio/carousel?post=${post.id}`} target="_blank" rel="noreferrer">Render carousel slides</a> : null}
           </div>
         </>
@@ -128,7 +129,7 @@ function PostEditor({ post, onClose }: { post: any; onClose: () => void }) {
             <div key={i} className="media-item">
               {a.type === 'direction' ? <p className="small"><strong>Visual direction:</strong> {a.note}</p>
                 : /\.(png|jpe?g|webp|gif)$/i.test(a.url) ? <img src={a.url} alt="" /> : /\.(mp4|mov|webm)$/i.test(a.url) ? <video src={a.url} controls /> : <a href={a.url} target="_blank" rel="noreferrer">{a.url.split('/').pop()}</a>}
-              <button className="icon" onClick={() => setAssets(assets.filter((_, j) => j !== i))}>✕</button>
+              <button className="icon" onClick={() => setAssets(assets.filter((_, j) => j !== i))} aria-label="Remove"><X size={15} strokeWidth={2} /></button>
             </div>
           ))}</div>
         </div>
@@ -184,7 +185,7 @@ function Generator({ onClose }: { onClose: () => void }) {
 function Performance() {
   const { data, loading } = useData(() => api('/content/performance'));
   if (loading) return <Loading />;
-  if (!data?.total) return <Empty title="No results yet">Mark posts as posted and add their numbers in the Results tab — this page then shows what works and what doesn’t.</Empty>;
+  if (!data?.total) return <Empty icon={BarChart3} title="No results yet">Mark posts as posted and add their numbers in the Results tab — this page then shows what works and what doesn’t.</Empty>;
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
   const Group = ({ title, rows }: { title: string; rows: any[] }) => (
     <Card title={title}><table className="table"><thead><tr><th></th><th>Posts</th><th>Reach</th><th>Engagement rate</th><th>Leads</th></tr></thead>

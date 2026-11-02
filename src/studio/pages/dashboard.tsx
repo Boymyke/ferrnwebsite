@@ -1,6 +1,7 @@
 import React from 'react';
 import { ago, api, fmtDate, ngn } from '../api';
 import { Card, Empty, ErrorNote, Link, Loading, Page, Status, useData, useUser } from '../ui';
+import { ArrowRight, CalendarDays, CalendarX2, Inbox } from 'lucide-react';
 
 export function Dashboard() {
   const user = useUser()!;
@@ -20,7 +21,7 @@ export function Dashboard() {
           <div className="kpi-icon">₦</div>
           <div><h4>Open pipeline</h4><p className="muted">Replied → proposal sent</p></div>
           <strong>{ngn(d.pipeline?.open_value ?? 0)}</strong>
-          <Link to="/leads" className="kpi-foot">See leads →</Link>
+          <Link to="/leads" className="kpi-foot">See leads <ArrowRight size={14} strokeWidth={2} /></Link>
         </div>
         <div className="kpi"><h4>Leads</h4><strong>{d.pipeline?.leads ?? 0}</strong><span className="muted">{d.pipeline?.needs_you ?? 0} need you</span></div>
         <div className="kpi"><h4>Emails sent this week</h4><strong>{k?.sentWeek ?? '—'}</strong><span className="muted">{k ? `${k.replied} replied · ${k.calls} calls` : 'Connect LeadsHunter'}</span></div>
@@ -33,26 +34,26 @@ export function Dashboard() {
       </Card>
 
       <div className="grid-2">
-        <Card title="Upcoming meetings" actions={<Link to="/meetings">All →</Link>}>
+        <Card title="Upcoming meetings" actions={<Link to="/meetings">All <ArrowRight size={14} strokeWidth={2} /></Link>}>
           {d.meetings.length ? (
             <ul className="list">{d.meetings.map((m: any) => (
               <li key={m.id}><Link to={`/meetings/${m.id}`}><strong>{m.title}</strong><span className="muted">{m.company ?? ''} · {fmtDate(m.starts_at, true)}</span></Link></li>
             ))}</ul>
-          ) : <Empty title="No meetings booked"><Link to="/meetings" className="btn sm">Book one</Link></Empty>}
+          ) : <Empty compact icon={CalendarX2} title="No meetings booked" action={<Link to="/meetings" className="btn sm">Book one</Link>}>Calls you book show up here with a reminder the day before.</Empty>}
         </Card>
-        <Card title="New enquiries" actions={<Link to="/marketplace/requests">All →</Link>}>
+        <Card title="New enquiries" actions={<Link to="/marketplace/requests">All <ArrowRight size={14} strokeWidth={2} /></Link>}>
           {d.requests.length ? (
             <ul className="list">{d.requests.map((r: any) => (
               <li key={r.id}><div><strong>{r.name || r.email}</strong> <Status s={r.type} /><span className="muted">{(r.message || '').slice(0, 90)} · {ago(r.created_at)}</span></div></li>
             ))}</ul>
-          ) : <Empty title="Inbox zero" />}
+          ) : <Empty compact icon={Inbox} title="Inbox zero">New marketplace enquiries land here.</Empty>}
         </Card>
-        <Card title="Content this week" actions={<Link to="/content">Calendar →</Link>}>
+        <Card title="Content this week" actions={<Link to="/content">Calendar <ArrowRight size={14} strokeWidth={2} /></Link>}>
           {d.content.length ? (
             <ul className="list">{d.content.map((c: any) => (
               <li key={c.id}><div><span className={`plat ${c.platform}`}>{c.platform}</span> <strong>{c.title}</strong><span className="muted">{fmtDate(c.scheduled_at, true)} · <Status s={c.status} /></span></div></li>
             ))}</ul>
-          ) : <Empty title="Nothing scheduled"><Link to="/content" className="btn sm">Plan content</Link></Empty>}
+          ) : <Empty compact icon={CalendarDays} title="Nothing scheduled this week" action={<Link to="/content" className="btn sm">Plan content</Link>} />}
         </Card>
         <Card title="Pipeline by status">
           <div className="bars">{d.byStatus.map((s: any) => {
@@ -62,7 +63,7 @@ export function Dashboard() {
         </Card>
       </div>
 
-      <Card title="Recent activity" actions={<Link to="/team">Team activity →</Link>}>
+      <Card title="Recent activity" actions={<Link to="/team">Team activity <ArrowRight size={14} strokeWidth={2} /></Link>}>
         <table className="table">
           <thead><tr><th>When</th><th>Who</th><th>What</th></tr></thead>
           <tbody>{d.activity.map((a: any) => <tr key={a.id}><td className="muted">{ago(a.at)}</td><td>{a.user_name}</td><td>{a.summary}</td></tr>)}</tbody>

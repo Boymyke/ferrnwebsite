@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { api, create, fmtDate, fromLocalInput, list, money, toLocalInput, update } from '../api';
 import { Card, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, type FieldDef } from '../ui';
+import { ArrowLeft, CalendarX2, ExternalLink, Link2, Video } from 'lucide-react';
 
 const FIELDS = (leads: any[]): FieldDef[] => [
   { name: 'title', label: 'Title', wide: true, placeholder: 'Discovery call — Clinic Front Desk' },
@@ -28,7 +29,7 @@ export function Meetings() {
   return (
     <Page title="Meetings" sub="Discovery calls with a ready brief: what to ask, what we found, what to propose." actions={<button className="btn primary" onClick={() => go('/meetings/new')}>+ Book meeting</button>}>
       <Tabs tabs={[['upcoming', 'Upcoming'], ['past', 'Past & closed']]} value={tab} onChange={setTab} />
-      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !rows.length ? <Empty title="No meetings here yet" /> : (
+      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !rows.length ? <Empty icon={CalendarX2} title="No meetings here yet">Book a call from a lead, or press New meeting.</Empty> : (
         Object.entries(byDay).map(([day, ms]) => (
           <Card key={day} title={day}>
             <ul className="list">{ms.map((m: any) => (
@@ -90,8 +91,8 @@ function MeetingBrief({ id, onBack }: { id: string; onBack: () => void }) {
   return (
     <Page title={m.title} sub={<>{fmtDate(m.starts_at, true)} · {m.duration_min} min · {m.channel?.replace('_', ' ')} <Status s={m.status} /> <EditedBy row={m} /></>}
       actions={<>
-        <button className="btn ghost" onClick={onBack}>← All meetings</button>
-        {m.location_url ? <a className="btn ghost" href={m.location_url} target="_blank" rel="noreferrer">Join ↗</a> : null}
+        <button className="btn ghost" onClick={onBack}><ArrowLeft size={15} strokeWidth={2} />All meetings</button>
+        {m.location_url ? <a className="btn ghost" href={m.location_url} target="_blank" rel="noreferrer"><Video size={15} strokeWidth={2} />Join</a> : null}
         {L ? <button className="btn primary" onClick={() => go(`/quotes/new?lead=${L.id}`)}>Draft quote</button> : null}
       </>}>
       <Tabs tabs={[['brief', 'Meeting brief'], ['notes', 'Notes & outcome'], ['history', 'History']]} value={tab} onChange={setTab} />
@@ -109,7 +110,7 @@ function MeetingBrief({ id, onBack }: { id: string; onBack: () => void }) {
                   <dt>Notes</dt><dd className="pre">{L.notes}</dd>
                 </dl>
               </Card>
-            ) : <Card><Empty title="Not linked to a lead">Link this meeting to a lead to get gap-specific questions.</Empty></Card>}
+            ) : <Card><Empty compact icon={Link2} title="Not linked to a lead">Link this meeting to a lead to get gap-specific questions.</Empty></Card>}
             {data.gaps.length ? (
               <Card title="What we found on their site — use these as openers">
                 {data.gapQuestions.map((q: string, i: number) => <Q key={i} q={q} k={`g${i}`} />)}
@@ -119,7 +120,7 @@ function MeetingBrief({ id, onBack }: { id: string; onBack: () => void }) {
               <Card title="What to propose">
                 <p><strong>{data.product.name}</strong> — {data.product.tagline}</p>
                 <p className="muted">Setup {money(data.product.price_ngn_setup)} + {money(data.product.price_ngn_monthly)}/month · or {money(data.product.price_usd_setup, 'USD')} + {money(data.product.price_usd_monthly, 'USD')}/month</p>
-                <a className="btn sm ghost" href={`/marketplace/${data.product.slug}`} target="_blank" rel="noreferrer">Show live demo ↗</a>
+                <a className="btn sm ghost" href={`/marketplace/${data.product.slug}`} target="_blank" rel="noreferrer"><ExternalLink size={14} strokeWidth={2} />Show live demo</a>
               </Card>
             ) : null}
             <Card title="Tailor with AI" actions={<button className="btn sm" onClick={async () => {

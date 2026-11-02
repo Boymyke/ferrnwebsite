@@ -13,13 +13,20 @@ import { Content } from './pages/content';
 import { CarouselStudio } from './pages/carousel';
 import { WhatsApp } from './pages/whatsapp';
 import { Settings, TeamAccess } from './pages/team';
+import { Demos } from './pages/demos';
+import {
+  LayoutDashboard, Users, Radar, Send, MessageCircle, CalendarClock, Receipt, PenSquare, Megaphone, Package, ShoppingBag, Inbox,
+  UserSquare2, Quote, Newspaper, BrainCircuit, ShieldCheck, Settings as SettingsIcon, ExternalLink, Menu, MonitorPlay, SunMoon, Search, LogOut,
+} from 'lucide-react';
 
-const NAV: { group: string; items: [string, string, string, User['role']?][] }[] = [
-  { group: 'Main', items: [['/', 'Dashboard', '▦'], ['/leads', 'Leads', '◎'], ['/prospect', 'Find leads', '⌕'], ['/outreach', 'Outreach', '✉'], ['/whatsapp', 'WhatsApp', '✆'], ['/meetings', 'Meetings', '◷'], ['/quotes', 'Quotes', '₦']] },
-  { group: 'Marketing', items: [['/content', 'Content', '✎'], ['/ads', 'Ads', '◆']] },
-  { group: 'Marketplace', items: [['/marketplace/products', 'Products', '▤'], ['/marketplace/orders', 'Orders', '◫'], ['/marketplace/requests', 'Enquiries', '✦']] },
-  { group: 'Website', items: [['/website/team', 'Team page', '☺'], ['/website/testimonials', 'Testimonials', '❝'], ['/website/posts', 'Insights', '¶'], ['/website/knowledge', 'Chatbot knowledge', '◐']] },
-  { group: 'Workspace', items: [['/team', 'Team & access', '⚑'], ['/settings', 'Settings', '⚙']] },
+const I = (C: React.ComponentType<any>) => <C size={17} strokeWidth={1.8} aria-hidden="true" />;
+
+const NAV: { group: string; items: [string, string, React.ReactNode, User['role']?][] }[] = [
+  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)]] },
+  { group: 'Marketing', items: [['/content', 'Content', I(PenSquare)], ['/ads', 'Ads', I(Megaphone)]] },
+  { group: 'Marketplace', items: [['/marketplace/products', 'Products', I(Package)], ['/marketplace/demos', 'Demos', I(MonitorPlay)], ['/marketplace/orders', 'Orders', I(ShoppingBag)], ['/marketplace/requests', 'Enquiries', I(Inbox)]] },
+  { group: 'Website', items: [['/website/team', 'Team page', I(UserSquare2)], ['/website/testimonials', 'Testimonials', I(Quote)], ['/website/posts', 'Insights', I(Newspaper)], ['/website/knowledge', 'Chatbot knowledge', I(BrainCircuit)]] },
+  { group: 'Workspace', items: [['/team', 'Team & access', I(ShieldCheck)], ['/settings', 'Settings', I(SettingsIcon)]] },
 ];
 
 function Router() {
@@ -36,6 +43,7 @@ function Router() {
   if (p.startsWith('/carousel')) return <CarouselStudio />;
   if (p.startsWith('/ads')) return <Ads />;
   if (p.startsWith('/marketplace/products')) return <Products />;
+  if (p.startsWith('/marketplace/demos')) return <Demos />;
   if (p.startsWith('/marketplace/orders')) return <Orders />;
   if (p.startsWith('/marketplace/requests')) return <Requests />;
   if (p.startsWith('/website/team')) return <TeamMembers />;
@@ -54,16 +62,17 @@ function Shell({ onSignOut }: { onSignOut: () => void }) {
   const [q, setQ] = useState('');
   useEffect(() => setMenu(false), [path]);
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); document.getElementById('global-search')?.focus(); } };
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenu(false); if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); document.getElementById('global-search')?.focus(); } };
     addEventListener('keydown', k); return () => removeEventListener('keydown', k);
   }, []);
   const crumb = NAV.flatMap((g) => g.items).find(([to]) => to !== '/' && path.startsWith(to))?.[1] ?? (path.startsWith('/carousel') ? 'Carousel slides' : 'Dashboard');
   return (
     <div className={`app ${menu ? 'menu-open' : ''}`}>
-      <aside className="side">
+      <div className="side-scrim" onClick={() => setMenu(false)} aria-hidden="true" />
+      <aside className="side" onTouchStart={(e) => { (e.currentTarget as any)._x = e.touches[0].clientX; }} onTouchEnd={(e) => { const x0 = (e.currentTarget as any)._x; if (x0 != null && x0 - e.changedTouches[0].clientX > 60) setMenu(false); }}>
         <div className="side-brand"><img src="/icons/appicon.svg" alt="" width="40" height="40" /><span>Ferrn Studio</span></div>
         <form className="side-search" onSubmit={(e) => { e.preventDefault(); if (q) go(`/leads?q=${encodeURIComponent(q)}`); }}>
-          <input id="global-search" placeholder="Search leads" value={q} onChange={(e) => setQ(e.target.value)} /><kbd>⌘K</kbd>
+          <Search className="side-search-ic" size={15} strokeWidth={2} aria-hidden="true" /><input id="global-search" placeholder="Search leads" value={q} onChange={(e) => setQ(e.target.value)} /><kbd>⌘K</kbd>
         </form>
         <nav>
           {NAV.map((g) => (
@@ -76,22 +85,22 @@ function Shell({ onSignOut }: { onSignOut: () => void }) {
           ))}
         </nav>
         <div className="side-foot">
-          <a className="side-link" href="/" target="_blank" rel="noreferrer"><i>↗</i>View website</a>
+          <a className="side-link" href="/" target="_blank" rel="noreferrer"><i>{I(ExternalLink)}</i>View website</a>
         </div>
       </aside>
       <div className="main">
         <header className="top">
-          <button className="icon menu" onClick={() => setMenu(!menu)} aria-label="Menu">☰</button>
+          <button className="icon menu" onClick={() => setMenu(!menu)} aria-label="Menu"><Menu size={18} strokeWidth={1.8} /></button>
           <div className="crumbs"><span className="muted">Ferrn</span> › <strong>{crumb}</strong></div>
           <div className="top-actions">
             <button className="icon" title="Theme" onClick={() => {
               const d = document.documentElement; const n = d.dataset.theme === 'light' ? 'dark' : 'light'; d.dataset.theme = n;
               try { localStorage.setItem('ferrn-studio-theme', n); } catch {}
-            }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" /></svg></button>
+            }}><SunMoon size={18} strokeWidth={1.8} /></button>
             <div className="me">
               <span className="me-avatar">{user.name.split(' ').map((x) => x[0]).slice(0, 2).join('')}</span>
               <div><strong>{user.name}</strong><span>{user.title || user.role}</span></div>
-              <button className="btn sm ghost" onClick={onSignOut}>Sign out</button>
+              <button className="btn sm ghost" onClick={onSignOut}><LogOut size={14} strokeWidth={2} />Sign out</button>
             </div>
           </div>
         </header>

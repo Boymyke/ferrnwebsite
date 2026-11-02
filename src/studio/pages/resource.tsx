@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { api, can, create, remove, update, list, type User } from '../api';
 import { Card, Confirm, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Tabs, useData, useToast, useUser, type FieldDef } from '../ui';
+import { FolderOpen, Plus, Upload } from 'lucide-react';
 
 export type Column = { key: string; label: string; render?: (row: any) => React.ReactNode };
 
@@ -9,7 +10,11 @@ export function ResourcePage(p: {
   res: string; entity: string; title: string; sub?: string; columns: Column[]; fields: FieldDef[]; writeRole?: User['role'];
   defaults?: Record<string, any>; filters?: React.ReactNode; params?: Record<string, string>; extraActions?: React.ReactNode;
   toForm?: (row: any) => Record<string, any>; fromForm?: (v: Record<string, any>) => Record<string, any>; canCreate?: boolean;
-  drawerExtra?: (row: any, reload: () => void) => React.ReactNode;
+  drawerExtra?: (row: any, reload: () => void, patch: (v: Record<string, any>) => void) => React.ReactNode;
+  /** live preview rendered beside the form, from the current form values */
+  preview?: (v: Record<string, any>) => React.ReactNode;
+  /** render rows as cards instead of a table */
+  card?: (row: any) => React.ReactNode;
 }) {
   const user = useUser();
   const toast = useToast();
@@ -18,9 +23,11 @@ export function ResourcePage(p: {
   const [open, setOpen] = useState<any | null>(null);
   const writable = can(user, p.writeRole ?? 'editor');
   return (
-    <Page title={p.title} sub={p.sub} actions={<>{p.extraActions}{writable && p.canCreate !== false ? <button className="btn primary" onClick={() => setOpen({ ...(p.defaults ?? {}) })}>+ New</button> : null}</>}>
+    <Page title={p.title} sub={p.sub} actions={<>{p.extraActions}{writable && p.canCreate !== false ? <button className="btn primary" onClick={() => setOpen({ ...(p.defaults ?? {}) })}><Plus size={15} strokeWidth={2.2} />New</button> : null}</>}>
       <div className="toolbar"><input className="search" placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} />{p.filters}</div>
-      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty title="Nothing here yet" /> : (
+      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty icon={FolderOpen} title="Nothing here yet">Add the first one with the button above.</Empty> : p.card ? (
+        <div className="res-cards">{data.map((r: any) => <button key={r.id} className="res-card" onClick={() => setOpen(r)}>{p.card!(r)}</button>)}</div>
+      ) : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr>{p.columns.map((c) => <th key={c.key}>{c.label}</th>)}<th>Last edit</th></tr></thead>
           <tbody>{data.map((r: any) => (
@@ -50,8 +57,10 @@ function Editor(p: any) {
       {!isNew ? <><EditedBy row={p.row} /><Tabs tabs={[['edit', 'Details'], ['history', 'History']]} value={tab} onChange={setTab} /></> : null}
       {tab === 'history' && !isNew ? <History entity={p.entity} id={p.row.id} /> : (
         <>
-          {p.drawerExtra && !isNew ? p.drawerExtra(p.row, p.reload) : null}
-          <Fields fields={p.fields} value={v} onChange={setV} disabled={!p.writable} />
+          {p.drawerExtra && !isNew ? p.drawerExtra({ ...p.row, ...v }, p.reload, (x: Record<string, any>) => setV((cur) => ({ ...cur, ...x }))) : null}
+          {p.preview ? (
+            <div className="res-split"><Fields fields={p.fields} value={v} onChange={setV} disabled={!p.writable} /><aside className="res-preview"><span className="side-label">Live preview</span>{p.preview(v)}</aside></div>
+          ) : <Fields fields={p.fields} value={v} onChange={setV} disabled={!p.writable} />}
           {p.writable ? (
             <div className="drawer-actions sticky">
               {!isNew ? <Confirm text="Delete this permanently?" className="btn ghost danger" onYes={async () => { try { await remove(p.res, p.row.id); p.toast('Deleted'); p.onClose(); } catch (x: any) { p.toast(x.message, 'err'); } }}>Delete</Confirm> : null}
@@ -75,7 +84,7 @@ export function UploadButton({ folder, onUploaded, label = 'Upload' }: { folder:
   const [busy, setBusy] = useState(false);
   return (
     <label className="btn sm ghost upload">
-      {busy ? 'Uploading…' : label}
+      <Upload size={14} strokeWidth={2} />{busy ? 'Uploading…' : label}
       <input type="file" hidden accept="image/*,video/*,audio/*,application/pdf" onChange={async (e) => {
         const f = e.target.files?.[0]; if (!f) return;
         setBusy(true);

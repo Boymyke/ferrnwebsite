@@ -10,6 +10,8 @@ import { siteRoutes, NotFound } from './routes/site';
 import publicApi from './routes/api-public';
 import authApi from './routes/auth';
 import studioApi from './routes/studio-api';
+import { demoSite, demosApi } from './routes/demos';
+import { runAutoProspect } from './lib/autoprospect';
 import { studioShell } from './routes/studio-shell';
 import { QuoteDocument, type QuoteRow } from './views/quote';
 import { LANGS } from './content/i18n';
@@ -35,9 +37,13 @@ app.use('*', async (c, next) => { c.set('lang', 'en'); await next(); });
 
 /* API */
 app.route('/api/auth', authApi);
+app.route('/api/studio/demos', demosApi);
 app.route('/api/studio', studioApi);
 app.route('/api/whatsapp', whatsappWebhook);
 app.route('/api', publicApi);
+
+/* Uploaded demo sites (R2) */
+app.route('/', demoSite);
 
 /* Studio (installable PWA) */
 app.get('/studio', studioShell);
@@ -54,6 +60,8 @@ app.get('/q/:key', async (c) => {
 /* R2 media (team photos, content assets) */
 app.get('/media/*', async (c) => {
   const key = c.req.path.replace(/^\/media\//, '');
+  // demo sites are only served through /demos/u/ (sandboxed), never raw from the main origin
+  if (/^demos\//i.test(decodeURIComponent(key))) return c.notFound();
   const obj = await c.env.MEDIA.get(key);
   if (!obj) return c.notFound();
   const h = new Headers();
@@ -110,6 +118,7 @@ export default {
     ctx.waitUntil((async () => {
       try { await syncEngine(env); } catch (e) { console.warn('engine sync failed', e); }
       try { await processQueue(env); } catch (e) { console.warn('whatsapp queue failed', e); }
+      try { await runAutoProspect(env); } catch (e) { console.warn('autoprospect failed', e); }
       await env.DB.prepare("DELETE FROM sessions WHERE expires_at < datetime('now')").run();
     })());
   },

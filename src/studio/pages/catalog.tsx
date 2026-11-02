@@ -1,18 +1,31 @@
 import React, { useState } from 'react';
 import { ago, fmtDate, money, update } from '../api';
-import { Badge, Status, useToast } from '../ui';
+import { Badge, mediaUrl, Status, useToast } from '../ui';
+import { Code2, ExternalLink, Link2, UploadCloud } from 'lucide-react';
+import { DemoLink, DemoUploader } from './demos';
 import { jsonList, listJson, ResourcePage, UploadButton } from './resource';
 
 export function Products() {
-  return (
+  const [up, setUp] = useState<null | { product_slug: string; title: string; done: (url: string) => void }>(null);
+  return (<>
     <ResourcePage res="products" entity="products" title="Marketplace products" sub="What appears on /marketplace. Edits go live within seconds."
       columns={[
         { key: 'name', label: 'Product', render: (r) => <><strong>{r.name}</strong><div className="muted small">{r.tagline}</div></> },
         { key: 'category', label: 'Type' }, { key: 'industry', label: 'Industry' },
         { key: 'price', label: 'Price', render: (r) => <>{money(r.price_ngn_setup)} + {money(r.price_ngn_monthly)}/mo<div className="muted small">{money(r.price_usd_setup, 'USD')} + {money(r.price_usd_monthly, 'USD')}/mo</div></> },
+        { key: 'demo_url', label: 'Live demo', render: (r) => <DemoLink url={r.demo_url} /> },
         { key: 'published', label: 'Live', render: (r) => (r.published ? <Badge tone="green">live</Badge> : <Badge>hidden</Badge>) },
       ]}
       defaults={{ category: 'website', published: 0, delivery_days: 7, sort: 100 }}
+      drawerExtra={(r, _reload, patch) => (
+        <div className="card soft demo-box">
+          <div><span className="side-label">Live demo</span><DemoLink url={r.demo_url} /></div>
+          <div className="row-actions">
+            {r.demo_url ? <a className="btn sm ghost" href={r.demo_url} target="_blank" rel="noreferrer"><ExternalLink size={14} />Open</a> : null}
+            <button className="btn sm" onClick={() => setUp({ product_slug: r.slug, title: `${r.name} demo`, done: (url) => patch({ demo_url: url }) })}><UploadCloud size={14} />Upload demo</button>
+          </div>
+        </div>
+      )}
       toForm={(r) => ({ ...r, features: jsonList(r.features_json), includes: jsonList(r.includes_json) })}
       fromForm={({ features, includes, ...v }) => ({ ...v, features_json: listJson(features), includes_json: listJson(includes) })}
       fields={[
@@ -20,14 +33,15 @@ export function Products() {
         { name: 'category', label: 'Type', type: 'select', options: ['website', 'webapp', 'chatbot', 'automation'] }, { name: 'industry', label: 'Industry' },
         { name: 'tagline', label: 'Tagline', wide: true }, { name: 'description', label: 'Description', type: 'textarea', rows: 5 },
         { name: 'features', label: 'Features (one per line)', type: 'textarea', rows: 6 }, { name: 'includes', label: 'Included (one per line)', type: 'textarea', rows: 4 },
-        { name: 'demo_url', label: 'Live demo URL', wide: true }, { name: 'accent', label: 'Accent colour', placeholder: '#ff4100' },
+        { name: 'demo_url', label: 'Live demo URL (full link)', type: 'url', wide: true, placeholder: 'https://www.ferrnagency.com/demos/u/your-demo/', help: 'Use “Upload demo” above to host a demo built elsewhere — the link fills in by itself.' }, { name: 'accent', label: 'Accent colour', placeholder: '#ff4100' },
         { name: 'delivery_days', label: 'Delivery days', type: 'number' },
         { name: 'price_ngn_setup', label: 'Setup ₦', type: 'number' }, { name: 'price_ngn_monthly', label: 'Monthly ₦', type: 'number' },
         { name: 'price_usd_setup', label: 'Setup $', type: 'number' }, { name: 'price_usd_monthly', label: 'Monthly $', type: 'number' },
         { name: 'buyout_ngn', label: 'Code buyout ₦', type: 'number' }, { name: 'buyout_usd', label: 'Code buyout $', type: 'number' },
         { name: 'sort', label: 'Sort order', type: 'number' }, { name: 'published', label: 'Published', type: 'checkbox' },
       ]} />
-  );
+      {up ? <DemoUploader initial={up} onClose={() => setUp(null)} onDone={up.done} /> : null}
+  </>);
 }
 
 export function Orders() {
@@ -61,22 +75,33 @@ export function Requests() {
   );
 }
 
-export function TeamMembers() {
-  const toast = useToast();
+const initials = (n = '') => n.split(' ').filter(Boolean).map((x) => x[0]).slice(0, 2).join('').toUpperCase();
+function TeamPreview({ m }: { m: Record<string, any> }) {
+  const src = mediaUrl(m.photo);
   return (
-    <ResourcePage res="team" entity="team_members" title="Team on the website" sub="Names, roles and photos shown on /team and the homepage. Upload a headshot or leave blank for the branded monogram."
-      columns={[
-        { key: 'name', label: 'Name', render: (r) => <span className="who">{r.photo ? <img src={r.photo.startsWith('http') ? r.photo : `/media/${r.photo}`} alt="" /> : <i>{r.name.split(' ').map((x: string) => x[0]).slice(0, 2).join('')}</i>}<strong>{r.name}</strong></span> },
-        { key: 'role', label: 'Role' }, { key: 'published', label: 'Shown', render: (r) => (r.published ? <Badge tone="green">yes</Badge> : <Badge>hidden</Badge>) },
-      ]}
+    <article className="tm-card">
+      <div className="tm-avatar">{src ? <img src={src} alt="" /> : <span>{initials(m.name) || '?'}</span>}</div>
+      <h3>{m.name || 'Full name'}</h3>
+      <p className="tm-role">{m.role || 'Role on the website'}</p>
+      {m.bio ? <p className="tm-bio">{m.bio}</p> : <p className="tm-bio muted">A short bio appears here.</p>}
+      <div className="tm-links">{m.linkedin ? <span><Link2 size={14} />LinkedIn</span> : null}{m.github ? <span><Code2 size={14} />GitHub</span> : null}</div>
+      {!Number(m.published ?? 1) ? <Badge>hidden from website</Badge> : null}
+    </article>
+  );
+}
+
+export function TeamMembers() {
+  return (
+    <ResourcePage res="team" entity="team_members" title="Team on the website" sub="Names, roles and photos shown on /team and the homepage. Drop in a headshot; it is cropped square and resized for you."
+      columns={[{ key: 'name', label: 'Name' }]}
+      card={(r) => <TeamPreview m={r} />}
+      preview={(v) => <TeamPreview m={v} />}
       defaults={{ published: 1, sort: 100 }}
-      drawerExtra={(r, reload) => (
-        <div className="row-actions"><UploadButton folder="team" label="Upload photo" onUploaded={async ({ key }) => { await update('team', r.id, { photo: key }); toast('Photo saved — close to refresh'); reload(); }} /></div>
-      )}
       fields={[
-        { name: 'name', label: 'Name' }, { name: 'role', label: 'Role on the website' }, { name: 'bio', label: 'Short bio', type: 'textarea' },
-        { name: 'photo', label: 'Photo (R2 key or image URL)', wide: true }, { name: 'linkedin', label: 'LinkedIn URL' }, { name: 'github', label: 'GitHub URL' },
-        { name: 'sort', label: 'Order', type: 'number' }, { name: 'published', label: 'Show on website', type: 'checkbox' },
+        { name: 'photo', label: 'Headshot', type: 'image', folder: 'team', square: true, maxPx: 800 },
+        { name: 'name', label: 'Name' }, { name: 'role', label: 'Role on the website' }, { name: 'bio', label: 'Short bio', type: 'textarea', help: 'One or two sentences. Shown under the role.' },
+        { name: 'linkedin', label: 'LinkedIn URL', type: 'url' }, { name: 'github', label: 'GitHub URL', type: 'url' },
+        { name: 'sort', label: 'Order', type: 'number', help: 'Lower shows first' }, { name: 'published', label: 'Show on website', type: 'checkbox' },
       ]} />
   );
 }

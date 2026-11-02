@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ago, api, can } from '../api';
 import { Badge, Card, copy, Empty, Fields, Loading, Page, Tabs, useData, useToast, useUser } from '../ui';
+import { Activity, ArrowRight } from 'lucide-react';
 
 const ROLES: [string, string][] = [['admin', 'Admin — everything except owner settings'], ['editor', 'Editor — website, content, marketplace'], ['sales', 'Sales — leads, outreach, meetings, quotes'], ['viewer', 'Viewer — read only']];
 
@@ -35,7 +36,7 @@ export function TeamAccess() {
                       </select>)}</td>
                     <td>{!u.active ? <Badge tone="red">disabled</Badge> : u.activated ? <Badge tone="green">active</Badge> : <Badge tone="orange">invite pending</Badge>}</td>
                     <td className="muted">{u.last_login_at ? ago(u.last_login_at) : 'never'}</td>
-                    <td><button className="link" onClick={() => { setWho(u.id); setTab('activity'); }}>{u.edits} →</button></td>
+                    <td><button className="link" onClick={() => { setWho(u.id); setTab('activity'); }}>{u.edits} <ArrowRight size={13} strokeWidth={2} /></button></td>
                     <td className="row-actions">
                       {can(me, 'admin') && !u.activated ? <button className="btn sm" onClick={() => invite({ user_id: u.id })}>Get invite link</button> : null}
                       {can(me, 'admin') && u.id !== me.id && u.role !== 'owner' ? <button className="btn sm ghost" onClick={async () => { await api(`/users/${u.id}`, { method: 'PATCH', body: { active: !u.active } }); reload(); }}>{u.active ? 'Disable' : 'Enable'}</button> : null}
@@ -61,7 +62,7 @@ export function TeamAccess() {
         </>
       ) : (
         <Card title="Activity" actions={<select value={who} onChange={(e) => setWho(e.target.value)}><option value="">Everyone</option>{users?.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>}>
-          {loading ? <Loading /> : !activity?.length ? <Empty title="No activity yet" /> : (
+          {loading ? <Loading /> : !activity?.length ? <Empty icon={Activity} title="No activity yet">Every create, edit and delete is logged here with who did it.</Empty> : (
             <table className="table"><thead><tr><th>When</th><th>Who</th><th>What</th><th>Area</th></tr></thead>
               <tbody>{activity.map((a: any) => <tr key={a.id}><td className="muted nowrap">{ago(a.at)}</td><td><strong>{a.user_name}</strong></td><td>{a.summary}</td><td className="muted small">{a.entity}</td></tr>)}</tbody></table>
           )}

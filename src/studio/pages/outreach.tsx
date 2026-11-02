@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ago, api, can, fmtDate } from '../api';
-import { Badge, Card, Empty, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
+import { Badge, Card, Drawer, Empty, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
+import { MailOpen, RefreshCw } from 'lucide-react';
 
 export function Outreach() {
   const user = useUser();
@@ -35,7 +36,7 @@ export function Outreach() {
   return (
     <Page title="Outreach" sub={<>Engine snapshot {ago(snap?.generated_at)} · sending as {s.FROM_ALIAS || 'your Gmail'} · {s.AUTO_SEND ? 'auto-send on' : 'auto-send off'}</>}
       actions={<>
-        <button className="btn ghost" onClick={refresh}>↻ Sync now</button>
+        <button className="btn ghost" onClick={refresh}><RefreshCw size={15} strokeWidth={2} />Sync now</button>
         {can(user, 'admin') ? <button className="btn ghost" onClick={() => act('setSetting', { key: 'AUTO_SEND', value: s.AUTO_SEND ? 'FALSE' : 'TRUE' }, 'Auto-send updated')}>{s.AUTO_SEND ? 'Pause sending' : 'Resume sending'}</button> : null}
         <button className="btn primary" onClick={() => act('runNow', {}, 'Engine run complete')}>Run engine now</button>
       </>}>
@@ -78,21 +79,19 @@ export function Outreach() {
       )} /> : null}
       {tab === 'log' ? <List rows={snap?.logs} empty="No log entries." render={(l: any) => <div><span className="muted small">{fmtDate(l.time, true)} · {l.event}</span><p className="pre">{l.detail}</p></div>} /> : null}
       {editing ? (
-        <div className="drawer-wrap" onMouseDown={(e) => e.target === e.currentTarget && setEditing(null)}>
-          <aside className="drawer"><header className="drawer-head"><h2>Edit email · {editing.company}</h2><button className="icon" onClick={() => setEditing(null)}>✕</button></header>
-            <div className="drawer-body">
+        <Drawer open onClose={() => setEditing(null)} title={`Edit email · ${editing.company}`}>
+            <div>
               <label className="field wide"><span>Subject</span><input value={editing.subject ?? ''} onChange={(e) => setEditing({ ...editing, subject: e.target.value })} /></label>
               <label className="field wide"><span>Body</span><textarea rows={14} value={editing.body ?? ''} onChange={(e) => setEditing({ ...editing, body: e.target.value })} /></label>
               <div className="drawer-actions"><button className="btn primary" onClick={async () => { await act('edit', { id: editing.id, subject: editing.subject, body: editing.body }, 'Email updated'); setEditing(null); }}>Save</button></div>
             </div>
-          </aside>
-        </div>
+        </Drawer>
       ) : null}
     </Page>
   );
 }
 
 function List({ rows, render, empty }: { rows?: any[]; render: (r: any) => React.ReactNode; empty: string }) {
-  if (!rows?.length) return <Empty title={empty} />;
+  if (!rows?.length) return <Empty compact icon={MailOpen} title={empty} />;
   return <div className="stack">{rows.map((r) => <div key={r.id} className="stack-item">{render(r)}</div>)}</div>;
 }

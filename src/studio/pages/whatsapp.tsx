@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ago, api, can, fmtDate } from '../api';
 import { Badge, Card, Empty, Loading, Page, useData, useToast, useUser } from '../ui';
+import { ExternalLink, MessageCircle, MessagesSquare } from 'lucide-react';
 
 type Contact = {
   wa_id: string; name: string | null; lead_id: string | null; lead_company: string | null; opted_in: number; opted_out_at: string | null;
@@ -31,7 +32,7 @@ export function WhatsApp() {
       </div>
       <div className="wa-layout">
         <Card className="wa-list" title={<input className="input" placeholder="Search chats" value={q} onChange={(e) => setQ(e.target.value)} />}>
-          {!rows.length ? <Empty title="No chats yet">Chats appear here when someone messages your WhatsApp number or ticks “send me updates on WhatsApp” on the website.</Empty> : rows.map((r) => (
+          {!rows.length ? <Empty icon={MessagesSquare} title="No chats yet">Chats appear here when someone messages your WhatsApp number or ticks “send me updates on WhatsApp” on the website.</Empty> : rows.map((r) => (
             <button key={r.wa_id} className={`wa-row ${sel === r.wa_id ? 'on' : ''}`} onClick={() => setSel(r.wa_id)}>
               <span className="avatar">{(r.name || '#').slice(0, 1).toUpperCase()}</span>
               <span className="wa-row-main">
@@ -42,7 +43,7 @@ export function WhatsApp() {
             </button>
           ))}
         </Card>
-        {sel ? <Thread key={sel} id={sel} templates={data?.templates ?? {}} onChange={reload} /> : <Card className="wa-thread"><Empty title="Pick a chat">Select a conversation to read it, reply, or take over from the bot.</Empty></Card>}
+        {sel ? <Thread key={sel} id={sel} templates={data?.templates ?? {}} onChange={reload} /> : <Card className="wa-thread"><Empty icon={MessageCircle} title="Pick a chat">Select a conversation to read it, reply, or take over from the bot.</Empty></Card>}
       </div>
     </Page>
   );
@@ -68,7 +69,7 @@ function Thread({ id, templates, onChange }: { id: string; templates: Record<str
   return (
     <Card className="wa-thread" title={<span>{c.name || '+' + c.wa_id} <small className="muted">+{c.wa_id}</small></span>} actions={
       <div className="row gap">
-        <a className="btn sm ghost" href={`https://wa.me/${c.wa_id}`} target="_blank" rel="noreferrer">Open in WhatsApp ↗</a>
+        <a className="btn sm ghost" href={`https://wa.me/${c.wa_id}`} target="_blank" rel="noreferrer"><ExternalLink size={14} strokeWidth={2} />Open in WhatsApp</a>
         {canSend ? (c.bot_paused
           ? <button className="btn sm" onClick={() => patch({ bot_paused: false, needs_human: false }, 'Bot is answering again')}>Hand back to bot</button>
           : <button className="btn sm primary" onClick={() => patch({ bot_paused: true }, 'You’ve taken over this chat')}>Take over</button>) : null}

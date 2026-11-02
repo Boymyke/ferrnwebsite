@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api, create, fmtDate, list, money, update } from '../api';
 import { Card, copy, EditedBy, Empty, ErrorNote, History, Loading, Page, Status, Tabs, useData, useRoute, useToast } from '../ui';
+import { ArrowLeft, FileText, ListChecks, Receipt, Trash2 } from 'lucide-react';
 
 type Item = { description: string; qty: number; unit_price: number; recurring: 'once' | 'monthly' | 'termly' | 'yearly' };
 
@@ -11,7 +12,7 @@ export function Quotes() {
   if (id) return <QuoteEditor id={id === 'new' ? null : id} onDone={() => { reload(); go('/quotes'); }} />;
   return (
     <Page title="Quotes" sub="Draft, share and track quotes. Clients open a branded link, download a PDF and accept online." actions={<button className="btn primary" onClick={() => go('/quotes/new')}>+ New quote</button>}>
-      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty title="No quotes yet">Create one from a lead, a meeting, or here.</Empty> : (
+      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty icon={Receipt} title="No quotes yet">Create one from a lead, a meeting, or here.</Empty> : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr><th>Number</th><th>Client</th><th>Title</th><th>Total (one-off)</th><th>Status</th><th>Created</th><th>By</th></tr></thead>
           <tbody>{data.map((q: any) => (
@@ -92,8 +93,8 @@ function QuoteEditor({ id, onDone }: { id: string | null; onDone: () => void }) 
   return (
     <Page title={id ? `Quote ${q.number}` : 'New quote'} sub={<><Status s={q.status} /> <EditedBy row={q} /></>}
       actions={<>
-        <button className="btn ghost" onClick={onDone}>← Quotes</button>
-        {shareUrl ? <a className="btn ghost" href={shareUrl} target="_blank" rel="noreferrer">Open / PDF ↗</a> : null}
+        <button className="btn ghost" onClick={onDone}><ArrowLeft size={15} strokeWidth={2} />Quotes</button>
+        {shareUrl ? <a className="btn ghost" href={shareUrl} target="_blank" rel="noreferrer"><FileText size={15} strokeWidth={2} />Open / PDF</a> : null}
         {shareUrl ? <button className="btn ghost" onClick={() => copy(shareUrl, toast, 'Share link copied')}>Copy link</button> : null}
         <button className="btn primary" disabled={busy} onClick={async () => { setBusy(true); try { await save(); toast('Saved'); } catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); } }}>Save</button>
       </>}>
@@ -125,11 +126,11 @@ function QuoteEditor({ id, onDone }: { id: string | null; onDone: () => void }) 
                       <td><input type="number" min={0} value={it.unit_price} onChange={(e) => setItem(i, 'unit_price', e.target.value)} /></td>
                       <td><select value={it.recurring} onChange={(e) => setItem(i, 'recurring', e.target.value)}><option value="once">One-off</option><option value="monthly">Monthly</option><option value="termly">Per term</option><option value="yearly">Yearly</option></select></td>
                       <td className="nowrap">{money(it.qty * it.unit_price, q.currency)}</td>
-                      <td><button className="icon" onClick={() => set('items', q.items.filter((_: Item, j: number) => j !== i))}>✕</button></td>
+                      <td><button className="icon" onClick={() => set('items', q.items.filter((_: Item, j: number) => j !== i))} aria-label="Remove line"><Trash2 size={15} strokeWidth={1.9} /></button></td>
                     </tr>
                   ))}</tbody>
                 </table>
-              ) : <Empty title="No items yet">Use a template, add lines, or let AI draft them from your call notes.</Empty>}
+              ) : <Empty compact icon={ListChecks} title="No items yet">Use a template, add lines, or let AI draft them from your call notes.</Empty>}
             </Card>
             <Card title="AI draft from call notes" actions={<button className="btn sm" disabled={busy || !brief} onClick={async () => {
               setBusy(true);
