@@ -180,7 +180,7 @@ siteStudio.post('/projects/import', async (c) => {
     const statusRaw = pick(h, r, 'status', 'stage', 'phase').toLowerCase();
     const status = STATUS[statusRaw] ?? (Object.entries(STATUS).find(([k]) => statusRaw.includes(k))?.[1] ?? 'discovery');
     const live = pick(h, r, 'live', 'url', 'website', 'link', 'domain');
-    const year = pick(h, r, 'year', 'date', 'completed', 'launch').match(/20\d{2}/)?.[0] ?? '';
+    const year = pick(h, r, 'year', 'completed', 'launch').match(/20\d{2}/)?.[0] ?? '';
     const budget = Number(pick(h, r, 'budget', 'price', 'value', 'amount', 'fee').replace(/[^\d.]/g, '')) || null;
     const expenses = Number(pick(h, r, 'expense', 'cost', 'spent').replace(/[^\d.]/g, '')) || null;
     const revenue = Number(pick(h, r, 'paid', 'received', 'revenue').replace(/[^\d.]/g, '')) || null;
