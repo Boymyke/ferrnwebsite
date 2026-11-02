@@ -6,6 +6,7 @@ import { synthesize } from '../lib/tts';
 import { initTransaction, validSignature, verifyTransaction } from '../lib/paystack';
 import { LANGS, isLang } from '../content/i18n';
 import { assistantSystemPrompt } from '../lib/assistant';
+import { bobPrompt, guard, parseReply, type BobAction } from '../lib/bob';
 import { onEnquiry, onPayment } from '../lib/wa-automations';
 import { settleInvoiceFromPaystack } from '../lib/docs';
 
@@ -53,27 +54,50 @@ api.post('/forms/:type', async (c) => {
   return c.json({ ok: true });
 });
 
-/* ── AI assistant ── */
+/* ── Bob, the AI assistant ── */
 api.post('/chat', async (c) => {
   if (await limited(c, 'chat', 40, 3600)) return c.json({ ok: false, message: 'You’ve sent a lot of messages — please email info@ferrnagency.com and we’ll pick it up.' }, 429);
+  if (await limited(c, 'chat-day', 150, 86400)) return c.json({ ok: false, message: 'That’s the daily limit for the assistant — email info@ferrnagency.com and a person will reply.' }, 429);
   const b = (await c.req.json().catch(() => ({}))) as { message?: string; history?: { role: string; content: string }[]; lang?: string; path?: string; session?: string };
   const message = clamp(b.message, 1500);
   if (!message) return c.json({ ok: false, message: 'Write a message first.' }, 422);
   const lang = isLang(b.lang) ? b.lang : 'en';
   const langName = LANGS.find((l) => l.code === lang)!.label;
+  const path = clamp(b.path, 200) || '/';
+  const session = clamp(b.session, 60);
+  const bobOff = (await first<{ value: string }>(c.env.DB, "SELECT value FROM settings WHERE key = 'bob.enabled'").catch(() => null))?.value === '0';
+  if (bobOff) return c.json({ ok: false, message: 'The assistant is taking a break. Email info@ferrnagency.com and we’ll reply within a working day.' }, 503);
 
-  const system = await assistantSystemPrompt(c.env, { channel: 'web', langName });
+  const log = (answer: string, provider: string, action?: BobAction, sources: string[] = []) =>
+    c.executionCtx.waitUntil(run(c.env.DB, 'INSERT INTO chat_logs (session, path, lang, question, answer, provider, action, sources) VALUES (?,?,?,?,?,?,?,?)',
+      session, path, lang, message, answer.slice(0, 4000), provider, action ? JSON.stringify(action) : null, sources.length ? JSON.stringify(sources) : null)
+      .catch(() => run(c.env.DB, 'INSERT INTO chat_logs (session, path, lang, question, answer, provider) VALUES (?,?,?,?,?,?)', session, path, lang, message, answer.slice(0, 4000), provider)));
+
+  const g = guard(message);
+  if (g.blocked) { log(g.reply!, 'guard:' + g.flag); return c.json({ ok: true, message: g.reply, sources: [] }); }
+
+  // Quick intents that need no model.
+  if (/^(read|read (this|the) page|read (it )?(to|for) me|listen|read aloud)\b/i.test(message)) {
+    const reply = 'Sure — reading this page now. Use the controls to pause, restart or stop.';
+    log(reply, 'intent'); return c.json({ ok: true, message: reply, action: { type: 'read' }, sources: [] });
+  }
+
+  let system = '', hits: any[] = [];
+  try { const p = await bobPrompt(c.env, { langName, path, message }); system = p.system; hits = p.hits; }
+  catch { system = await assistantSystemPrompt(c.env, { channel: 'web', langName }); }
 
   const history = (b.history ?? []).slice(-8).filter((m) => m.role === 'user' || m.role === 'assistant')
     .map((m) => ({ role: m.role as 'user' | 'assistant', content: clamp(m.content, 1500) }));
   const messages: ChatMessage[] = [{ role: 'system', content: system }, ...history, { role: 'user', content: message }];
 
-  let answer = '', provider = 'none';
+  let reply: { message: string; action?: BobAction; sources: string[] } = { message: '', sources: [] }, provider = 'none';
   try {
-    const r = await complete(c.env, messages, { maxTokens: 400 });
-    answer = r.text; provider = r.provider;
+    const r = await complete(c.env, messages, { maxTokens: 450, json: hits.length > 0 || system.includes('Output strictly as JSON') });
+    provider = r.provider;
+    reply = await parseReply(c.env, r.text, hits);
+    if (!reply.message) reply.message = 'I’m not sure about that one. Email info@ferrnagency.com or book a call at ' + (c.env.BOOKING_URL || 'https://cal.com/ferrn-agency') + ' and the team will help.';
   } catch {
-    answer = 'I can’t answer right now — please email info@ferrnagency.com or book a call at https://cal.com/ferrn-agency.';
+    reply.message = 'I can’t answer right now — please email info@ferrnagency.com or book a call at https://cal.com/ferrn-agency.';
   }
 
   // Capture contact details shared in chat as a lead.
@@ -81,11 +105,19 @@ api.post('/chat', async (c) => {
   const phone = message.match(/(\+?\d[\d\s-]{9,}\d)/)?.[0];
   if (email || phone) {
     await run(c.env.DB, `INSERT INTO requests (id, type, email, phone, message, meta_json, lang) VALUES (?, 'chat_lead', ?, ?, ?, ?, ?)`,
-      newId('r_'), email ?? '', phone ?? null, message, JSON.stringify({ path: clamp(b.path, 200), session: clamp(b.session, 60) }), lang);
+      newId('r_'), email ?? '', phone ?? null, message, JSON.stringify({ path, session }), lang);
   }
-  c.executionCtx.waitUntil(run(c.env.DB, 'INSERT INTO chat_logs (session, path, lang, question, answer, provider) VALUES (?,?,?,?,?,?)',
-    clamp(b.session, 60), clamp(b.path, 200), lang, message, answer.slice(0, 4000), provider));
-  return c.json({ ok: true, message: answer, booking_url: c.env.BOOKING_URL });
+  log(reply.message, provider, reply.action, reply.sources);
+  return c.json({ ok: true, message: reply.message, action: reply.action ?? null, sources: reply.sources, booking_url: c.env.BOOKING_URL });
+});
+
+/** Thumbs up/down on an answer (by session + question), for the Studio Bob analytics. */
+api.post('/chat/rate', async (c) => {
+  const b = (await c.req.json().catch(() => ({}))) as { session?: string; question?: string; rating?: number };
+  const rating = b.rating === 1 ? 1 : b.rating === -1 ? -1 : 0;
+  if (!rating || !b.session) return c.json({ ok: false }, 422);
+  await run(c.env.DB, 'UPDATE chat_logs SET rating = ? WHERE id = (SELECT id FROM chat_logs WHERE session = ? AND question = ? ORDER BY id DESC LIMIT 1)', rating, clamp(b.session, 60), clamp(b.question, 1500)).catch(() => {});
+  return c.json({ ok: true });
 });
 
 /* ── Nigerian voice ── */

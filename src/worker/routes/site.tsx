@@ -4,6 +4,7 @@ import { all, first } from '../lib/db';
 import { edgeCache } from '../lib/cache';
 import { mt } from '../lib/translate';
 import { loadSite } from '../lib/content';
+import { profilePdf } from '../lib/profile-pdf';
 import { loadProject, loadProjects } from '../lib/projects';
 import { type Lang } from '../content/i18n';
 import { HomePage, type PostRow, type ProductRow, type TeamRow, type TestimonialRow } from '../views/home';
@@ -75,6 +76,12 @@ export function siteRoutes(lang: Lang) {
     const [ctx, team, projects, rows] = await Promise.all([ctxOf(c), all<TeamRow>(c.env.DB, TEAM), loadProjects(c.env),
       all<ProfileSection>(c.env.DB, 'SELECT key, title, body, items_json, image FROM profile_sections WHERE published = 1 ORDER BY sort').catch(() => [])]);
     return c.html(<ProfilePage lang={lang} ctx={ctx} sections={rows.length ? rows : DEFAULT_PROFILE} projects={projects} team={team} />);
+  });
+  app.get('/profile.pdf', async (c) => {
+    const [team, projects, rows] = await Promise.all([all<TeamRow>(c.env.DB, TEAM), loadProjects(c.env),
+      all<ProfileSection>(c.env.DB, 'SELECT key, title, body, items_json, image FROM profile_sections WHERE published = 1 ORDER BY sort').catch(() => [])]);
+    const bytes = await profilePdf(c.env, { sections: rows.length ? rows : DEFAULT_PROFILE, projects, team: team.map((m) => ({ name: m.name, role: m.role })), site: c.env.SITE_URL || 'https://www.ferrnagency.com' });
+    return c.body(bytes as any, 200, { 'content-type': 'application/pdf', 'content-disposition': 'inline; filename="Ferrn-Digital-Agency-Company-Profile.pdf"', 'cache-control': 'public, max-age=3600' });
   });
   app.get('/links', async (c) => c.html(<LinksPage lang={lang} ctx={await ctxOf(c)} />));
 
