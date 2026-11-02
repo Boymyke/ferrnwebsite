@@ -1,5 +1,6 @@
-/* Ferrn public site — progressive enhancement. Everything works without JS except the
-   chat, checkout and animations. */
+/* Ferrn public site — progressive enhancement. Everything works without JS except Bob,
+   checkout and animations. */
+import { bob } from './bob';
 type Strings = Record<string, string>;
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector<T>(s);
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
@@ -28,39 +29,19 @@ function runIntro(done: () => void) {
   setTimeout(finish, 3400); // safety net
 }
 
-/* ── write-on text ── */
-async function prepareWriteOn(el: HTMLElement) {
-  const svg = $<SVGSVGElement>('svg', el);
-  const text = $<SVGTextElement>('text', el);
-  if (!svg || !text) return;
-  // Never let a slow font block the hero: wait at most 1.2 s, then draw with whatever is loaded.
-  try { await Promise.race([(document as any).fonts?.load?.('100px "Pinyon Script"', text.textContent || ''), new Promise((r) => setTimeout(r, 1200))]); } catch {}
-  // CJK and other scripts the calligraphic font can't render fall back to Poppins.
-  if (/[぀-鿿]/.test(text.textContent || '')) el.classList.add('plain');
-  const b = text.getBBox();
-  const pad = 14;
-  svg.setAttribute('viewBox', `${b.x - pad} ${b.y - pad} ${b.width + pad * 2} ${b.height + pad * 2}`);
-  const len = Math.ceil((b.width + b.height) * 3.2);
-  text.style.strokeDasharray = String(len);
-  text.style.strokeDashoffset = String(len);
-}
-function drawWriteOn(el: HTMLElement) {
-  requestAnimationFrame(() => el.classList.add('draw'));
-}
-
-/* ── reveal + counters ── */
+/* ── reveals: lines (gradient mask), text clips, fades, counters, wordmark ── */
 function observe() {
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) {
       if (!e.isIntersecting) continue;
       const el = e.target as HTMLElement;
+      if (el.matches('[data-lines]')) $$<HTMLElement>('.line-in', el).forEach((l, i) => l.style.setProperty('--i', String(i)));
       el.classList.add('in');
       if (el.matches('[data-count]')) countUp(el);
-      if (el.matches('[data-writeon]') && !el.closest('.hero')) drawWriteOn(el);
       io.unobserve(el);
     }
   }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
-  $$('.reveal, [data-count], [data-writeon]').forEach((el) => io.observe(el));
+  $$('.reveal, .reveal-text, [data-lines], [data-count], .footer-mark').forEach((el) => io.observe(el));
 }
 function countUp(el: HTMLElement) {
   const target = Number(el.dataset.count || 0), suffix = el.dataset.suffix || '';
@@ -74,6 +55,91 @@ function countUp(el: HTMLElement) {
   requestAnimationFrame(step);
 }
 
+/* ── motion: hero light follows the pointer, cover parallax, nav hides on scroll down ── */
+function motion() {
+  const hero = $('[data-hero]');
+  if (hero && !reduced && matchMedia('(hover: hover)').matches) {
+    let raf = 0, mx = 0.5, my = 0.5;
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width; my = (e.clientY - r.top) / r.height;
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; hero.style.setProperty('--mx', mx.toFixed(3)); hero.style.setProperty('--my', my.toFixed(3)); });
+    }, { passive: true });
+  }
+  const para = $$<HTMLElement>('[data-parallax] img');
+  const nav = $('[data-nav]');
+  let last = scrollY, ticking = false;
+  const onScroll = () => {
+    ticking = false;
+    const y = scrollY;
+    if (nav) {
+      nav.classList.toggle('solid', y > 24);
+      nav.classList.toggle('hide', y > 320 && y > last && !document.body.classList.contains('menu-open'));
+    }
+    if (!reduced) for (const img of para) {
+      const r = img.parentElement!.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight) continue;
+      const p = (r.top + r.height / 2 - innerHeight / 2) / innerHeight; // -1..1
+      img.style.transform = `translateY(${(p * -6).toFixed(2)}%) scale(1.12)`;
+    }
+    last = y;
+  };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
+}
+
+/* ── idle storytelling: after N seconds without input, full-screen lines; any input dismisses ── */
+function idle() {
+  const el = $('[data-idle]'); if (!el) return;
+  const cfg = document.body.dataset.idle || '45';
+  if (cfg === '0') return;
+  let off = false; try { off = localStorage.getItem('ferrn-idle-off') === '1'; } catch {}
+  if (off || reduced) return;
+  const secs = Math.max(15, Number(cfg) || 45);
+  const lines = $$<HTMLElement>('.idle-lines p', el);
+  let timer = 0, on = false, cycle = 0, li = 0;
+  const show = () => {
+    if (on || document.visibilityState !== 'visible' || $('[data-bob][data-open]') || document.body.classList.contains('menu-open') || document.querySelector('dialog[open]')) return arm();
+    on = true; el.hidden = false; el.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => el.classList.add('on'));
+    li = 0; lines.forEach((l, i) => l.classList.toggle('on', i === 0));
+    cycle = window.setInterval(() => { lines[li].classList.remove('on'); li = (li + 1) % lines.length; lines[li].classList.add('on'); }, 4200);
+  };
+  const hide = () => {
+    if (!on) return; on = false; clearInterval(cycle);
+    el.classList.remove('on'); setTimeout(() => { el.hidden = true; el.setAttribute('aria-hidden', 'true'); }, 800);
+  };
+  const arm = () => { clearTimeout(timer); timer = window.setTimeout(show, secs * 1000); };
+  const poke = () => { hide(); arm(); };
+  for (const ev of ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll']) addEventListener(ev, poke, { passive: true });
+  document.addEventListener('visibilitychange', () => (document.visibilityState === 'visible' ? arm() : clearTimeout(timer)));
+  $('[data-idle-off]', el)?.addEventListener('click', (e) => { e.stopPropagation(); try { localStorage.setItem('ferrn-idle-off', '1'); } catch {} hide(); clearTimeout(timer); });
+  arm();
+}
+
+/* ── seasonal particles (snow, confetti, hearts, sparkle) — light, CSS-driven ── */
+function season() {
+  const preset = html.dataset.season; if (!preset || reduced) return;
+  const fx: Record<string, { cls: string; n: number; colors: string[] }> = {
+    christmas: { cls: 'fx-snow', n: 40, colors: ['#fff', '#e8f1ff'] },
+    'new-year': { cls: 'fx-confetti', n: 50, colors: ['#ff4100', '#ffd27a', '#fff', '#8ad1ff'] },
+    valentine: { cls: 'fx-hearts', n: 18, colors: ['#ff4d8d'] },
+    independence: { cls: 'fx-confetti', n: 40, colors: ['#1aa64b', '#fff', '#1aa64b'] },
+    halloween: { cls: 'fx-sparkle', n: 24, colors: ['#ff7a00', '#ffd27a'] },
+    easter: { cls: 'fx-sparkle', n: 24, colors: ['#ffd27a', '#b7e4c7', '#ffb3c6'] },
+  };
+  const f = fx[preset]; if (!f) return;
+  const box = document.createElement('div'); box.className = `season-fx ${f.cls}`; box.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < f.n; i++) {
+    const p = document.createElement('i');
+    const s = 4 + Math.random() * (f.cls === 'fx-hearts' ? 14 : 8);
+    p.style.cssText = `--x:${(Math.random() * 100).toFixed(1)}%;--s:${s.toFixed(1)}px;--t:${(8 + Math.random() * 10).toFixed(1)}s;--dl:-${(Math.random() * 18).toFixed(1)}s;--o:${(0.4 + Math.random() * 0.5).toFixed(2)};--c:${f.colors[i % f.colors.length]}`;
+    box.appendChild(p);
+  }
+  document.body.appendChild(box);
+  // stop after 40 s so it's a greeting, not a nuisance
+  setTimeout(() => { box.style.transition = 'opacity 2s'; box.style.opacity = '0'; setTimeout(() => box.remove(), 2100); }, 40_000);
+}
+
 /* ── chrome: theme, menu, filters, currency, slider ── */
 function chrome() {
   $('[data-theme-toggle]')?.addEventListener('click', () => {
@@ -82,14 +148,17 @@ function chrome() {
     try { localStorage.setItem('ferrn-theme', next); } catch {}
   });
   const menuBtn = $('[data-menu-toggle]'), panel = $('[data-mobile-panel]');
-  menuBtn?.addEventListener('click', () => {
-    const open = panel!.classList.toggle('open');
-    menuBtn.setAttribute('aria-expanded', String(open));
-  });
-  document.addEventListener('click', (e) => {
-    const menu = $<HTMLDetailsElement>('.lang-menu');
-    if (menu?.open && !menu.contains(e.target as Node)) menu.open = false;
-  });
+  const setMenu = (open: boolean) => {
+    panel?.classList.toggle('open', open); panel?.setAttribute('aria-hidden', String(!open));
+    menuBtn?.setAttribute('aria-expanded', String(open)); document.body.classList.toggle('menu-open', open);
+    menuBtn && (menuBtn.innerHTML = open
+      ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+      : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M4 18h16"/><path d="M4 6h16"/></svg>');
+  };
+  menuBtn?.addEventListener('click', () => setMenu(!panel?.classList.contains('open')));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panel?.classList.contains('open')) setMenu(false); });
+  // Footer language link opens the menu's language list (the only place languages live now).
+  $$('[data-lang-open]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); setMenu(true); setTimeout(() => $('.menu-langs a')?.focus(), 500); }));
   $$('[data-set-lang]').forEach((a) => a.addEventListener('click', () => {
     document.cookie = `ferrn_lang=${a.dataset.setLang}; path=/; max-age=31536000; samesite=lax`;
   }));
@@ -116,6 +185,7 @@ function chrome() {
       const v = p.dataset[cur === 'USD' ? 'usd' : 'ngn'];
       if (v && p.firstChild) p.firstChild.textContent = v + ' ';
     });
+    $$('.plan-extra').forEach((p) => { const v = p.dataset[cur === 'USD' ? 'usd' : 'ngn']; if (v) p.textContent = v; });
   };
   $$('[data-currency]').forEach((b) => b.addEventListener('click', () => setCurrency(b.dataset.currency!)));
   try {
@@ -124,14 +194,26 @@ function chrome() {
     if (guess === 'USD') setCurrency('USD');
   } catch {}
 
-  $$('[data-slider]').forEach((s) => {
-    const track = $('.testimonial-track', s)!; const n = track.children.length; let i = 0;
-    const go = (d: number) => { i = (i + d + n) % n; track.style.transform = `translateX(-${i * 100}%)`; };
+  $$('[data-quotes]').forEach((s) => {
+    const track = $('.quotes-track', s)!; const n = track.children.length; let i = 0;
+    const pos = $('[data-quotes-pos]', s);
+    const go = (d: number) => { i = (i + d + n) % n; (track.children[i] as HTMLElement).scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest', inline: 'start' }); pos && (pos.textContent = `${i + 1} / ${n}`); };
     $('[data-next]', s)?.addEventListener('click', () => go(1));
     $('[data-prev]', s)?.addEventListener('click', () => go(-1));
-    let timer = setInterval(() => go(1), 7000);
-    s.addEventListener('pointerenter', () => clearInterval(timer));
-    s.addEventListener('pointerleave', () => { timer = setInterval(() => go(1), 7000); });
+    track.addEventListener('scroll', () => { const k = Math.round(track.scrollLeft / Math.max(1, track.clientWidth)); if (k !== i) { i = k; pos && (pos.textContent = `${i + 1} / ${n}`); } }, { passive: true });
+  });
+
+  // Voice testimonials: one plays at a time; bars animate while playing.
+  const players = $$('[data-voice]');
+  players.forEach((v) => {
+    const a = $<HTMLAudioElement>('audio', v)!, btn = $('[data-voice-play]', v)!, time = $('[data-voice-time]', v);
+    const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+    btn.addEventListener('click', () => { if (a.paused) { players.forEach((o) => o !== v && $<HTMLAudioElement>('audio', o)?.pause()); a.play(); } else a.pause(); });
+    a.addEventListener('play', () => v.classList.add('playing'));
+    a.addEventListener('pause', () => v.classList.remove('playing'));
+    a.addEventListener('ended', () => { v.classList.remove('playing'); a.currentTime = 0; });
+    a.addEventListener('timeupdate', () => time && (time.textContent = fmt(a.currentTime)));
+    a.addEventListener('loadedmetadata', () => time && (time.textContent = fmt(a.duration)));
   });
 }
 
@@ -182,102 +264,6 @@ function forms() {
       } catch (err: any) { status.textContent = err?.message || S.error; }
     });
   }
-}
-
-/* ── AI assistant with a Nigerian voice ── */
-function chat() {
-  const root = $('[data-chat]'); if (!root) return;
-  const panel = $('.chat-panel', root)!, log = $('[data-chat-log]', root)!, form = $<HTMLFormElement>('[data-chat-form]', root)!;
-  const input = $<HTMLInputElement>('input[name=q]', form)!, voiceToggle = $<HTMLInputElement>('[data-chat-voice]', root)!;
-  const KEY = 'ferrn-chat';
-  let history: { role: 'user' | 'assistant'; content: string }[] = [];
-  try { history = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch {}
-  const session = (() => { try { let s = sessionStorage.getItem('ferrn-chat-s'); if (!s) { s = Math.random().toString(36).slice(2); sessionStorage.setItem('ferrn-chat-s', s); } return s; } catch { return ''; } })();
-  try { voiceToggle.checked = localStorage.getItem('ferrn-voice') === '1'; } catch {}
-  voiceToggle.addEventListener('change', () => { try { localStorage.setItem('ferrn-voice', voiceToggle.checked ? '1' : '0'); } catch {} });
-
-  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
-  const linkify = (s: string) => esc(s)
-    .replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
-    .replace(/(^|\s)(\/(?:marketplace|work|services|contact|team|insights)[\w\-/]*)/g, '$1<a href="$2">$2</a>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  const add = (role: 'me' | 'bot', text: string) => {
-    const d = document.createElement('div');
-    d.className = `msg ${role}`;
-    d.innerHTML = linkify(text);
-    if (role === 'bot') {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'speak'; b.textContent = '🔊 ' + (S.voice || 'Listen');
-      b.addEventListener('click', () => speak(text)); d.appendChild(document.createElement('br')); d.appendChild(b);
-    }
-    log.appendChild(d); log.scrollTop = log.scrollHeight;
-    return d;
-  };
-  const render = () => {
-    log.innerHTML = '';
-    add('bot', S.welcome);
-    history.forEach((m) => add(m.role === 'user' ? 'me' : 'bot', m.content));
-  };
-
-  let audio: HTMLAudioElement | null = null;
-  async function speak(text: string) {
-    const plain = text.replace(/https?:\/\/\S+/g, '').replace(/[*#_]/g, '');
-    audio?.pause();
-    try {
-      const r = await fetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: plain, lang }) });
-      if (r.ok && (r.headers.get('content-type') || '').includes('audio')) {
-        audio = new Audio(URL.createObjectURL(await r.blob()));
-        await audio.play();
-        return;
-      }
-    } catch {}
-    // Browser fallback: prefer a Nigerian English voice when the device has one.
-    if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance(plain);
-    const voices = speechSynthesis.getVoices();
-    const want = lang === 'en' || lang === 'yo' || lang === 'ig' || lang === 'ha' ? ['en-NG', 'en-GB', 'en'] : [lang];
-    u.voice = want.map((w) => voices.find((v) => v.lang.replace('_', '-').startsWith(w))).find(Boolean) || null;
-    u.rate = 0.98;
-    speechSynthesis.cancel(); speechSynthesis.speak(u);
-  }
-
-  const open = () => { panel.hidden = false; if (!log.children.length) render(); input.focus(); };
-  $('[data-chat-open]', root)!.addEventListener('click', () => (panel.hidden ? open() : (panel.hidden = true)));
-  $('[data-chat-close]', root)!.addEventListener('click', () => { panel.hidden = true; });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const q = input.value.trim(); if (!q) return;
-    input.value = '';
-    add('me', q);
-    const typing = document.createElement('div'); typing.className = 'msg bot typing'; typing.innerHTML = '<span></span><span></span><span></span>';
-    log.appendChild(typing); log.scrollTop = log.scrollHeight;
-    try {
-      const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ message: q, history, lang, path: location.pathname, session }) });
-      const j = await r.json();
-      typing.remove();
-      add('bot', j.message);
-      history.push({ role: 'user', content: q }, { role: 'assistant', content: j.message });
-      history = history.slice(-12);
-      try { sessionStorage.setItem(KEY, JSON.stringify(history)); } catch {}
-      if (voiceToggle.checked) speak(j.message);
-    } catch {
-      typing.remove(); add('bot', S.error);
-    }
-  });
-
-  // Speech input (Chrome/Edge/Safari): talk to the assistant.
-  const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-  const mic = $<HTMLButtonElement>('[data-chat-mic]', root)!;
-  if (!SR) { mic.hidden = true; return; }
-  const bcp: Record<string, string> = { en: 'en-NG', yo: 'yo-NG', ig: 'ig-NG', ha: 'ha-NG', fr: 'fr-FR', de: 'de-DE', es: 'es-ES', zh: 'zh-CN' };
-  mic.addEventListener('click', () => {
-    const rec = new SR(); rec.lang = bcp[lang] || 'en-NG'; rec.interimResults = false;
-    mic.classList.add('rec');
-    rec.onresult = (ev: any) => { input.value = ev.results[0][0].transcript; voiceToggle.checked = true; form.requestSubmit(); };
-    rec.onend = () => mic.classList.remove('rec');
-    rec.start();
-  });
 }
 
 /* ── first-party analytics: no cookies, no IPs; honours Do Not Track and GPC ── */
@@ -397,11 +383,8 @@ document.addEventListener('click', (e) => {
 });
 
 /* ── boot ── */
-html.classList.remove('no-js');
+html.classList.remove('no-js'); html.classList.add('js');
 consent();
-chrome(); forms(); chat();
-const writeOns = $$<HTMLElement>('[data-writeon]');
-Promise.all(writeOns.map(prepareWriteOn)).then(() => {
-  observe();
-  runIntro(() => $$<HTMLElement>('.hero [data-writeon]').forEach((el) => setTimeout(() => drawWriteOn(el), 150)));
-});
+chrome(); forms(); motion(); season();
+bob({ lang, S, reduced });
+runIntro(() => { observe(); idle(); });
