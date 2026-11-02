@@ -37,6 +37,7 @@ npm run deploy           # build + wrangler deploy (normally done by Workers Bui
 - [docs/MIGRATION.md](docs/MIGRATION.md): moving ferrnagency.com from Namecheap to Cloudflare without breaking email.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how the pieces fit, with a diagram.
 - [docs/WEBSITE.md](docs/WEBSITE.md): the v4 site — design system, Bob (grounding, reading aloud, voice), idle and seasonal modes, Studio website modules, deploy and rollback.
+- [docs/COSTS.md](docs/COSTS.md): what each service costs, the free allowances, and the switches that keep the bill at $5/month.
 - [docs/I18N.md](docs/I18N.md): how the 8 languages work and what still needs a native speaker.
 - [docs/CONTENT.md](docs/CONTENT.md): the content workflow for X, Instagram and TikTok.
 - [docs/WHATSAPP.md](docs/WHATSAPP.md): the WhatsApp bot and how to connect it.

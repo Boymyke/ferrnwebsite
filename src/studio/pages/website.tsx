@@ -224,7 +224,7 @@ export function BobPage() {
   const admin = can(user, 'admin');
   return (
     <Page title="Bob" sub="The website assistant: what it knows, what it's doing, and how it sounds." actions={<button className="btn ghost" onClick={reindex}><RefreshCw size={15} />Rebuild knowledge</button>}>
-      <Tabs tabs={[['overview', 'Overview'], ['knowledge', 'Knowledge'], ['logs', 'Conversations'], ['settings', 'Settings']]} value={tab} onChange={setTab} />
+      <Tabs tabs={[['overview', 'Overview'], ['knowledge', 'Knowledge'], ['logs', 'Conversations'], ['costs', 'Costs'], ['settings', 'Settings']]} value={tab} onChange={setTab} />
       {tab === 'overview' ? (
         <>
           <div className="stats">
@@ -241,7 +241,7 @@ export function BobPage() {
             {!data.unsure?.length ? <p className="muted small">None in the last 30 days.</p> : <table className="table"><tbody>{data.unsure.map((u: any, i: number) => <tr key={i}><td><strong>{u.question}</strong><div className="muted small">{u.path} · {fmtDate(u.created_at, true)}</div></td></tr>)}</tbody></table>}
           </Card>
         </>
-      ) : tab === 'knowledge' ? <Knowledge preview={preview} q={q} setQ={setQ} setPreview={setPreview} index={data.index} /> : tab === 'logs' ? <Logs /> : (
+      ) : tab === 'knowledge' ? <Knowledge preview={preview} q={q} setQ={setQ} setPreview={setPreview} index={data.index} /> : tab === 'logs' ? <Logs /> : tab === 'costs' ? <Costs settings={s} set={set} admin={admin} /> : (
         <div className="fields">
           <label className="field"><span>Bob on the website</span><select disabled={!admin} value={s['bob.enabled'] || '1'} onChange={(e) => set('bob.enabled', e.target.value)}><option value="1">On</option><option value="0">Off (hidden, API answers 503)</option></select></label>
           <label className="field"><span>Voice</span><select disabled={!admin} value={s['bob.voice'] || 'auto'} onChange={(e) => set('bob.voice', e.target.value)}><option value="auto">Automatic (server voice when available)</option><option value="server">Ferrn's voice only</option><option value="browser">Visitor's device voice only</option></select><small>{data.voice}</small></label>
@@ -250,6 +250,60 @@ export function BobPage() {
         </div>
       )}
     </Page>
+  );
+}
+
+function Costs({ settings, set, admin }: { settings: Record<string, string | null>; set: (k: string, v: string) => Promise<void>; admin: boolean }) {
+  const { data, loading, error, reload } = useData(() => api<any>('/site/costs'), []);
+  const [limit, setLimit] = useState<string>('');
+  const [mapsLimit, setMapsLimit] = useState<string>('');
+  if (loading) return <Loading />;
+  if (error) return <ErrorNote error={error} onRetry={reload} />;
+  const model = settings['bob.model'] || '@cf/meta/llama-3.1-8b-instruct-fp8-fast';
+  const usd = (n: number) => '$' + n.toFixed(n < 1 ? 3 : 2);
+  const pct = Math.min(100, Math.round((data.todayNeurons / data.freeNeurons) * 100));
+  return (
+    <>
+      <div className="stats">
+        <div className="stat"><span>Today's AI use (all features)</span><strong>{data.todayNeurons.toLocaleString()} / {data.freeNeurons.toLocaleString()} free Neurons</strong><div className="bar"><i style={{ width: pct + '%' }} /></div></div>
+        <div className="stat"><span>Bob answers today</span><strong>{data.bobToday} / {settings['bob.daily_limit'] || 300}</strong></div>
+        <div className="stat"><span>Last 30 days — AI</span><strong>{data.month.calls} calls · {usd(data.month.usd)}</strong><small className="muted">{data.month.billableNeurons.toLocaleString()} billable Neurons above the free allowance</small></div>
+        <div className="stat"><span>Google Maps this month</span><strong>{data.maps ? `${data.maps.used} / ${data.maps.limit}` : '—'}</strong><small className="muted">1,000 free searches/month, then $35 per 1,000 — capped so it stays free</small></div>
+      </div>
+      <div className="two">
+        <Card title="Bob's brain">
+          <div className="fields">
+            <label className="field wide"><span>Model</span>
+              <select disabled={!admin} value={model} onChange={(e) => set('bob.model', e.target.value)}>
+                {Object.entries(data.models as Record<string, any>).map(([k, m]) => <option key={k} value={k}>{m.label}</option>)}
+                {data.openai ? <option value="openai">OpenAI (uses OPENAI_API_KEY, paid per token)</option> : null}
+              </select>
+              <small>{(data.models as any)[model]?.note ?? 'Paid per token on your OpenAI account.'}</small>
+            </label>
+            <label className="field wide"><span>Daily answer ceiling (site-wide)</span>
+              <div className="toolbar"><input type="number" min={1} placeholder={settings['bob.daily_limit'] || '300'} value={limit} onChange={(e) => setLimit(e.target.value)} disabled={!admin} /><button className="btn sm" disabled={!admin || !limit} onClick={() => { set('bob.daily_limit', limit); setLimit(''); }}>Save</button></div>
+              <small>After this many model answers in a day Bob politely points to email and booking instead. With the 8B model, 300 answers ≈ 6,600 Neurons — inside the free 10,000.</small>
+            </label>
+            <label className="field wide"><span>Google Maps searches per month</span>
+              <div className="toolbar"><input type="number" min={0} placeholder={settings['maps.monthly_limit'] || '900'} value={mapsLimit} onChange={(e) => setMapsLimit(e.target.value)} disabled={!admin} /><button className="btn sm" disabled={!admin || !mapsLimit} onClick={() => { set('maps.monthly_limit', mapsLimit); setMapsLimit(''); }}>Save</button></div>
+              <small>Lead finding stops at this number until the next month. Keep it under 1,000 to pay nothing.</small>
+            </label>
+          </div>
+        </Card>
+        <Card title="What you pay for">
+          <ul className="plain">
+            <li><strong>Cloudflare</strong> — {data.plan.workers}. Everything (site, Studio, database, media, Bob) runs here.</li>
+            <li><strong>AI</strong> — Workers AI: 10,000 Neurons/day free on this plan, then $0.011 per 1,000. {data.openai ? 'OpenAI key present: Studio drafting may bill there.' : 'No OpenAI key: nothing is billed outside Cloudflare.'}</li>
+            <li><strong>Voice</strong> — {data.voice === 'azure' ? 'Azure Speech (Nigerian voice; free tier is 500,000 characters/month)' : data.voice === 'elevenlabs' ? 'ElevenLabs (free tier 10,000 credits/month)' : 'Visitor device voices only — $0. Add AZURE_SPEECH_KEY (free tier) for the Nigerian voice.'}</li>
+            <li><strong>Lead finding</strong> — {data.plan.maps}.</li>
+            <li><strong>Email</strong> — {data.plan.resend}. Outreach goes through Gmail (free).</li>
+            <li><strong>Payments</strong> — Paystack takes its fee per transaction only.</li>
+          </ul>
+          <h4 className="small muted">By feature, last 30 days</h4>
+          <table className="table"><tbody>{Object.entries(data.byFeature as Record<string, any>).map(([f, r]) => <tr key={f}><td>{f}</td><td>{r.calls} calls</td><td>{r.neurons.toLocaleString()} Neurons</td><td>{r.usd ? usd(r.usd) : ''}</td></tr>)}{!Object.keys(data.byFeature).length ? <tr><td className="muted">No AI calls recorded yet.</td></tr> : null}</tbody></table>
+        </Card>
+      </div>
+    </>
   );
 }
 

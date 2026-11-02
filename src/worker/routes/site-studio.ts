@@ -10,6 +10,8 @@ import { audit } from '../lib/audit';
 import { bumpContentVersion } from '../lib/cache';
 import { CONTENT_FIELDS } from '../lib/content';
 import { rebuildPageIndex, retrieve } from '../lib/bob';
+import { AI_MODELS, usageDays } from '../lib/ai';
+import { mapsBudget } from '../lib/maps';
 
 const RANK = { viewer: 0, sales: 1, editor: 2, admin: 3, owner: 4 } as const;
 const can = (u: SessionUser, role: SessionUser['role']) => RANK[u.role] >= RANK[role];
@@ -66,7 +68,7 @@ siteStudio.post('/content/revert', async (c) => {
 });
 
 /* ── Bob ── */
-const BOB_KEYS = ['bob.enabled', 'bob.voice', 'bob.read_aloud', 'bob.autovoice'];
+const BOB_KEYS = ['bob.enabled', 'bob.voice', 'bob.read_aloud', 'bob.autovoice', 'bob.model', 'bob.daily_limit', 'maps.monthly_limit'];
 siteStudio.get('/bob', async (c) => {
   const settings: Record<string, string | null> = {};
   for (const k of BOB_KEYS) settings[k] = await getSetting(c.env.DB, k);
@@ -92,6 +94,24 @@ siteStudio.put('/bob', async (c) => {
   await audit(c, 'settings', 'bob', 'update', `${u.name} changed Bob settings`);
   await bumpContentVersion(c.env);
   return c.json({ ok: true });
+});
+
+/** What the AI and lead finding cost: per-day Neurons/USD by feature, free allowances, Maps budget. */
+siteStudio.get('/costs', async (c) => {
+  const days = await usageDays(c.env, 30);
+  const today = new Date().toISOString().slice(0, 10);
+  const sum = (filter: (k: string) => boolean, d = days) => d.reduce((acc, x) => { for (const [k, r] of Object.entries(x.rows)) if (filter(k)) { acc.calls += r.calls; acc.neurons += r.neurons; acc.usd += r.usd; } return acc; }, { calls: 0, neurons: 0, usd: 0 });
+  const byFeature: Record<string, { calls: number; neurons: number; usd: number }> = {};
+  for (const x of days) for (const [k, r] of Object.entries(x.rows)) { const f = k.split('|')[0]; const b = byFeature[f] ?? (byFeature[f] = { calls: 0, neurons: 0, usd: 0 }); b.calls += r.calls; b.neurons += r.neurons; b.usd += r.usd; }
+  // Workers AI bills per day above 10,000 free Neurons.
+  const billable = days.reduce((a, x) => a + Math.max(0, Object.values(x.rows).reduce((n, r) => n + r.neurons, 0) - 10_000), 0);
+  const todayRow = days.find((x) => x.day === today);
+  const todayNeurons = todayRow ? Object.values(todayRow.rows).reduce((n, r) => n + r.neurons, 0) : 0;
+  const bobToday = Number((await c.env.CACHE.get(`bob:answers:${today}`)) ?? 0);
+  return c.json({ ok: true, today, todayNeurons, freeNeurons: 10_000, bobToday, days, byFeature, month: { ...sum(() => true), billableNeurons: billable, usd: billable / 1000 * 0.011 + sum(() => true).usd },
+    models: AI_MODELS, openai: !!c.env.OPENAI_API_KEY, maps: await mapsBudget(c.env).catch(() => null),
+    voice: c.env.AZURE_SPEECH_KEY ? 'azure' : c.env.ELEVENLABS_API_KEY ? 'elevenlabs' : 'browser',
+    plan: { workers: 'Workers Paid $5/month (includes 10,000 free Neurons/day, 10M D1 reads/day, 1M KV reads/day)', resend: c.env.RESEND_API_KEY ? 'Resend (3,000 emails/month free)' : 'Resend not connected', maps: c.env.GOOGLE_MAPS_API_KEY ? 'Google Places (1,000 free enterprise searches/month, then $35 per 1,000)' : 'Google Maps not connected' } });
 });
 
 siteStudio.post('/bob/reindex', async (c) => {

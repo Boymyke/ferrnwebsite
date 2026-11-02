@@ -46,8 +46,20 @@ export const placeQuery = (what: string, city: string) => {
  * Needs GOOGLE_MAPS_API_KEY with "Places API (New)" enabled. One call returns up to 20
  * businesses with phone, website and rating, which the Studio scores and lets you add as leads.
  */
+/** Google gives 1,000 free Text Search (Enterprise fields: phone + website) calls a month, then $35 per 1,000.
+ *  We stop at a monthly ceiling (setting maps.monthly_limit, default 900) so lead finding never produces a bill. */
+export async function mapsBudget(env: Bindings) {
+  const month = new Date().toISOString().slice(0, 7);
+  const used = Number((await env.CACHE.get(`maps:calls:${month}`)) ?? 0);
+  const limitRow = await env.DB.prepare("SELECT value FROM settings WHERE key = 'maps.monthly_limit'").first<{ value: string }>().catch(() => null);
+  const limit = Math.max(0, Number(limitRow?.value ?? 900) || 900);
+  return { month, used, limit, left: Math.max(0, limit - used) };
+}
 export async function searchPlaces(env: Bindings, query: string, pageToken?: string): Promise<{ results: Prospect[]; next?: string }> {
   if (!env.GOOGLE_MAPS_API_KEY) throw new Error('Add a GOOGLE_MAPS_API_KEY secret to search Google Maps.');
+  const b = await mapsBudget(env);
+  if (b.used >= b.limit) throw new Error(`Google Maps budget for ${b.month} reached (${b.limit} free searches). It resets next month, or raise maps.monthly_limit in Settings.`);
+  await env.CACHE.put(`maps:calls:${b.month}`, String(b.used + 1), { expirationTtl: 60 * 60 * 24 * 62 });
   const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
     method: 'POST',
     headers: {

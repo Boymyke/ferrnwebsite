@@ -65,8 +65,13 @@ api.post('/chat', async (c) => {
   const langName = LANGS.find((l) => l.code === lang)!.label;
   const path = clamp(b.path, 200) || '/';
   const session = clamp(b.session, 60);
-  const bobOff = (await first<{ value: string }>(c.env.DB, "SELECT value FROM settings WHERE key = 'bob.enabled'").catch(() => null))?.value === '0';
-  if (bobOff) return c.json({ ok: false, message: 'The assistant is taking a break. Email info@ferrnagency.com and we’ll reply within a working day.' }, 503);
+  const bobSet = Object.fromEntries((await all<{ key: string; value: string }>(c.env.DB, "SELECT key, value FROM settings WHERE key IN ('bob.enabled','bob.model','bob.daily_limit')").catch(() => [])).map((r) => [r.key, r.value]));
+  if (bobSet['bob.enabled'] === '0') return c.json({ ok: false, message: 'The assistant is taking a break. Email info@ferrnagency.com and we’ll reply within a working day.' }, 503);
+  const model = bobSet['bob.model'] || '@cf/meta/llama-3.1-8b-instruct-fp8-fast';
+  // Site-wide daily ceiling so Bob can never run up a bill (counts model answers only).
+  const dayKey = `bob:answers:${new Date().toISOString().slice(0, 10)}`;
+  const answersToday = Number((await c.env.CACHE.get(dayKey)) ?? 0);
+  const dailyLimit = Math.max(1, Number(bobSet['bob.daily_limit'] ?? 300) || 300);
 
   const log = (answer: string, provider: string, action?: BobAction, sources: string[] = []) =>
     c.executionCtx.waitUntil(run(c.env.DB, 'INSERT INTO chat_logs (session, path, lang, question, answer, provider, action, sources) VALUES (?,?,?,?,?,?,?,?)',
@@ -82,6 +87,11 @@ api.post('/chat', async (c) => {
     log(reply, 'intent'); return c.json({ ok: true, message: reply, action: { type: 'read' }, sources: [] });
   }
 
+  if (answersToday >= dailyLimit) {
+    const reply = 'I’ve answered a lot of questions today and I’m resting until tomorrow. Email info@ferrnagency.com or book a call at ' + (c.env.BOOKING_URL || 'https://cal.com/ferrn-agency') + ' and a person will help.';
+    log(reply, 'limit'); return c.json({ ok: true, message: reply, sources: [] });
+  }
+  await c.env.CACHE.put(dayKey, String(answersToday + 1), { expirationTtl: 60 * 60 * 26 });
   let system = '', hits: any[] = [];
   try { const p = await bobPrompt(c.env, { langName, path, message }); system = p.system; hits = p.hits; }
   catch { system = await assistantSystemPrompt(c.env, { channel: 'web', langName }); }
@@ -92,7 +102,7 @@ api.post('/chat', async (c) => {
 
   let reply: { message: string; action?: BobAction; sources: string[] } = { message: '', sources: [] }, provider = 'none';
   try {
-    const r = await complete(c.env, messages, { maxTokens: 450, json: hits.length > 0 || system.includes('Output strictly as JSON') });
+    const r = await complete(c.env, messages, { maxTokens: 450, json: hits.length > 0 || system.includes('Output strictly as JSON'), model, bucket: 'bob' });
     provider = r.provider;
     reply = await parseReply(c.env, r.text, hits);
     if (!reply.message) reply.message = 'I’m not sure about that one. Email info@ferrnagency.com or book a call at ' + (c.env.BOOKING_URL || 'https://cal.com/ferrn-agency') + ' and the team will help.';

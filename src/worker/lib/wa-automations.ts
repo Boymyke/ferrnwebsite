@@ -123,7 +123,7 @@ export async function handleInbound(env: Bindings, m: { from: string; id: string
     { role: 'user', content: text.slice(0, 1500) },
   ];
   let reply = '';
-  try { reply = (await complete(env, messages, { maxTokens: 300 })).text; } catch { /* fall through */ }
+  try { reply = (await complete(env, messages, { maxTokens: 300, bucket: 'whatsapp' })).text; } catch { /* fall through */ }
   if (!reply) {
     await run(env.DB, 'UPDATE wa_contacts SET needs_human = 1 WHERE wa_id = ?', waId);
     reply = 'Thanks for your message! A member of the Ferrn team will reply here shortly.';

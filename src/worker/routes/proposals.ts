@@ -319,7 +319,7 @@ api.post('/ai-draft', async (c) => {
 Return JSON only: {"title": string, "summary": string (2–3 sentences for the cover), "sections": [{"heading": string, "body": string}], "items": [{"description": string, "qty": number, "unit_price": number, "billing": "once"|"monthly"|"termly"|"yearly"}], "deposit_pct": number}.
 Sections, in this order: "Overview", "Scope of work", "Timeline", "What we need from you", "Terms". Bodies use simple markdown only: **bold**, "- " bullets, "1. " lists, "### " sub-headings. Keep 3–7 line items, realistic, no padding.` },
       { role: 'user', content: JSON.stringify({ notes, client: { name: b.client_name, company: b.client_company }, lead, price_list: products }) },
-    ], { maxTokens: 2200, json: true, temperature: 0.5 });
+    ], { maxTokens: 2200, json: true, temperature: 0.5, bucket: 'studio' });
     const d = extractJson<Record<string, any>>(r.text, {});
     return c.json({ ok: true, provider: r.provider, draft: {
       title: clamp(d.title, 200), summary: clamp(d.summary, 1500), sections: normSections(d.sections), items: normItems(d.items),

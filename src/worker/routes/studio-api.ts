@@ -435,7 +435,7 @@ studio.post('/meetings/:id/ai-questions', async (c): Promise<Response> => {
   const r = await complete(c.env, [
     { role: 'system', content: 'You prepare short discovery-call briefs for Ferrn Digital Agency (Nigeria). Return JSON: {"opener": string, "questions": string[6], "risks": string[3], "recommendation": string}. Plain, respectful Nigerian business English.' },
     { role: 'user', content: JSON.stringify({ company: lead.company, niche: lead.niche, city: lead.city, website: lead.website, gaps: lead.gaps, pitch: lead.pitch, notes: lead.notes }) },
-  ], { maxTokens: 700, json: true });
+  ], { maxTokens: 700, json: true, bucket: 'studio' });
   return c.json({ ok: true, brief: extractJson(r.text, { questions: [] }) });
 });
 
@@ -447,7 +447,7 @@ studio.post('/quotes/ai-draft', async (c): Promise<Response> => {
   const r = await complete(c.env, [
     { role: 'system', content: `You draft quotes for Ferrn Digital Agency. Use the marketplace price list as anchors; custom work at ₦150,000 or $400 per developer-day. Return JSON {"title": string, "items": [{"description": string, "qty": number, "unit_price": number, "recurring": "once"|"monthly"|"termly"}], "notes": string}. Currency: ${b.currency === 'USD' ? 'USD' : 'NGN'}. Keep 3–7 line items, realistic, no padding.` },
     { role: 'user', content: JSON.stringify({ brief: clamp(b.brief, 3000), lead, price_list: products }) },
-  ], { maxTokens: 900, json: true });
+  ], { maxTokens: 900, json: true, bucket: 'studio' });
   return c.json({ ok: true, draft: extractJson(r.text, { items: [] }) });
 });
 
@@ -461,7 +461,7 @@ studio.post('/content/generate', async (c): Promise<Response> => {
   const r = await complete(c.env, [
     { role: 'system', content: `You are Ferrn Digital Agency's content lead. Ferrn builds websites, web apps and AI automation for Nigerian and international SMEs. Brand: confident, specific, useful — never hype, no clichés, no emoji walls, no made-up stats or client names. Platform rules: X = ≤280 chars per post or a numbered thread; Instagram = carousel slide text (≤12 words a slide) + caption; TikTok = hook (0–3s), beats with on-screen text, CTA, plus voiceover script. Every piece ends with one clear CTA (DM a keyword, link in bio, book a call). Return JSON {"posts":[{"title":string,"format":string,"body":string,"hashtags":string,"visual_direction":string}]}.` },
     { role: 'user', content: JSON.stringify({ platform, format: b.format, theme: b.theme, goal: b.goal, brief: clamp(b.brief, 2000), count, what_performed_well: top }) },
-  ], { maxTokens: 1800, json: true, temperature: 0.7 });
+  ], { maxTokens: 1800, json: true, temperature: 0.7, bucket: 'studio' });
   const posts = extractJson<{ posts: any[] }>(r.text, { posts: [] }).posts ?? [];
   if (b.save) {
     for (const p of posts) {

@@ -757,3 +757,5 @@ ul.plain, ol.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; } u
 .rev { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
 .rev p { margin: 4px 0 0; font-size: 13px; white-space: pre-wrap; }
 .filefield { display: grid; gap: 8px; } .filefield audio { width: 100%; max-width: 420px; }
+.stat .bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 4px; } .stat .bar i { display: block; height: 100%; background: var(--accent); }
+.stat small { font-size: 11.5px; }
