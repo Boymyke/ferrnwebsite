@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api, create, fmtDate, list, money, update } from '../api';
 import { Card, copy, EditedBy, Empty, ErrorNote, History, Loading, Page, Status, Tabs, useData, useRoute, useToast } from '../ui';
-import { ArrowLeft, FileText, ListChecks, Receipt, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, ListChecks, Plus, Receipt, Trash2 } from 'lucide-react';
 
 type Item = { description: string; qty: number; unit_price: number; recurring: 'once' | 'monthly' | 'termly' | 'yearly' };
 
@@ -11,7 +11,7 @@ export function Quotes() {
   const id = path.match(/^\/quotes\/([^/?]+)/)?.[1];
   if (id) return <QuoteEditor id={id === 'new' ? null : id} onDone={() => { reload(); go('/quotes'); }} />;
   return (
-    <Page title="Quotes" sub="Draft, share and track quotes. Clients open a branded link, download a PDF and accept online." actions={<button className="btn primary" onClick={() => go('/quotes/new')}>+ New quote</button>}>
+    <Page title="Quotes" sub="Draft, share and track quotes. Clients open a branded link, download a PDF and accept online." actions={<button className="btn primary" onClick={() => go('/quotes/new')}><Plus size={14} strokeWidth={2.2} />New quote</button>}>
       {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty icon={Receipt} title="No quotes yet">Create one from a lead, a meeting, or here.</Empty> : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr><th>Number</th><th>Client</th><th>Title</th><th>Total (one-off)</th><th>Status</th><th>Created</th><th>By</th></tr></thead>
@@ -112,9 +112,9 @@ function QuoteEditor({ id, onDone }: { id: string | null; onDone: () => void }) 
             </Card>
             <Card title="Line items" actions={<>
               <select onChange={(e) => { if (e.target.value) set('items', [...q.items, ...TEMPLATES[e.target.value]]); e.target.value = ''; }}>
-                <option value="">+ From template…</option>{Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
+                <option value="">Add from a template…</option>{Object.keys(TEMPLATES).map((t) => <option key={t}>{t}</option>)}
               </select>
-              <button className="btn sm ghost" onClick={() => set('items', [...q.items, { description: '', qty: 1, unit_price: 0, recurring: 'once' }])}>+ Line</button>
+              <button className="btn sm ghost" onClick={() => set('items', [...q.items, { description: '', qty: 1, unit_price: 0, recurring: 'once' }])}><Plus size={14} strokeWidth={2.2} />Line</button>
             </>}>
               {q.items.length ? (
                 <table className="table items">

@@ -373,9 +373,32 @@ function track() {
   setInterval(() => { if (document.visibilityState === 'visible') push({ t: 'hb' }, true); }, 20_000);
 }
 
+/* ── consent: analytics (GA4 + first-party heatmaps) only after Accept, as the cookie policy says ── */
+function consent() {
+  let choice = '';
+  try { choice = localStorage.getItem('ferrn-consent') || ''; } catch {}
+  const start = () => { try { (window as any).ferrnLoadGA?.(); } catch {} try { track(); } catch {} };
+  if (choice === 'all') return start();
+  const bar = document.getElementById('consent');
+  if (choice || !bar || /^\/(studio|q|p|i)\//.test(location.pathname + '/')) return;
+  setTimeout(() => { bar.hidden = false; requestAnimationFrame(() => bar.classList.add('in')); }, 1200);
+  bar.addEventListener('click', (e) => {
+    const v = (e.target as HTMLElement).closest<HTMLElement>('[data-consent]')?.dataset.consent;
+    if (!v) return;
+    try { localStorage.setItem('ferrn-consent', v); } catch {}
+    bar.classList.remove('in'); setTimeout(() => (bar.hidden = true), 250);
+    if (v === 'all') start();
+  });
+}
+// The footer's "Cookie settings" link (if present) reopens the choice.
+document.addEventListener('click', (e) => {
+  if (!(e.target as HTMLElement).closest('[data-cookie-settings]')) return;
+  e.preventDefault(); try { localStorage.removeItem('ferrn-consent'); } catch {} location.reload();
+});
+
 /* ── boot ── */
 html.classList.remove('no-js');
-try { track(); } catch {}
+consent();
 chrome(); forms(); chat();
 const writeOns = $$<HTMLElement>('[data-writeon]');
 Promise.all(writeOns.map(prepareWriteOn)).then(() => {

@@ -13,6 +13,8 @@ import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, type AutoConfig } from
 import { CORE_FLOW, NICHE_PRODUCT, NICHE_QUESTIONS, OBJECTIONS, nicheKey } from '../content/meeting-playbook';
 import { quoteTotals, type QuoteItem } from '../views/quote';
 import { NOVEMBER_CALENDAR } from '../content/november-calendar';
+import { socialStudio } from './social';
+import { rearmAfterEdit } from '../lib/social';
 
 type Resource = {
   table: string;
@@ -48,8 +50,8 @@ const R: Record<string, Resource> = {
   requests: { table: 'requests', label: 'enquiry', title: 'name', idPrefix: 'r_', order: 'created_at DESC', writeRole: 'sales',
     writable: ['status'], search: ['name', 'email', 'company', 'message'], filters: ['type', 'status'] },
   content: { table: 'content_posts', label: 'post', title: 'title', idPrefix: 'c_', order: 'COALESCE(scheduled_at, created_at) ASC', writeRole: 'editor',
-    writable: ['platform', 'format', 'theme', 'goal', 'audience', 'title', 'body', 'hashtags', 'media_json', 'scheduled_at', 'status', 'post_url', 'metrics_json', 'posted_at'],
-    json: ['media_json', 'metrics_json'], search: ['title', 'body', 'theme'], filters: ['platform', 'status'] },
+    writable: ['platform', 'format', 'theme', 'goal', 'audience', 'title', 'body', 'hashtags', 'media_json', 'scheduled_at', 'status', 'post_url', 'metrics_json', 'posted_at', 'autopost', 'publish_opts_json'],
+    json: ['media_json', 'metrics_json', 'publish_opts_json'], search: ['title', 'body', 'theme'], filters: ['platform', 'status'] },
   ads: { table: 'ad_campaigns', label: 'ad campaign', title: 'name', idPrefix: 'a_', order: 'COALESCE(start_date, updated_at) DESC', writeRole: 'admin',
     writable: ['platform', 'name', 'objective', 'audience', 'product_id', 'daily_budget', 'currency', 'start_date', 'end_date', 'status', 'creatives_json', 'metrics_json', 'notes'],
     json: ['creatives_json', 'metrics_json'], search: ['name', 'audience'], filters: ['platform', 'status'] },
@@ -65,6 +67,7 @@ const R: Record<string, Resource> = {
 
 const studio = new Hono<AppEnv>();
 studio.use('*', requireUser('viewer'));
+studio.route('/social', socialStudio); // auto-posting, connections, results dashboard (routes/social.ts)
 
 const RANK: Record<string, number> = { viewer: 0, sales: 1, editor: 2, admin: 3, owner: 4 };
 const can = (u: SessionUser, role: SessionUser['role']) => RANK[u.role] >= RANK[role];
@@ -246,6 +249,7 @@ studio.patch('/r/:res/:id', async (c): Promise<Response> => {
   if (key === 'leads' && before.origin === 'engine' && 'status' in data && engineConfigured(c.env)) {
     c.executionCtx.waitUntil(engineCall(c.env, 'dashAction', ['setStatus', { lead_id: id, status: data.status }]).catch(() => null));
   }
+  if (key === 'content') await rearmAfterEdit(c.env, before, data);
   if (res.public) await bumpContentVersion(c.env);
   const after = await first<Record<string, any>>(c.env.DB, `SELECT * FROM ${res.table} WHERE id = ?`, id);
   if (key === 'meetings' && after && ('starts_at' in data || 'lead_id' in data)) c.executionCtx.waitUntil(onMeetingBooked(c.env, after as any).catch(() => null));

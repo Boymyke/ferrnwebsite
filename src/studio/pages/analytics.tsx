@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Activity, ArrowRight, ChevronsDown, CornerUpLeft, ExternalLink, Eye, Globe, Languages, MapPin, Monitor, MousePointerClick,
-  RefreshCw, Route, Smartphone, Tablet, Timer, Users,
-} from 'lucide-react';
+import { Activity, ArrowRight, ChevronsDown, CornerUpLeft, ExternalLink, Eye, Globe, Languages, MapPin, Minus, Monitor, MousePointerClick, RefreshCw, Route, Smartphone, Tablet, Timer, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { api } from '../api';
 import { Badge, Card, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute } from '../ui';
 import { AreaChart, BarList, ColumnChart, useWidth } from '../charts';
@@ -103,7 +100,7 @@ function Delta({ cur, prev, invert }: { cur: number; prev: number; invert?: bool
   if (!prev) return <span className="an-delta up">new</span>;
   const pct = Math.round(((cur - prev) / prev) * 100);
   const good = invert ? pct <= 0 : pct >= 0;
-  return <span className={`an-delta ${pct === 0 ? 'flat' : good ? 'up' : 'down'}`}>{pct > 0 ? '▲' : pct < 0 ? '▼' : '•'} {Math.abs(pct)}%</span>;
+  return <span className={`an-delta ${pct === 0 ? 'flat' : good ? 'up' : 'down'}`}>{pct > 0 ? <TrendingUp size={12} strokeWidth={2.4} /> : pct < 0 ? <TrendingDown size={12} strokeWidth={2.4} /> : <Minus size={12} />} {Math.abs(pct)}%</span>;
 }
 
 function OverviewTab({ range, onLive }: { range: Range; onLive: () => void }) {

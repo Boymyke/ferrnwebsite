@@ -377,3 +377,11 @@ input, select, textarea { font: inherit; color: inherit; }
   .reveal { opacity: 1; transform: none; }
   .writeon text { stroke-dashoffset: 0; fill: var(--orange); }
 }
+
+/* consent bar */
+.consent { position: fixed; left: 50%; bottom: 18px; z-index: 80; width: min(680px, calc(100% - 28px)); transform: translate(-50%, 20px); opacity: 0; transition: transform .25s var(--ease, ease), opacity .25s; display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 18px; border: 1px solid var(--line); background: var(--card, #fff); box-shadow: 0 18px 50px rgba(0,0,0,.18); font-size: 14px; line-height: 1.45; }
+.consent.in { transform: translate(-50%, 0); opacity: 1; }
+.consent p { margin: 0; }
+.consent a { text-decoration: underline; }
+.consent > div { display: flex; gap: 8px; flex: none; }
+@media (max-width: 640px) { .consent { flex-direction: column; align-items: stretch; bottom: 10px; } .consent > div { justify-content: flex-end; } }

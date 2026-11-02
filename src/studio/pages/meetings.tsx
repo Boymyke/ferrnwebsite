@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { api, create, fmtDate, fromLocalInput, list, money, toLocalInput, update } from '../api';
 import { Card, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, type FieldDef } from '../ui';
-import { ArrowLeft, CalendarX2, ExternalLink, Link2, Video } from 'lucide-react';
+import { ArrowLeft, CalendarX2, ExternalLink, Link2, Plus, Video } from 'lucide-react';
 
 const FIELDS = (leads: any[]): FieldDef[] => [
   { name: 'title', label: 'Title', wide: true, placeholder: 'Discovery call — Clinic Front Desk' },
@@ -27,7 +27,7 @@ export function Meetings() {
   if (tab === 'upcoming') rows.reverse();
   const byDay = rows.reduce((acc: Record<string, any[]>, m: any) => { const d = fmtDate(m.starts_at); (acc[d] ??= []).push(m); return acc; }, {});
   return (
-    <Page title="Meetings" sub="Discovery calls with a ready brief: what to ask, what we found, what to propose." actions={<button className="btn primary" onClick={() => go('/meetings/new')}>+ Book meeting</button>}>
+    <Page title="Meetings" sub="Discovery calls with a ready brief: what to ask, what we found, what to propose." actions={<button className="btn primary" onClick={() => go('/meetings/new')}><Plus size={15} strokeWidth={2.2} />Book meeting</button>}>
       <Tabs tabs={[['upcoming', 'Upcoming'], ['past', 'Past & closed']]} value={tab} onChange={setTab} />
       {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !rows.length ? <Empty icon={CalendarX2} title="No meetings here yet">Book a call from a lead, or press New meeting.</Empty> : (
         Object.entries(byDay).map(([day, ms]) => (
