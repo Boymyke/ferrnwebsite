@@ -53,7 +53,7 @@
     "AZURE_SPEECH_REGION": "westeurope",
     "AZURE_VOICE": "en-NG-EzinneNeural",
     "ELEVENLABS_VOICE_ID": "U7wWSnxIJwCjioxt86mk",
-    "ENGINE_URL": ""
+    "ENGINE_URL": "https://script.google.com/macros/s/AKfycbxHGrYu59me2dpKLI1ZCzTjoEeWuukYK-5kJDfZv-eCfp3W8rjRbD_YrWUDblJXOJtK/exec"
   }
   // Secrets (wrangler secret put NAME): OPENAI_API_KEY, AZURE_SPEECH_KEY, ELEVENLABS_API_KEY,
   // ENGINE_KEY, PAYSTACK_SECRET_KEY, GOOGLE_MAPS_API_KEY, BOOTSTRAP_SECRET, SESSION_PEPPER
