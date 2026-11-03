@@ -28,7 +28,8 @@ var HEADERS = {
   Settings: ['key', 'value', 'help'],
   Log: ['time', 'level', 'event', 'detail'],
   RFPs: ['id', 'found', 'title', 'buyer', 'country', 'url', 'source', 'deadline', 'budget', 'scope', 'fit_score',
-    'fit_reasons', 'requirements', 'risks', 'next_step', 'status', 'notes', 'updated']
+    'fit_reasons', 'requirements', 'risks', 'next_step', 'status', 'notes', 'updated'],
+  Previews: ['slug', 'lead_id', 'company', 'file_id', 'url', 'created', 'synced_at', 'bytes']
 };
 var RFP_STATUSES = ['new', 'reviewing', 'bidding', 'submitted', 'won', 'lost', 'skipped'];
 
@@ -53,8 +54,9 @@ var DEFAULT_SETTINGS = [
   ['PREVIEWS_PER_RUN', '3', 'Concept websites the morning routine builds each run.'],
   ['NICHES', 'logistics,realestate,school,clinic', 'Niches the routine prospects, in rotation.'],
   ['CITIES', 'Lagos,London,Manchester,Houston,Atlanta,Toronto', 'Cities the routine prospects: Lagos plus abroad markets.'],
-  ['PREVIEWS_REPO', 'Boymyke/leadshunter', 'GitHub repo holding templates + preview sites (hosted on Cloudflare Pages).'],
-  ['PREVIEW_BASE_URL', '', 'Where previews are live, e.g. https://leadshunter.pages.dev (your Cloudflare Pages address).'],
+  ['PREVIEWS_REPO', '', 'Unused since previews moved to the Ferrn site (kept for old briefs).'],
+  ['PREVIEW_BASE_URL', 'https://www.ferrnagency.com/preview', 'Where previews are live: the Ferrn site serves them at <base>/<slug>/.'],
+  ['PREVIEWS_FOLDER_ID', '', 'Set automatically: Drive folder holding preview HTML files.'],
   ['ENGINE_FOLDER_ID', '', 'Set by setup().'],
   ['INBOX_FOLDER_ID', '', 'Set by setup().'],
   ['PROCESSED_FOLDER_ID', '', 'Set by setup().'],
@@ -259,9 +261,66 @@ function processBatch_(data) {
       updateRow_(inT, r, ch);
     });
   }
+  var previewsAdded = (data.previews && data.previews.length) ? addPreviews_(data.previews, leadsT, keyToId) : 0;
   var rfpAdded = (data.rfps && data.rfps.length) ? addRfps_(data.rfps) : 0;
   if (data.log) log_('info', 'ai-run', String(data.log).slice(0, 4000));
-  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.rfps ? ', rfps +' + rfpAdded : '');
+  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.previews ? ', previews +' + previewsAdded : '') + (data.rfps ? ', rfps +' + rfpAdded : '');
+}
+
+// ───────────────────────────── Previews ─────────────────────────────
+// The morning routine puts concept sites in the batch as {slug, lead_id|key, company, html} (one self-contained page).
+// They are kept as HTML files in Drive › Ferrn Engine › previews, and the Ferrn site pulls them every 10 minutes
+// (getPreviews → R2) and serves them at PREVIEW_BASE_URL + '/' + slug + '/'. No git, no Pages.
+function previewsFolder_() {
+  var s = settings_();
+  if (s.PREVIEWS_FOLDER_ID) { try { return DriveApp.getFolderById(s.PREVIEWS_FOLDER_ID); } catch (e) {} }
+  var inbox = DriveApp.getFolderById(s.INBOX_FOLDER_ID);
+  var parents = inbox.getParents();
+  var root = parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
+  var it = root.getFoldersByName('previews');
+  var f = it.hasNext() ? it.next() : root.createFolder('previews');
+  setSetting_('PREVIEWS_FOLDER_ID', f.getId());
+  return f;
+}
+function addPreviews_(list, leadsT, keyToId) {
+  ensureSheet_('Previews');
+  var t = table_('Previews'), bySlug = indexBy_(t.rows, 'slug');
+  var leads = indexBy_(leadsT.rows, 'id');
+  var folder = previewsFolder_();
+  var base = String(settings_().PREVIEW_BASE_URL || '').replace(/\/+$/, '');
+  var now = new Date(), n = 0;
+  list.slice(0, 10).forEach(function (pv) {
+    if (!pv || !pv.html || String(pv.html).length < 200 || String(pv.html).length > 400000) return;
+    var slug = String(pv.slug || pv.company || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+    if (!slug) return;
+    var leadId = pv.lead_id || (pv.key && keyToId[pv.key]) || '';
+    var url = base ? base + '/' + slug + '/' : '';
+    var file;
+    if (bySlug[slug] && bySlug[slug].file_id) {
+      try { file = DriveApp.getFileById(bySlug[slug].file_id); file.setContent(String(pv.html)); } catch (e) { file = null; }
+    }
+    if (!file) file = folder.createFile(slug + '.html', String(pv.html), 'text/html');
+    var row = { slug: slug, lead_id: leadId, company: String(pv.company || '').slice(0, 200), file_id: file.getId(), url: url, created: now, synced_at: '', bytes: String(pv.html).length };
+    if (bySlug[slug]) updateRow_(t, bySlug[slug], row); else { appendObjects_('Previews', [row]); t.rows.push(row); bySlug[slug] = row; }
+    if (leadId && leads[leadId] && url) {
+      var ch = { preview_url: url };
+      if (['New', 'Queued'].indexOf(leads[leadId].status) > -1) ch.status = 'Preview ready';
+      updateRow_(leadsT, leads[leadId], ch);
+    }
+    n++;
+  });
+  return n;
+}
+/** Previews the Ferrn site has not stored yet (API: getPreviews). Returns at most 3 with their HTML. */
+function getPreviews() {
+  var sh = SpreadsheetApp.getActive().getSheetByName('Previews');
+  if (!sh) return [];
+  var out = [];
+  table_('Previews').rows.filter(function (r) { return !r.synced_at; }).slice(0, 3).forEach(function (r) {
+    try { out.push({ slug: r.slug, lead_id: r.lead_id, company: r.company, html: DriveApp.getFileById(r.file_id).getBlob().getDataAsString('UTF-8') }); }
+    catch (e) { log_('error', 'previews', r.slug + ': ' + e); }
+  });
+  return out;
 }
 
 // ───────────────────────────── RFPs ─────────────────────────────
@@ -670,7 +729,7 @@ function doGet() {
  * JSON API for the hosted dashboard (Cloudflare).
  * Body: {"key": "<API_KEY>", "fn": "getDashboardData" | "getLeadDetail" | "dashAction", "args": [...]}
  */
-var API_FNS = ['getDashboardData', 'getLeadDetail', 'dashAction'];
+var API_FNS = ['getDashboardData', 'getLeadDetail', 'dashAction', 'getPreviews'];
 function doPost(e) {
   var out;
   try {
@@ -681,7 +740,7 @@ function doPost(e) {
       throw new Error('Wrong access key');
     }
     if (API_FNS.indexOf(req.fn) === -1) throw new Error('Unknown function');
-    var fns = { getDashboardData: getDashboardData, getLeadDetail: getLeadDetail, dashAction: dashAction };
+    var fns = { getDashboardData: getDashboardData, getLeadDetail: getLeadDetail, dashAction: dashAction, getPreviews: getPreviews };
     out = { ok: true, data: fns[req.fn].apply(null, Array.isArray(req.args) ? req.args : []) };
   } catch (err) {
     out = { ok: false, error: String((err && err.message) || err) };
@@ -873,6 +932,19 @@ function dashAction(action, p) {
           if (RFP_STATUSES.indexOf(p.status) > -1) rch.status = p.status;
           if (p.note) rch.notes = (rr.notes ? rr.notes + '\n' : '') + stamp_() + ' ' + String(p.note).slice(0, 1000);
           updateRow_(rt, rr, rch);
+        }
+      }
+      break;
+    case 'previewSynced':
+      // The Ferrn site stored the file; record the live URL on the preview and the lead.
+      if (p.slug) {
+        var pt = table_('Previews'), pr = indexBy_(pt.rows, 'slug')[p.slug];
+        if (pr) {
+          updateRow_(pt, pr, { synced_at: new Date(), url: p.url || pr.url });
+          if (pr.lead_id && p.url) {
+            var plt = table_('Leads'), pl = indexBy_(plt.rows, 'id')[pr.lead_id];
+            if (pl) { var pch = { preview_url: p.url }; if (['New', 'Queued'].indexOf(pl.status) > -1) pch.status = 'Preview ready'; updateRow_(plt, pl, pch); }
+          }
         }
       }
       break;

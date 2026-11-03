@@ -9,7 +9,7 @@ import type { Bindings } from './env';
  */
 export const engineConfigured = (env: Bindings) => !!(env.ENGINE_URL && env.ENGINE_KEY);
 
-export async function engineCall<T = any>(env: Bindings, fn: 'getDashboardData' | 'getLeadDetail' | 'dashAction', args: unknown[] = []): Promise<T> {
+export async function engineCall<T = any>(env: Bindings, fn: 'getDashboardData' | 'getLeadDetail' | 'dashAction' | 'getPreviews', args: unknown[] = []): Promise<T> {
   if (!engineConfigured(env)) throw new Error('LeadsHunter engine is not connected yet (set ENGINE_URL and ENGINE_KEY).');
   const res = await fetch(env.ENGINE_URL!, {
     method: 'POST',
@@ -51,4 +51,35 @@ export async function syncEngine(env: Bindings): Promise<{ leads: number } | nul
   for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
   await syncOutreachEmails(env, dash).catch((e) => console.warn('outreach email sync', e));
   return { leads: leads.length };
+}
+
+/**
+ * Concept sites the morning routine built for leads. The engine keeps the HTML in Drive; we copy each new one
+ * into R2 (demos/<slug>/index.html), register it as an uploaded demo and serve it at /preview/<slug>/.
+ * Then the engine marks it synced and writes the live URL on the lead.
+ */
+export async function syncPreviews(env: Bindings): Promise<number> {
+  if (!engineConfigured(env)) return 0;
+  const list = await engineCall<{ slug: string; lead_id?: string; company?: string; html: string }[]>(env, 'getPreviews').catch(() => []);
+  let n = 0;
+  for (const p of list ?? []) {
+    const slug = String(p.slug || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+    if (!slug || !p.html || p.html.length < 200) continue;
+    // Never let a preview take over a marketplace demo address.
+    const existing = await env.DB.prepare('SELECT kind FROM demos WHERE slug = ?').bind(slug).first<{ kind: string }>();
+    if (existing && existing.kind !== 'upload') continue;
+    await env.MEDIA.put(`demos/${slug}/index.html`, p.html, { httpMetadata: { contentType: 'text/html; charset=utf-8' }, customMetadata: { by: 'morning-routine', lead: p.lead_id ?? '' } });
+    if (existing) {
+      await env.DB.prepare("UPDATE demos SET title = ?, lead_id = COALESCE(?, lead_id), files = 1, bytes = ?, entry = 'index.html', updated_by = 'Morning routine', updated_at = datetime('now') WHERE slug = ?")
+        .bind(`Preview — ${p.company || slug}`, p.lead_id || null, p.html.length, slug).run();
+    } else {
+      await env.DB.prepare("INSERT INTO demos (id, slug, title, kind, lead_id, notes, files, bytes, entry, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+        .bind('dm_' + Math.random().toString(36).slice(2, 12), slug, `Preview — ${p.company || slug}`, 'upload', p.lead_id || null, 'Concept site built by the morning routine', 1, p.html.length, 'index.html', 'Morning routine', 'Morning routine').run();
+    }
+    const url = `${env.SITE_URL || 'https://www.ferrnagency.com'}/preview/${slug}/`;
+    if (p.lead_id) await env.DB.prepare("UPDATE leads SET preview_url = ? WHERE id = ?").bind(url, p.lead_id).run().catch(() => null);
+    await engineCall(env, 'dashAction', ['previewSynced', { slug, url }]).catch(() => null);
+    n++;
+  }
+  return n;
 }

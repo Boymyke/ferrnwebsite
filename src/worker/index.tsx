@@ -15,6 +15,7 @@ import authApi from './routes/auth';
 import studioApi from './routes/studio-api';
 import { demoSite, demosApi } from './routes/demos';
 import { pushPendingToEngine, runAutoProspect } from './lib/autoprospect';
+import { syncPreviews } from './lib/engine';
 import { analyticsCollect, analyticsStudio, pruneAnalytics } from './routes/analytics';
 import proposalsApi from './routes/proposals';
 import clientDocs from './routes/client-docs';
@@ -134,6 +135,7 @@ export default {
       try { await processQueue(env); } catch (e) { console.warn('whatsapp queue failed', e); }
       try { await runAutoProspect(env); } catch (e) { console.warn('autoprospect failed', e); }
       try { await pushPendingToEngine(env); } catch (e) { console.warn('autopilot → engine push failed', e); }
+      try { await syncPreviews(env); } catch (e) { console.warn('preview sync failed', e); }
       try { await pruneAnalytics(env); } catch (e) { console.warn('analytics prune failed', e); }
       try { await syncEmailStatus(env); } catch (e) { console.warn('email status sync failed', e); }
       try { await runSocial(env, event.scheduledTime); } catch (e) { console.warn('social autopost/metrics failed', e); }

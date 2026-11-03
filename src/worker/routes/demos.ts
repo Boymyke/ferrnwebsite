@@ -39,12 +39,15 @@ export function withFavicon(res: Response, opts: { shim?: boolean } = {}): Respo
 /* ── public: serve uploaded demos ── */
 export const demoSite = new Hono<AppEnv>();
 demoSite.get('/demos/u/:slug', (c) => c.redirect(`/demos/u/${cleanSlug(c.req.param('slug'))}/`, 301));
-demoSite.get('/demos/u/:slug/*', async (c) => {
-  const slug = cleanSlug(c.req.param('slug'));
+// Lead previews (concept sites from the morning routine) share the uploaded-demo store under a friendlier address.
+demoSite.get('/preview/:slug', (c) => c.redirect(`/preview/${cleanSlug(c.req.param('slug'))}/`, 301));
+demoSite.get('/preview/:slug/*', async (c) => serveUpload(c, cleanSlug(c.req.param('slug')), `/preview/${cleanSlug(c.req.param('slug'))}/`));
+demoSite.get('/demos/u/:slug/*', async (c) => serveUpload(c, cleanSlug(c.req.param('slug')), `/demos/u/${cleanSlug(c.req.param('slug'))}/`));
+async function serveUpload(c: any, slug: string, prefix: string) {
   const row = await first<{ entry: string }>(c.env.DB, "SELECT entry FROM demos WHERE slug = ? AND kind = 'upload'", slug);
   // Answer directly: c.notFound() would hit the site's trailing-slash 301 and loop with the redirect above.
   if (!row) return c.html('<!doctype html><meta charset="utf-8"><title>Demo not found · Ferrn</title><link rel="icon" href="/icons/favicon-32.png"><body style="font-family:system-ui;display:grid;place-items:center;min-height:90vh;color:#444"><div style="text-align:center"><h1 style="font-weight:600">This demo link isn’t active</h1><p>It may have been replaced by a newer version. <a href="/marketplace" style="color:#ff4100">See live demos</a></p></div></body>', 404, { 'x-robots-tag': 'noindex' });
-  let rel = cleanPath(decodeURIComponent(c.req.path.slice(`/demos/u/${slug}/`.length)));
+  let rel = cleanPath(decodeURIComponent(c.req.path.slice(prefix.length)));
   const tries = !rel ? [row.entry] : rel.includes('.') ? [rel] : [rel + '/index.html', rel + '.html', row.entry]; // last = SPA fallback
   let obj: R2ObjectBody | null = null; let served = '';
   for (const t of tries) { obj = await c.env.MEDIA.get(`demos/${slug}/${t}`); if (obj) { served = t; break; } }
@@ -57,7 +60,7 @@ demoSite.get('/demos/u/:slug/*', async (c) => {
   });
   const res = new Response(obj.body, { headers });
   return ct.startsWith('text/html') ? withFavicon(res, { shim: true }) : res;
-});
+}
 
 /* ── Studio API: /api/studio/demos ── */
 export const demosApi = new Hono<AppEnv>();
