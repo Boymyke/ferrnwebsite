@@ -64,3 +64,7 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - axe-core (WCAG 2.0/2.1/2.2 A+AA) on home, case study, services, product, contact, Yorùbá home: **0 violations**.
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
+
+## Lead previews (concept sites for prospects)
+
+The morning routine no longer needs a git repo. It puts each concept site in the batch file as one self-contained HTML page (`previews: [{slug, company, lead_id|key, html}]`). The LeadsHunter engine keeps the file in Drive › previews and lists it in a `Previews` sheet; the Worker cron (`syncPreviews`, every 10 minutes) copies new ones into R2 as uploaded demos and serves them at **`https://www.ferrnagency.com/preview/<slug>/`** (sandboxed, `noindex`, same store as Studio → Marketplace → Demos). The engine then records the live URL on the lead (`preview_url`, status "Preview ready"). `PREVIEW_BASE_URL` in the engine settings is `https://www.ferrnagency.com/preview`.
