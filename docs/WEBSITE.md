@@ -65,6 +65,10 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Home page v5 (3 Nov) — Huly structure
+
+Michael asked for huly.io as the reference. The home page now follows that structure with Ferrn's own material: short two-line headline, one pill button, then a large real product screenshot with an orange glow; a capabilities ticker; a **light room** with a bento of silent looping clips of real Ferrn products (Clinic Front Desk booking, Quote & Track, WhatsApp reminders, Studio); a **dark room** marketplace shelf; a **light room** of case-study shots; a **dark room** for Bob with a clip of him answering and reading aloud; testimonials; a glowing closing CTA. Tokens moved to rounded cards (14–18px), pill buttons (ink by default, orange on hover/glow), light/dark sections. Clips live in `public/assets/home/` (recorded with Playwright from the local demos and Studio; 70–170 KB each, lazy-loaded and paused off-screen) and are swappable from Studio → Website copy → Home (the card lines are `title|text|video`). Product images: Studio cover → bundled demo still → live capture.
+
 ## Lead previews (concept sites for prospects)
 
 The morning routine no longer needs a git repo. It puts each concept site in the batch file as one self-contained HTML page (`previews: [{slug, company, lead_id|key, html}]`). The LeadsHunter engine keeps the file in Drive › previews and lists it in a `Previews` sheet; the Worker cron (`syncPreviews`, every 10 minutes) copies new ones into R2 as uploaded demos and serves them at **`https://www.ferrnagency.com/preview/<slug>/`** (sandboxed, `noindex`, same store as Studio → Marketplace → Demos). The engine then records the live URL on the lead (`preview_url`, status "Preview ready"). `PREVIEW_BASE_URL` in the engine settings is `https://www.ferrnagency.com/preview`.

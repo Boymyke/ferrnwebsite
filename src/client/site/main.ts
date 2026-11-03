@@ -55,6 +55,20 @@ function countUp(el: HTMLElement) {
   requestAnimationFrame(step);
 }
 
+/* ── lazy looping clips: load and play only when near the viewport, pause when away ── */
+function clips() {
+  const vids = $$<HTMLVideoElement>('video[data-src]');
+  if (!vids.length) return;
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const v = e.target as HTMLVideoElement;
+      if (e.isIntersecting) { if (!v.src) { v.src = v.dataset.src!; v.load(); } if (!reduced) v.play().catch(() => {}); }
+      else if (v.src) v.pause();
+    }
+  }, { rootMargin: '200px 0px' });
+  vids.forEach((v) => io.observe(v));
+}
+
 /* ── motion: hero light follows the pointer, cover parallax, nav hides on scroll down ── */
 function motion() {
   const hero = $('[data-hero]');
@@ -385,6 +399,6 @@ document.addEventListener('click', (e) => {
 /* ── boot ── */
 html.classList.remove('no-js'); html.classList.add('js');
 consent();
-chrome(); forms(); motion(); season();
+chrome(); forms(); motion(); season(); clips();
 bob({ lang, S, reduced });
 runIntro(() => { observe(); idle(); });

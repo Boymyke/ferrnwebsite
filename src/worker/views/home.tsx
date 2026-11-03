@@ -1,10 +1,10 @@
 import { raw } from 'hono/html';
 import { t, type Lang } from '../content/i18n';
-import { CLIENT_LOGOS, FAQS, PROCESS } from '../content/site';
+import { FAQS } from '../content/site';
 import type { SiteCtx } from '../lib/content';
 import { icon } from '../lib/icons';
 import { shotOf, type PublicProject } from '../lib/projects';
-import { Head, href, initials, Layout, money, Section } from './layout';
+import { href, initials, Layout, money } from './layout';
 
 export type ProductRow = {
   slug: string; name: string; category: string; industry: string | null; tagline: string | null; description?: string | null;
@@ -41,8 +41,18 @@ export function WorkRow({ p, lang, i }: { p: PublicProject; lang: Lang; i: numbe
   );
 }
 
+/** Product image: Studio cover → bundled still of its demo (public/assets/home/shot-<demo>.webp) → live capture of the demo URL. */
+const DEMO_STILLS = ['clinic-desk', 'admissions', 'track', 'cedar-clinic', 'brightpath-academy', 'harbourline-homes', 'northbridge-freight', 'assistant', 'automation'];
+export function productShot(p: { cover?: string | null; demo_url?: string | null }): string | null {
+  if (p.cover) return mediaUrl(p.cover);
+  if (!p.demo_url) return null;
+  const m = p.demo_url.match(/\/demos\/([a-z0-9-]+)\/?(?:[?#]|$)/i);
+  if (m && DEMO_STILLS.includes(m[1])) return `/assets/home/shot-${m[1]}.webp`;
+  return `https://image.thum.io/get/width/1200/crop/760/noanimate/${p.demo_url}`;
+}
+
 export function ProductCard({ p, lang }: { p: ProductRow; lang: Lang }) {
-  const cover = mediaUrl(p.cover) ?? (p.demo_url ? `https://image.thum.io/get/width/1200/crop/750/noanimate/${p.demo_url}` : null);
+  const cover = productShot(p);
   return (
     <article class="product reveal" data-category={p.category} style={`--tint:${p.accent ?? 'var(--orange)'}`}>
       <a class="product-media" href={href(lang, `/marketplace/${p.slug}`)} aria-label={p.name}>
@@ -138,118 +148,142 @@ export function HomePage(p: {
       { '@type': 'FAQPage', mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
     ],
   };
-  const featured = p.projects.filter((x) => x.featured).slice(0, 5);
-  const stats = ctx.get('home.stats').split('\n').map((l) => l.split('|')).filter((x) => x.length === 2);
-  const services = ['s1', 's2', 's3'] as const;
-  const serviceIcons = ['monitor', 'layout-dashboard', 'brain-circuit'];
-  const serviceAnchors = ['websites', 'apps', 'ai'];
-  const serviceBullets = [
-    ['Positioning & copy', 'UI/UX design', 'Fast, SEO-ready build', 'Booking, quote & enquiry flows'],
-    ['Client & patient portals', 'Admin dashboards', 'Workflow & approvals', 'Payments, roles & audit logs'],
-    ['Website & WhatsApp assistants', 'Document intelligence', 'Lead follow-up automation', 'Internal AI copilots'],
-  ];
+  const featured = (p.projects.filter((x) => x.featured).length ? p.projects.filter((x) => x.featured) : p.projects).slice(0, 3);
+  const cards = ctx.get('home.bento.cards').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
+  const bobPoints = ctx.get('home.bob.points').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length === 2);
+  const shot = mediaUrl(ctx.get('home.hero.shot')) || '/assets/home/hero-clinic.webp';
+  const H = ({ text, cls = 'h-display' }: { text: string; cls?: string }) => <Lines text={text} tag="h2" class={cls} />;
   return (
-    <Layout lang={lang} ctx={ctx} path="/" kind="home" intro schema={schema} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
-      {/* ── hero ── */}
-      <section class="hero" data-hero>
-        <div class="hero-bg" aria-hidden="true"><div class="hero-light"></div></div>
-        <div class="wrap hero-inner">
-          <p class="hero-kicker reveal">{ctx.season?.greeting ? <span class="season-greet">{ctx.season.greeting}</span> : ctx.get('home.hero.kicker')}</p>
+    <Layout lang={lang} ctx={ctx} path="/" kind="home" schema={schema} preloadImage={shot} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
+      {/* ── hero: words, one button, then the product ── */}
+      <section class="hero hero-shot" data-hero>
+        <div class="wrap">
+          {ctx.season?.greeting ? <p class="hero-kicker reveal"><span class="season-greet">{ctx.season.greeting}</span></p> : ctx.get('home.hero.kicker') ? <p class="hero-kicker reveal">{ctx.get('home.hero.kicker')}</p> : null}
           <Lines text={ctx.get('home.hero.title')} class="hero-title" />
-          <div class="hero-grid">
-            <p class="hero-copy reveal" style="--d:.35s">{ctx.get('home.hero.sub')}</p>
-            <div class="hero-actions reveal" style="--d:.5s">
-              <a class="btn btn-primary" href={href(lang, '/contact')}>{ctx.get('home.hero.cta')} {icon('arrow-up-right', { size: 16 })}</a>
-              <a class="btn btn-ghost" href={href(lang, '/work')}>{ctx.get('home.hero.cta2')} {icon('arrow-right', { size: 16 })}</a>
-            </div>
+          <p class="hero-copy reveal" style="--d:.3s">{ctx.get('home.hero.sub')}</p>
+          <div class="hero-actions reveal" style="--d:.45s">
+            <a class="btn btn-primary btn-glow" href={href(lang, '/marketplace')}>{ctx.get('home.hero.cta')} {icon('arrow-right', { size: 15 })}</a>
+            <a class="btn btn-ghost" href={href(lang, '/contact')}>{ctx.get('home.hero.cta2')}</a>
           </div>
         </div>
-        <div class="hero-foot wrap reveal" style="--d:.7s">
-          <div class="hero-stats">{stats.map(([v, l]) => <div><strong>{v}</strong><span>{l}</span></div>)}</div>
-          <div class="hero-scroll" aria-hidden="true">{icon('arrow-down', { size: 16 })} <span>Scroll</span></div>
+        <div class="hero-stage">
+          <div class="hero-glow" aria-hidden="true"></div>
+          <figure class="hero-frame">
+            <picture>
+              <source media="(max-width: 760px)" srcset={shot.endsWith('hero-clinic.webp') ? '/assets/home/phone-clinic-desk.webp' : shot} />
+              <img src={shot} alt={ctx.get('home.hero.caption')} width="1800" height="1108" fetchpriority="high" decoding="async" />
+            </picture>
+            <figcaption>{ctx.get('home.hero.caption')}</figcaption>
+          </figure>
+        </div>
+        <div class="wrap ticker-row" aria-hidden="true">
+          <span class="ticker-label">Everything a business needs online:</span>
+          <div class="ticker"><div class="ticker-track">{[0, 1].map(() => ctx.list('home.ticker').map((s) => <span>{s}<i></i></span>))}</div></div>
         </div>
       </section>
 
-      {/* ── capabilities ticker + client logos ── */}
-      <div class="ticker" aria-hidden="true"><div class="ticker-track">{[0, 1].map(() => ctx.list('home.ticker').map((s) => <span>{s}<i></i></span>))}</div></div>
-      <section class="logos wrap">
-        <p class="logos-label">Trusted by teams in logistics, healthcare, education, energy and Web3</p>
-        <div class="logo-row">{CLIENT_LOGOS.map((l) => <img src={l.src} alt={`${l.name} logo`} loading="lazy" height="28" />)}</div>
-      </section>
-
-      {/* ── featured work ── */}
-      <Section n="01" label={t(lang, 'nav.work')} title={ctx.get('home.work.title')} id="work" right={<a class="link" href={href(lang, '/work')}>All work {icon('arrow-right', { size: 15 })}</a>}>
-        <div class="work-list">{featured.map((x, i) => <WorkRow p={x} lang={lang} i={i} />)}</div>
-      </Section>
-
-      {/* ── services: stacked story cards ── */}
-      <section class="section section-dark" id="services">
+      {/* ── light room: capabilities bento with real clips ── */}
+      <section class="room room-light" id="services">
         <div class="wrap">
-          <Head n="02" label={t(lang, 'nav.services')} title={ctx.get('home.services.title')} lead={ctx.get('home.services.lead')} />
-          <div class="stack">
-            {services.map((k, i) => (
-              <article class="stack-card reveal" style={`--i:${i}`} id={`home-${serviceAnchors[i]}`}>
-                <div class="stack-head"><span class="stack-n">0{i + 1}</span>{icon(serviceIcons[i]!, { size: 26, stroke: 1.5, class: 'stack-ic' })}</div>
-                <div class="stack-body">
-                  <h3>{ctx.get(`${k}.title`)}</h3>
-                  <p>{ctx.get(`${k}.body`)}</p>
-                  <ul class="ticks">{serviceBullets[i]!.map((b) => <li>{icon('check', { size: 14 })}{b}</li>)}</ul>
-                  <a class="link" href={href(lang, `/services#${serviceAnchors[i]}`)}>How we do it {icon('arrow-right', { size: 15 })}</a>
-                </div>
+          <div class="room-head">
+            <H text={ctx.get('home.bento.title')} />
+            <p class="room-lead reveal">{ctx.get('home.bento.lead')}</p>
+          </div>
+          <div class="bento">
+            {cards.map(([title, text, media], i) => (
+              <article class={`bento-card reveal ${i % 4 === 1 || i % 4 === 2 ? 'wide' : ''}`} style={`--d:${(i % 2) * 0.12}s`}>
+                <div class="bento-media">{media ? (/\.(mp4|webm)$/i.test(media) ? <video data-src={mediaUrl(media)!} muted loop playsinline preload="none" aria-hidden="true"></video> : <img src={mediaUrl(media)!} alt="" loading="lazy" />) : null}</div>
+                <p class="bento-text"><strong>{title}</strong> {text}</p>
               </article>
             ))}
           </div>
+          <div class="room-links reveal">
+            <a class="link" href={href(lang, '/services')}>{t(lang, 'nav.services')} {icon('arrow-right', { size: 15 })}</a>
+          </div>
         </div>
       </section>
 
-      {/* ── marketplace ── */}
-      {p.products.length ? (
-        <Section n="03" label={t(lang, 'nav.marketplace')} title={ctx.get('home.market.title')} lead={ctx.get('home.market.lead')} id="marketplace" right={<a class="link" href={href(lang, '/marketplace')}>{t(lang, 'cta.browse')} {icon('arrow-right', { size: 15 })}</a>}>
-          <div class="product-grid">{p.products.slice(0, 3).map((x) => <ProductCard p={x} lang={lang} />)}</div>
-        </Section>
-      ) : null}
+      {/* ── dark room: marketplace ── */}
+      <section class="room room-dark" id="marketplace">
+        <div class="wrap">
+          <div class="room-head">
+            <H text={ctx.get('home.market.title')} />
+            <p class="room-lead reveal">{ctx.get('home.market.lead')}</p>
+          </div>
+          <div class="shelf">
+            {p.products.slice(0, 3).map((x, i) => (
+              <a class="shelf-item reveal" style={`--d:${i * 0.1}s`} href={href(lang, `/marketplace/${x.slug}`)}>
+                <div class="shelf-shot">{productShot(x) ? <img src={productShot(x)!} alt="" loading="lazy" /> : <div class="product-media-empty">{icon('package', { size: 28 })}</div>}</div>
+                <div class="shelf-body">
+                  <h3>{x.name}</h3>
+                  <p>{x.tagline}</p>
+                  <span class="shelf-price">{money(x.price_ngn_monthly, 'NGN')}<small>{t(lang, 'market.month')}</small> <em>· live in {x.delivery_days} days</em></span>
+                </div>
+              </a>
+            ))}
+          </div>
+          <div class="room-links reveal"><a class="btn btn-ghost btn-pill" href={href(lang, '/marketplace')}>{t(lang, 'nav.marketplace')} {icon('arrow-right', { size: 15 })}</a></div>
+        </div>
+      </section>
 
-      {/* ── process ── */}
-      <Section n="04" label="Process" title={ctx.get('home.process.title')} id="process" class="section-tight">
-        <ol class="process">
-          {PROCESS.map(([a, b, c], i) => <li class="reveal" style={`--d:${i * 0.08}s`}><span>{a}</span><h3>{b}</h3><p>{c}</p></li>)}
-        </ol>
-      </Section>
+      {/* ── light room: work with device mockups ── */}
+      <section class="room room-light room-haze" id="work">
+        <div class="wrap">
+          <div class="room-head">
+            <H text={ctx.get('home.work.title')} />
+            <p class="room-lead reveal">{ctx.get('home.work.lead')}</p>
+          </div>
+          <div class="work-grid">
+            {featured.map((x, i) => { const img = shotOf(x); return (
+              <a class={`work-card reveal ${i === 0 ? 'big' : ''}`} style={`--d:${i * 0.08}s`} href={href(lang, `/work/${x.slug}`)}>
+                <div class="work-shot">{img ? <img src={img} alt={`${x.title} — screenshot`} loading="lazy" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
+                <div class="work-cap"><strong>{x.title}</strong><span>{[x.type, x.industry].filter(Boolean).join(' · ')}</span></div>
+              </a>
+            ); })}
+          </div>
+          <div class="room-links reveal"><a class="link" href={href(lang, '/work')}>{t(lang, 'nav.work')} {icon('arrow-right', { size: 15 })}</a></div>
+        </div>
+      </section>
 
-      {/* ── testimonials ── */}
+      {/* ── dark room: Bob ── */}
+      <section class="room room-dark room-bob" id="bob">
+        <div class="wrap bob-split">
+          <div class="bob-copy">
+            <H text={ctx.get('home.bob.title')} />
+            <p class="room-lead reveal">{ctx.get('home.bob.lead')}</p>
+            <ul class="bob-points">{bobPoints.map(([a, b], i) => <li class="reveal" style={`--d:${i * 0.1}s`}><strong>{a}</strong> {b}</li>)}</ul>
+            <div class="room-links reveal"><button type="button" class="btn btn-primary btn-glow" data-bob-prompt="What can you do?">Try Bob {icon('arrow-right', { size: 15 })}</button></div>
+          </div>
+          <div class="bob-stage reveal">
+            <div class="bob-stage-glow" aria-hidden="true"></div>
+            <div class="bento-card"><div class="bento-media tall"><video data-src="/assets/home/bob.mp4" muted loop playsinline preload="none" aria-hidden="true"></video></div></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── quotes (short) ── */}
       {p.testimonials.length ? (
-        <Section n="05" label="Clients" title={ctx.get('home.testimonials.title')} id="testimonials" class="section-dark">
-          <div class="quotes" data-quotes>
-            <div class="quotes-track" tabindex={0} aria-label="Client testimonials, scroll sideways">{p.testimonials.map((x, i) => <Testimonial x={x} i={i} />)}</div>
-            <div class="quotes-nav"><button type="button" data-prev aria-label="Previous">{icon('arrow-left', { size: 18 })}</button><span data-quotes-pos>1 / {p.testimonials.length}</span><button type="button" data-next aria-label="Next">{icon('arrow-right', { size: 18 })}</button></div>
+        <section class="room room-dark room-quotes" id="testimonials">
+          <div class="wrap">
+            <div class="quotes" data-quotes>
+              <div class="quotes-track" tabindex={0} aria-label="Client testimonials, scroll sideways">{p.testimonials.map((x, i) => <Testimonial x={x} i={i} />)}</div>
+              <div class="quotes-nav"><button type="button" data-prev aria-label="Previous">{icon('arrow-left', { size: 18 })}</button><span data-quotes-pos>1 / {p.testimonials.length}</span><button type="button" data-next aria-label="Next">{icon('arrow-right', { size: 18 })}</button></div>
+            </div>
           </div>
-        </Section>
+        </section>
       ) : null}
 
-      {/* ── faq ── */}
-      <Section n="06" label="FAQ" title={ctx.get('home.faq.title')} id="faq" class="section-tight">
-        <div class="faq reveal">{faqs.map(([q, a]) => <details><summary>{q}{icon('chevron-down', { size: 18 })}</summary><p>{a}</p></details>)}</div>
-      </Section>
-
-      {/* ── insights ── */}
-      {p.posts.length ? (
-        <Section n="07" label={t(lang, 'nav.insights')} title="Useful thinking for better digital decisions." class="section-tight" right={<a class="link" href={href(lang, '/insights')}>All insights {icon('arrow-right', { size: 15 })}</a>}>
-          <div class="post-grid">{p.posts.map((x) => (
-            <a class="post reveal" href={href(lang, `/insights/${x.slug}`)}><span class="post-meta">{x.category} · {x.published_at?.slice(0, 10)}</span><h3>{x.title}</h3><p>{x.excerpt}</p><span class="link">Read {icon('arrow-right', { size: 14 })}</span></a>
-          ))}</div>
-        </Section>
-      ) : null}
-
-      {/* ── start a project ── */}
-      <section class="section" id="contact">
-        <div class="wrap contact-split">
-          <div class="reveal">
-            <p class="head-rule"><span>08 — Start a project</span></p>
-            <h2 class="h2">{ctx.get('contact.title')}</h2>
-            <p class="lead">{ctx.get('contact.sub')}</p>
-            <a class="contact-email" href="mailto:info@ferrnagency.com">info@ferrnagency.com {icon('arrow-up-right', { size: 20 })}</a>
+      {/* ── closing ── */}
+      <section class="room room-dark room-close" id="contact">
+        <div class="close-glow" aria-hidden="true"></div>
+        <div class="wrap close-inner">
+          <H text={ctx.get('home.cta.title')} cls="h-display center" />
+          <p class="room-lead center reveal">{ctx.get('home.cta.lead')}</p>
+          <div class="hero-actions center reveal">
+            <a class="btn btn-primary btn-glow" href={href(lang, '/contact')}>{t(lang, 'cta.start')} {icon('arrow-right', { size: 15 })}</a>
+            <a class="btn btn-ghost" href="https://cal.com/ferrn-agency" target="_blank" rel="noopener">Book a 20-minute call</a>
           </div>
-          <ContactForm lang={lang} ctx={ctx} />
+          <p class="close-mail"><a href="mailto:info@ferrnagency.com">info@ferrnagency.com</a></p>
         </div>
       </section>
     </Layout>

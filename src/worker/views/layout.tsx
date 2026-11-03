@@ -12,7 +12,7 @@ export const MARK_PATH = 'M163.419 0V163.419H0V109.064H107.208V52.9022H17.0028V0
 
 type LayoutProps = {
   lang: Lang; path: string; title: string; description: string; children: Child;
-  ctx?: SiteCtx; schema?: unknown; noindex?: boolean; ogImage?: string; theme?: 'dark' | 'light';
+  ctx?: SiteCtx; schema?: unknown; noindex?: boolean; ogImage?: string; theme?: 'dark' | 'light'; preloadImage?: string;
   /** page family for the transition + nav state */
   kind?: string; intro?: boolean;
 };
@@ -53,6 +53,7 @@ export function Layout(p: LayoutProps) {
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="preload" href="/fonts/poppins-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="preload" href="/fonts/poppins-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin="" />
+        {p.preloadImage ? <link rel="preload" href={p.preloadImage} as="image" fetchpriority="high" /> : null}
         <link rel="stylesheet" href="/fonts/fonts.css" />
         {raw(`<script>window.ferrnLoadGA=function(){if(window.__ga||!/(^|\\.)ferrnagency\\.com$/.test(location.hostname))return;window.__ga=1;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-XYT9F1DHSF';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-XYT9F1DHSF',{anonymize_ip:true});};try{if(localStorage.getItem('ferrn-consent')==='all')window.ferrnLoadGA();}catch(e){}</script>`)}
         <link rel="stylesheet" href={`/assets/site.css?v=${ASSET_V}`} />

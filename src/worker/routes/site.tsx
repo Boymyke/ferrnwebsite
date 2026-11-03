@@ -47,7 +47,7 @@ export function siteRoutes(lang: Lang) {
   app.get('/', async (c) => {
     const [ctx, projects, products, testimonials, posts] = await Promise.all([
       ctxOf(c), loadProjects(c.env),
-      all<ProductRow>(c.env.DB, `SELECT ${PRODUCT_COLS} FROM products WHERE published = 1 ORDER BY sort LIMIT 3`),
+      all<ProductRow>(c.env.DB, `SELECT ${PRODUCT_COLS} FROM products WHERE published = 1 AND (cover IS NOT NULL OR demo_url IS NOT NULL) ORDER BY sort LIMIT 3`),
       all<TestimonialRow>(c.env.DB, TESTIMONIALS).catch(() => all<TestimonialRow>(c.env.DB, 'SELECT id, name, role, quote, avatar FROM testimonials WHERE published = 1 ORDER BY sort')),
       all<PostRow>(c.env.DB, "SELECT slug, title, category, excerpt, published_at FROM posts WHERE status = 'published' ORDER BY published_at DESC LIMIT 3"),
     ]);
