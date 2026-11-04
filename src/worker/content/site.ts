@@ -9,13 +9,14 @@ export const CLIENT_LOGOS: { name: string; file: string; w: number }[] = [
 
 /** Home showreel: live client sites, captured full-page into R2 (Studio → POST /api/studio/capture → reel/<slug>.webp). */
 export const REEL: { name: string; slug: string; url: string; work?: string }[] = [
-  { name: 'Gromzia', slug: 'gromzia', url: 'https://www.gromzialtd.com/', work: 'gromzia' },
   { name: 'Synergix Africa', slug: 'synergix', url: 'https://www.synergixafrica.com/', work: 'synergix' },
-  { name: 'Aroda Group', slug: 'aroda', url: 'https://www.arodagroup.com/', work: 'aroda' },
   { name: 'MPI Africa', slug: 'mpi', url: 'https://www.mpiafrica.com/', work: 'mpi' },
+  { name: 'Gromzia', slug: 'gromzia', url: 'https://www.gromzialtd.com/', work: 'gromzia' },
+  { name: 'Relay — freight app', slug: 'relay', url: 'https://freight-app1.netlify.app/', work: 'relay' },
   { name: 'Insightblitz', slug: 'insightblitz', url: 'https://insightblitz.io/', work: 'insightblitz' },
-  { name: 'Fashion Fusion Africa', slug: 'fashion-fusion-africa', url: 'https://fashionfusionafrica.com/', work: 'fashion-fusion-africa' },
 ];
+// Not in the reel: arodagroup.com and eha.partnersnigeria.org show a bot check to the capture browser;
+// fashionfusionafrica.com refused the connection (4 Nov). Re-try them with POST /api/studio/capture later.
 
 export const STATS = [
   { value: 50, suffix: '+', label: 'projects across websites, web applications and AI systems' },
