@@ -39,3 +39,14 @@ export const SOCIALS = [
   ['LinkedIn', 'https://www.linkedin.com/company/109135329/'],
   ['TikTok', 'https://www.tiktok.com/@ferrnagency'],
 ];
+
+/** Control-centre music. Free tracks from Pixabay (Pixabay Content License — free to use on the site, no
+ *  attribution required; we credit anyway). Files live in R2 under music/ and stream from /media/. */
+export const MUSIC: { title: string; artist: string; src: string; length: string; page: string }[] = [
+  { title: 'Calm Ambient', artist: 'VelarioMusic', src: '/media/music/2026-11/3f128b2d8e5a.mp3', length: '3:32', page: 'https://pixabay.com/music/ambient-calm-ambient-613378/' },
+  { title: 'Warm Story', artist: 'Strawberry_Candy', src: '/media/music/2026-11/f24ee0306caf.mp3', length: '1:56', page: 'https://pixabay.com/music/corporate-chill-advertising-music-warm-story-627308/' },
+  { title: 'Chill Downtempo', artist: 'AtlasAudio', src: '/media/music/2026-11/ec51e39231bf.mp3', length: '2:54', page: 'https://pixabay.com/music/lofi-chill-downtempo-613513/' },
+  { title: 'Chill Ambient', artist: 'VelarioMusic', src: '/media/music/2026-11/742c082d4378.mp3', length: '3:44', page: 'https://pixabay.com/music/ambient-chill-ambient-589693/' },
+  { title: 'Beautiful Chill', artist: 'AtlasAudio', src: '/media/music/2026-11/e9cd8d124ba9.mp3', length: '1:45', page: 'https://pixabay.com/music/ambient-beautiful-chill-589968/' },
+  { title: 'Chill Beats Instrumental', artist: 'Sub_Clair', src: '/media/music/2026-11/0effdcd9a119.mp3', length: '2:39', page: 'https://pixabay.com/music/beats-chill-beats-instrumental-628039/' },
+];

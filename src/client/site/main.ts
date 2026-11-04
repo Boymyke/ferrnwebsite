@@ -10,16 +10,13 @@ const lang = document.body.dataset.lang || 'en';
 const S: Strings = JSON.parse(document.body.dataset.i18n || '{}');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ── intro: "Websites? / Web apps? / AI automations?" type in and out → "all in Ferrn" → the mark writes itself
-   in orange (bottom-left → right → top), shines, fades → an orange curtain drops, then a black one → the page is
-   revealed with a soft bounce. Once per session; Skip or any key ends it. ── */
+/* ── intro: "Websites? / Web apps? / AI automations?" type in and out → "all in FERRN" → an orange curtain drops,
+   a black one follows, and both carry on down to reveal the page. Once per session; Escape ends it. ── */
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function runIntro(done: () => void) {
   const intro = $('.intro');
   if (!intro || !html.classList.contains('play-intro')) return done();
-  const text = $('[data-intro-text]', intro)!, typeBox = $('.intro-type', intro)!, mark = $('.intro-mark', intro)!;
-  const path = $<SVGPathElement>('.intro-mark-path', intro);
-  if (path) intro.style.setProperty('--len', String(Math.ceil(path.getTotalLength()) + 2));
+  const text = $('[data-intro-text]', intro)!, typeBox = $('.intro-type', intro)!;
   let finished = false, skipped = false;
   const finish = () => {
     if (finished) return;
@@ -28,28 +25,20 @@ function runIntro(done: () => void) {
     html.classList.remove('play-intro');
     done();
   };
-  const skip = () => { skipped = true; finish(); };
-  $('[data-intro-skip]', intro)?.addEventListener('click', skip);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !finished) skip(); }, { once: true });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !finished) { skipped = true; finish(); } }, { once: true });
   const type = async (word: string, speed: number) => { for (let i = 1; i <= word.length && !skipped; i++) { text.textContent = word.slice(0, i); await wait(speed); } };
   const untype = async (speed: number) => { while (text.textContent && !skipped) { text.textContent = text.textContent.slice(0, -1); await wait(speed); } };
-  const cls = (el: Element, c: string) => el.classList.add(c);
   (async () => {
     await wait(250);
     for (const w of (intro.dataset.introWords || '').split('|')) { await type(w, 38); await wait(360); await untype(14); await wait(100); }
-    typeBox.classList.add('final');
-    await type(intro.dataset.introFinal || 'all in Ferrn', 44); await wait(600);
-    typeBox.classList.add('gone'); await wait(300);
-    cls(mark, 'show'); cls(mark, 'write'); await wait(1050);            // writes in: bottom-left → right → top
-    cls(mark, 'filled'); await wait(200); cls(mark, 'unwrite'); await wait(720); // the stroke writes out, the mark stays
-    cls(mark, 'shine'); await wait(850);
-    cls(mark, 'fade'); await wait(350);
-    cls($('.intro-drop-orange', intro)!, 'down'); await wait(480);
-    cls($('.intro-drop-black', intro)!, 'down'); await wait(520);
-    cls(intro, 'away'); await wait(300);
+    await type(intro.dataset.introFinal || 'all in FERRN', 44); await wait(700);
+    intro.classList.add('drop');          // orange, then black, fall over the words…
+    await wait(1250);
+    intro.classList.add('away');          // …and the whole stack keeps falling, uncovering the page
+    await wait(900);
     finish();
   })().catch(finish);
-  setTimeout(finish, 14000); // safety net
+  setTimeout(finish, 12000); // safety net
 }
 
 /* ── reveals: lines (gradient mask), text clips, fades, counters, wordmark ── */
@@ -104,12 +93,15 @@ function motion() {
   }
   const para = $$<HTMLElement>('[data-parallax] img');
   const nav = $('[data-nav]');
+  const lightRooms = $$('.room-light, .section-light');
   let last = scrollY, ticking = false;
   const onScroll = () => {
     ticking = false;
     const y = scrollY;
     if (nav) {
-      nav.classList.toggle('solid', y > 24);
+      // No bar behind the nav: it floats. Over a light section its ink flips so it stays readable.
+      const mid = 36;
+      nav.classList.toggle('on-light', lightRooms.some((el) => { const r = el.getBoundingClientRect(); return r.top <= mid && r.bottom >= mid; }));
       nav.classList.toggle('hide', y > 320 && y > last && !document.body.classList.contains('menu-open'));
     }
     if (!reduced) for (const img of para) {
@@ -185,30 +177,47 @@ function clock() {
     const d = new Date();
     const date = new Intl.DateTimeFormat(navigator.language || 'en', { weekday: 'short', day: 'numeric', month: 'short' }).format(d);
     const hh = String(d.getHours()).padStart(2, '0'), mm = String(d.getMinutes()).padStart(2, '0');
-    el.innerHTML = `${date} · <b>${hh}<i>:</i>${mm}</b>`;
+    el.innerHTML = `<span class="nav-date">${date} · </span><b>${hh}:${mm}</b>`;
     (el as HTMLTimeElement).dateTime = d.toISOString();
   };
   tick(); setInterval(tick, 10_000);
 }
 function geo() {
   const el = $('[data-geo]'); if (!el) return;
-  const show = (code: string, city?: string | null) => {
-    let name = code;
-    try { name = new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' }).of(code) || code; } catch {}
-    el.textContent = city ? `${city}, ${name}` : name;
+  const flag = $<HTMLImageElement>('.nav-flag', el)!, name = $('[data-geo-name]', el)!;
+  const emoji = (cc: string) => cc.toUpperCase().replace(/./g, (ch) => String.fromCodePoint(127397 + ch.charCodeAt(0)));
+  const show = (code: string) => {
+    if (!/^[A-Z]{2}$/i.test(code) || code === 'XX' || code === 'T1') return;
+    let country = code;
+    try { country = new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' }).of(code.toUpperCase()) || code; } catch {}
+    name.textContent = country;
+    // Round sticker-style flag (HatScripts circle-flags, MIT); falls back to the emoji flag if it can't load.
+    flag.onerror = () => { const s = document.createElement('span'); s.className = 'nav-flag-emoji'; s.textContent = emoji(code); flag.replaceWith(s); };
+    flag.src = `https://cdn.jsdelivr.net/gh/HatScripts/circle-flags@2.7.0/flags/${code.toLowerCase()}.svg`;
+    flag.alt = '';
     el.hidden = false;
   };
-  try { const c = sessionStorage.getItem('ferrn-geo'); if (c) { const g = JSON.parse(c); if (g.country) show(g.country, g.city); } } catch {}
-  fetch('/api/geo', { cache: 'no-store' }).then((r) => r.json()).then((g: { country?: string; city?: string }) => {
+  try { const c = sessionStorage.getItem('ferrn-geo'); if (c) { const g = JSON.parse(c); if (g.country) return show(g.country); } } catch {}
+  fetch('/api/geo', { cache: 'no-store' }).then((r) => r.json()).then((g: { country?: string }) => {
     if (!g?.country) return;
-    try { sessionStorage.setItem('ferrn-geo', JSON.stringify(g)); } catch {}
-    show(g.country, g.city);
+    try { sessionStorage.setItem('ferrn-geo', JSON.stringify({ country: g.country })); } catch {}
+    show(g.country);
   }).catch(() => {});
 }
 
 function toast(msg: string) {
   let t = $('.cc-toast'); if (!t) { t = document.createElement('div'); t.className = 'cc-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
   t.textContent = msg; t.classList.add('show'); setTimeout(() => t!.classList.remove('show'), 1800);
+}
+
+/* Reading guide: a soft band that follows the pointer so the line being read stands out. */
+let guideEl: HTMLElement | null = null;
+const moveGuide = (e: PointerEvent) => { if (guideEl) guideEl.style.transform = `translateY(${e.clientY - 22}px)`; };
+function guide(on: boolean) {
+  if (on && !guideEl) {
+    guideEl = document.createElement('div'); guideEl.className = 'read-guide'; guideEl.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(guideEl); addEventListener('pointermove', moveGuide, { passive: true });
+  } else if (!on && guideEl) { guideEl.remove(); guideEl = null; removeEventListener('pointermove', moveGuide); }
 }
 
 function chrome() {
@@ -224,16 +233,29 @@ function chrome() {
   mq.addEventListener('change', () => { try { if (localStorage.getItem('ferrn-theme') === 'system') applyTheme('system'); } catch {} });
   $('[data-theme-toggle]')?.addEventListener('click', () => applyTheme(html.dataset.theme === 'light' ? 'dark' : 'light'));
 
-  // Accessibility switches, remembered per browser; the head script re-applies them before paint.
-  let a11y: Record<string, boolean> = {}; try { a11y = JSON.parse(localStorage.getItem('ferrn-a11y') || '{}'); } catch {}
+  // Accessibility, remembered per browser; the head script re-applies the classes before paint.
+  let a11y: Record<string, boolean | number> = {}; try { a11y = JSON.parse(localStorage.getItem('ferrn-a11y') || '{}'); } catch {}
+  const saveA11y = () => { try { localStorage.setItem('ferrn-a11y', JSON.stringify(a11y)); } catch {} };
+  const applySize = (n: number) => {
+    html.classList.toggle('a11y-text', n === 1); html.classList.toggle('a11y-text2', n === 2);
+    $$('[data-text-size]').forEach((b) => b.setAttribute('aria-checked', String(Number(b.dataset.textSize) === n)));
+  };
+  applySize(Number(a11y.size) || 0);
+  $$('[data-text-size]').forEach((b) => b.addEventListener('click', () => { a11y.size = Number(b.dataset.textSize); applySize(a11y.size); saveA11y(); }));
+  const setFlag = (k: string, on: boolean) => {
+    html.classList.toggle('a11y-' + k, on);
+    $(`[data-a11y="${k}"]`)?.setAttribute('aria-pressed', String(on));
+    if (k === 'media') $$<HTMLVideoElement>('video').forEach((v) => (on ? v.pause() : v.autoplay && v.play().catch(() => {})));
+    if (k === 'guide') guide(on);
+  };
   $$('[data-a11y]').forEach((b) => {
     const k = b.dataset.a11y!;
-    b.setAttribute('aria-pressed', String(!!a11y[k]));
-    b.addEventListener('click', () => {
-      a11y[k] = !a11y[k]; b.setAttribute('aria-pressed', String(a11y[k]));
-      html.classList.toggle('a11y-' + k, a11y[k]);
-      try { localStorage.setItem('ferrn-a11y', JSON.stringify(a11y)); } catch {}
-    });
+    setFlag(k, !!a11y[k]);
+    b.addEventListener('click', () => { a11y[k] = !a11y[k]; setFlag(k, !!a11y[k]); saveA11y(); });
+  });
+  $('[data-a11y-reset]')?.addEventListener('click', () => {
+    Object.keys(a11y).forEach((k) => k !== 'size' && setFlag(k, false));
+    a11y = {}; applySize(0); saveA11y();
   });
 
   // Control centre.

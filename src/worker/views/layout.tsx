@@ -1,7 +1,7 @@
 import type { Child } from 'hono/jsx';
 import { raw } from 'hono/html';
 import { LANGS, t, type Lang } from '../content/i18n';
-import { SOCIALS } from '../content/site';
+import { MUSIC, SOCIALS } from '../content/site';
 import { icon } from '../lib/icons';
 import type { SiteCtx } from '../lib/content';
 import { ASSET_V } from '../version';
@@ -59,12 +59,12 @@ export function Layout(p: LayoutProps) {
         <link rel="stylesheet" href="/fonts/fonts.css" />
         {raw(`<script>window.ferrnLoadGA=function(){if(window.__ga||!/(^|\\.)ferrnagency\\.com$/.test(location.hostname))return;window.__ga=1;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-XYT9F1DHSF';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-XYT9F1DHSF',{anonymize_ip:true});};try{if(localStorage.getItem('ferrn-consent')==='all')window.ferrnLoadGA();}catch(e){}</script>`)}
         <link rel="stylesheet" href={`/assets/site.css?v=${ASSET_V}`} />
-        {raw(`<script>(function(){try{var d=document.documentElement,t=localStorage.getItem('ferrn-theme');if(t==='system')d.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';else if(t)d.dataset.theme=t;var a=JSON.parse(localStorage.getItem('ferrn-a11y')||'{}');for(var k in a)if(a[k])d.classList.add('a11y-'+k);d.classList.add('js');${p.intro ? "if(!sessionStorage.getItem('ferrn-intro')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('play-intro');" : ''}}catch(e){}})();</script>`)}
+        {raw(`<script>(function(){try{var d=document.documentElement,t=localStorage.getItem('ferrn-theme');if(t==='system')d.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';else if(t)d.dataset.theme=t;var a=JSON.parse(localStorage.getItem('ferrn-a11y')||'{}');for(var k in a)if(a[k]&&k!=='size')d.classList.add('a11y-'+k);if(a.size==1)d.classList.add('a11y-text');if(a.size==2)d.classList.add('a11y-text2');d.classList.add('js');${p.intro ? "if(!sessionStorage.getItem('ferrn-intro')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('play-intro');" : ''}}catch(e){}})();</script>`)}
         {p.schema ? raw(`<script type="application/ld+json">${JSON.stringify(p.schema).replace(/</g, '\\u003c')}</script>`) : null}
         <script src={`/assets/site.js?v=${ASSET_V}`} defer></script>
       </head>
       <body data-lang={p.lang} data-i18n={JSON.stringify(strings)} data-idle={ctx?.get('idle.enabled') === '0' ? '0' : (ctx?.get('idle.seconds') ?? '45')}>
-        {p.intro ? <Intro lang={p.lang} /> : null}
+        {p.intro ? <Intro /> : null}
         <div class="grain" aria-hidden="true"></div>
         {season?.banner_text ? (
           <div class="season-banner" role="region" aria-label="Announcement">
@@ -86,29 +86,24 @@ export function Layout(p: LayoutProps) {
   );
 }
 
-/** Opening sequence (once per session): the questions type in and out, "all in Ferrn", the mark writes itself in
- *  orange, shines, then an orange and a black curtain drop before the page is revealed. Driven by runIntro() in main.ts. */
-function Intro({ lang }: { lang: Lang }) {
+/** Opening sequence (once per session): the questions type in and out, then "all in FERRN"; an orange curtain
+ *  and a black one drop over it and carry on down, revealing the page. Driven by runIntro() in main.ts. */
+function Intro() {
   return (
-    <div class="intro" aria-hidden="true" data-intro-words="Websites?|Web apps?|AI automations?" data-intro-final="all in Ferrn">
-      <div class="intro-stage">
-        <p class="intro-type"><span class="intro-text" data-intro-text></span><span class="intro-caret"></span></p>
-        <svg class="intro-mark" viewBox="-24 -24 212 212" width="150" height="150">
-          <defs>
-            <linearGradient id="intro-shine" x1="0" x2="1" y1="0" y2="0" gradientTransform="translate(-1)"><stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset=".5" stop-color="#fff" stop-opacity=".9" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></linearGradient>
-            <clipPath id="intro-clip"><path d={MARK_DRAW} /></clipPath>
-          </defs>
-          <path class="intro-mark-fill" d={MARK_DRAW} />
-          <path class="intro-mark-path" d={MARK_DRAW} />
-          <g clip-path="url(#intro-clip)"><rect class="intro-mark-shine" x="-40" y="-24" width="80" height="212" fill="url(#intro-shine)" /></g>
-        </svg>
-      </div>
+    <div class="intro" aria-hidden="true" data-intro-words="Websites?|Web apps?|AI automations?" data-intro-final="all in FERRN">
+      <p class="intro-type"><span class="intro-text" data-intro-text></span><span class="intro-caret"></span></p>
       <div class="intro-drop intro-drop-orange"></div>
       <div class="intro-drop intro-drop-black"></div>
-      <button class="intro-skip" type="button" data-intro-skip>{t(lang, 'skip')}</button>
     </div>
   );
 }
+
+/** Accessibility switches in the control centre → `html.a11y-<key>` (see site.css), remembered in localStorage. */
+const A11Y: [string, string, string][] = [
+  ['motion', 'Stop motion', 'zap-off'], ['contrast', 'High contrast', 'contrast'], ['links', 'Highlight links', 'underline'], ['font', 'Readable font', 'case-sensitive'],
+  ['spacing', 'Text spacing', 'text-cursor'], ['grey', 'Greyscale', 'droplet-off'], ['cursor', 'Big cursor', 'mouse-pointer-2'], ['guide', 'Reading guide', 'ruler'],
+  ['focus', 'Focus outline', 'scan'], ['media', 'Pause video', 'circle-pause'], ['images', 'Hide images', 'image-off'], ['align', 'Align left', 'text-align-start'],
+];
 
 const NAV_LINKS: [string, string, string][] = [['/', 'nav.home', 'house'], ['/work', 'nav.work', 'layout-dashboard'], ['/services', 'nav.services', 'layers'], ['/marketplace', 'nav.marketplace', 'package'], ['/about', 'nav.about', 'users'], ['/insights', 'nav.insights', 'book-open'], ['/contact', 'nav.contact', 'send']];
 
@@ -122,7 +117,6 @@ const BRAND_GLYPH: Record<string, string> = {
 function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
   const cta = ctx?.get('nav.cta') ?? t(lang, 'cta.start');
   const current = (p: string) => path === p || (p !== '/' && path.startsWith(p + '/')) ? 'page' : undefined;
-  const a11y: [string, string, string][] = [['text', 'Larger text', 'a-large-small'], ['motion', 'Reduce motion', 'zap-off'], ['contrast', 'High contrast', 'contrast'], ['links', 'Underline links', 'underline']];
   return (
     <header class="nav-shell" data-nav>
       <a class="skip-link" href="#main">Skip to content</a>
@@ -132,7 +126,7 @@ function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
         </a>
         <div class="nav-meta" aria-live="off">
           <time class="nav-clock" data-clock></time>
-          <span class="nav-geo" data-geo hidden></span>
+          <span class="nav-geo" data-geo hidden><img class="nav-flag" alt="" width="18" height="18" decoding="async" /><span data-geo-name></span></span>
         </div>
         <div class="nav-actions">
           <button class="icon-btn menu-btn" type="button" data-menu-toggle aria-label="Menu" aria-expanded="false" aria-controls="cc">{icon('menu', { size: 20 })}</button>
@@ -167,20 +161,25 @@ function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
               <div class="cc-langs" data-lang-list hidden>{LANGS.map((l) => <a href={href(l.code, path)} hreflang={l.code} data-set-lang={l.code} aria-current={l.code === lang ? 'true' : undefined}>{l.native}</a>)}</div>
             </section>
             <section class="cc-panel" aria-label="Accessibility">
-              <h4 class="cc-label">{icon('accessibility', { size: 15 })} Accessibility</h4>
+              <div class="cc-label-row"><h4 class="cc-label">{icon('accessibility', { size: 15 })} Accessibility</h4><button type="button" class="cc-reset" data-a11y-reset>{icon('rotate-ccw', { size: 13 })} Reset</button></div>
+              <div class="cc-size" role="radiogroup" aria-label="Text size">
+                <span>Text size</span>
+                {[['0', 'Default', '15'], ['1', 'Large', '18'], ['2', 'Larger', '21']].map(([v, label, px]) => <button type="button" role="radio" data-text-size={v} aria-checked={v === '0' ? 'true' : 'false'} aria-label={label}><b style={`font-size:${px}px`}>A</b></button>)}
+              </div>
               <div class="cc-tiles">
-                {a11y.map(([k, label, ic]) => <button type="button" class="cc-tile" data-a11y={k} aria-pressed="false">{icon(ic, { size: 20 })}<span>{label}</span></button>)}
+                {A11Y.map(([k, label, ic]) => <button type="button" class="cc-tile" data-a11y={k} aria-pressed="false">{icon(ic, { size: 19 })}<span>{label}</span></button>)}
               </div>
             </section>
-            <section class="cc-panel cc-music" aria-label="Music" data-music>
-              <h4 class="cc-label">{icon('disc-3', { size: 15, class: 'cc-disc' })} Music</h4>
+            <section class="cc-panel cc-music" aria-label="Music" data-music={JSON.stringify(MUSIC)}>
+              <div class="cc-label-row"><h4 class="cc-label">{icon('disc-3', { size: 15, class: 'cc-disc' })} Music</h4><a class="cc-credit" href="https://pixabay.com/music/" target="_blank" rel="noopener">via Pixabay</a></div>
               <div class="cc-player">
-                <button class="cc-play" type="button" data-music-toggle aria-label="Play ambient music" aria-pressed="false">{icon('play', { size: 18 })}</button>
-                <div class="cc-track"><b data-music-title>Ferrn ambient</b><small data-music-sub>Generated live — nothing to download</small></div>
-                <button class="icon-btn cc-next" type="button" data-music-next aria-label="Next mood">{icon('skip-forward', { size: 16 })}</button>
+                <button class="icon-btn cc-prev" type="button" data-music-prev aria-label="Previous track">{icon('skip-back', { size: 16 })}</button>
+                <button class="cc-play" type="button" data-music-toggle aria-label="Play music" aria-pressed="false">{icon('play', { size: 18 })}</button>
+                <button class="icon-btn cc-next" type="button" data-music-next aria-label="Next track">{icon('skip-forward', { size: 16 })}</button>
+                <div class="cc-track"><b data-music-title>{MUSIC[0].title}</b><small data-music-sub>{MUSIC[0].artist}</small></div>
               </div>
-              <div class="cc-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-              <input class="cc-vol" type="range" min="0" max="100" value="50" data-music-vol aria-label="Volume" />
+              <div class="cc-progress"><span data-music-time>0:00</span><input type="range" min="0" max="1000" value="0" data-music-seek aria-label="Seek" /><span data-music-dur>{MUSIC[0].length}</span></div>
+              <div class="cc-volrow">{icon('volume-2', { size: 15 })}<input class="cc-vol" type="range" min="0" max="100" value="60" data-music-vol aria-label="Volume" /></div>
             </section>
             <section class="cc-panel cc-actions" aria-label="Share and links">
               <button class="cc-row" type="button" data-share>{icon('share-2', { size: 17 })}<span>Share this page</span><small data-share-hint>Copy link</small></button>
