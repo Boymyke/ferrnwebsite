@@ -1,6 +1,6 @@
 /* Ferrn public site — progressive enhancement. Everything works without JS except Bob,
    checkout and animations. */
-import { bob } from './bob';
+import { bobLauncher, personalise, prefillContact } from './bob-launcher';
 import { music } from './music';
 import { home } from './hero';
 type Strings = Record<string, string>;
@@ -138,7 +138,7 @@ function idle() {
   const lines = $$<HTMLElement>('.idle-lines p', el);
   let timer = 0, on = false, cycle = 0, li = 0;
   const show = () => {
-    if (on || document.visibilityState !== 'visible' || $('[data-bob][data-open]') || document.body.classList.contains('menu-open') || document.querySelector('dialog[open]')) return arm();
+    if (on || document.visibilityState !== 'visible' || document.documentElement.classList.contains('bob-open') || document.documentElement.classList.contains('bob-touring') || document.body.classList.contains('menu-open') || document.querySelector('dialog[open]')) return arm();
     on = true; el.hidden = false; el.setAttribute('aria-hidden', 'false');
     requestAnimationFrame(() => el.classList.add('on'));
     li = 0; lines.forEach((l, i) => l.classList.toggle('on', i === 0));
@@ -586,7 +586,7 @@ async function softGo(url: URL, push: boolean) {
     const brand = doc.querySelector('.brand'); if (brand) $('.brand')?.setAttribute('href', brand.getAttribute('href') || '/');
     closeMenu();
     if (url.hash) document.getElementById(decodeURIComponent(url.hash.slice(1)))?.scrollIntoView(); else scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
-    observe(); clips(); forms(); pageBits(); heroPointer(); refreshScroll(); geo();
+    observe(); clips(); forms(); pageBits(); heroPointer(); refreshScroll(); geo(); personalise(); prefillContact();
     softPageview();
   };
   const vt = (document as any).startViewTransition;
@@ -597,5 +597,5 @@ async function softGo(url: URL, push: boolean) {
 html.classList.remove('no-js'); html.classList.add('js');
 consent();
 chrome(); pageBits(); clock(); geo(); forms(); motion(); season(); clips(); softNav();
-bob({ lang, S, reduced });
+bobLauncher();
 runIntro(() => { observe(); idle(); });

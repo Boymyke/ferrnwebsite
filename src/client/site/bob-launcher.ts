@@ -1,0 +1,95 @@
+/* Bob's launcher — the only part of Bob in the main bundle. A ghost that floats, blinks and watches the
+   pointer. Clicking it (or anything with data-bob-prompt) loads the full assistant (/assets/bob.js + bob.css)
+   once. Also: the visitor's first name personalises a few headlines, and the contact form picks up what the
+   guided tour collected. */
+const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector<T>(s);
+const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
+
+type BobApi = { open: (mode?: string) => void; ask: (q: string) => void; resume: () => void };
+declare global { interface Window { FerrnBob?: BobApi; __ferrnBobLoading?: Promise<BobApi> } }
+
+export function loadBob(): Promise<BobApi> {
+  if (window.FerrnBob) return Promise.resolve(window.FerrnBob);
+  if (window.__ferrnBobLoading) return window.__ferrnBobLoading;
+  const root = $('[data-bob]');
+  const src = root?.dataset.bobSrc || '/assets/bob.js', css = root?.dataset.bobCss || '/assets/bob.css';
+  window.__ferrnBobLoading = new Promise((resolve, reject) => {
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = css; document.head.appendChild(l);
+    const s = document.createElement('script'); s.src = src; s.async = true;
+    s.onload = () => (window.FerrnBob ? resolve(window.FerrnBob) : reject(new Error('Bob did not start')));
+    s.onerror = () => { window.__ferrnBobLoading = undefined; reject(new Error('Bob could not load')); };
+    document.head.appendChild(s);
+  });
+  return window.__ferrnBobLoading;
+}
+
+/* ── first name: validation shared with the assistant ── */
+export const NAME_KEY = 'ferrn-name';
+export function readName(): string { try { return localStorage.getItem(NAME_KEY) || ''; } catch { return ''; } }
+
+/** Headlines that greet the visitor by name: "Not for show, Michael." */
+const PERSONAL = ['.hx-rest', '#services .h-display .line:last-child .line-in', '.close-glow .h-display .line:last-child .line-in', '.footer-title .grad'];
+export function personalise(name = readName()) {
+  for (const sel of PERSONAL) {
+    for (const el of $$<HTMLElement>(sel)) {
+      if (el.dataset.orig === undefined) el.dataset.orig = el.textContent || '';
+      const orig = el.dataset.orig;
+      el.textContent = name ? orig.replace(/\s*([.!?…])?\s*$/, (_m, p) => `, ${name}${p || ''}`) : orig;
+      el.classList.toggle('is-personal', !!name);
+    }
+  }
+}
+
+/** The tour leaves a prefilled message for the contact form; fill it in when the form is on the page. */
+export function prefillContact() {
+  let p: Record<string, string> | null = null;
+  try { p = JSON.parse(sessionStorage.getItem('ferrn-prefill') || 'null'); } catch {}
+  const form = $<HTMLFormElement>('form[data-form="contact"]');
+  if (!p || !form) return;
+  for (const [k, v] of Object.entries(p)) {
+    const f = form.elements.namedItem(k) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+    if (f && v && !f.value) f.value = v;
+  }
+  const more = $<HTMLDetailsElement>('.cform-more', form);
+  if (more && (p.phone || p.company || p.need)) more.open = true;
+}
+
+export function bobLauncher() {
+  const root = $('[data-bob]'); if (!root) return;
+  const btn = $<HTMLButtonElement>('[data-bob-open]', root)!;
+  const eyes = $<SVGGElement>('.ghost-eyes', root);
+  const open = (mode?: string) => {
+    root.classList.add('loading');
+    loadBob().then((b) => b.open(mode)).catch(() => { root.classList.remove('loading'); location.href = '/contact'; })
+      .finally(() => root.classList.remove('loading'));
+  };
+  btn.addEventListener('click', () => open());
+  // "Try Bob" buttons and the like: <button data-bob-prompt="…"> (empty prompt just opens, "tour" starts the tour)
+  document.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-bob-prompt]'); if (!el) return;
+    e.preventDefault();
+    const q = el.dataset.bobPrompt || '';
+    if (q === 'tour') return open('present');
+    loadBob().then((b) => { b.open('chat'); if (q) b.ask(q); }).catch(() => {});
+  });
+  // The eyes follow the pointer (cheap: one transform per frame at most).
+  if (eyes && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let raf = 0, x = 0, y = 0;
+    addEventListener('pointermove', (e) => {
+      x = e.clientX; y = e.clientY;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = btn.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const a = Math.atan2(y - cy, x - cx), d = Math.min(1, Math.hypot(x - cx, y - cy) / 300);
+        eyes.style.transform = `translate(${(Math.cos(a) * 4 * d).toFixed(1)}px, ${(Math.sin(a) * 3 * d).toFixed(1)}px)`;
+      });
+    }, { passive: true });
+  }
+  personalise();
+  prefillContact();
+  // A tour or an open chat carries on after a page change.
+  let resume = false;
+  try { resume = !!sessionStorage.getItem('ferrn-bob-tour') || sessionStorage.getItem('ferrn-bob-open') === '1'; } catch {}
+  if (resume) loadBob().then((b) => b.resume()).catch(() => {});
+}

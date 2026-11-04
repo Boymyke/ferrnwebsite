@@ -249,48 +249,21 @@ function Footer({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }
 }
 
 /** Bob: the launcher is the blob itself; the panel is a side sheet. Everything else is built in JS. */
+/** Bob: a small orange ghost bottom-right. The full assistant (chat, talk, guided tour) loads only when it is clicked. */
 function BobMount({ lang, ctx }: { lang: Lang; ctx?: SiteCtx }) {
   const name = ctx?.get('bob.name') ?? 'Bob';
   const suggestions = (ctx?.get('bob.suggestions') ?? 'What does Ferrn build?|Show me your work|Read this page to me|Can Ferrn build a patient portal?').split('|').map((s) => s.trim()).filter(Boolean);
   return (
-    <div class="bob" data-bob data-bob-voice={ctx?.bob?.voice ?? 'auto'} data-bob-name={name}>
-      <button class="bob-launch" type="button" data-bob-open aria-label={`Open ${name}, the Ferrn assistant`} aria-expanded="false">
-        <span class="bob-orb" data-bob-orb aria-hidden="true"><canvas width="112" height="112"></canvas></span>
-        <span class="bob-launch-label">{name}</span>
+    <div class="bob" data-bob data-bob-name={name} data-bob-voice={ctx?.bob?.voice ?? 'auto'} data-bob-suggest={suggestions.join('|')} data-bob-src={`/assets/bob.js?v=${ASSET_V}`} data-bob-css={`/assets/bob.css?v=${ASSET_V}`}>
+      <button class="bob-ghost" type="button" data-bob-open aria-label={`Open ${name}, the Ferrn assistant`} aria-expanded="false">
+        <svg class="ghost" viewBox="0 0 120 132" width="58" height="64" aria-hidden="true">
+          <defs><radialGradient id="ghost-g" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#ffb08a" /><stop offset=".45" stop-color="#F94406" /><stop offset="1" stop-color="#b52c00" /></radialGradient></defs>
+          <path class="ghost-body" fill="url(#ghost-g)" d="M60 6C31 6 12 28 12 58v58c0 6 6 9 11 5l9-7 9 8c4 3 8 3 12 0l7-7 7 7c4 3 8 3 12 0l9-8 9 7c5 4 11 1 11-5V58C108 28 89 6 60 6Z" />
+          <g class="ghost-eyes"><ellipse cx="44" cy="56" rx="7.5" ry="10" fill="#1a0d06" /><ellipse cx="76" cy="56" rx="7.5" ry="10" fill="#1a0d06" /><circle cx="46.5" cy="52" r="2.6" fill="#fff" /><circle cx="78.5" cy="52" r="2.6" fill="#fff" /></g>
+          <path class="ghost-mouth" d="M53 78q7 6 14 0" stroke="#1a0d06" stroke-width="3.5" fill="none" stroke-linecap="round" />
+        </svg>
+        <span class="bob-ghost-label">Ask {name}</span>
       </button>
-      <section class="bob-sheet" role="dialog" aria-label={`${name}, the Ferrn assistant`} hidden>
-        <header class="bob-head">
-          <span class="bob-orb sm" data-bob-orb aria-hidden="true"><canvas width="88" height="88"></canvas></span>
-          <div class="bob-id"><strong>{name}</strong><span data-bob-state>Ready</span></div>
-          <div class="bob-tools">
-            <button class="icon-btn" type="button" data-bob-read aria-label="Read this page aloud" title="Read this page">{icon('book-open', { size: 17 })}</button>
-            <button class="icon-btn" type="button" data-bob-settings aria-label="Voice settings" title="Voice">{icon('sliders-horizontal', { size: 17 })}</button>
-            <button class="icon-btn" type="button" data-bob-close aria-label="Close">{icon('x', { size: 18 })}</button>
-          </div>
-        </header>
-        <div class="bob-settings" data-bob-settings-panel hidden>
-          <label>Voice <select data-bob-voice-select><option value="auto">Automatic</option></select></label>
-          <label>Speed <input type="range" min="0.7" max="1.4" step="0.05" value="1" data-bob-rate /></label>
-          <label class="bob-check"><input type="checkbox" data-bob-autovoice /> Speak replies aloud</label>
-          <p class="bob-note" data-bob-voice-note></p>
-        </div>
-        <div class="bob-reader" data-bob-reader hidden>
-          <div class="bob-reader-row">
-            <button class="icon-btn" type="button" data-read-toggle aria-label="Pause">{icon('pause', { size: 16 })}</button>
-            <button class="icon-btn" type="button" data-read-restart aria-label="Restart">{icon('rotate-ccw', { size: 16 })}</button>
-            <button class="icon-btn" type="button" data-read-stop aria-label="Stop reading">{icon('square', { size: 14 })}</button>
-            <div class="bob-progress"><i data-read-progress></i></div>
-            <span class="bob-reader-pos" data-read-pos>0 / 0</span>
-          </div>
-        </div>
-        <div class="bob-log" data-bob-log aria-live="polite"></div>
-        <div class="bob-suggest" data-bob-suggest>{suggestions.map((s) => <button type="button" data-bob-ask={s}>{s}</button>)}</div>
-        <form class="bob-form" data-bob-form>
-          <button class="icon-btn bob-mic" type="button" data-bob-mic aria-label={t(lang, 'chat.mic')} title={t(lang, 'chat.mic')}>{icon('mic', { size: 17 })}</button>
-          <input name="q" autocomplete="off" maxlength={1500} placeholder={`Ask ${name} anything about Ferrn…`} aria-label="Your question" />
-          <button class="btn btn-primary btn-sm" type="submit" aria-label={t(lang, 'chat.send')}>{icon('arrow-up-right', { size: 16 })}</button>
-        </form>
-      </section>
     </div>
   );
 }

@@ -301,7 +301,7 @@ export function HomePage(p: {
             <H text={ctx.get('home.bob.title')} />
             <p class="room-lead reveal">{ctx.get('home.bob.lead')}</p>
             <ul class="bob-points">{bobPoints.map(([a, b], i) => <li class="reveal" style={`--d:${i * 0.1}s`}><strong>{a}</strong> {b}</li>)}</ul>
-            <div class="room-links reveal"><button type="button" class="btn btn-primary btn-glow" data-bob-prompt="What can you do?">Try Bob {icon('arrow-right', { size: 15 })}</button></div>
+            <div class="room-links reveal"><button type="button" class="btn btn-primary btn-glow" data-bob-prompt="tour">Take the tour with Bob {icon('arrow-right', { size: 15 })}</button><button type="button" class="btn btn-ghost" data-bob-prompt="">Chat with Bob</button></div>
           </div>
           <div class="bob-stage reveal">
             <div class="bob-stage-glow" aria-hidden="true"></div>

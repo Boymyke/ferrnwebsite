@@ -58,7 +58,7 @@ api.post('/forms/:type', async (c) => {
 api.post('/chat', async (c) => {
   if (await limited(c, 'chat', 40, 3600)) return c.json({ ok: false, message: 'You’ve sent a lot of messages — please email info@ferrnagency.com and we’ll pick it up.' }, 429);
   if (await limited(c, 'chat-day', 150, 86400)) return c.json({ ok: false, message: 'That’s the daily limit for the assistant — email info@ferrnagency.com and a person will reply.' }, 429);
-  const b = (await c.req.json().catch(() => ({}))) as { message?: string; history?: { role: string; content: string }[]; lang?: string; path?: string; session?: string };
+  const b = (await c.req.json().catch(() => ({}))) as { message?: string; history?: { role: string; content: string }[]; lang?: string; path?: string; session?: string; visitor?: string; voice?: boolean };
   const message = clamp(b.message, 1500);
   if (!message) return c.json({ ok: false, message: 'Write a message first.' }, 422);
   const lang = isLang(b.lang) ? b.lang : 'en';
@@ -96,6 +96,10 @@ api.post('/chat', async (c) => {
   try { const p = await bobPrompt(c.env, { langName, path, message }); system = p.system; hits = p.hits; }
   catch { system = await assistantSystemPrompt(c.env, { channel: 'web', langName }); }
 
+  // The visitor told Bob their first name (validated client-side; re-checked here) — and voice answers stay short.
+  const visitor = /^[\p{L}'’-]{2,12}$/u.test(String(b.visitor || '')) ? String(b.visitor) : '';
+  if (visitor) system += `\n\nThe visitor's first name is ${visitor}. Use it naturally now and then — not in every message.`;
+  if (b.voice) system += '\n\nThis answer will be spoken aloud in a live conversation: keep it to two or three short sentences, no lists, no links.';
   const history = (b.history ?? []).slice(-8).filter((m) => m.role === 'user' || m.role === 'assistant')
     .map((m) => ({ role: m.role as 'user' | 'assistant', content: clamp(m.content, 1500) }));
   const messages: ChatMessage[] = [{ role: 'system', content: system }, ...history, { role: 'user', content: message }];

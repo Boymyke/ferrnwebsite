@@ -65,6 +65,20 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Site v5 — section 3 (4 Nov): Bob, the ghost
+
+**Loading.** Only a tiny launcher is in the main bundle (`client/site/bob-launcher.ts`): an orange ghost bottom-right that floats, blinks and follows the pointer with its eyes. The assistant itself (`client/bob/index.ts` → `/assets/bob.js`, ~29 KB, plus `/assets/bob.css`) loads the first time someone opens Bob, so it costs nothing on page load. `data-bob-prompt="…"` on any button opens chat with that question; `data-bob-prompt="tour"` starts the tour.
+
+**Name.** Bob asks what to call you. First name only (two names → the first), Latin letters, 2–12 characters — numbers or symbols get "that doesn't look like a name", non-Latin scripts get a request for English letters, long names get a request for a shorter name or nickname, so nothing breaks the layout. Stored in `localStorage['ferrn-name']`; headlines then greet the visitor ("that grow your business, Michael." / "Not for show, Michael." / "Let's build what's next, Michael.") on every page. `/api/chat` receives the name (re-validated) and uses it now and then.
+
+**Chat.** Big quote-style messages (Bob's with an orange quote mark), your messages small on the right; each older message fades a little more but stays (hover brings it back). Chips: tour, read this page, suggestions. Mic for dictation. When an answer includes an action Bob acts on it: a white-glove hand flies to the matching link or section, presses it and goes there; the chat reopens on the next page with its history.
+
+**Talk.** Hands-free: tap *Start talking*, speak; Bob says a filler ("Hmm…", "Let me think…") while he fetches the answer (`voice: true` keeps answers to two or three short sentences), speaks it, and listens again. *End conversation* shows the full transcript (copy, or continue in chat). The microphone runs only while the conversation is on. Needs a browser with speech recognition (Chrome, Edge, Safari); otherwise it says so.
+
+**Present.** A guided tour of the home page (13 steps): asks your name → "sit back and relax" → Bob leaves the corner through a portal and appears on the page → highlights the hero (and plucks the first letter of the orange word, carrying it along), the growth levers, the calculator (asks your monthly visitors and sets the calculator), services (asks what you need), marketplace, work, Trusted By → offers to write to the team, asks for an email (optional) → portals to `/contact`, drops the letter into the message and types the form in (name, email, need, a message built from your answers). Nothing is sent for you. Spotlight dims the rest of the page; the caption has Pause / Next / End tour; Escape ends it. After 10 s without an answer: "Still there, Ada?"; 20 s more pauses the tour. The tour survives the page change (`sessionStorage['ferrn-bob-tour']`).
+
+**Voice.** Sound toggle in the panel (remembered). Uses `/api/tts` (Azure, when a key is set) or the device's voice; never speaks or listens until asked.
+
 ## Leads: delete and take over (4 Nov)
 
 **Delete** (Studio → Leads → open a lead → *Delete*, editors and admins). For a LeadsHunter lead the engine removes the row from the Leads sheet first, cancels every email still waiting for it and adds the address to Suppression, so the routine can't re-add or email it; then the Studio row goes, and any WhatsApp queue for it is cancelled.
