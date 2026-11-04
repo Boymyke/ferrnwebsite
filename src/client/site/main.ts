@@ -98,7 +98,7 @@ function heroPointer() {
     }, { passive: true });
   }
 }
-function refreshScroll() { para = $$<HTMLElement>('[data-parallax] img'); lightRooms = $$('.room-light, .section-light'); darkRooms = $$('.hx, .trusted'); onScrollNow(); }
+function refreshScroll() { para = $$<HTMLElement>('[data-parallax] img'); lightRooms = $$('.room-light, .section-light'); onScrollNow(); }
 function motion() {
   heroPointer();
   const nav = $('[data-nav]');

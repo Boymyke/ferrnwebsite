@@ -34,7 +34,7 @@ export const PROJECTS: Project[] = [
                 "text": "Visitors can move quickly from understanding the offer to contacting the team."
             }
         ],
-        "slug": "gromzia"
+        "image": "/media/covers/gromzia.webp", "slug": "gromzia"
     },
     {
         "title": "Synergix Africa",
@@ -68,7 +68,7 @@ export const PROJECTS: Project[] = [
                 "text": "Programs and outcomes reinforce trust."
             }
         ],
-        "slug": "synergix"
+        "image": "/media/covers/synergix.webp", "slug": "synergix"
     },
     {
         "title": "M-P Infrastructure",
@@ -102,7 +102,7 @@ export const PROJECTS: Project[] = [
                 "text": "Proof supports higher-stakes buying decisions."
             }
         ],
-        "slug": "mpi"
+        "image": "/media/covers/mpi.webp", "slug": "mpi"
     },
     {
         "title": "Insightblitz",
@@ -136,7 +136,7 @@ export const PROJECTS: Project[] = [
                 "text": "Partner and network depth reinforce execution capacity."
             }
         ],
-        "slug": "insightblitz"
+        "image": "/media/covers/insightblitz.webp", "slug": "insightblitz"
     },
     {
         "title": "Aroda",
@@ -238,7 +238,7 @@ export const PROJECTS: Project[] = [
                 "text": "Operations and billing work from one control layer."
             }
         ],
-        "slug": "relay"
+        "image": "/media/covers/relay.webp", "slug": "relay"
     },
     {
         "title": "PWAN — EHA AI Chatbot",

@@ -30,7 +30,7 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'home.bob.points', group: 'Home', label: 'Bob points (title|text per line)', type: 'textarea', default: 'Grounded answers.|Only what is on your site and in your approved notes — never invented prices or promises.\nTakes them there.|“Show me the plans” opens the right page instead of a wall of text.\nReads aloud.|Pause, restart, change the speed; the page highlights as it reads.' },
   { key: 'home.cta.title', group: 'Home', label: 'Closing headline (| = new line)', default: 'Let’s build|what’s next.' },
   { key: 'home.cta.lead', group: 'Home', label: 'Closing line', default: 'Tell us the problem. We’ll help define what should be built, and give you an honest price.' },
-  { key: 'home.trusted.title', group: 'Home', label: 'Trusted-by label', default: 'Trusted by teams in Nigeria, the UK and the US' },
+  { key: 'home.trusted.title', group: 'Home', label: 'Trusted-by label', default: 'Trusted By' },
   { key: 'home.growth.kicker', group: 'Home', label: 'Growth — kicker', default: 'Why it pays for itself' },
   { key: 'home.growth.title', group: 'Home', label: 'Growth — headline', default: 'More enquiries.|More customers.|Less chasing.' },
   { key: 'home.growth.lead', group: 'Home', label: 'Growth — paragraph', type: 'textarea', default: 'A website earns money in three places: when people find you, when they decide to contact you, and when someone follows up. We build for all three — then measure it, so you can see what changed.' },

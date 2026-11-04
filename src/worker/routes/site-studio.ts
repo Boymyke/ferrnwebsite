@@ -4,6 +4,7 @@
  * Mounted at /api/studio/site (requireUser already applied by the parent router).
  */
 import { Hono } from 'hono';
+import { captureSite } from '../lib/capture';
 import type { AppEnv, SessionUser } from '../lib/env';
 import { all, clamp, first, getSetting, newId, run, setSetting } from '../lib/db';
 import { audit } from '../lib/audit';
@@ -251,6 +252,15 @@ siteStudio.post('/projects/:id/capture', async (c) => {
   const b = (await c.req.json().catch(() => ({}))) as { url?: string };
   const live = clamp(b.url, 500) || JSON.parse(p.links_json || '{}').live;
   if (!live || !/^https?:\/\//.test(live)) return c.json({ ok: false, error: 'Add the live URL first' }, 422);
+  // First choice: our own capture with Cloudflare Browser Rendering (small WebP, first screen).
+  try {
+    const key = `projects/${p.slug}-${Date.now().toString(36)}.webp`;
+    await captureSite(c.env, live, key, 900, { wait: 2500 });
+    await run(c.env.DB, "UPDATE projects SET cover = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?", `/media/${key}`, u.name, p.id);
+    await audit(c, 'projects', p.id, 'capture', `${u.name} captured a screenshot of ${live}`);
+    await bumpContentVersion(c.env);
+    return c.json({ ok: true, cover: `/media/${key}` });
+  } catch { /* fall back to the public screenshot services */ }
   const sources = [
     `https://image.thum.io/get/width/1600/crop/1000/noanimate/${live}`,
     `https://s0.wp.com/mshots/v1/${encodeURIComponent(live)}?w=1600&h=1000`,

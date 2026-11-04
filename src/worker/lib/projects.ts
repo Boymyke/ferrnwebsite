@@ -54,4 +54,4 @@ export async function loadProject(env: Bindings, slug: string): Promise<PublicPr
 
 /** Screenshot for a project: self-hosted cover first, else a live capture (thum.io), else nothing. */
 export const shotOf = (p: { cover: string | null; live: string | null }) =>
-  p.cover ? (p.cover.startsWith('http') || p.cover.startsWith('/') ? p.cover : `/media/${p.cover}`) : p.live ? `https://image.thum.io/get/width/1400/crop/900/noanimate/${p.live}` : null;
+  p.cover ? (p.cover.startsWith('http') || p.cover.startsWith('/') ? p.cover : `/media/${p.cover}`) : p.live ? `https://image.thum.io/get/width/800/crop/500/noanimate/${p.live}` : null;

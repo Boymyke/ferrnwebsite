@@ -1,6 +1,6 @@
 import { raw } from 'hono/html';
 import { t, type Lang } from '../content/i18n';
-import { CLIENT_LOGOS, FAQS, REEL } from '../content/site';
+import { CLIENT_LOGOS, FAQS } from '../content/site';
 import type { SiteCtx } from '../lib/content';
 import { icon } from '../lib/icons';
 import { shotOf, type PublicProject } from '../lib/projects';
@@ -17,6 +17,12 @@ export type TestimonialRow = { id?: string; name: string; role: string | null; c
 export type PostRow = { slug: string; title: string; category: string | null; excerpt: string | null; published_at: string | null; cover?: string | null };
 
 export const mediaUrl = (v: string | null | undefined) => (!v ? null : v.startsWith('http') || v.startsWith('/') ? v : `/media/${v}`);
+/** A right-sized image: Cloudinary URLs get a resize + modern-format transform (a 44px avatar was a 900 KB photo). */
+export const sized = (v: string | null | undefined, w: number, h = w) => {
+  const u = mediaUrl(v); if (!u) return null;
+  return /res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(u) && !/\/upload\/[a-z]_[^/]*\//.test(u)
+    ? u.replace('/image/upload/', `/image/upload/c_fill,w_${w * 2},h_${h * 2},g_face,f_auto,q_auto/`) : u;
+};
 
 /** Headline split into lines on "|", each line revealed through a gradient mask. */
 export function Lines({ text, class: cls, tag = 'h1' }: { text: string; class?: string; tag?: 'h1' | 'h2' | 'p' }) {
@@ -92,7 +98,7 @@ export function Testimonial({ x, i }: { x: TestimonialRow; i: number }) {
         </div>
       ) : null}
       <figcaption>
-        {x.avatar ? <img src={mediaUrl(x.avatar)!} alt="" loading="lazy" width="44" height="44" /> : <span class="avatar sm">{initials(x.name)}</span>}
+        {x.avatar ? <img src={sized(x.avatar, 44)!} alt="" loading="lazy" decoding="async" width="44" height="44" /> : <span class="avatar sm">{initials(x.name)}</span>}
         <span><strong>{x.name}</strong><small>{[x.role, x.company].filter(Boolean).join(', ')}</small></span>
         {x.logo ? <img class="quote-logo" src={mediaUrl(x.logo)!} alt={x.company ?? ''} loading="lazy" height="22" /> : null}
       </figcaption>
@@ -155,8 +161,8 @@ export function HomePage(p: {
   const levers = ctx.get('home.growth.levers').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
   const H = ({ text, cls = 'h-display' }: { text: string; cls?: string }) => <Lines text={text} tag="h2" class={cls} />;
   return (
-    <Layout lang={lang} ctx={ctx} path="/" kind="home" intro schema={schema} preloadImage={`/media/reel/${REEL[0].slug}.webp`} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
-      {/* ── hero: flicking words, then a showreel of client sites under an orange halftone light ── */}
+    <Layout lang={lang} ctx={ctx} path="/" kind="home" intro schema={schema} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
+      {/* ── hero: one changing word; the orange dot texture appears only where the pointer moves ── */}
       <section class="hx" data-hero>
         <canvas class="hx-dots" data-dots aria-hidden="true"></canvas>
         <div class="wrap hx-copy">
@@ -167,39 +173,8 @@ export function HomePage(p: {
           </h1>
           <p class="hx-sub">{ctx.get('home.hero.sub')}</p>
           <div class="hx-actions">
-            <a class="btn btn-primary btn-glow" href={href(lang, '/contact')}>{ctx.get('home.hero.cta2')} {icon('arrow-up-right', { size: 15 })}</a>
+            <a class="btn btn-primary" href={href(lang, '/contact')}>{ctx.get('home.hero.cta2')} {icon('arrow-up-right', { size: 15 })}</a>
             <a class="btn btn-ghost" href={href(lang, '/work')}>See our work</a>
-          </div>
-        </div>
-        <div class="wrap hx-stage">
-          <div class="hx-reel" data-reel>
-            <div class="hx-bar">
-              <span class="hx-dots3" aria-hidden="true"><i></i><i></i><i></i></span>
-              <a class="hx-url" data-reel-url href={REEL[0].url} target="_blank" rel="noopener">{icon('lock', { size: 12 })}<span>{REEL[0].url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</span></a>
-              <span class="hx-tag">Built by Ferrn</span>
-            </div>
-            <div class="hx-screen">
-              {REEL.map((r, i) => (
-                <a class={`hx-slide ${i === 0 ? 'on' : ''}`} data-slide data-url={r.url} href={r.work ? href(lang, `/work/${r.work}`) : r.url} aria-label={`${r.name} — website built by Ferrn`} tabindex={i === 0 ? 0 : -1}>
-                  <img src={`/media/reel/${r.slug}.webp`} alt="" width="1440" height="5200" loading={i < 2 ? 'eager' : 'lazy'} decoding="async" fetchpriority={i === 0 ? 'high' : undefined} />
-                  <span class="hx-name">{r.name}</span>
-                </a>
-              ))}
-            </div>
-            <div class="hx-progress" aria-hidden="true">{REEL.map(() => <i><b></b></i>)}</div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── trusted by: every client, an endless strip ── */}
-      <section class="trusted" aria-label={ctx.get('home.trusted.title')}>
-        <p class="trusted-label">{ctx.get('home.trusted.title')}</p>
-        <div class="trusted-strip">
-          <div class="trusted-track">
-            {[0, 1].map((k) => CLIENT_LOGOS.map((l) => {
-              const ratio = l.w / 40, h = Math.round(Math.max(26, Math.min(46, 46 / Math.sqrt(ratio))));
-              return <img src={`/assets/clients/${l.file}.webp`} alt={k ? '' : l.name} aria-hidden={k ? 'true' : undefined} title={l.name === 'Client' ? undefined : l.name} height={h} width={Math.round(h * ratio)} loading="lazy" decoding="async" />;
-            }))}
           </div>
         </div>
       </section>
@@ -303,6 +278,19 @@ export function HomePage(p: {
             ); })}
           </div>
           <div class="room-links reveal"><a class="link" href={href(lang, '/work')}>{t(lang, 'nav.work')} {icon('arrow-right', { size: 15 })}</a></div>
+        </div>
+      </section>
+
+      {/* ── Trusted By: every client, an endless strip ── */}
+      <section class="trusted" aria-labelledby="trusted-title">
+        <div class="wrap"><h2 class="trusted-title reveal" id="trusted-title">{ctx.get('home.trusted.title')}</h2></div>
+        <div class="trusted-strip">
+          <div class="trusted-track">
+            {[0, 1].map((k) => CLIENT_LOGOS.map((l) => {
+              const ratio = l.w / 40, h = Math.round(Math.max(26, Math.min(46, 46 / Math.sqrt(ratio))));
+              return <img src={`/assets/clients/${l.file}.webp`} alt={k ? '' : l.name} aria-hidden={k ? 'true' : undefined} title={l.name === 'Client' ? undefined : l.name} height={h} width={Math.round(h * ratio)} loading="lazy" decoding="async" />;
+            }))}
+          </div>
         </div>
       </section>
 
