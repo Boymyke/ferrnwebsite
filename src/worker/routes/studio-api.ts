@@ -7,8 +7,9 @@ import { requireUser, sha256 } from '../lib/auth';
 import { audit, diff } from '../lib/audit';
 import { bumpContentVersion } from '../lib/cache';
 import { complete, extractJson } from '../lib/ai';
-import { engineCall, engineConfigured, syncEngine } from '../lib/engine';
+import { engineCall, engineConfigured, hasHandledBy, syncEngine } from '../lib/engine';
 import { captureSite } from '../lib/capture';
+import { fromOf } from '../lib/email';
 import { searchPlaces } from '../lib/maps';
 import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, LAGOS_AND_ABROAD, type AutoConfig } from '../lib/autoprospect';
 import { enrichProspects, placeQuery } from '../lib/maps';
@@ -284,6 +285,18 @@ studio.delete('/r/:res/:id', async (c): Promise<Response> => {
   if (!can(u, res.writeRole === 'sales' ? 'editor' : 'admin')) return c.json({ ok: false, error: 'Only admins can delete this.' }, 403);
   const before = await first<Record<string, unknown>>(c.env.DB, `SELECT * FROM ${res.table} WHERE id = ?`, id);
   if (!before) return c.json({ ok: false }, 404);
+  if (res.table === 'leads') {
+    // A LeadsHunter lead lives in the engine's sheet too: remove it there first (cancels its pending emails and
+    // suppresses the address), otherwise the next sync would bring it straight back.
+    if (before.origin === 'engine' && engineConfigured(c.env)) {
+      try {
+        const data = await engineCall(c.env, 'dashAction', ['deleteLead', { lead_id: id, by: u.name }]);
+        await c.env.CACHE.put('engine:snapshot', JSON.stringify(data), { expirationTtl: 60 * 60 * 6 });
+      } catch (e: any) { return c.json({ ok: false, error: `Couldn't remove it from LeadsHunter: ${e.message}` }, 502); }
+    }
+    await run(c.env.DB, "UPDATE wa_queue SET status = 'cancelled' WHERE status = 'pending' AND wa_id IN (SELECT wa_id FROM wa_contacts WHERE lead_id = ?)", id).catch(() => null);
+    await run(c.env.DB, 'UPDATE wa_contacts SET lead_id = NULL WHERE lead_id = ?', id).catch(() => null);
+  }
   await run(c.env.DB, `DELETE FROM ${res.table} WHERE id = ?`, id);
   await audit(c, res.table, id, 'delete', `${u.name} deleted ${res.label} “${String(before[res.title] ?? id).slice(0, 60)}”`, before, null);
   if (res.public) await bumpContentVersion(c.env);
@@ -365,7 +378,7 @@ studio.post('/engine/action', async (c): Promise<Response> => {
   const u = c.get('user')!;
   if (!can(u, 'sales')) return c.json({ ok: false, error: 'No access' }, 403);
   const b = (await c.req.json().catch(() => ({}))) as { action?: string; params?: Record<string, unknown> };
-  const allowed = ['approve', 'hold', 'cancel', 'edit', 'sendNow', 'waSent', 'resolve', 'setStatus', 'note', 'markInbox', 'setSetting', 'runNow', 'rfpStatus'];
+  const allowed = ['approve', 'hold', 'cancel', 'edit', 'sendNow', 'waSent', 'resolve', 'setStatus', 'note', 'markInbox', 'setSetting', 'runNow', 'rfpStatus', 'takeOver', 'release'];
   if (!allowed.includes(String(b.action))) return c.json({ ok: false, error: 'Unknown action' }, 400);
   if (b.action === 'setSetting' && !can(u, 'admin')) return c.json({ ok: false, error: 'Only admins change engine settings.' }, 403);
   try {
@@ -375,6 +388,31 @@ studio.post('/engine/action', async (c): Promise<Response> => {
     return c.json({ ok: true, data });
   } catch (e: any) { return c.json({ ok: false, error: e.message }, 502); }
 });
+/* ── take a lead over from the automation (or hand it back) ── */
+studio.post('/leads/:id/takeover', async (c): Promise<Response> => {
+  const u = c.get('user')!; const id = c.req.param('id');
+  if (!can(u, 'sales')) return c.json({ ok: false, error: 'No access' }, 403);
+  const b = (await c.req.json().catch(() => ({}))) as { on?: boolean };
+  const on = b.on !== false;
+  if (!(await hasHandledBy(c.env))) return c.json({ ok: false, error: 'One database update is still needed for take-over (migration 0011_lead_takeover.sql).' }, 503);
+  const lead = await first<{ id: string; company: string; origin: string }>(c.env.DB, 'SELECT id, company, origin FROM leads WHERE id = ?', id);
+  if (!lead) return c.json({ ok: false, error: 'Not found' }, 404);
+  // LeadsHunter: hold every automated email that hasn't gone out; replies come to you.
+  if (lead.origin === 'engine' && engineConfigured(c.env)) {
+    try {
+      const data = await engineCall(c.env, 'dashAction', [on ? 'takeOver' : 'release', { lead_id: id, by: u.name }]);
+      await c.env.CACHE.put('engine:snapshot', JSON.stringify(data), { expirationTtl: 60 * 60 * 6 });
+    } catch (e: any) { return c.json({ ok: false, error: `LeadsHunter didn't accept it: ${e.message}` }, 502); }
+  }
+  // WhatsApp: the bot stops answering this lead and its follow-ups are cancelled.
+  await run(c.env.DB, 'UPDATE wa_contacts SET bot_paused = ? WHERE lead_id = ?', on ? 1 : 0, id).catch(() => null);
+  if (on) await run(c.env.DB, "UPDATE wa_queue SET status = 'cancelled' WHERE status = 'pending' AND sequence LIKE 'followup:%' AND wa_id IN (SELECT wa_id FROM wa_contacts WHERE lead_id = ?)", id).catch(() => null);
+  await run(c.env.DB, "UPDATE leads SET handled_by = ?, handled_at = CASE WHEN ? IS NULL THEN NULL ELSE datetime('now') END, next_action = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?",
+    on ? u.name : null, on ? u.name : null, on ? `Handled by ${u.name} — automation paused` : 'Back with the automation', u.name, id);
+  await audit(c, 'leads', id, on ? 'takeover' : 'release', on ? `${u.name} took over “${lead.company}” from the automation` : `${u.name} handed “${lead.company}” back to the automation`);
+  return c.json({ ok: true, row: await first(c.env.DB, 'SELECT * FROM leads WHERE id = ?', id) });
+});
+
 studio.post('/engine/sync', async (c): Promise<Response> => {
   try { const r = await syncEngine(c.env); return c.json({ ok: true, result: r }); }
   catch (e: any) { return c.json({ ok: false, error: e.message }, 502); }
@@ -553,6 +591,7 @@ studio.get('/settings', async (c): Promise<Response> => {
   return c.json({ ok: true, rows, integrations: {
     ai: e.OPENAI_API_KEY ? `OpenAI (${e.OPENAI_MODEL})` : e.AI ? 'Cloudflare Workers AI (fallback)' : 'Not configured',
     voice: e.AZURE_SPEECH_KEY ? `Azure ${e.AZURE_VOICE}` : e.ELEVENLABS_API_KEY ? 'ElevenLabs' : 'Browser voice (add AZURE_SPEECH_KEY for a Nigerian neural voice)',
+    email: e.RESEND_API_KEY ? `Resend — sending as ${fromOf(e)}` : 'Site emails off — add RESEND_API_KEY (outreach still goes from Gmail as michael@ferrnagency.com)',
     engine: engineConfigured(e) ? 'Connected' : 'Not connected — set ENGINE_URL + ENGINE_KEY',
     maps: e.GOOGLE_MAPS_API_KEY ? 'Connected' : 'Add GOOGLE_MAPS_API_KEY',
     payments: e.PAYSTACK_SECRET_KEY ? 'Paystack live' : 'Paystack not connected (orders become invoice requests)',

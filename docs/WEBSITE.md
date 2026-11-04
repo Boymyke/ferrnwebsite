@@ -65,6 +65,16 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Leads: delete and take over (4 Nov)
+
+**Delete** (Studio → Leads → open a lead → *Delete*, editors and admins). For a LeadsHunter lead the engine removes the row from the Leads sheet first, cancels every email still waiting for it and adds the address to Suppression, so the routine can't re-add or email it; then the Studio row goes, and any WhatsApp queue for it is cancelled.
+
+**Take over** (*Take over* / *Hand back to automation*). Marks the lead as handled by you (`leads.handled_by`, engine `Leads.handler`). While taken over: no automated email goes out (anything queued is held; anything the AI routine drafts later arrives held for you to approve in Outreach → Held), replies set *needs you* instead of waiting for the AI, the WhatsApp bot stops answering (`wa_contacts.bot_paused`) and WhatsApp follow-ups are cancelled. Handing back resumes the automation; held messages stay held until you approve them one by one.
+
+Needs: migration `0011_lead_takeover.sql` on the live D1 (two columns) and LeadsHunter Apps Script **version 7** (actions `takeOver`, `release`, `deleteLead`, the `handler` column — added to the sheet automatically the first time). Until the migration is applied the sync carries on without the column and *Take over* explains what's missing.
+
+**Email sender.** Site emails (Resend) always go from `michael@ferrnagency.com` — `EMAIL_FROM` can change the display name only, replies come back to the same address. Outreach goes from Gmail as `michael@ferrnagency.com` (the engine's `FROM_ALIAS`; Studio → Outreach shows the address actually used). Studio → Team → Integrations now shows the email line.
+
 ## Site v5 — section 2, simplified (4 Nov evening)
 
 Michael asked to dial it down. Now:

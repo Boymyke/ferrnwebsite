@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { ago, api, can, create, fmtDate, list, ngn, update } from '../api';
+import { ago, api, can, create, fmtDate, list, ngn, remove, update } from '../api';
 import { Badge, Card, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, useUser, waLink, type FieldDef } from '../ui';
-import { Bot, CalendarPlus, ExternalLink, Globe, MailOpen, MessageCircle, Radar, SearchX, UserPlus, Workflow, MapPin, Play, Sparkles, Zap, Plus, X as XIcon } from 'lucide-react';
+import { Bot, CalendarPlus, ExternalLink, Globe, Hand, MailOpen, MessageCircle, Radar, SearchX, Trash2, UserPlus, Workflow, MapPin, Play, Sparkles, Zap, Plus, X as XIcon } from 'lucide-react';
 
 /** Where a lead came from, as an icon chip. */
 export function LeadOrigin({ l }: { l: any; full?: boolean }) {
@@ -76,7 +76,7 @@ export function Leads() {
             <thead><tr><th>Company</th><th>Niche · City</th><th>Tier</th><th>Status</th><th>Value</th><th>Last contact</th><th>Next action</th></tr></thead>
             <tbody>{data.map((l: any) => (
               <tr key={l.id} onClick={() => go(`/leads/${l.id}`)}>
-                <td><strong>{l.company}</strong>{l.needs_you === 'Y' ? <Badge tone="orange">needs you</Badge> : null}<div className="lead-sub"><LeadOrigin l={l} /><span className="muted small">{l.email || l.phone || ''}</span></div></td>
+                <td><strong>{l.company}</strong>{l.needs_you === 'Y' ? <Badge tone="orange">needs you</Badge> : null}{l.handled_by ? <Badge tone="purple">{`with ${String(l.handled_by).split(' ')[0]}`}</Badge> : null}<div className="lead-sub"><LeadOrigin l={l} /><span className="muted small">{l.email || l.phone || ''}</span></div></td>
                 <td>{l.niche} · {l.city}</td><td>{l.tier}</td><td><Status s={l.status} /></td><td>{ngn(l.est_value)}</td>
                 <td className="muted">{fmtDate(l.last_contact)}</td><td className="muted small">{(l.next_action || '').slice(0, 60)}</td>
               </tr>
@@ -131,6 +131,7 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
   const { data: engine } = useData(() => api(`/engine/lead/${id}`).then((r) => r.data).catch(() => null), [id]);
   const [tab, setTab] = useState('details');
   const [draft, setDraft] = useState<Record<string, any> | null>(null);
+  const [busy, setBusy] = useState('');
   const v = draft ?? lead ?? {};
   if (error) return <Drawer open title="Lead" onClose={onClose}><ErrorNote error={error} /></Drawer>;
   if (!lead) return <Drawer open title="Lead" onClose={onClose}><Loading /></Drawer>;
@@ -138,6 +139,16 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
     try { const row = await update('leads', id, draft!); setData(row); setDraft(null); toast('Saved'); } catch (x: any) { toast(x.message, 'err'); }
   };
   const waText = `Hello ${lead.contact_name || lead.company + ' team'}, this is Michael from Ferrn Digital Agency.`;
+  const takeOver = async (on: boolean) => {
+    setBusy('take');
+    try { const r = await api(`/leads/${id}/takeover`, { body: { on } }); setData(r.row); toast(on ? 'You’re handling this lead — automation paused' : 'Handed back to the automation'); }
+    catch (x: any) { toast(x.message, 'err'); } finally { setBusy(''); }
+  };
+  const del = async () => {
+    if (!confirm(`Delete “${lead.company}”? This removes it from Studio${lead.origin === 'engine' ? ' and LeadsHunter, cancels any emails waiting to go out, and stops the address being added again' : ''}. It can’t be undone.`)) return;
+    setBusy('del');
+    try { await remove('leads', id); toast('Lead deleted'); onClose(); } catch (x: any) { toast(x.message, 'err'); setBusy(''); }
+  };
   return (
     <Drawer open wide onClose={onClose} title={<>{lead.company} <Status s={lead.status} /></>}>
       <div className="lead-actions">
@@ -148,7 +159,12 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
         {lead.preview_url ? <a className="btn sm ghost" href={lead.preview_url} target="_blank" rel="noreferrer"><ExternalLink size={14} strokeWidth={2} />Concept preview</a> : null}
         <button className="btn sm" onClick={() => go(`/meetings/new?lead=${id}`)}><CalendarPlus size={14} strokeWidth={2} />Book meeting</button>
         <button className="btn sm primary" onClick={() => go(`/quotes/new?lead=${id}`)}>Draft quote</button>
+        {can(user, 'sales') ? (lead.handled_by
+          ? <button className="btn sm ghost" disabled={!!busy} onClick={() => takeOver(false)} title="AI replies, follow-ups and the WhatsApp bot start again"><Bot size={14} strokeWidth={2} />Hand back to automation</button>
+          : <button className="btn sm" disabled={!!busy} onClick={() => takeOver(true)} title="Stops AI replies, automatic follow-ups and the WhatsApp bot for this lead"><Hand size={14} strokeWidth={2} />Take over</button>) : null}
+        {can(user, 'editor') ? <button className="btn sm ghost danger" disabled={!!busy} onClick={del}><Trash2 size={14} strokeWidth={2} />Delete</button> : null}
       </div>
+      {lead.handled_by ? <div className="callout"><Hand size={15} /> <span><strong>{lead.handled_by} is handling this lead.</strong> Automated emails, AI replies and the WhatsApp bot are paused for it; anything the AI drafts waits in Outreach → Held for you to approve.</span></div> : null}
       <EditedBy row={lead} />
       <Tabs tabs={[['details', 'Details'], ['outreach', `Outreach${engine?.messages ? ` (${engine.messages.length})` : ''}`], ['history', 'History']]} value={tab} onChange={setTab} />
       {tab === 'details' ? (

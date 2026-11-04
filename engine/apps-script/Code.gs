@@ -19,7 +19,7 @@ var TZ = 'Africa/Lagos';
 var HEADERS = {
   Leads: ['id', 'created', 'niche', 'company', 'website', 'email', 'phone', 'contact_name', 'role', 'city',
     'tier', 'score', 'gaps', 'pitch', 'est_value', 'status', 'preview_url', 'last_contact', 'last_reply',
-    'next_action', 'needs_you', 'needs_you_reason', 'notes', 'source', 'thread_id'],
+    'next_action', 'needs_you', 'needs_you_reason', 'notes', 'source', 'thread_id', 'handler'],
   Messages: ['id', 'lead_id', 'step', 'channel', 'to', 'subject', 'body', 'delay_days', 'send_after',
     'created', 'status', 'approved', 'sent_at', 'thread_id', 'gmail_id', 'error'],
   Inbox: ['id', 'lead_id', 'thread_id', 'gmail_id', 'from', 'received_at', 'subject', 'body', 'status',
@@ -229,6 +229,7 @@ function processBatch_(data) {
     if (channel === 'email' && suppressed[to.toLowerCase()]) return;
     if (CLOSED_STATUSES.indexOf(lead.status) > -1 && String(m.step) !== 'R') return;
     var status = m.status || (channel === 'whatsapp' ? 'wa_pending' : (m.hold ? 'held' : 'queued'));
+    if (lead.handler) status = 'held'; // a person took this lead over: AI writes drafts, nothing goes out on its own
     var sendAfter = m.send_after ? new Date(m.send_after) : '';
     var delay = Number(m.delay_days || 0);
     var stepStr = String(m.step === undefined ? 0 : m.step);
@@ -335,6 +336,16 @@ function ensureSheet_(name) {
   sh.getRange(1, 1, 1, HEADERS[name].length).setFontWeight('bold').setBackground('#0b1b2b').setFontColor('#ffffff');
   return sh;
 }
+/** Adds any header in HEADERS[name] the sheet doesn't have yet (new columns after an update). Returns a fresh table. */
+function ensureColumns_(name) {
+  var sh = SpreadsheetApp.getActive().getSheetByName(name);
+  var have = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  var missing = HEADERS[name].filter(function (h) { return have.indexOf(h) === -1; });
+  if (missing.length) {
+    sh.getRange(1, have.length + 1, 1, missing.length).setValues([missing]).setFontWeight('bold').setBackground('#0b1b2b').setFontColor('#ffffff');
+  }
+  return table_(name);
+}
 function rfpKey_(r) {
   var u = String(r.url || '').trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/[?#].*$/, '').replace(/\/+$/, '');
   return u || (norm_(r.title) + '|' + norm_(r.buyer));
@@ -425,6 +436,7 @@ function deliver_(m, lead, mT, lT, s) {
   var step = String(m.step);
   var isReply = step === 'R';
   if (!lead) { updateRow_(mT, m, { status: 'cancelled', error: 'lead missing' }); return false; }
+  if (lead.handler && m.approved !== 'Y') { updateRow_(mT, m, { status: 'held', error: lead.handler + ' took this lead over' }); return false; }
   if (suppressionSet_()[String(m.to).toLowerCase()]) { updateRow_(mT, m, { status: 'cancelled', error: 'suppressed' }); return false; }
   if (!isReply && step !== '0' && STOP_STATUSES.indexOf(lead.status) > -1) {
     updateRow_(mT, m, { status: 'cancelled', error: 'lead is ' + lead.status }); return false;
@@ -599,7 +611,8 @@ function checkReplies_() {
         updateRow_(lT, lead, { status: 'Opted out', last_reply: msg.getDate(), next_action: 'Do not contact' });
         cancelPending_(lead.id, 'opted out', true);
       } else {
-        var ch = { last_reply: msg.getDate(), next_action: 'AI will answer at the next reply check' };
+        var ch = { last_reply: msg.getDate(), next_action: lead.handler ? 'They replied. Over to you (' + lead.handler + ').' : 'AI will answer at the next reply check' };
+        if (lead.handler) { ch.needs_you = 'Y'; ch.needs_you_reason = 'They replied — you are handling this lead.'; }
         if (['Interested', 'Call booked', 'Proposal sent', 'Won'].indexOf(lead.status) === -1) ch.status = 'Replied';
         if (ATTENTION_RE.test(body.slice(0, 1500))) {
           ch.needs_you = 'Y';
@@ -778,7 +791,7 @@ function getDashboardData() {
       id: r.id, company: r.company, niche: r.niche, city: r.city, email: r.email, phone: r.phone, website: r.website,
       contact_name: r.contact_name, tier: r.tier, status: r.status, est_value: Number(r.est_value || 0),
       preview_url: r.preview_url, gaps: r.gaps, pitch: r.pitch, next_action: r.next_action,
-      needs_you: r.needs_you, needs_you_reason: r.needs_you_reason, notes: r.notes,
+      needs_you: r.needs_you, needs_you_reason: r.needs_you_reason, notes: r.notes, handler: r.handler || '',
       last_contact: iso_(r.last_contact), last_reply: iso_(r.last_reply), created: iso_(r.created)
     };
   };
@@ -902,6 +915,35 @@ function dashAction(action, p) {
           updateRow_(lT, L2, ch);
           if (String(msg.step) === '0') scheduleFollowUps_(L2.id, t, mT);
         }
+      }
+      break;
+    case 'takeOver':
+      // A person handles this lead from now on: hold everything automated that hasn't gone out.
+      if (lead) {
+        lT = ensureColumns_('Leads'); lead = indexBy_(lT.rows, 'id')[p.lead_id];
+        updateRow_(lT, lead, { handler: String(p.by || 'You').slice(0, 60), next_action: 'Handled by ' + String(p.by || 'you').slice(0, 60) + ' — automation paused', needs_you: '' });
+        mT.rows.forEach(function (x) {
+          if (x.lead_id === lead.id && ['queued', 'wa_pending'].indexOf(x.status) > -1) updateRow_(mT, x, { status: 'held', error: 'taken over by ' + String(p.by || 'you').slice(0, 60) });
+        });
+      }
+      break;
+    case 'release':
+      // Back to the automation. Held messages stay held until approved one by one.
+      if (lead) {
+        lT = ensureColumns_('Leads'); lead = indexBy_(lT.rows, 'id')[p.lead_id];
+        updateRow_(lT, lead, { handler: '', next_action: 'Back with the automation' });
+      }
+      break;
+    case 'deleteLead':
+      // Removes the lead for good: pending messages are cancelled and the address is suppressed so the
+      // routine never re-adds or emails it.
+      if (lead) {
+        mT.rows.forEach(function (x) {
+          if (x.lead_id === lead.id && ['queued', 'held', 'wa_pending'].indexOf(x.status) > -1) updateRow_(mT, x, { status: 'cancelled', error: 'lead deleted' });
+        });
+        if (lead.email) addSuppression_(String(lead.email).toLowerCase(), 'deleted in Studio');
+        lT.sheet.deleteRow(lead._row);
+        log_('info', 'deleteLead', lead.id + ' ' + lead.company + (p.by ? ' by ' + p.by : ''));
       }
       break;
     case 'resolve':

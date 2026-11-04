@@ -4,8 +4,12 @@ import type { Bindings } from './env';
  *  every caller falls back to showing links in Studio, so nothing breaks. */
 export const FROM_ADDR = 'michael@ferrnagency.com';
 export const FROM = `Michael | Ferrn Digital Agency <${FROM_ADDR}>`;
-const fromOf = (env: Bindings) => env.EMAIL_FROM || FROM;
-const replyOf = (env: Bindings) => env.EMAIL_REPLY_TO || FROM_ADDR;
+/** Every site email goes out from michael@ferrnagency.com. EMAIL_FROM may change the display name only. */
+export const fromOf = (env: Bindings) => {
+  const name = String(env.EMAIL_FROM || '').replace(/<[^>]*>/, '').replace(/"/g, '').trim() || 'Michael | Ferrn Digital Agency';
+  return `${name} <${FROM_ADDR}>`;
+};
+const replyOf = (_env: Bindings) => FROM_ADDR;
 
 export const emailConfigured = (env: Bindings) => !!env.RESEND_API_KEY;
 
