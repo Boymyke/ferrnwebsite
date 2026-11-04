@@ -85,8 +85,10 @@ body.menu-open .nav-shell.on-light { --ink: #f4f3f0; --muted: #a7a5a0; --line: r
 .nav-clock { color: var(--muted); }
 .nav-clock b { font-weight: 500; }
 .nav-geo { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
-.nav-flag { width: 18px; height: 18px; border-radius: 50%; display: block; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--ink) 14%, transparent), 0 2px 6px rgba(0,0,0,.25); }
-.nav-flag-emoji { font-size: 16px; line-height: 1; }
+.nav-flag-emoji { font-size: 17px; line-height: 1; font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+/* Windows has no flag emoji: a bundled Twemoji flags font (graphics © Twitter, CC-BY 4.0) draws them there. */
+@font-face { font-family: 'Twemoji Country Flags'; src: url('/fonts/TwemojiCountryFlags.woff2') format('woff2'); unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067, U+E006C, U+E006E, U+E0073-E0074, U+E0077, U+E007F; font-display: swap; }
+.flag-font .nav-flag-emoji { font-family: 'Twemoji Country Flags', 'Segoe UI Emoji', sans-serif; }
 .nav-sep { color: var(--faint); }
 .nav-geo[hidden] { display: none; }
 .nav-actions { justify-self: end; display: flex; align-items: center; gap: 10px; }
@@ -135,9 +137,14 @@ body.menu-open .cc-backdrop { opacity: 1; pointer-events: auto; backdrop-filter:
 .cc-row b { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 14px; }
 .cc-row small { margin-left: auto; color: var(--faint); font-size: 12.5px; }
 .cc-row[aria-expanded="true"] .cc-chev { transform: rotate(180deg); }
-.cc-langs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding-top: 4px; }
+.cc-lang { position: relative; z-index: 3; overflow: visible; }
+.cc-langs { position: absolute; left: -1px; right: -1px; top: calc(100% + 6px); z-index: 5; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 8px;
+  border-radius: 14px; border: var(--bw) solid var(--line-2); background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 0 24px 60px -18px rgba(0,0,0,.6); transform-origin: top center; animation: langs-in .35s cubic-bezier(.22, 1, .36, 1); }
+@keyframes langs-in { from { opacity: 0; transform: translateY(-8px); clip-path: inset(0 0 100% 0 round 14px); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0 round 14px); } }
+.cc.langs-open .cc-panel:not(.cc-lang), .cc.langs-open .cc-nav { opacity: .45 !important; transition: opacity .3s; }
 .cc-langs[hidden] { display: none; }
-.cc-langs a { padding: 8px 10px; border-radius: 8px; font-size: 13.5px; color: var(--muted); text-align: center; transition: background .25s, color .25s; }
+.cc-langs a { padding: 11px 12px; border-radius: 9px; font-size: 14.5px; color: var(--ink); text-align: left; transition: background .25s, color .25s; }
 .cc-langs a:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); }
 .cc-langs a[aria-current] { color: var(--orange); background: color-mix(in srgb, var(--orange) 12%, transparent); }
 .cc-label-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -210,6 +217,7 @@ html.a11y-align main, html.a11y-align main * { text-align: left !important; }
 .play-intro .intro { display: grid; place-items: center; position: fixed; inset: 0; z-index: 400; background: #090a0c; color: #f4f3f0; overflow: hidden; }
 .play-intro body { overflow: hidden; }
 .intro-type { position: relative; z-index: 1; margin: 0; font-size: clamp(30px, 6vw, 68px); font-weight: 500; letter-spacing: -.04em; line-height: 1; white-space: nowrap; display: inline-flex; align-items: center; color: #f4f3f0; }
+.intro-brand { color: var(--orange); margin-left: .26em; }
 .intro-caret { display: inline-block; width: .08em; height: .95em; margin-left: .08em; background: currentColor; animation: blink .9s steps(2) infinite; }
 .intro-drop { position: absolute; inset: 0; z-index: 2; transform: translateY(-100%); will-change: transform; }
 .intro-drop-orange { background: var(--orange); }
@@ -800,3 +808,11 @@ html:has(.season-banner) .nav-shell { top: 37px; }
   .nav-shell, .bob, .footer-mark, .grain, .consent, .idle, .season-fx, .ticker { display: none !important; }
   body { background: #fff; color: #000; }
 }
+
+/* "Resume music" chip after a full page load (browsers can block sound until the visitor touches the page). */
+.music-resume { position: fixed; left: 50%; top: 78px; z-index: 300; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; border: var(--bw) solid var(--line-2); border-radius: var(--r-btn);
+  background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); color: var(--ink); font-size: 13.5px; font-weight: 500;
+  transform: translate(-50%, -12px); opacity: 0; transition: transform .45s var(--ease), opacity .3s; box-shadow: 0 16px 40px -16px rgba(0,0,0,.5); }
+.music-resume.in { transform: translate(-50%, 0); opacity: 1; }
+.music-resume svg { color: var(--orange); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .35s; }

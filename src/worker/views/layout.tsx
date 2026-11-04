@@ -90,7 +90,7 @@ export function Layout(p: LayoutProps) {
  *  and a black one drop over it and carry on down, revealing the page. Driven by runIntro() in main.ts. */
 function Intro() {
   return (
-    <div class="intro" aria-hidden="true" data-intro-words="Websites?|Web apps?|AI automations?" data-intro-final="all in FERRN">
+    <div class="intro" aria-hidden="true" data-intro-words="Websites?|Web apps?|AI automations?" data-intro-final="all in|FERRN">
       <p class="intro-type"><span class="intro-text" data-intro-text></span><span class="intro-caret"></span></p>
       <div class="intro-drop intro-drop-orange"></div>
       <div class="intro-drop intro-drop-black"></div>
@@ -126,7 +126,7 @@ function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
         </a>
         <div class="nav-meta" aria-live="off">
           <time class="nav-clock" data-clock></time>
-          <span class="nav-geo" data-geo hidden><img class="nav-flag" alt="" width="18" height="18" decoding="async" /><span data-geo-name></span></span>
+          <span class="nav-geo" data-geo hidden><span data-geo-name></span><span class="nav-flag-emoji" data-geo-flag aria-hidden="true"></span></span>
         </div>
         <div class="nav-actions">
           <button class="icon-btn menu-btn" type="button" data-menu-toggle aria-label="Menu" aria-expanded="false" aria-controls="cc">{icon('menu', { size: 20 })}</button>
@@ -156,9 +156,9 @@ function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
                 <button type="button" role="radio" data-theme-set="system" aria-checked="false">{icon('laptop-minimal', { size: 16 })}<span>Auto</span></button>
               </div>
             </section>
-            <section class="cc-panel" aria-label={t(lang, 'lang.label')}>
+            <section class="cc-panel cc-lang" aria-label={t(lang, 'lang.label')}>
               <button class="cc-row" type="button" data-lang-toggle aria-expanded="false">{icon('languages', { size: 17 })}<span>{t(lang, 'lang.label')}</span><b>{LANGS.find((l) => l.code === lang)?.native}</b>{icon('chevron-down', { size: 15, class: 'cc-chev' })}</button>
-              <div class="cc-langs" data-lang-list hidden>{LANGS.map((l) => <a href={href(l.code, path)} hreflang={l.code} data-set-lang={l.code} aria-current={l.code === lang ? 'true' : undefined}>{l.native}</a>)}</div>
+              <div class="cc-langs" data-lang-list role="menu" aria-label={t(lang, 'lang.label')} hidden>{LANGS.map((l) => <a href={href(l.code, path)} hreflang={l.code} data-set-lang={l.code} aria-current={l.code === lang ? 'true' : undefined}>{l.native}</a>)}</div>
             </section>
             <section class="cc-panel" aria-label="Accessibility">
               <div class="cc-label-row"><h4 class="cc-label">{icon('accessibility', { size: 15 })} Accessibility</h4><button type="button" class="cc-reset" data-a11y-reset>{icon('rotate-ccw', { size: 13 })} Reset</button></div>
@@ -181,8 +181,7 @@ function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
               <div class="cc-progress"><span data-music-time>0:00</span><input type="range" min="0" max="1000" value="0" data-music-seek aria-label="Seek" /><span data-music-dur>{MUSIC[0].length}</span></div>
               <div class="cc-volrow">{icon('volume-2', { size: 15 })}<input class="cc-vol" type="range" min="0" max="100" value="60" data-music-vol aria-label="Volume" /></div>
             </section>
-            <section class="cc-panel cc-actions" aria-label="Share and links">
-              <button class="cc-row" type="button" data-share>{icon('share-2', { size: 17 })}<span>Share this page</span><small data-share-hint>Copy link</small></button>
+            <section class="cc-panel cc-actions" aria-label="Our website links">
               <h4 class="cc-label">Our website links</h4>
               <div class="cc-social">
                 {SOCIALS.map(([n, u]) => <a href={u} rel="noopener" target="_blank" aria-label={n} title={n}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={BRAND_GLYPH[n]} /></svg></a>)}

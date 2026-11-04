@@ -6,8 +6,8 @@ type Strings = Record<string, string>;
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector<T>(s);
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
 const html = document.documentElement;
-const lang = document.body.dataset.lang || 'en';
-const S: Strings = JSON.parse(document.body.dataset.i18n || '{}');
+let lang = document.body.dataset.lang || 'en';
+let S: Strings = JSON.parse(document.body.dataset.i18n || '{}');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ── intro: "Websites? / Web apps? / AI automations?" type in and out → "all in FERRN" → an orange curtain drops,
@@ -31,7 +31,11 @@ function runIntro(done: () => void) {
   (async () => {
     await wait(250);
     for (const w of (intro.dataset.introWords || '').split('|')) { await type(w, 38); await wait(360); await untype(14); await wait(100); }
-    await type(intro.dataset.introFinal || 'all in FERRN', 44); await wait(700);
+    const [lead, brand] = (intro.dataset.introFinal || 'all in|FERRN').split('|');
+    await type(lead, 44);
+    const b = document.createElement('span'); b.className = 'intro-brand'; text.after(b);
+    for (let i = 1; i <= brand.length && !skipped; i++) { b.textContent = brand.slice(0, i); await wait(52); }
+    await wait(750);
     intro.classList.add('drop');          // orange, then black, fall over the words…
     await wait(1250);
     intro.classList.add('away');          // …and the whole stack keeps falling, uncovering the page
@@ -82,7 +86,8 @@ function clips() {
 }
 
 /* ── motion: hero light follows the pointer, cover parallax, nav hides on scroll down ── */
-function motion() {
+let para: HTMLElement[] = [], lightRooms: HTMLElement[] = [], onScrollNow = () => {};
+function heroPointer() {
   const hero = $('[data-hero]');
   if (hero && !reduced && matchMedia('(hover: hover)').matches) {
     let raf = 0, mx = 0.5, my = 0.5;
@@ -91,9 +96,11 @@ function motion() {
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; hero.style.setProperty('--mx', mx.toFixed(3)); hero.style.setProperty('--my', my.toFixed(3)); });
     }, { passive: true });
   }
-  const para = $$<HTMLElement>('[data-parallax] img');
+}
+function refreshScroll() { para = $$<HTMLElement>('[data-parallax] img'); lightRooms = $$('.room-light, .section-light'); onScrollNow(); }
+function motion() {
+  heroPointer();
   const nav = $('[data-nav]');
-  const lightRooms = $$('.room-light, .section-light');
   let last = scrollY, ticking = false;
   const onScroll = () => {
     ticking = false;
@@ -113,7 +120,8 @@ function motion() {
     last = y;
   };
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
-  onScroll();
+  onScrollNow = onScroll;
+  refreshScroll();
 }
 
 /* ── idle storytelling: after N seconds without input, full-screen lines; any input dismisses ── */
@@ -172,8 +180,8 @@ function season() {
 /* ── chrome: theme, menu, filters, currency, slider ── */
 /* ── nav: clock + country in the middle, the hamburger opens the control centre ── */
 function clock() {
-  const el = $('[data-clock]'); if (!el) return;
   const tick = () => {
+    const el = $('[data-clock]'); if (!el) return;
     const d = new Date();
     const date = new Intl.DateTimeFormat(navigator.language || 'en', { weekday: 'short', day: 'numeric', month: 'short' }).format(d);
     const hh = String(d.getHours()).padStart(2, '0'), mm = String(d.getMinutes()).padStart(2, '0');
@@ -182,21 +190,31 @@ function clock() {
   };
   tick(); setInterval(tick, 10_000);
 }
+/* Country + emoji flag. Windows has no flag emoji, so there a small bundled font (Twemoji country flags,
+   graphics CC-BY 4.0) draws them; everywhere else the system emoji is used. */
+let geoCode = '';
+function flagSupport() {
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 16;
+    const x = c.getContext('2d', { willReadFrequently: true })!; x.font = '14px sans-serif'; x.textBaseline = 'top'; x.fillText('\u{1F1F3}\u{1F1EC}', 0, 0);
+    const d = x.getImageData(0, 0, 16, 16).data;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] && (Math.abs(d[i] - d[i + 1]) > 30 || Math.abs(d[i + 1] - d[i + 2]) > 30)) return true;
+  } catch {}
+  return false;
+}
 function geo() {
-  const el = $('[data-geo]'); if (!el) return;
-  const flag = $<HTMLImageElement>('.nav-flag', el)!, name = $('[data-geo-name]', el)!;
-  const emoji = (cc: string) => cc.toUpperCase().replace(/./g, (ch) => String.fromCodePoint(127397 + ch.charCodeAt(0)));
   const show = (code: string) => {
+    const el = $('[data-geo]'); if (!el) return;
     if (!/^[A-Z]{2}$/i.test(code) || code === 'XX' || code === 'T1') return;
-    let country = code;
-    try { country = new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' }).of(code.toUpperCase()) || code; } catch {}
-    name.textContent = country;
-    // Round sticker-style flag (HatScripts circle-flags, MIT); falls back to the emoji flag if it can't load.
-    flag.onerror = () => { const s = document.createElement('span'); s.className = 'nav-flag-emoji'; s.textContent = emoji(code); flag.replaceWith(s); };
-    flag.src = `https://cdn.jsdelivr.net/gh/HatScripts/circle-flags@2.7.0/flags/${code.toLowerCase()}.svg`;
-    flag.alt = '';
+    geoCode = code.toUpperCase();
+    let country = geoCode;
+    try { country = new Intl.DisplayNames([document.documentElement.lang || navigator.language || 'en'], { type: 'region' }).of(geoCode) || geoCode; } catch {}
+    $('[data-geo-name]', el)!.textContent = country;
+    $('[data-geo-flag]', el)!.textContent = geoCode.replace(/./g, (ch) => String.fromCodePoint(127397 + ch.charCodeAt(0)));
     el.hidden = false;
   };
+  if (!flagSupport()) html.classList.add('flag-font');
+  if (geoCode) return show(geoCode);
   try { const c = sessionStorage.getItem('ferrn-geo'); if (c) { const g = JSON.parse(c); if (g.country) return show(g.country); } } catch {}
   fetch('/api/geo', { cache: 'no-store' }).then((r) => r.json()).then((g: { country?: string }) => {
     if (!g?.country) return;
@@ -220,6 +238,7 @@ function guide(on: boolean) {
   } else if (!on && guideEl) { guideEl.remove(); guideEl = null; removeEventListener('pointermove', moveGuide); }
 }
 
+let closeMenu = () => {};
 function chrome() {
   // Theme: dark (default) / light / auto (follows the OS).
   const mq = matchMedia('(prefers-color-scheme: light)');
@@ -261,6 +280,7 @@ function chrome() {
   // Control centre.
   const menuBtn = $('[data-menu-toggle]'), panel = $('[data-mobile-panel]');
   const setMenu = (open: boolean) => {
+    if (!open) setLangs(false);
     panel?.classList.toggle('open', open); if (panel) { if (open) panel.removeAttribute('inert'); else panel.setAttribute('inert', ''); }
     menuBtn?.setAttribute('aria-expanded', String(open)); document.body.classList.toggle('menu-open', open);
     menuBtn && (menuBtn.innerHTML = open
@@ -268,27 +288,36 @@ function chrome() {
       : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M4 18h16"/><path d="M4 6h16"/></svg>');
     if (open) setTimeout(() => $('.cc-close', panel!)?.focus(), 350); else menuBtn?.focus();
   };
+  closeMenu = () => { if (panel?.classList.contains('open')) setMenu(false); };
   menuBtn?.addEventListener('click', () => setMenu(!panel?.classList.contains('open')));
   $$('[data-cc-close]').forEach((b) => b.addEventListener('click', () => setMenu(false)));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panel?.classList.contains('open')) setMenu(false); });
-  const langBtn = $('[data-lang-toggle]'), langList = $('[data-lang-list]');
-  const setLangs = (open: boolean) => { if (langList) langList.hidden = !open; langBtn?.setAttribute('aria-expanded', String(open)); };
-  langBtn?.addEventListener('click', () => setLangs(langList?.hidden ?? true));
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (langsOpen()) { setLangs(false); $('[data-lang-toggle]')?.focus(); } else if (panel?.classList.contains('open')) setMenu(false);
+  });
+  // Languages open as an overlay over the panels (the control centre doesn't change height).
+  function langsOpen() { return !($('[data-lang-list]')?.hidden ?? true); }
+  function setLangs(open: boolean) {
+    const list = $('[data-lang-list]'); if (list) list.hidden = !open;
+    $('[data-lang-toggle]')?.setAttribute('aria-expanded', String(open));
+    panel?.classList.toggle('langs-open', open);
+  }
+  document.addEventListener('click', (e) => {
+    const t = e.target as Element;
+    if (t.closest('[data-lang-toggle]')) { setLangs(!langsOpen()); if (langsOpen()) setTimeout(() => $<HTMLElement>('.cc-langs a[aria-current]')?.focus(), 50); return; }
+    if (langsOpen() && !t.closest('[data-lang-list]')) setLangs(false);
+  });
   // Footer language link opens the control centre with the language list expanded.
   $$('[data-lang-open]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); setMenu(true); setLangs(true); setTimeout(() => $('.cc-langs a')?.focus(), 500); }));
-  $$('[data-set-lang]').forEach((a) => a.addEventListener('click', () => {
-    document.cookie = `ferrn_lang=${a.dataset.setLang}; path=/; max-age=31536000; samesite=lax`;
-  }));
-  // Share: the native sheet where there is one, otherwise copy the link.
-  $('[data-share]')?.addEventListener('click', async () => {
-    const data = { title: document.title, url: location.href };
-    try {
-      if (navigator.share) { await navigator.share(data); return; }
-      await navigator.clipboard.writeText(location.href); toast('Link copied');
-    } catch (e) { if ((e as Error).name !== 'AbortError') toast('Could not share'); }
-  });
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element).closest<HTMLElement>('[data-set-lang]');
+    if (a) document.cookie = `ferrn_lang=${a.dataset.setLang}; path=/; max-age=31536000; samesite=lax`;
+  }, true);
   music();
+}
 
+/* ── page-level widgets (re-run after a soft page change) ── */
+function pageBits() {
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;
     $$('[data-filter]', btn.parentElement!).forEach((b) => b.classList.toggle('active', b === btn));
@@ -393,9 +422,10 @@ function forms() {
 }
 
 /* ── first-party analytics: no cookies, no IPs; honours Do Not Track and GPC ── */
+let softPageview = () => {};
 function track() {
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
-  const path = (location.pathname.replace(/\/+$/, '') || '/').slice(0, 200);
+  let path = (location.pathname.replace(/\/+$/, '') || '/').slice(0, 200);
   if (/^\/(?:studio|api)(?:\/|$)|^\/(?:q|p|i|demos)\//.test(path + '/') || /[?&]__noTrack=1(?:&|$)/.test(location.search)) return;
   if (nav.doNotTrack === '1' || (window as any).doNotTrack === '1' || nav.globalPrivacyControl === true) return;
   const rid = () => { const a = new Uint8Array(15); crypto.getRandomValues(a); return Array.from(a, (b) => (b % 36).toString(36)).join(''); };
@@ -481,6 +511,8 @@ function track() {
   addEventListener('pagehide', leave);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') leave(); });
 
+  softPageview = () => { leave(); path = (location.pathname.replace(/\/+$/, '') || '/').slice(0, 200); maxDepth = 0; sentDepth = -1; pageview(); };
+
   // Heartbeat while the tab is visible, so Live shows who is still reading.
   setInterval(() => { if (document.visibilityState === 'visible') push({ t: 'hb' }, true); }, 20_000);
 }
@@ -508,9 +540,58 @@ document.addEventListener('click', (e) => {
   e.preventDefault(); try { localStorage.removeItem('ferrn-consent'); } catch {} location.reload();
 });
 
+/* ── soft page changes: while music is playing, links swap the page in place so the music never stops ── */
+const musicOn = () => !!$('[data-music]')?.classList.contains('playing');
+const SOFT_SKIP = /^\/(?:studio|api|media|preview|demos|q|p|i|assets|brand|icons|fonts|feed|sitemap)(?:\/|$|\.)/;
+function softNav() {
+  try { history.replaceState({ ...(history.state || {}), soft: true }, ''); } catch {}
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !musicOn()) return;
+    const a = (e.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
+    if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download') || a.hasAttribute('data-hard')) return;
+    const url = new URL(a.href, location.href);
+    if (url.origin !== location.origin || SOFT_SKIP.test(url.pathname) || /\.[a-z0-9]{2,5}$/i.test(url.pathname)) return;
+    if (url.pathname === location.pathname && url.search === location.search && url.hash) return; // same-page anchor
+    e.preventDefault();
+    softGo(url, true);
+  });
+  addEventListener('popstate', (e) => { if ((e.state as { soft?: boolean } | null)?.soft) softGo(new URL(location.href), false); });
+}
+async function softGo(url: URL, push: boolean) {
+  let doc: Document;
+  try {
+    const r = await fetch(url.href, { credentials: 'same-origin' });
+    if (!r.ok || !(r.headers.get('content-type') || '').includes('text/html')) throw new Error('not a page');
+    doc = new DOMParser().parseFromString(await r.text(), 'text/html');
+  } catch { location.href = url.href; return; }
+  const newMain = doc.querySelector('main#main'), newFooter = doc.querySelector('footer.footer'), newCc = doc.querySelector('.cc');
+  if (!newMain || !newCc) { location.href = url.href; return; }
+  if (push) history.pushState({ soft: true }, '', url.href);
+  const swap = () => {
+    document.title = doc.title;
+    const desc = doc.querySelector('meta[name="description"]')?.getAttribute('content');
+    if (desc) document.querySelector('meta[name="description"]')?.setAttribute('content', desc);
+    const nh = doc.documentElement;
+    html.lang = nh.lang; html.dir = nh.dir; html.dataset.page = nh.dataset.page || 'page';
+    document.body.dataset.lang = doc.body.dataset.lang || 'en'; document.body.dataset.i18n = doc.body.dataset.i18n || '{}';
+    lang = document.body.dataset.lang!; try { S = JSON.parse(document.body.dataset.i18n!); } catch {}
+    const main = $('main#main')!; main.innerHTML = newMain.innerHTML; main.className = newMain.className;
+    const footer = $('footer.footer'); if (footer && newFooter) footer.replaceWith(document.importNode(newFooter, true));
+    // Nav pieces that depend on the page or the language; theme, accessibility and music stay as they are.
+    for (const sel of ['.cc-nav', '[data-lang-list]', '[data-lang-toggle]']) { const o = $(sel), n = newCc.querySelector(sel); if (o && n) o.replaceWith(document.importNode(n, true)); }
+    const brand = doc.querySelector('.brand'); if (brand) $('.brand')?.setAttribute('href', brand.getAttribute('href') || '/');
+    closeMenu();
+    if (url.hash) document.getElementById(decodeURIComponent(url.hash.slice(1)))?.scrollIntoView(); else scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    observe(); clips(); forms(); pageBits(); heroPointer(); refreshScroll(); geo();
+    softPageview();
+  };
+  const vt = (document as any).startViewTransition;
+  if (vt && !reduced) vt.call(document, swap); else swap();
+}
+
 /* ── boot ── */
 html.classList.remove('no-js'); html.classList.add('js');
 consent();
-chrome(); clock(); geo(); forms(); motion(); season(); clips();
+chrome(); pageBits(); clock(); geo(); forms(); motion(); season(); clips(); softNav();
 bob({ lang, S, reduced });
 runIntro(() => { observe(); idle(); });
