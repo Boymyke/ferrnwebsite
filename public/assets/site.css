@@ -847,6 +847,9 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .hx-slide { position: absolute; inset: 0; opacity: 0; transition: opacity .9s var(--ease); display: block; }
 .hx-slide.on { opacity: 1; z-index: 1; }
 .hx-slide img { display: block; width: 100%; height: auto; min-height: 100%; object-fit: cover; object-position: top; transform: translate3d(0, 0, 0); will-change: transform; }
+.hx-slide img { opacity: 0; transition: opacity .6s ease; } .hx-slide img.ok { opacity: 1; }
+.hx-screen { background: linear-gradient(110deg, #0b0c0e 30%, #15161a 45%, #0b0c0e 60%) 0 0 / 300% 100%; animation: shimmer 1.6s linear infinite; }
+@keyframes shimmer { to { background-position: -150% 0; } }
 .hx-slide.broken { display: none; }
 .hx-name { position: absolute; left: 16px; bottom: 16px; z-index: 2; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #fff; background: rgba(6,7,8,.66); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); opacity: 0; transform: translateY(6px); transition: opacity .4s .3s, transform .5s .3s var(--ease); }
 .hx-slide.on .hx-name { opacity: 1; transform: none; }

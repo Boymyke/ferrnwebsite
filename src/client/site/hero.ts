@@ -160,6 +160,8 @@ function reel(hero: HTMLElement, reduced: boolean) {
   const DUR = 7000;
   slides.forEach((s, k) => {
     const img = $<HTMLImageElement>('img', s)!;
+    const ok = () => img.classList.add('ok');
+    if (img.complete && img.naturalHeight) ok(); else img.addEventListener('load', ok, { once: true });
     img.addEventListener('error', () => {
       s.classList.add('broken'); bars[k]?.remove(); slides = slides.filter((x) => x !== s);
       if (!slides.length) { // no captures yet: fall back to a bundled still so the stage is never empty
