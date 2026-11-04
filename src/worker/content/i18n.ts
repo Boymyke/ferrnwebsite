@@ -22,7 +22,7 @@ export const isLang = (s: string | undefined | null): s is Lang => !!s && (LANG_
 type Dict = Record<string, string>;
 
 const en: Dict = {
-  'nav.work': 'Work', 'nav.services': 'Services', 'nav.marketplace': 'Marketplace', 'nav.team': 'Team',
+  'nav.home': 'Home', 'nav.work': 'Work', 'nav.services': 'Services', 'nav.marketplace': 'Marketplace', 'nav.team': 'Team',
   'nav.insights': 'Insights', 'nav.about': 'About', 'nav.contact': 'Contact',
   'cta.start': 'Start a project', 'cta.demo': 'Live demo', 'cta.see_work': 'See the work', 'cta.book': 'Book a call',
   'cta.browse': 'Browse the marketplace', 'cta.whatsapp': 'Chat on WhatsApp',
@@ -60,7 +60,7 @@ const en: Dict = {
 };
 
 const yo: Dict = {
-  'nav.work': 'Iṣẹ́ wa', 'nav.services': 'Iṣẹ́ ìsìn', 'nav.marketplace': 'Ọjà', 'nav.team': 'Ẹgbẹ́', 'nav.insights': 'Àròkọ',
+  'nav.home': 'Ilé', 'nav.work': 'Iṣẹ́ wa', 'nav.services': 'Iṣẹ́ ìsìn', 'nav.marketplace': 'Ọjà', 'nav.team': 'Ẹgbẹ́', 'nav.insights': 'Àròkọ',
   'nav.about': 'Nípa wa', 'nav.contact': 'Kàn sí wa',
   'cta.start': 'Bẹ̀rẹ̀ iṣẹ́ kan', 'cta.demo': 'Wo àpẹẹrẹ', 'cta.see_work': 'Wo iṣẹ́ wa', 'cta.book': 'Ṣètò ìpè',
   'cta.browse': 'Ṣàwárí ọjà', 'cta.whatsapp': 'Bá wa sọ̀rọ̀ lórí WhatsApp',
@@ -98,7 +98,7 @@ const yo: Dict = {
 };
 
 const ig: Dict = {
-  'nav.work': 'Ọrụ anyị', 'nav.services': 'Ọrụ ndị anyị na-enye', 'nav.marketplace': 'Ahịa', 'nav.team': 'Otu anyị', 'nav.insights': 'Edemede',
+  'nav.home': 'Ụlọ', 'nav.work': 'Ọrụ anyị', 'nav.services': 'Ọrụ ndị anyị na-enye', 'nav.marketplace': 'Ahịa', 'nav.team': 'Otu anyị', 'nav.insights': 'Edemede',
   'nav.about': 'Maka anyị', 'nav.contact': 'Kpọtụrụ anyị',
   'cta.start': 'Malite ọrụ', 'cta.demo': 'Lee ngosi', 'cta.see_work': 'Lee ọrụ anyị', 'cta.book': 'Hazie oku',
   'cta.browse': 'Lee ahịa', 'cta.whatsapp': 'Kparịta ụka na WhatsApp',
@@ -136,7 +136,7 @@ const ig: Dict = {
 };
 
 const ha: Dict = {
-  'nav.work': 'Ayyukanmu', 'nav.services': 'Sabis', 'nav.marketplace': 'Kasuwa', 'nav.team': 'Ma’aikata', 'nav.insights': 'Rubuce-rubuce',
+  'nav.home': 'Gida', 'nav.work': 'Ayyukanmu', 'nav.services': 'Sabis', 'nav.marketplace': 'Kasuwa', 'nav.team': 'Ma’aikata', 'nav.insights': 'Rubuce-rubuce',
   'nav.about': 'Game da mu', 'nav.contact': 'Tuntuɓe mu',
   'cta.start': 'Fara aiki', 'cta.demo': 'Duba samfuri', 'cta.see_work': 'Duba ayyukanmu', 'cta.book': 'Shirya kira',
   'cta.browse': 'Duba kasuwa', 'cta.whatsapp': 'Yi hira ta WhatsApp',
@@ -174,7 +174,7 @@ const ha: Dict = {
 };
 
 const fr: Dict = {
-  'nav.work': 'Réalisations', 'nav.services': 'Services', 'nav.marketplace': 'Marketplace', 'nav.team': 'Équipe', 'nav.insights': 'Articles',
+  'nav.home': 'Accueil', 'nav.work': 'Réalisations', 'nav.services': 'Services', 'nav.marketplace': 'Marketplace', 'nav.team': 'Équipe', 'nav.insights': 'Articles',
   'nav.about': 'À propos', 'nav.contact': 'Contact',
   'cta.start': 'Démarrer un projet', 'cta.demo': 'Démo en direct', 'cta.see_work': 'Voir nos projets', 'cta.book': 'Réserver un appel',
   'cta.browse': 'Parcourir la marketplace', 'cta.whatsapp': 'Discuter sur WhatsApp',
@@ -212,7 +212,7 @@ const fr: Dict = {
 };
 
 const de: Dict = {
-  'nav.work': 'Projekte', 'nav.services': 'Leistungen', 'nav.marketplace': 'Marktplatz', 'nav.team': 'Team', 'nav.insights': 'Insights',
+  'nav.home': 'Start', 'nav.work': 'Projekte', 'nav.services': 'Leistungen', 'nav.marketplace': 'Marktplatz', 'nav.team': 'Team', 'nav.insights': 'Insights',
   'nav.about': 'Über uns', 'nav.contact': 'Kontakt',
   'cta.start': 'Projekt starten', 'cta.demo': 'Live-Demo', 'cta.see_work': 'Projekte ansehen', 'cta.book': 'Termin buchen',
   'cta.browse': 'Marktplatz ansehen', 'cta.whatsapp': 'Per WhatsApp schreiben',
@@ -250,7 +250,7 @@ const de: Dict = {
 };
 
 const es: Dict = {
-  'nav.work': 'Proyectos', 'nav.services': 'Servicios', 'nav.marketplace': 'Marketplace', 'nav.team': 'Equipo', 'nav.insights': 'Artículos',
+  'nav.home': 'Inicio', 'nav.work': 'Proyectos', 'nav.services': 'Servicios', 'nav.marketplace': 'Marketplace', 'nav.team': 'Equipo', 'nav.insights': 'Artículos',
   'nav.about': 'Nosotros', 'nav.contact': 'Contacto',
   'cta.start': 'Iniciar un proyecto', 'cta.demo': 'Demo en vivo', 'cta.see_work': 'Ver proyectos', 'cta.book': 'Agendar llamada',
   'cta.browse': 'Ver el marketplace', 'cta.whatsapp': 'Escribir por WhatsApp',
@@ -288,7 +288,7 @@ const es: Dict = {
 };
 
 const zh: Dict = {
-  'nav.work': '案例', 'nav.services': '服务', 'nav.marketplace': '产品市场', 'nav.team': '团队', 'nav.insights': '洞察',
+  'nav.home': '首页', 'nav.work': '案例', 'nav.services': '服务', 'nav.marketplace': '产品市场', 'nav.team': '团队', 'nav.insights': '洞察',
   'nav.about': '关于我们', 'nav.contact': '联系',
   'cta.start': '开始项目', 'cta.demo': '在线演示', 'cta.see_work': '查看案例', 'cta.book': '预约通话',
   'cta.browse': '浏览产品市场', 'cta.whatsapp': '通过 WhatsApp 联系',

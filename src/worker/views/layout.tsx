@@ -9,6 +9,8 @@ import { ASSET_V } from '../version';
 export const href = (lang: Lang, path: string) => (lang === 'en' ? path : `/${lang}${path === '/' ? '/' : path}`);
 export const SITE = 'https://www.ferrnagency.com';
 export const MARK_PATH = 'M163.419 0V163.419H0V109.064H107.208V52.9022H17.0028V0H163.419Z';
+/** Same mark, but the path starts bottom-left and runs right, then up — so a stroke draw "writes" it in that order. */
+export const MARK_DRAW = 'M0 163.419H163.419V0H17.0028V52.9022H107.208V109.064H0Z';
 
 type LayoutProps = {
   lang: Lang; path: string; title: string; description: string; children: Child;
@@ -57,7 +59,7 @@ export function Layout(p: LayoutProps) {
         <link rel="stylesheet" href="/fonts/fonts.css" />
         {raw(`<script>window.ferrnLoadGA=function(){if(window.__ga||!/(^|\\.)ferrnagency\\.com$/.test(location.hostname))return;window.__ga=1;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-XYT9F1DHSF';document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-XYT9F1DHSF',{anonymize_ip:true});};try{if(localStorage.getItem('ferrn-consent')==='all')window.ferrnLoadGA();}catch(e){}</script>`)}
         <link rel="stylesheet" href={`/assets/site.css?v=${ASSET_V}`} />
-        {raw(`<script>(function(){try{var d=document.documentElement,t=localStorage.getItem('ferrn-theme');if(t)d.dataset.theme=t;d.classList.add('js');${p.intro ? "if(!sessionStorage.getItem('ferrn-intro')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('play-intro');" : ''}}catch(e){}})();</script>`)}
+        {raw(`<script>(function(){try{var d=document.documentElement,t=localStorage.getItem('ferrn-theme');if(t==='system')d.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';else if(t)d.dataset.theme=t;var a=JSON.parse(localStorage.getItem('ferrn-a11y')||'{}');for(var k in a)if(a[k])d.classList.add('a11y-'+k);d.classList.add('js');${p.intro ? "if(!sessionStorage.getItem('ferrn-intro')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('play-intro');" : ''}}catch(e){}})();</script>`)}
         {p.schema ? raw(`<script type="application/ld+json">${JSON.stringify(p.schema).replace(/</g, '\\u003c')}</script>`) : null}
         <script src={`/assets/site.js?v=${ASSET_V}`} defer></script>
       </head>
@@ -84,47 +86,111 @@ export function Layout(p: LayoutProps) {
   );
 }
 
-/** Opening sequence: the mark draws, fills and grows into the page. Once per session. */
+/** Opening sequence (once per session): the questions type in and out, "all in Ferrn", the mark writes itself in
+ *  orange, shines, then an orange and a black curtain drop before the page is revealed. Driven by runIntro() in main.ts. */
 function Intro({ lang }: { lang: Lang }) {
   return (
-    <div class="intro" aria-hidden="true">
-      <svg class="intro-mark" viewBox="-20 -20 204 204" width="88" height="88"><path class="intro-mark-path" d={MARK_PATH} /></svg>
+    <div class="intro" aria-hidden="true" data-intro-words="Websites?|Web apps?|AI automations?" data-intro-final="all in Ferrn">
+      <div class="intro-stage">
+        <p class="intro-type"><span class="intro-text" data-intro-text></span><span class="intro-caret"></span></p>
+        <svg class="intro-mark" viewBox="-24 -24 212 212" width="150" height="150">
+          <defs>
+            <linearGradient id="intro-shine" x1="0" x2="1" y1="0" y2="0" gradientTransform="translate(-1)"><stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset=".5" stop-color="#fff" stop-opacity=".9" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></linearGradient>
+            <clipPath id="intro-clip"><path d={MARK_DRAW} /></clipPath>
+          </defs>
+          <path class="intro-mark-fill" d={MARK_DRAW} />
+          <path class="intro-mark-path" d={MARK_DRAW} />
+          <g clip-path="url(#intro-clip)"><rect class="intro-mark-shine" x="-40" y="-24" width="80" height="212" fill="url(#intro-shine)" /></g>
+        </svg>
+      </div>
+      <div class="intro-drop intro-drop-orange"></div>
+      <div class="intro-drop intro-drop-black"></div>
       <button class="intro-skip" type="button" data-intro-skip>{t(lang, 'skip')}</button>
     </div>
   );
 }
 
+const NAV_LINKS: [string, string, string][] = [['/', 'nav.home', 'house'], ['/work', 'nav.work', 'layout-dashboard'], ['/services', 'nav.services', 'layers'], ['/marketplace', 'nav.marketplace', 'package'], ['/about', 'nav.about', 'users'], ['/insights', 'nav.insights', 'book-open'], ['/contact', 'nav.contact', 'send']];
+
+const BRAND_GLYPH: Record<string, string> = {
+  Instagram: 'M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm5 5.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm5.6-1.1a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2Z',
+  X: 'M3 3h4.6l4.9 6.7L18.2 3H21l-7.2 8.4L21.5 21h-4.6l-5.2-7.1L5.6 21H2.8l7.6-8.9Z',
+  LinkedIn: 'M4.5 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM3 9h3v12H3Zm6 0h2.9v1.7c.5-.9 1.7-2 3.6-2 3.8 0 4.5 2.5 4.5 5.7V21h-3v-5.7c0-1.4 0-3.1-1.9-3.1s-2.2 1.5-2.2 3V21H9Z',
+  TikTok: 'M13 3h3c.2 2 1.6 3.6 3.7 3.8v3a6.7 6.7 0 0 1-3.7-1.2v6.2A5.2 5.2 0 1 1 10.8 9.7v3.1a2.2 2.2 0 1 0 2.2 2.2Z',
+};
+
 function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
-  const links: [string, string][] = [['/work', 'nav.work'], ['/services', 'nav.services'], ['/marketplace', 'nav.marketplace'], ['/about', 'nav.about'], ['/insights', 'nav.insights']];
   const cta = ctx?.get('nav.cta') ?? t(lang, 'cta.start');
+  const current = (p: string) => path === p || (p !== '/' && path.startsWith(p + '/')) ? 'page' : undefined;
+  const a11y: [string, string, string][] = [['text', 'Larger text', 'a-large-small'], ['motion', 'Reduce motion', 'zap-off'], ['contrast', 'High contrast', 'contrast'], ['links', 'Underline links', 'underline']];
   return (
     <header class="nav-shell" data-nav>
       <a class="skip-link" href="#main">Skip to content</a>
       <nav class="nav" aria-label="Primary">
         <a class="brand" href={href(lang, '/')} aria-label="Ferrn Digital Agency home">
-          <svg viewBox="0 0 164 164" width="26" height="26" aria-hidden="true"><path d={MARK_PATH} fill="currentColor" /></svg>
-          <span>Ferrn</span>
+          <svg viewBox="0 0 164 164" width="28" height="28" aria-hidden="true"><path d={MARK_PATH} fill="currentColor" /></svg>
         </a>
-        <div class="nav-links">
-          {links.map(([p, k]) => <a href={href(lang, p)} aria-current={path === p || (p !== '/' && path.startsWith(p + '/')) ? 'page' : undefined}><span>{t(lang, k)}</span></a>)}
+        <div class="nav-meta" aria-live="off">
+          <time class="nav-clock" data-clock></time>
+          <span class="nav-geo" data-geo hidden></span>
         </div>
         <div class="nav-actions">
-          <button class="icon-btn" type="button" data-theme-toggle aria-label={t(lang, 'theme.toggle')}>{icon('sun-moon', { size: 18 })}</button>
-          <a class="btn btn-primary btn-sm nav-cta" href={href(lang, '/contact')}>{cta} {icon('arrow-up-right', { size: 15 })}</a>
-          <button class="icon-btn menu-btn" type="button" data-menu-toggle aria-label="Menu" aria-expanded="false">{icon('menu', { size: 20 })}</button>
+          <button class="icon-btn menu-btn" type="button" data-menu-toggle aria-label="Menu" aria-expanded="false" aria-controls="cc">{icon('menu', { size: 20 })}</button>
         </div>
       </nav>
-      <div class="menu" data-mobile-panel inert>
-        <div class="menu-inner">
-          <div class="menu-links">
-            {[...links, ['/contact', 'nav.contact'] as [string, string]].map(([p, k], i) => <a href={href(lang, p)} style={`--i:${i}`}><small>0{i + 1}</small>{t(lang, k)}</a>)}
-          </div>
-          <div class="menu-side">
-            <p class="menu-label">Say hello</p>
-            <a href="mailto:info@ferrnagency.com">info@ferrnagency.com</a>
-            <a href="https://cal.com/ferrn-agency" target="_blank" rel="noopener">Book a 20-minute call</a>
-            <p class="menu-label">Language</p>
-            <div class="menu-langs">{LANGS.map((l) => <a href={href(l.code, path)} hreflang={l.code} data-set-lang={l.code} aria-current={l.code === lang ? 'true' : undefined}>{l.native}</a>)}</div>
+      <div class="cc-backdrop" data-cc-close></div>
+      <div class="cc" id="cc" role="dialog" aria-modal="true" aria-label="Menu" data-mobile-panel inert>
+        <div class="cc-head">
+          <span class="cc-title">Menu</span>
+          <button class="icon-btn cc-close" type="button" data-cc-close aria-label="Close menu">{icon('x', { size: 18 })}</button>
+        </div>
+        <div class="cc-grid">
+          <section class="cc-panel cc-nav" aria-label="Navigation">
+            <h4 class="cc-label">Navigation</h4>
+            <ul class="cc-list">
+              {NAV_LINKS.map(([p, k, ic], i) => <li style={`--i:${i}`}><a href={href(lang, p)} aria-current={current(p)}>{icon(ic, { size: 17 })}<span>{t(lang, k)}</span>{icon('chevron-right', { size: 15, class: 'cc-chev' })}</a></li>)}
+            </ul>
+            <div class="cc-hello"><span>Say hello</span><a href="mailto:info@ferrnagency.com">info@ferrnagency.com</a><a href="https://cal.com/ferrn-agency" target="_blank" rel="noopener">Book a 20-minute call</a></div>
+            <a class="btn btn-primary cc-cta" href={href(lang, '/contact')}>{cta} {icon('arrow-up-right', { size: 15 })}</a>
+          </section>
+          <div class="cc-col">
+            <section class="cc-panel" aria-label="Theme">
+              <h4 class="cc-label">Theme</h4>
+              <div class="cc-seg" role="radiogroup" aria-label="Theme">
+                <button type="button" role="radio" data-theme-set="dark" aria-checked="false">{icon('moon', { size: 16 })}<span>Dark</span></button>
+                <button type="button" role="radio" data-theme-set="light" aria-checked="false">{icon('sun-medium', { size: 16 })}<span>Light</span></button>
+                <button type="button" role="radio" data-theme-set="system" aria-checked="false">{icon('laptop-minimal', { size: 16 })}<span>Auto</span></button>
+              </div>
+            </section>
+            <section class="cc-panel" aria-label={t(lang, 'lang.label')}>
+              <button class="cc-row" type="button" data-lang-toggle aria-expanded="false">{icon('languages', { size: 17 })}<span>{t(lang, 'lang.label')}</span><b>{LANGS.find((l) => l.code === lang)?.native}</b>{icon('chevron-down', { size: 15, class: 'cc-chev' })}</button>
+              <div class="cc-langs" data-lang-list hidden>{LANGS.map((l) => <a href={href(l.code, path)} hreflang={l.code} data-set-lang={l.code} aria-current={l.code === lang ? 'true' : undefined}>{l.native}</a>)}</div>
+            </section>
+            <section class="cc-panel" aria-label="Accessibility">
+              <h4 class="cc-label">{icon('accessibility', { size: 15 })} Accessibility</h4>
+              <div class="cc-tiles">
+                {a11y.map(([k, label, ic]) => <button type="button" class="cc-tile" data-a11y={k} aria-pressed="false">{icon(ic, { size: 20 })}<span>{label}</span></button>)}
+              </div>
+            </section>
+            <section class="cc-panel cc-music" aria-label="Music" data-music>
+              <h4 class="cc-label">{icon('disc-3', { size: 15, class: 'cc-disc' })} Music</h4>
+              <div class="cc-player">
+                <button class="cc-play" type="button" data-music-toggle aria-label="Play ambient music" aria-pressed="false">{icon('play', { size: 18 })}</button>
+                <div class="cc-track"><b data-music-title>Ferrn ambient</b><small data-music-sub>Generated live — nothing to download</small></div>
+                <button class="icon-btn cc-next" type="button" data-music-next aria-label="Next mood">{icon('skip-forward', { size: 16 })}</button>
+              </div>
+              <div class="cc-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+              <input class="cc-vol" type="range" min="0" max="100" value="50" data-music-vol aria-label="Volume" />
+            </section>
+            <section class="cc-panel cc-actions" aria-label="Share and links">
+              <button class="cc-row" type="button" data-share>{icon('share-2', { size: 17 })}<span>Share this page</span><small data-share-hint>Copy link</small></button>
+              <h4 class="cc-label">Our website links</h4>
+              <div class="cc-social">
+                {SOCIALS.map(([n, u]) => <a href={u} rel="noopener" target="_blank" aria-label={n} title={n}><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={BRAND_GLYPH[n]} /></svg></a>)}
+                <a href="mailto:info@ferrnagency.com" aria-label="Email" title="info@ferrnagency.com">{icon('at-sign', { size: 18 })}</a>
+                <a href="https://cal.com/ferrn-agency" target="_blank" rel="noopener" aria-label="Book a call" title="Book a 20-minute call">{icon('calendar', { size: 18 })}</a>
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -134,7 +200,6 @@ function Nav({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
 
 function Footer({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }) {
   const year = new Date().getFullYear();
-  const links = ctx?.links ?? [];
   return (
     <footer class="footer" id="footer">
       <div class="wrap footer-cta reveal">
@@ -164,11 +229,9 @@ function Footer({ lang, path, ctx }: { lang: Lang; path: string; ctx?: SiteCtx }
         <div class="footer-col">
           <h4>Company</h4>
           <a href={href(lang, '/profile')}>Company profile</a>
-          <a href={href(lang, '/links')}>Important links</a>
           <a href={href(lang, '/procurement')}>Procurement</a>
           <a href={href(lang, '/careers')}>Careers</a>
           <a href={href(lang, '/policies')}>Policies</a>
-          {links.slice(0, 3).map((l) => <a href={l.url} target={/^https?:/.test(l.url) && !l.url.includes('ferrnagency.com') ? '_blank' : undefined} rel="noopener">{l.title}</a>)}
         </div>
         <div class="footer-col">
           <h4>{t(lang, 'nav.contact')}</h4>

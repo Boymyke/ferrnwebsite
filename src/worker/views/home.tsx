@@ -154,7 +154,7 @@ export function HomePage(p: {
   const shot = mediaUrl(ctx.get('home.hero.shot')) || '/assets/home/hero-clinic.webp';
   const H = ({ text, cls = 'h-display' }: { text: string; cls?: string }) => <Lines text={text} tag="h2" class={cls} />;
   return (
-    <Layout lang={lang} ctx={ctx} path="/" kind="home" schema={schema} preloadImage={shot} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
+    <Layout lang={lang} ctx={ctx} path="/" kind="home" intro schema={schema} preloadImage={shot} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
       {/* ── hero: words, one button, then the product ── */}
       <section class="hero hero-shot" data-hero>
         <div class="wrap">

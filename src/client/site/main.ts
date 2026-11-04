@@ -1,6 +1,7 @@
 /* Ferrn public site — progressive enhancement. Everything works without JS except Bob,
    checkout and animations. */
 import { bob } from './bob';
+import { music } from './music';
 type Strings = Record<string, string>;
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector<T>(s);
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
@@ -9,13 +10,17 @@ const lang = document.body.dataset.lang || 'en';
 const S: Strings = JSON.parse(document.body.dataset.i18n || '{}');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ── intro: mark draws → fills → grows over the screen → reveal (auto, no scroll) ── */
+/* ── intro: "Websites? / Web apps? / AI automations?" type in and out → "all in Ferrn" → the mark writes itself
+   in orange (bottom-left → right → top), shines, fades → an orange curtain drops, then a black one → the page is
+   revealed with a soft bounce. Once per session; Skip or any key ends it. ── */
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function runIntro(done: () => void) {
   const intro = $('.intro');
   if (!intro || !html.classList.contains('play-intro')) return done();
+  const text = $('[data-intro-text]', intro)!, typeBox = $('.intro-type', intro)!, mark = $('.intro-mark', intro)!;
   const path = $<SVGPathElement>('.intro-mark-path', intro);
-  if (path) intro.style.setProperty('--len', String(Math.ceil(path.getTotalLength())));
-  let finished = false;
+  if (path) intro.style.setProperty('--len', String(Math.ceil(path.getTotalLength()) + 2));
+  let finished = false, skipped = false;
   const finish = () => {
     if (finished) return;
     finished = true;
@@ -23,10 +28,28 @@ function runIntro(done: () => void) {
     html.classList.remove('play-intro');
     done();
   };
-  requestAnimationFrame(() => intro.classList.add('run'));
-  intro.addEventListener('animationend', (e) => { if ((e as AnimationEvent).animationName === 'intro-out') finish(); });
-  $('[data-intro-skip]', intro)?.addEventListener('click', finish);
-  setTimeout(finish, 3400); // safety net
+  const skip = () => { skipped = true; finish(); };
+  $('[data-intro-skip]', intro)?.addEventListener('click', skip);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !finished) skip(); }, { once: true });
+  const type = async (word: string, speed: number) => { for (let i = 1; i <= word.length && !skipped; i++) { text.textContent = word.slice(0, i); await wait(speed); } };
+  const untype = async (speed: number) => { while (text.textContent && !skipped) { text.textContent = text.textContent.slice(0, -1); await wait(speed); } };
+  const cls = (el: Element, c: string) => el.classList.add(c);
+  (async () => {
+    await wait(250);
+    for (const w of (intro.dataset.introWords || '').split('|')) { await type(w, 38); await wait(360); await untype(14); await wait(100); }
+    typeBox.classList.add('final');
+    await type(intro.dataset.introFinal || 'all in Ferrn', 44); await wait(600);
+    typeBox.classList.add('gone'); await wait(300);
+    cls(mark, 'show'); cls(mark, 'write'); await wait(1050);            // writes in: bottom-left → right → top
+    cls(mark, 'filled'); await wait(200); cls(mark, 'unwrite'); await wait(720); // the stroke writes out, the mark stays
+    cls(mark, 'shine'); await wait(850);
+    cls(mark, 'fade'); await wait(350);
+    cls($('.intro-drop-orange', intro)!, 'down'); await wait(480);
+    cls($('.intro-drop-black', intro)!, 'down'); await wait(520);
+    cls(intro, 'away'); await wait(300);
+    finish();
+  })().catch(finish);
+  setTimeout(finish, 14000); // safety net
 }
 
 /* ── reveals: lines (gradient mask), text clips, fades, counters, wordmark ── */
@@ -155,12 +178,65 @@ function season() {
 }
 
 /* ── chrome: theme, menu, filters, currency, slider ── */
+/* ── nav: clock + country in the middle, the hamburger opens the control centre ── */
+function clock() {
+  const el = $('[data-clock]'); if (!el) return;
+  const tick = () => {
+    const d = new Date();
+    const date = new Intl.DateTimeFormat(navigator.language || 'en', { weekday: 'short', day: 'numeric', month: 'short' }).format(d);
+    const hh = String(d.getHours()).padStart(2, '0'), mm = String(d.getMinutes()).padStart(2, '0');
+    el.innerHTML = `${date} · <b>${hh}<i>:</i>${mm}</b>`;
+    (el as HTMLTimeElement).dateTime = d.toISOString();
+  };
+  tick(); setInterval(tick, 10_000);
+}
+function geo() {
+  const el = $('[data-geo]'); if (!el) return;
+  const show = (code: string, city?: string | null) => {
+    let name = code;
+    try { name = new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' }).of(code) || code; } catch {}
+    el.textContent = city ? `${city}, ${name}` : name;
+    el.hidden = false;
+  };
+  try { const c = sessionStorage.getItem('ferrn-geo'); if (c) { const g = JSON.parse(c); if (g.country) show(g.country, g.city); } } catch {}
+  fetch('/api/geo', { cache: 'no-store' }).then((r) => r.json()).then((g: { country?: string; city?: string }) => {
+    if (!g?.country) return;
+    try { sessionStorage.setItem('ferrn-geo', JSON.stringify(g)); } catch {}
+    show(g.country, g.city);
+  }).catch(() => {});
+}
+
+function toast(msg: string) {
+  let t = $('.cc-toast'); if (!t) { t = document.createElement('div'); t.className = 'cc-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show'); setTimeout(() => t!.classList.remove('show'), 1800);
+}
+
 function chrome() {
-  $('[data-theme-toggle]')?.addEventListener('click', () => {
-    const next = html.dataset.theme === 'light' ? 'dark' : 'light';
-    html.dataset.theme = next;
-    try { localStorage.setItem('ferrn-theme', next); } catch {}
+  // Theme: dark (default) / light / auto (follows the OS).
+  const mq = matchMedia('(prefers-color-scheme: light)');
+  const applyTheme = (mode: string) => {
+    html.dataset.theme = mode === 'system' ? (mq.matches ? 'light' : 'dark') : mode;
+    $$('[data-theme-set]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.themeSet === mode)));
+    try { localStorage.setItem('ferrn-theme', mode); } catch {}
+  };
+  let saved = ''; try { saved = localStorage.getItem('ferrn-theme') || ''; } catch {}
+  $$('[data-theme-set]').forEach((b) => { b.setAttribute('aria-checked', String(b.dataset.themeSet === (saved || 'dark'))); b.addEventListener('click', () => applyTheme(b.dataset.themeSet!)); });
+  mq.addEventListener('change', () => { try { if (localStorage.getItem('ferrn-theme') === 'system') applyTheme('system'); } catch {} });
+  $('[data-theme-toggle]')?.addEventListener('click', () => applyTheme(html.dataset.theme === 'light' ? 'dark' : 'light'));
+
+  // Accessibility switches, remembered per browser; the head script re-applies them before paint.
+  let a11y: Record<string, boolean> = {}; try { a11y = JSON.parse(localStorage.getItem('ferrn-a11y') || '{}'); } catch {}
+  $$('[data-a11y]').forEach((b) => {
+    const k = b.dataset.a11y!;
+    b.setAttribute('aria-pressed', String(!!a11y[k]));
+    b.addEventListener('click', () => {
+      a11y[k] = !a11y[k]; b.setAttribute('aria-pressed', String(a11y[k]));
+      html.classList.toggle('a11y-' + k, a11y[k]);
+      try { localStorage.setItem('ferrn-a11y', JSON.stringify(a11y)); } catch {}
+    });
   });
+
+  // Control centre.
   const menuBtn = $('[data-menu-toggle]'), panel = $('[data-mobile-panel]');
   const setMenu = (open: boolean) => {
     panel?.classList.toggle('open', open); if (panel) { if (open) panel.removeAttribute('inert'); else panel.setAttribute('inert', ''); }
@@ -168,14 +244,28 @@ function chrome() {
     menuBtn && (menuBtn.innerHTML = open
       ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
       : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M4 18h16"/><path d="M4 6h16"/></svg>');
+    if (open) setTimeout(() => $('.cc-close', panel!)?.focus(), 350); else menuBtn?.focus();
   };
   menuBtn?.addEventListener('click', () => setMenu(!panel?.classList.contains('open')));
+  $$('[data-cc-close]').forEach((b) => b.addEventListener('click', () => setMenu(false)));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panel?.classList.contains('open')) setMenu(false); });
-  // Footer language link opens the menu's language list (the only place languages live now).
-  $$('[data-lang-open]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); setMenu(true); setTimeout(() => $('.menu-langs a')?.focus(), 500); }));
+  const langBtn = $('[data-lang-toggle]'), langList = $('[data-lang-list]');
+  const setLangs = (open: boolean) => { if (langList) langList.hidden = !open; langBtn?.setAttribute('aria-expanded', String(open)); };
+  langBtn?.addEventListener('click', () => setLangs(langList?.hidden ?? true));
+  // Footer language link opens the control centre with the language list expanded.
+  $$('[data-lang-open]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); setMenu(true); setLangs(true); setTimeout(() => $('.cc-langs a')?.focus(), 500); }));
   $$('[data-set-lang]').forEach((a) => a.addEventListener('click', () => {
     document.cookie = `ferrn_lang=${a.dataset.setLang}; path=/; max-age=31536000; samesite=lax`;
   }));
+  // Share: the native sheet where there is one, otherwise copy the link.
+  $('[data-share]')?.addEventListener('click', async () => {
+    const data = { title: document.title, url: location.href };
+    try {
+      if (navigator.share) { await navigator.share(data); return; }
+      await navigator.clipboard.writeText(location.href); toast('Link copied');
+    } catch (e) { if ((e as Error).name !== 'AbortError') toast('Could not share'); }
+  });
+  music();
 
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;
@@ -399,6 +489,6 @@ document.addEventListener('click', (e) => {
 /* ── boot ── */
 html.classList.remove('no-js'); html.classList.add('js');
 consent();
-chrome(); forms(); motion(); season(); clips();
+chrome(); clock(); geo(); forms(); motion(); season(); clips();
 bob({ lang, S, reduced });
 runIntro(() => { observe(); idle(); });

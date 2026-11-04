@@ -9,3 +9,4 @@ public/studio/app.js.map
 migrations/seed/
 *.log
 .DS_Store
+wrangler.local.jsonc

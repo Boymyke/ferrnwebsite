@@ -138,7 +138,7 @@ export function siteRoutes(lang: Lang) {
 export async function sitemap(env: AppEnv['Bindings']) {
   const site = 'https://www.ferrnagency.com';
   const langs = ['en', 'yo', 'ig', 'ha', 'fr', 'de', 'es', 'zh'];
-  const fixed = ['/', '/work', '/services', '/marketplace', '/about', '/team', '/insights', '/contact', '/rfp', '/profile', '/links', '/policies', '/careers', '/procurement'];
+  const fixed = ['/', '/work', '/services', '/marketplace', '/about', '/team', '/insights', '/contact', '/rfp', '/profile', '/policies', '/careers', '/procurement'];
   const [projects, products, posts] = await Promise.all([
     loadProjects(env),
     all<{ slug: string; updated_at: string | null }>(env.DB, 'SELECT slug, updated_at FROM products WHERE published = 1'),

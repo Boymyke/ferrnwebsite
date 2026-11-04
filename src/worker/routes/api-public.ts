@@ -140,6 +140,12 @@ api.post('/tts', async (c) => {
   return res;
 });
 
+/** Where the visitor is, from Cloudflare's request metadata — used by the nav clock. Never cached. */
+api.get('/geo', (c) => {
+  const cf = ((c.req.raw as any).cf ?? {}) as Record<string, string | undefined>;
+  return c.json({ country: cf.country ?? null, city: cf.city ?? null, region: cf.region ?? null, tz: cf.timezone ?? null }, 200, { 'cache-control': 'private, no-store' });
+});
+
 api.get('/public/config', (c) => c.json({
   tts: c.env.AZURE_SPEECH_KEY || c.env.ELEVENLABS_API_KEY ? 'server' : 'browser',
   payments: !!c.env.PAYSTACK_SECRET_KEY,
