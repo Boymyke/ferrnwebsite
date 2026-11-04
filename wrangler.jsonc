@@ -27,6 +27,8 @@
     { "binding": "MEDIA", "bucket_name": "ferrn-media" }
   ],
   "ai": { "binding": "AI" },
+  // Cloudflare Browser Rendering: Studio captures full-page screenshots of client sites for the home showreel.
+  "browser": { "binding": "BROWSER" },
   // ferrnagency.com runs through Worker routes on the existing proxied DNS records
   // (legacy.ferrnagency.com stays DNS-only and still reaches the old cPanel site).
   // Keep the workers.dev address and preview URLs on even though routes are set.

@@ -11,7 +11,8 @@ export type ContentField = { key: string; label: string; group: string; type?: '
 export const CONTENT_FIELDS: ContentField[] = [
   // Home
   { key: 'home.hero.kicker', group: 'Home', label: 'Hero kicker (optional)', default: '' },
-  { key: 'home.hero.title', group: 'Home', label: 'Hero headline (use | for a new line)', default: 'Websites, apps and AI|for growing businesses' },
+  { key: 'home.hero.flick', group: 'Home', label: 'Hero — words that flick in orange (| separated)', default: 'Websites|Web apps|AI assistants|Automations' },
+  { key: 'home.hero.title', group: 'Home', label: 'Hero — rest of the headline', default: 'that grow your business.' },
   { key: 'home.hero.sub', group: 'Home', label: 'Hero paragraph', type: 'textarea', default: 'Ferrn designs and builds the website, the web app and the assistant behind it — one accountable team in Lagos, working with clients in the UK, US and Canada.' },
   { key: 'home.hero.cta', group: 'Home', label: 'Primary button', default: 'See it in action' },
   { key: 'home.hero.cta2', group: 'Home', label: 'Secondary button', default: 'Start a project' },
@@ -29,6 +30,11 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'home.bob.points', group: 'Home', label: 'Bob points (title|text per line)', type: 'textarea', default: 'Grounded answers.|Only what is on your site and in your approved notes — never invented prices or promises.\nTakes them there.|“Show me the plans” opens the right page instead of a wall of text.\nReads aloud.|Pause, restart, change the speed; the page highlights as it reads.' },
   { key: 'home.cta.title', group: 'Home', label: 'Closing headline (| = new line)', default: 'Let’s build|what’s next.' },
   { key: 'home.cta.lead', group: 'Home', label: 'Closing line', default: 'Tell us the problem. We’ll help define what should be built, and give you an honest price.' },
+  { key: 'home.trusted.title', group: 'Home', label: 'Trusted-by label', default: 'Trusted by teams in Nigeria, the UK and the US' },
+  { key: 'home.growth.kicker', group: 'Home', label: 'Growth — kicker', default: 'Why it pays for itself' },
+  { key: 'home.growth.title', group: 'Home', label: 'Growth — headline', default: 'More enquiries.|More customers.|Less chasing.' },
+  { key: 'home.growth.lead', group: 'Home', label: 'Growth — paragraph', type: 'textarea', default: 'A website earns money in three places: when people find you, when they decide to contact you, and when someone follows up. We build for all three — then measure it, so you can see what changed.' },
+  { key: 'home.growth.levers', group: 'Home', label: 'Growth — levers (title|text|tag per line)', type: 'textarea', default: 'Get found|Fast pages, clean structure and local search set up properly, so the people already searching for what you sell land on you — not a competitor.|Search · Speed · Google Business\nGet chosen|A clear offer, real proof and one-tap WhatsApp, booking or quote — the fewer steps between interest and contact, the more visitors become enquiries.|Copy · Proof · Booking · WhatsApp\nNever let a lead go cold|An assistant answers at 2am, reminders go out on their own and every enquiry lands in one place with a next step — so nothing waits for someone to remember.|AI assistant · Automations · CRM' },
   { key: 'home.ticker', group: 'Home', label: 'Capabilities ticker (| separated)', default: 'Websites|Web applications|Client portals|Dashboards|AI assistants|WhatsApp automation|UI/UX design|Booking systems|E-commerce|Hosting & care' },
   { key: 'home.services.title', group: 'Home', label: 'Services headline', default: 'Three things we do very well.' },
   { key: 'home.services.lead', group: 'Home', label: 'Services lead', type: 'textarea', default: 'Pick the one that solves the actual problem. We’ll tell you if it’s the wrong one.' },

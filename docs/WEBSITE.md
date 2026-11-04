@@ -65,6 +65,16 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Site v5 — section 2 (4 Nov): showreel hero, trusted-by, growth
+
+**Hero** (`.hx` in `views/home.tsx`, `client/site/hero.ts`). Headline = a word that flicks in orange (`home.hero.flick`: Websites | Web apps | AI assistants | Automations — the letters scramble into the next word with a short neon flicker every 2.6 s) over "that grow your business." (`home.hero.title`). Below it, a browser-framed **showreel** of live client sites (`REEL` in `content/site.ts`): each full-page capture scrolls top to bottom for 7 s, then cross-fades to the next; the address pill shows and links the real URL, each slide links to its case study, progress bars underneath; it pauses on hover/focus, off-screen and in hidden tabs. **Light**: a WebGL halftone field in brand orange (two passes — the light is computed once per dot into a small texture, then drawn as dots, so it's cheap): a thin beam lands on the top edge of the showreel, spreads along it, blooms into slow drifting clouds and runs down the right edge, after the reference video. The pointer gently leans the beam and lifts dots near it. No WebGL → a soft CSS glow; reduced motion → one still frame.
+
+**Showreel images** come from Cloudflare **Browser Rendering** (binding `BROWSER` in `wrangler.jsonc`, `lib/capture.ts`): `POST /api/studio/capture {url, slug, folder?:"reel", height?}` (admins) opens the site at 1440×900, forces scroll-reveal effects on, walks the page so lazy images load, and saves a full-page WebP (≤5,200 px tall) to R2 at `reel/<slug>.webp`. Re-run it whenever a client site changes. If no capture exists yet the stage shows a bundled still instead of an empty frame.
+
+**Trusted by** (`.trusted`). All 13 client logos (`CLIENT_LOGOS`, transparent WebPs in `/assets/clients/`; Ataam's from its Drive brand assets) in an endless strip with faded left/right edges, drawn as white silhouettes that turn to full colour on hover; the strip pauses on hover.
+
+**Growth** (`.growth`). "More enquiries. More customers. Less chasing." with three levers (`home.growth.levers`: get found · get chosen · never let a lead go cold) and a calculator: visitors × conversion × average sale (₦/$, log-scale sale slider), showing what one more customer per hundred visitors is worth a month and a year — labelled as an illustration, not a promise, with a CTA for a free review.
+
 ## Site v5 — section 1 (4 Nov): foundations, opening sequence, control-centre navigation
 
 Michael is reworking the site in sections. Section 1 is live; sections 2 (hero video + growth story + trusted-by marquee) and 3 (Bob modes) follow.

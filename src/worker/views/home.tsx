@@ -1,6 +1,6 @@
 import { raw } from 'hono/html';
 import { t, type Lang } from '../content/i18n';
-import { FAQS } from '../content/site';
+import { CLIENT_LOGOS, FAQS, REEL } from '../content/site';
 import type { SiteCtx } from '../lib/content';
 import { icon } from '../lib/icons';
 import { shotOf, type PublicProject } from '../lib/projects';
@@ -151,34 +151,95 @@ export function HomePage(p: {
   const featured = (p.projects.filter((x) => x.featured).length ? p.projects.filter((x) => x.featured) : p.projects).slice(0, 3);
   const cards = ctx.get('home.bento.cards').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
   const bobPoints = ctx.get('home.bob.points').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length === 2);
-  const shot = mediaUrl(ctx.get('home.hero.shot')) || '/assets/home/hero-clinic.webp';
+  const flick = ctx.list('home.hero.flick').length ? ctx.list('home.hero.flick') : ['Websites'];
+  const levers = ctx.get('home.growth.levers').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
   const H = ({ text, cls = 'h-display' }: { text: string; cls?: string }) => <Lines text={text} tag="h2" class={cls} />;
   return (
-    <Layout lang={lang} ctx={ctx} path="/" kind="home" intro schema={schema} preloadImage={shot} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
-      {/* ── hero: words, one button, then the product ── */}
-      <section class="hero hero-shot" data-hero>
-        <div class="wrap">
-          {ctx.season?.greeting ? <p class="hero-kicker reveal"><span class="season-greet">{ctx.season.greeting}</span></p> : ctx.get('home.hero.kicker') ? <p class="hero-kicker reveal">{ctx.get('home.hero.kicker')}</p> : null}
-          <Lines text={ctx.get('home.hero.title')} class="hero-title" />
-          <p class="hero-copy reveal" style="--d:.3s">{ctx.get('home.hero.sub')}</p>
-          <div class="hero-actions reveal" style="--d:.45s">
-            <a class="btn btn-primary btn-glow" href={href(lang, '/marketplace')}>{ctx.get('home.hero.cta')} {icon('arrow-right', { size: 15 })}</a>
-            <a class="btn btn-ghost" href={href(lang, '/contact')}>{ctx.get('home.hero.cta2')}</a>
+    <Layout lang={lang} ctx={ctx} path="/" kind="home" intro schema={schema} preloadImage={`/media/reel/${REEL[0].slug}.webp`} title={ctx.get('seo.home.title')} description={ctx.get('seo.home.description')}>
+      {/* ── hero: flicking words, then a showreel of client sites under an orange halftone light ── */}
+      <section class="hx" data-hero>
+        <canvas class="hx-dots" data-dots aria-hidden="true"></canvas>
+        <div class="wrap hx-copy">
+          {ctx.season?.greeting ? <p class="hero-kicker"><span class="season-greet">{ctx.season.greeting}</span></p> : ctx.get('home.hero.kicker') ? <p class="hero-kicker">{ctx.get('home.hero.kicker')}</p> : null}
+          <h1 class="hx-title">
+            <span class="hx-flick" data-flick={flick.join('|')}><span class="hx-flick-word">{flick[0]}</span></span>
+            <span class="hx-rest">{ctx.get('home.hero.title')}</span>
+          </h1>
+          <p class="hx-sub">{ctx.get('home.hero.sub')}</p>
+          <div class="hx-actions">
+            <a class="btn btn-primary btn-glow" href={href(lang, '/contact')}>{ctx.get('home.hero.cta2')} {icon('arrow-up-right', { size: 15 })}</a>
+            <a class="btn btn-ghost" href={href(lang, '/work')}>See our work</a>
           </div>
         </div>
-        <div class="hero-stage">
-          <div class="hero-glow" aria-hidden="true"></div>
-          <figure class="hero-frame">
-            <picture>
-              <source media="(max-width: 760px)" srcset={shot.endsWith('hero-clinic.webp') ? '/assets/home/phone-clinic-desk.webp' : shot} />
-              <img src={shot} alt={ctx.get('home.hero.caption')} width="1800" height="1108" fetchpriority="high" decoding="async" />
-            </picture>
-            <figcaption>{ctx.get('home.hero.caption')}</figcaption>
-          </figure>
+        <div class="wrap hx-stage">
+          <div class="hx-reel" data-reel>
+            <div class="hx-bar">
+              <span class="hx-dots3" aria-hidden="true"><i></i><i></i><i></i></span>
+              <a class="hx-url" data-reel-url href={REEL[0].url} target="_blank" rel="noopener">{icon('lock', { size: 12 })}<span>{REEL[0].url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</span></a>
+              <span class="hx-tag">Built by Ferrn</span>
+            </div>
+            <div class="hx-screen">
+              {REEL.map((r, i) => (
+                <a class={`hx-slide ${i === 0 ? 'on' : ''}`} data-slide data-url={r.url} href={r.work ? href(lang, `/work/${r.work}`) : r.url} aria-label={`${r.name} — website built by Ferrn`} tabindex={i === 0 ? 0 : -1}>
+                  <img src={`/media/reel/${r.slug}.webp`} alt="" width="1440" height="5200" loading={i < 2 ? 'eager' : 'lazy'} decoding="async" fetchpriority={i === 0 ? 'high' : undefined} />
+                  <span class="hx-name">{r.name}</span>
+                </a>
+              ))}
+            </div>
+            <div class="hx-progress" aria-hidden="true">{REEL.map(() => <i><b></b></i>)}</div>
+          </div>
         </div>
-        <div class="wrap ticker-row" aria-hidden="true">
-          <span class="ticker-label">Everything a business needs online:</span>
-          <div class="ticker"><div class="ticker-track">{[0, 1].map(() => ctx.list('home.ticker').map((s) => <span>{s}<i></i></span>))}</div></div>
+      </section>
+
+      {/* ── trusted by: every client, an endless strip ── */}
+      <section class="trusted" aria-label={ctx.get('home.trusted.title')}>
+        <p class="trusted-label">{ctx.get('home.trusted.title')}</p>
+        <div class="trusted-strip">
+          <div class="trusted-track">
+            {[0, 1].map((k) => CLIENT_LOGOS.map((l) => {
+              const ratio = l.w / 40, h = Math.round(Math.max(26, Math.min(46, 46 / Math.sqrt(ratio))));
+              return <img src={`/assets/clients/${l.file}.webp`} alt={k ? '' : l.name} aria-hidden={k ? 'true' : undefined} title={l.name === 'Client' ? undefined : l.name} height={h} width={Math.round(h * ratio)} loading="lazy" decoding="async" />;
+            }))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── growth: how the work turns into revenue ── */}
+      <section class="growth" id="growth">
+        <div class="wrap">
+          <div class="growth-head">
+            <p class="kicker reveal">{ctx.get('home.growth.kicker')}</p>
+            <H text={ctx.get('home.growth.title')} />
+            <p class="room-lead reveal">{ctx.get('home.growth.lead')}</p>
+          </div>
+          <div class="growth-grid">
+            <ol class="levers">
+              {levers.map(([title, text, tags], i) => (
+                <li class="lever reveal" style={`--d:${i * 0.08}s`}>
+                  <span class="lever-n">0{i + 1}</span>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                  {tags ? <p class="lever-tags">{tags.split('·').map((x) => <span>{x.trim()}</span>)}</p> : null}
+                </li>
+              ))}
+            </ol>
+            <div class="calc reveal" data-calc>
+              <div class="calc-head">
+                <h3>What one more enquiry in a hundred is worth</h3>
+                <div class="currency-toggle calc-cur" role="group" aria-label="Currency"><button type="button" data-calc-cur="NGN" class="active">₦</button><button type="button" data-calc-cur="USD">$</button></div>
+              </div>
+              <label class="calc-row"><span>Visitors a month <b data-calc-out="visits">3,000</b></span><input type="range" min="200" max="50000" step="100" value="3000" data-calc-in="visits" /></label>
+              <label class="calc-row"><span>Average sale <b data-calc-out="sale">₦150,000</b></span><input type="range" min="0" max="100" step="1" value="45" data-calc-in="sale" /></label>
+              <label class="calc-row"><span>Visitors who become customers now <b data-calc-out="rate">1.0%</b></span><input type="range" min="0.2" max="5" step="0.1" value="1" data-calc-in="rate" /></label>
+              <div class="calc-result">
+                <p><span>If a better site lifts that to <b data-calc-out="better">2.0%</b></span></p>
+                <p class="calc-big"><b data-calc-out="extra">+₦4,500,000</b><small>more a month</small></p>
+                <p class="calc-sub"><span data-calc-out="customers">+30 customers</span> · <span data-calc-out="year">₦54,000,000 a year</span></p>
+              </div>
+              <p class="calc-note">An illustration with your own numbers, not a promise. Every project starts by measuring where you are, so you can see what actually changes.</p>
+              <a class="btn btn-primary calc-cta" href={href(lang, '/contact')}>Get a free review of your site {icon('arrow-up-right', { size: 15 })}</a>
+            </div>
+          </div>
         </div>
       </section>
 

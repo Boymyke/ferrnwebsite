@@ -4,6 +4,7 @@ export type Bindings = {
   MEDIA: R2Bucket;
   ASSETS: Fetcher;
   AI?: Ai;
+  BROWSER?: Fetcher;                // Browser Rendering (full-page captures for the showreel)
 
   SITE_URL: string;
   SITE_NAME: string;

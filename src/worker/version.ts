@@ -1,2 +1,2 @@
 /** Bump on every release: busts browser asset caches and the edge HTML cache together. */
-export const ASSET_V = '4.3.1';
+export const ASSET_V = '4.4.0';

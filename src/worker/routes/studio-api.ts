@@ -8,6 +8,7 @@ import { audit, diff } from '../lib/audit';
 import { bumpContentVersion } from '../lib/cache';
 import { complete, extractJson } from '../lib/ai';
 import { engineCall, engineConfigured, syncEngine } from '../lib/engine';
+import { captureSite } from '../lib/capture';
 import { searchPlaces } from '../lib/maps';
 import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, LAGOS_AND_ABROAD, type AutoConfig } from '../lib/autoprospect';
 import { enrichProspects, placeQuery } from '../lib/maps';
@@ -527,6 +528,22 @@ studio.post('/media', async (c): Promise<Response> => {
   await c.env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' }, customMetadata: { by: u.name, name: file.name } });
   await audit(c, 'media', key, 'upload', `${u.name} uploaded ${file.name}`);
   return c.json({ ok: true, key, url: `/media/${key}` });
+});
+
+/* ── full-page capture of a live site (Browser Rendering → R2) ── */
+studio.post('/capture', async (c): Promise<Response> => {
+  const u = c.get('user')!;
+  if (!can(u, 'admin')) return c.json({ ok: false, error: 'Only admins can capture sites.' }, 403);
+  const b = await c.req.json<{ url?: string; slug?: string; folder?: string; height?: number }>().catch(() => ({} as any));
+  let url: URL;
+  try { url = new URL(String(b.url)); if (!/^https?:$/.test(url.protocol)) throw 0; } catch { return c.json({ ok: false, error: 'Give a full https:// address.' }, 400); }
+  const slug = String(b.slug || url.hostname).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'site';
+  const folder = String(b.folder || 'reel').replace(/[^a-z0-9-]/gi, '').slice(0, 20) || 'reel';
+  try {
+    const r = await captureSite(c.env, url.href, `${folder}/${slug}.webp`, Math.min(Math.max(Number(b.height) || 5200, 900), 9000));
+    await audit(c, 'media', r.key, 'capture', `${u.name} captured ${url.href}`);
+    return c.json({ ok: true, ...r });
+  } catch (e: any) { return c.json({ ok: false, error: String(e?.message || e) }, 502); }
 });
 
 /* ── settings & integrations ── */

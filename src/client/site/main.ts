@@ -2,6 +2,7 @@
    checkout and animations. */
 import { bob } from './bob';
 import { music } from './music';
+import { home } from './hero';
 type Strings = Record<string, string>;
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector<T>(s);
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
@@ -86,7 +87,7 @@ function clips() {
 }
 
 /* ── motion: hero light follows the pointer, cover parallax, nav hides on scroll down ── */
-let para: HTMLElement[] = [], lightRooms: HTMLElement[] = [], onScrollNow = () => {};
+let para: HTMLElement[] = [], lightRooms: HTMLElement[] = [], darkRooms: HTMLElement[] = [], onScrollNow = () => {};
 function heroPointer() {
   const hero = $('[data-hero]');
   if (hero && !reduced && matchMedia('(hover: hover)').matches) {
@@ -97,7 +98,7 @@ function heroPointer() {
     }, { passive: true });
   }
 }
-function refreshScroll() { para = $$<HTMLElement>('[data-parallax] img'); lightRooms = $$('.room-light, .section-light'); onScrollNow(); }
+function refreshScroll() { para = $$<HTMLElement>('[data-parallax] img'); lightRooms = $$('.room-light, .section-light'); darkRooms = $$('.hx, .trusted'); onScrollNow(); }
 function motion() {
   heroPointer();
   const nav = $('[data-nav]');
@@ -108,7 +109,9 @@ function motion() {
     if (nav) {
       // No bar behind the nav: it floats. Over a light section its ink flips so it stays readable.
       const mid = 36;
-      nav.classList.toggle('on-light', lightRooms.some((el) => { const r = el.getBoundingClientRect(); return r.top <= mid && r.bottom >= mid; }));
+      const under = (els: HTMLElement[]) => els.some((el) => { const r = el.getBoundingClientRect(); return r.top <= mid && r.bottom >= mid; });
+      nav.classList.toggle('on-light', under(lightRooms));
+      nav.classList.toggle('on-dark', under(darkRooms));
       nav.classList.toggle('hide', y > 320 && y > last && !document.body.classList.contains('menu-open'));
     }
     if (!reduced) for (const img of para) {
@@ -318,6 +321,7 @@ function chrome() {
 
 /* ── page-level widgets (re-run after a soft page change) ── */
 function pageBits() {
+  home(reduced);
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;
     $$('[data-filter]', btn.parentElement!).forEach((b) => b.classList.toggle('active', b === btn));

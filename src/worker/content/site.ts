@@ -1,7 +1,21 @@
-export const CLIENT_LOGOS = [
-  ['clientLogo1.svg', 'Gromzia'], ['clientLogo2.svg', 'Synergix Africa'], ['clientLogo3.svg', 'M-P Infrastructure'],
-  ['clientLogo5.svg', 'Aroda'], ['clientLogo6.svg', 'Outbox Experience'], ['clientLogo7.svg', 'Knomi'], ['clientLogo12.svg', 'Padher'],
-].map(([file, name]) => ({ name, src: `https://raw.githubusercontent.com/FERRN-AGENCY/ferrn-website/main/fern/src/assets/${file}` }));
+/** Clients for the "Trusted by" marquee. Transparent WebP files in /assets/clients/ (from the old site's
+ *  repo, plus Ataam from its brand assets in Drive). `w` is the drawn width at 40px tall. */
+export const CLIENT_LOGOS: { name: string; file: string; w: number }[] = [
+  { name: 'Ataam', file: 'ataam', w: 96 }, { name: 'Gromzia', file: 'clientLogo2', w: 40 }, { name: 'Synergix Africa', file: 'clientLogo5', w: 250 },
+  { name: 'MPI — M-P Infrastructure', file: 'clientLogo1', w: 44 }, { name: 'Knomi', file: 'clientLogo3', w: 132 }, { name: 'Aroda', file: 'clientLogo4', w: 39 },
+  { name: 'Outbox Experience', file: 'clientLogo10', w: 103 }, { name: 'Padher', file: 'clientLogo8', w: 126 }, { name: 'WIB Fair — Women in Business Fair', file: 'clientLogo12', w: 131 },
+  { name: 'Client', file: 'clientLogo6', w: 40 }, { name: 'Client', file: 'clientLogo7', w: 45 }, { name: 'Client', file: 'clientLogo9', w: 48 }, { name: 'Client', file: 'clientLogo11', w: 56 },
+];
+
+/** Home showreel: live client sites, captured full-page into R2 (Studio → POST /api/studio/capture → reel/<slug>.webp). */
+export const REEL: { name: string; slug: string; url: string; work?: string }[] = [
+  { name: 'Gromzia', slug: 'gromzia', url: 'https://www.gromzialtd.com/', work: 'gromzia' },
+  { name: 'Synergix Africa', slug: 'synergix', url: 'https://www.synergixafrica.com/', work: 'synergix' },
+  { name: 'Aroda Group', slug: 'aroda', url: 'https://www.arodagroup.com/', work: 'aroda' },
+  { name: 'MPI Africa', slug: 'mpi', url: 'https://www.mpiafrica.com/', work: 'mpi' },
+  { name: 'Insightblitz', slug: 'insightblitz', url: 'https://insightblitz.io/', work: 'insightblitz' },
+  { name: 'Fashion Fusion Africa', slug: 'fashion-fusion-africa', url: 'https://fashionfusionafrica.com/', work: 'fashion-fusion-africa' },
+];
 
 export const STATS = [
   { value: 50, suffix: '+', label: 'projects across websites, web applications and AI systems' },
