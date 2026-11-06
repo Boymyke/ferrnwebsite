@@ -33,6 +33,7 @@ function DemoThumb({ url }: { url: string }) {
     const ro = new ResizeObserver(([e]) => setScale(e.contentRect.width / 1280));
     ro.observe(el);
     // Only load the page once the card is near the screen: a grid of live sites is heavy.
+    if (el.getBoundingClientRect().top < innerHeight + 200) setShow(true); // already on screen
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShow(true); io.disconnect(); } }, { rootMargin: '200px' });
     io.observe(el);
     return () => { ro.disconnect(); io.disconnect(); };

@@ -52,6 +52,7 @@ function cleanUrl(v: unknown, platform: Platform): string | null {
 
 const VOICE = `You write as Michael, founder of Ferrn Digital Agency in Lagos (websites, web apps, AI automation; ferrnagency.com).
 Voice: warm, direct, Nigerian-professional English, plain words, no hype, no exclamation marks, no emojis unless the platform context clearly invites one, no hashtags.
+Write complete sentences with normal punctuation (full stops, question marks) and line breaks between ideas in longer messages.
 Never invent facts about the person or their business. Use only what you are given. Never include links unless asked.`;
 
 async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, unknown>) {
