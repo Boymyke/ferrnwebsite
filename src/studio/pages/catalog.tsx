@@ -116,9 +116,9 @@ export function Posts() {
   );
 }
 
-export function Knowledge() {
+export function Knowledge({ embedded }: { embedded?: boolean } = {}) {
   return (
-    <ResourcePage res="knowledge" entity="knowledge" title="Chatbot knowledge" sub="The website assistant only answers from what is published here (plus the marketplace price list)."
+    <ResourcePage embedded={embedded} res="knowledge" entity="knowledge" title="Chatbot knowledge" sub="The website assistant only answers from what is published here (plus the marketplace price list)."
       columns={[{ key: 'title', label: 'Title', render: (r) => <strong>{r.title}</strong> }, { key: 'content', label: 'Content', render: (r) => <span className="small">{r.content.slice(0, 140)}</span> }, { key: 'published', label: 'Used', render: (r) => (r.published ? 'yes' : 'no') }]}
       defaults={{ published: 1 }}
       fields={[{ name: 'title', label: 'Title', wide: true }, { name: 'content', label: 'Content', type: 'textarea', rows: 14 }, { name: 'published', label: 'Use in chatbot', type: 'checkbox' }]} />

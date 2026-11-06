@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ago, api, can } from '../api';
-import { Badge, Card, copy, Empty, Fields, Loading, Page, Tabs, useData, useToast, useUser } from '../ui';
+import { Badge, Card, copy, Empty, Fields, Loading, Page, Pager, Tabs, useData, usePaged, useToast, useUser } from '../ui';
 import { Activity, ArrowRight } from 'lucide-react';
 
 const ROLES: [string, string][] = [['admin', 'Admin — everything except owner settings'], ['editor', 'Editor — website, content, marketplace'], ['sales', 'Sales — leads, outreach, meetings, quotes'], ['viewer', 'Viewer — read only']];
@@ -12,6 +12,7 @@ export function TeamAccess() {
   const [who, setWho] = useState('');
   const { data: users, reload } = useData(() => api('/users').then((r) => r.rows));
   const { data: activity, loading } = useData(() => api(`/activity${who ? `?user=${who}` : ''}`).then((r) => r.rows), [who]);
+  const pgAct = usePaged<any>(activity, 'team-activity', who);
   const [inv, setInv] = useState<Record<string, any>>({ role: 'editor' });
   const [link, setLink] = useState('');
   const invite = async (body: Record<string, any>) => {
@@ -64,8 +65,9 @@ export function TeamAccess() {
         <Card title="Activity" actions={<select value={who} onChange={(e) => setWho(e.target.value)}><option value="">Everyone</option>{users?.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>}>
           {loading ? <Loading /> : !activity?.length ? <Empty icon={Activity} title="No activity yet">Every create, edit and delete is logged here with who did it.</Empty> : (
             <table className="table"><thead><tr><th>When</th><th>Who</th><th>What</th><th>Area</th></tr></thead>
-              <tbody>{activity.map((a: any) => <tr key={a.id}><td className="muted nowrap">{ago(a.at)}</td><td><strong>{a.user_name}</strong></td><td>{a.summary}</td><td className="muted small">{a.entity}</td></tr>)}</tbody></table>
+              <tbody>{pgAct.rows.map((a: any) => <tr key={a.id}><td className="muted nowrap">{ago(a.at)}</td><td><strong>{a.user_name}</strong></td><td>{a.summary}</td><td className="muted small">{a.entity}</td></tr>)}</tbody></table>
           )}
+          <Pager pg={pgAct} noun="changes" />
         </Card>
       )}
     </Page>

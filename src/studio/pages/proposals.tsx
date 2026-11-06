@@ -5,7 +5,7 @@ import {
   Smartphone, Sparkles, Trash2, Wallet, X, MailOpen, MousePointerClick, AlertTriangle,
 } from 'lucide-react';
 import { ago, api, can, fmtDate, list, money } from '../api';
-import { Badge, Card, copy, Drawer, Empty, ErrorNote, History, Loading, Page, Tabs, useData, useRoute, useToast, useUser, waLink } from '../ui';
+import { Badge, Card, copy, Drawer, Empty, ErrorNote, History, Loading, Page, Tabs, useData, useRoute, useToast, useUser, waLink, Pager, usePaged } from '../ui';
 
 /* ── types & maths (mirrors src/worker/lib/docs.ts) ── */
 type Billing = 'once' | 'monthly' | 'termly' | 'yearly';
@@ -68,7 +68,15 @@ export function Proposals() {
 
 function ProposalList() {
   const { go } = useRoute();
-  const { data, loading, error } = useData(() => api<{ rows: any[] }>('/proposals').then((r) => r.rows));
+  const toast = useToast();
+  const user = useUser();
+  const { data, loading, error, reload } = useData(() => api<{ rows: any[] }>('/proposals').then((r) => r.rows));
+  const del = async (r: any) => {
+    const msg = r.status === 'signed' ? `${r.number} is signed. Delete it anyway? Its invoices stay in the Invoices tab. This can’t be undone.` : `Delete ${r.number}${r.title ? ` (${r.title})` : ''}? This can’t be undone.`;
+    if (!confirm(msg)) return;
+    try { await api(`/proposals/${r.id}`, { method: 'DELETE' }); toast('Proposal deleted'); reload(); } catch (x: any) { toast(x.message, 'err'); }
+  };
+  const pg = usePaged<any>(data, 'proposals');
   if (loading) return <Loading />;
   if (error) return <ErrorNote error={error} />;
   const rows = data ?? [];
@@ -90,8 +98,8 @@ function ProposalList() {
       </div>
       {!rows.length ? <Card><Empty title="No proposals yet">Start from a lead or write one from your call notes with AI.<button className="btn sm primary" onClick={() => go('/proposals/new')}><Plus {...I} />New proposal</button></Empty></Card> : (
         <div className="table-wrap"><table className="table clickable">
-          <thead><tr><th>Number</th><th>Client</th><th>Title</th><th>Value</th><th>Status</th><th>Views</th><th>Updated</th></tr></thead>
-          <tbody>{rows.map((r) => (
+          <thead><tr><th>Number</th><th>Client</th><th>Title</th><th>Value</th><th>Status</th><th>Views</th><th>Updated</th><th aria-label="Actions" /></tr></thead>
+          <tbody>{pg.rows.map((r) => (
             <tr key={r.id} onClick={() => go(`/proposals/${r.id}`)} className={r.revoked ? 'dim' : ''}>
               <td><strong>{r.number}</strong></td>
               <td>{r.client_company || r.client_name || <span className="muted">—</span>}{r.client_company && r.client_name ? <div className="muted small">{r.client_name}</div> : null}</td>
@@ -100,9 +108,10 @@ function ProposalList() {
               <td><DocStatus s={r.status} />{r.revoked ? <Badge tone="red">link off</Badge> : null}</td>
               <td className="muted nowrap">{r.view_count ? <><Eye size={13} /> {r.view_count} · {ago(r.last_viewed_at)}</> : '—'}</td>
               <td className="muted nowrap">{ago(r.updated_at || r.created_at)}<div className="small">{r.updated_by}</div></td>
+              <td className="cell-act">{can(user, r.status === 'signed' ? 'admin' : 'editor') ? <button className="icon" title="Delete proposal" aria-label={`Delete ${r.number}`} onClick={(e) => { e.stopPropagation(); del(r); }}><Trash2 {...I} /></button> : null}</td>
             </tr>
           ))}</tbody>
-        </table></div>
+        </table><Pager pg={pg} noun="proposals" /></div>
       )}
     </>
   );
@@ -291,7 +300,7 @@ function ProposalEditor({ id }: { id: string | null }) {
                   {row.has_code ? <a className="btn ghost sm" href={here(data.url)} target="_blank" rel="noreferrer"><ExternalLink {...I} />Open client page</a> : null}
                   {row.has_code && writable ? <button className="btn ghost sm" disabled={busy} onClick={() => { if (confirm('Create a new access code? The old code and anyone already signed in stop working.')) run(async () => setShare(await api(`/proposals/${id}/code`, { body: {} }))); }}><KeyRound {...I} />New code</button> : null}
                   {row.has_code && writable ? <button className="btn ghost sm" disabled={busy} onClick={() => run(async () => { await api(`/proposals/${id}/revoke`, { body: { revoked: !row.revoked } }); toast(row.revoked ? 'Link switched back on' : 'Link switched off'); reload(); })}>{row.revoked ? <><LockOpen {...I} />Restore link</> : <><Lock {...I} />Revoke link</>}</button> : null}
-                  {row.status !== 'signed' && can(user, 'editor') ? <button className="btn ghost sm danger" onClick={() => { if (confirm(`Delete ${row.number}? This can’t be undone.`)) run(async () => { await api(`/proposals/${id}`, { method: 'DELETE' }); toast('Deleted'); go('/proposals'); }); }}><Trash2 {...I} />Delete</button> : null}
+                  {can(user, row.status === 'signed' ? 'admin' : 'editor') ? <button className="btn ghost sm danger" onClick={() => { if (confirm(row.status === 'signed' ? `${row.number} is signed. Delete it anyway? Its invoices stay in the Invoices tab. This can’t be undone.` : `Delete ${row.number}? This can’t be undone.`)) run(async () => { await api(`/proposals/${id}`, { method: 'DELETE' }); toast('Deleted'); go('/proposals'); }); }}><Trash2 {...I} />Delete</button> : null}
                 </div>
               </Card>
             ) : <Card><p className="muted small">Save the draft to get a private client link and access code.</p></Card>}
@@ -513,10 +522,11 @@ function InvoicesTab() {
   const open = new URLSearchParams(path.split('?')[1] ?? '').get('invoice');
   const { data, loading, error, reload } = useData(() => api('/proposals/invoices'));
   const [filter, setFilter] = useState('open');
+  const shown = ((data?.rows ?? []) as any[]).filter((r) => filter === 'all' || (filter === 'open' ? ['unpaid', 'receipt_submitted', 'part_paid'].includes(r.status) : r.status === filter));
+  const pg = usePaged<any>(shown, 'invoices', filter);
   if (loading && !data) return <Loading />;
   if (error) return <ErrorNote error={error} />;
   const rows: any[] = data.rows;
-  const shown = rows.filter((r) => filter === 'all' || (filter === 'open' ? ['unpaid', 'receipt_submitted', 'part_paid'].includes(r.status) : r.status === filter));
   const k = data.kpis;
   return (
     <>
@@ -536,7 +546,7 @@ function InvoicesTab() {
       {!shown.length ? <Card><Empty title={rows.length ? 'Nothing here' : 'No invoices yet'}>Invoices are created automatically when a client signs a proposal.</Empty></Card> : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr><th>Invoice</th><th>Client</th><th>Amount due</th><th>Paid</th><th>Status</th><th>Due</th><th>Receipts</th></tr></thead>
-          <tbody>{shown.map((r) => {
+          <tbody>{pg.rows.map((r) => {
             const overdue = r.due_date && r.due_date < new Date().toISOString().slice(0, 10) && !['paid', 'void'].includes(r.status);
             return (
               <tr key={r.id} onClick={() => go(`/proposals?tab=invoices&invoice=${r.id}`)} className={r.status === 'void' ? 'dim' : ''}>
@@ -550,7 +560,7 @@ function InvoicesTab() {
               </tr>
             );
           })}</tbody>
-        </table></div>
+        </table><Pager pg={pg} noun="invoices" /></div>
       )}
       <Drawer open={!!open} wide onClose={() => { go('/proposals?tab=invoices'); reload(); }} title={rows.find((r) => r.id === open)?.number ?? 'Invoice'}>
         {open ? <InvoiceDetail key={open} id={open} onChange={reload} /> : null}

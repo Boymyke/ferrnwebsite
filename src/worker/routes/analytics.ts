@@ -200,7 +200,7 @@ export async function pruneAnalytics(env: Bindings) {
 export const analyticsStudio = new Hono<AppEnv>();
 analyticsStudio.use('*', requireUser('viewer'));
 
-const RANGES = { '24h': { span: DAY, bucket: 3600 }, '7d': { span: 7 * DAY, bucket: DAY }, '30d': { span: 30 * DAY, bucket: DAY } } as const;
+const RANGES = { '24h': { span: DAY, bucket: 3600 }, '7d': { span: 7 * DAY, bucket: DAY }, '30d': { span: 30 * DAY, bucket: DAY }, '90d': { span: 90 * DAY, bucket: DAY } } as const;
 type RangeKey = keyof typeof RANGES;
 
 function window_(q: (k: string) => string | undefined) {
@@ -338,14 +338,91 @@ analyticsStudio.get('/heatmap', async (c) => {
   });
 });
 
+/** Every place visitors came from in the window: one pin per rounded location (lat/lon are stored at 0.1°). */
+analyticsStudio.get('/places', async (c) => {
+  const w = window_((k) => c.req.query(k));
+  const t = now();
+  const places = await all(c.env.DB,
+    `SELECT lat, lon, city, region, country, COUNT(DISTINCT visitor_id) visitors, COUNT(*) sessions, COALESCE(SUM(pageviews), 0) pageviews,
+            MAX(last_seen) last_seen, SUM(CASE WHEN last_seen >= ? THEN 1 ELSE 0 END) live
+       FROM an_sessions WHERE last_seen >= ? AND lat IS NOT NULL AND lon IS NOT NULL
+      GROUP BY lat, lon ORDER BY visitors DESC LIMIT 3000`, t - 300, w.since);
+  const unlocated = await first<{ n: number }>(c.env.DB,
+    'SELECT COUNT(DISTINCT visitor_id) n FROM an_sessions WHERE last_seen >= ? AND (lat IS NULL OR lon IS NULL)', w.since);
+  c.header('cache-control', 'no-store');
+  return c.json({ now: t, range: w.key, places, unlocated: unlocated?.n ?? 0 });
+});
+
+/** One row per visitor (the anonymous id their browser keeps), newest first. */
+analyticsStudio.get('/visitors', async (c) => {
+  const w = window_((k) => c.req.query(k));
+  const page = Math.max(1, Math.round(num(c.req.query('page'), 1, 100000) ?? 1));
+  const size = Math.round(num(c.req.query('size'), 10, 100) ?? 25);
+  const country = (c.req.query('country') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+  const kind = c.req.query('kind'); // returning | new | live
+  const t = now();
+  const where = ['s.last_seen >= ?']; const params: unknown[] = [w.since];
+  if (country) { where.push('s.visitor_id IN (SELECT visitor_id FROM an_sessions WHERE country = ? AND last_seen >= ?)'); params.push(country, w.since); }
+  const having: string[] = [];
+  if (kind === 'returning') having.push('COUNT(*) > 1');
+  if (kind === 'new') having.push('COUNT(*) = 1');
+  if (kind === 'live') having.push(`MAX(s.last_seen) >= ${t - 300}`);
+  const base = `FROM an_sessions s WHERE ${where.join(' AND ')} GROUP BY s.visitor_id ${having.length ? 'HAVING ' + having.join(' AND ') : ''}`;
+  // SQLite: with a single MAX() aggregate, the bare columns come from the row holding the maximum, i.e. the latest session.
+  const [rows, total, countries] = await Promise.all([
+    all<Record<string, unknown>>(c.env.DB,
+      `SELECT s.visitor_id vid, MAX(s.last_seen) last_seen, COUNT(*) sessions, COALESCE(SUM(s.pageviews), 0) pageviews,
+              COALESCE(SUM(s.clicks), 0) clicks, COALESCE(SUM(MAX(0, s.last_seen - s.first_seen)), 0) time_on_site,
+              s.city, s.region, s.country, s.lat, s.lon, s.device, s.browser, s.os, s.current_path, s.referrer, s.utm_source, s.utm_campaign
+         ${base} ORDER BY last_seen DESC LIMIT ${size} OFFSET ${(page - 1) * size}`, ...params),
+    first<{ n: number }>(c.env.DB, `SELECT COUNT(*) n FROM (SELECT 1 ${base})`, ...params),
+    all(c.env.DB, `SELECT country, COUNT(DISTINCT visitor_id) n FROM an_sessions WHERE last_seen >= ? AND country IS NOT NULL GROUP BY country ORDER BY n DESC LIMIT 60`, w.since),
+  ]);
+  // Before the window too? Then they are returning visitors even with one session in it.
+  const vids = rows.map((r) => String(r.vid));
+  const before = vids.length
+    ? await all<{ vid: string; n: number; first: number }>(c.env.DB,
+      `SELECT visitor_id vid, COUNT(*) n, MIN(first_seen) first FROM an_sessions WHERE visitor_id IN (${vids.map(() => '?').join(',')}) GROUP BY visitor_id`, ...vids)
+    : [];
+  const all_ = new Map(before.map((b) => [b.vid, b]));
+  c.header('cache-control', 'no-store');
+  return c.json({
+    now: t, page, size, total: total?.n ?? 0, countries,
+    visitors: rows.map((r) => {
+      const b = all_.get(String(r.vid));
+      return { ...r, id: String(r.vid), vid: undefined, total_sessions: b?.n ?? r.sessions, first_ever: b?.first ?? null, live: Number(r.last_seen) >= t - 300 };
+    }),
+  });
+});
+
+/** Everything one visitor did: each session with its page journey. */
+analyticsStudio.get('/visitors/:id', async (c) => {
+  const vid = c.req.param('id').slice(0, 80);
+  const sessions = await all<Record<string, unknown> & { id: string }>(c.env.DB,
+    `SELECT id, first_seen, last_seen, MAX(0, last_seen - first_seen) duration, entry_path, current_path, referrer, utm_source, utm_medium, utm_campaign,
+            city, region, country, lat, lon, device, browser, os, language, viewport, pageviews, clicks, max_scroll
+       FROM an_sessions WHERE visitor_id = ? ORDER BY last_seen DESC LIMIT 100`, vid);
+  const ids = sessions.map((s) => s.id);
+  const steps = ids.length
+    ? await all<{ session_id: string; path: string; ts: number }>(c.env.DB,
+      `SELECT session_id, path, ts FROM an_events WHERE type = 'pageview' AND session_id IN (${ids.map(() => '?').join(',')}) ORDER BY ts, id LIMIT 3000`, ...ids)
+    : [];
+  const journeys = new Map<string, { path: string; ts: number }[]>();
+  for (const s of steps) { const j = journeys.get(s.session_id) ?? []; if (j.length < 30) j.push({ path: s.path, ts: s.ts }); journeys.set(s.session_id, j); }
+  c.header('cache-control', 'no-store');
+  return c.json({ now: now(), sessions: sessions.map((s) => ({ ...s, returning: false, journey: journeys.get(s.id) ?? [] })) });
+});
+
 analyticsStudio.get('/sessions', async (c) => {
   const limit = Math.round(num(c.req.query('limit'), 1, 100) ?? 40);
+  const page = Math.max(1, Math.round(num(c.req.query('page'), 1, 100000) ?? 1));
   const db = c.env.DB;
+  const total = await first<{ n: number }>(db, 'SELECT COUNT(*) n FROM an_sessions');
   const sessions = await all<Record<string, unknown> & { id: string }>(db,
     `SELECT id, visitor_id, first_seen, last_seen, MAX(0, last_seen - first_seen) duration, entry_path, current_path, referrer, utm_source, utm_medium, utm_campaign,
             city, region, country, device, browser, os, language, viewport, pageviews, clicks, max_scroll,
             (SELECT COUNT(*) FROM an_sessions o WHERE o.visitor_id = s.visitor_id AND o.first_seen < s.first_seen) previous
-       FROM an_sessions s ORDER BY last_seen DESC LIMIT ${limit}`);
+       FROM an_sessions s ORDER BY last_seen DESC LIMIT ${limit} OFFSET ${(page - 1) * limit}`);
   const ids = sessions.map((s) => s.id);
   const steps = ids.length
     ? await all<{ session_id: string; path: string; ts: number }>(db,
@@ -358,5 +435,5 @@ analyticsStudio.get('/sessions', async (c) => {
     journeys.set(s.session_id, j);
   }
   c.header('cache-control', 'no-store');
-  return c.json({ now: now(), sessions: sessions.map(({ visitor_id: _v, ...s }) => ({ ...s, returning: Number(s.previous) > 0, journey: journeys.get(s.id) ?? [] })) });
+  return c.json({ now: now(), page, size: limit, total: total?.n ?? 0, sessions: sessions.map(({ visitor_id: v, ...s }) => ({ ...s, visitor: v, returning: Number(s.previous) > 0, journey: journeys.get(s.id) ?? [] })) });
 });

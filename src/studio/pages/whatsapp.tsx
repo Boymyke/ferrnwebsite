@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ago, api, can, fmtDate } from '../api';
-import { Badge, Card, Empty, Loading, Page, useData, useToast, useUser } from '../ui';
+import { Badge, Card, Empty, Loading, Page, useData, useToast, useUser, Pager, usePaged } from '../ui';
 import { ExternalLink, MessageCircle, MessagesSquare } from 'lucide-react';
 
 type Contact = {
@@ -15,10 +15,12 @@ export function WhatsApp() {
   const { data, loading, reload } = useData(() => api('/wa/contacts'));
   const [sel, setSel] = useState<string | null>(() => new URLSearchParams(location.search).get('chat'));
   const [q, setQ] = useState('');
+  const allRows: Contact[] = (data?.rows ?? []).filter((r: Contact) => !q || `${r.name} ${r.wa_id} ${r.lead_company}`.toLowerCase().includes(q.toLowerCase()));
+  const pg = usePaged<Contact>(allRows, 'wa-chats', q);
   useEffect(() => { const t = setInterval(reload, 20000); return () => clearInterval(t); }, []); // light polling for new messages
   useEffect(() => { const c = new URLSearchParams(location.search).get('chat'); if (c) setSel(c); }, [location.search]); // opened from a notification
   if (loading && !data) return <Loading />;
-  const rows: Contact[] = (data?.rows ?? []).filter((r: Contact) => !q || `${r.name} ${r.wa_id} ${r.lead_company}`.toLowerCase().includes(q.toLowerCase()));
+  const rows = allRows;
   const s = data?.stats ?? {};
   return (
     <Page title="WhatsApp" sub="The bot answers every message instantly, sends enquiry confirmations, follow-ups, meeting reminders and quote links to people who opted in, and hands over to you when someone asks for a person.">
@@ -33,7 +35,7 @@ export function WhatsApp() {
       </div>
       <div className="wa-layout">
         <Card className="wa-list" title={<input className="input" placeholder="Search chats" value={q} onChange={(e) => setQ(e.target.value)} />}>
-          {!rows.length ? <Empty icon={MessagesSquare} title="No chats yet">Chats appear here when someone messages your WhatsApp number or ticks “send me updates on WhatsApp” on the website.</Empty> : rows.map((r) => (
+          {!rows.length ? <Empty icon={MessagesSquare} title="No chats yet">Chats appear here when someone messages your WhatsApp number or ticks “send me updates on WhatsApp” on the website.</Empty> : pg.rows.map((r) => (
             <button key={r.wa_id} className={`wa-row ${sel === r.wa_id ? 'on' : ''}`} onClick={() => setSel(r.wa_id)}>
               <span className="avatar">{(r.name || '#').slice(0, 1).toUpperCase()}</span>
               <span className="wa-row-main">
@@ -43,6 +45,7 @@ export function WhatsApp() {
               <small className="muted">{r.last_at ? ago(r.last_at + 'Z') : ''}</small>
             </button>
           ))}
+          <Pager pg={pg} noun="chats" />
         </Card>
         {sel ? <Thread key={sel} id={sel} templates={data?.templates ?? {}} onChange={reload} /> : <Card className="wa-thread"><Empty icon={MessageCircle} title="Pick a chat">Select a conversation to read it, reply, or take over from the bot.</Empty></Card>}
       </div>

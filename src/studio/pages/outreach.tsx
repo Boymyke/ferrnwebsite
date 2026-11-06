@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ago, api, can, fmtDate } from '../api';
-import { Badge, Card, Drawer, Empty, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
+import { Badge, Card, Drawer, Empty, Loading, Page, Status, Tabs, useData, useToast, useUser, Pager, usePaged } from '../ui';
 import { AlertTriangle, MailOpen, RefreshCw } from 'lucide-react';
 
 export function Outreach() {
@@ -96,6 +96,7 @@ export function Outreach() {
 }
 
 function List({ rows, render, empty }: { rows?: any[]; render: (r: any) => React.ReactNode; empty: string }) {
+  const pg = usePaged<any>(rows, `outreach-${empty.slice(0, 12)}`, null, 25);
   if (!rows?.length) return <Empty compact icon={MailOpen} title={empty} />;
-  return <div className="stack">{rows.map((r) => <div key={r.id} className="stack-item">{render(r)}</div>)}</div>;
+  return <><div className="stack">{pg.rows.map((r) => <div key={r.id} className="stack-item">{render(r)}</div>)}</div><Pager pg={pg} /></>;
 }

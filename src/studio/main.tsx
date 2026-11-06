@@ -13,7 +13,7 @@ import { Meetings } from './pages/meetings';
 import { Quotes } from './pages/quotes';
 import { Proposals } from './pages/proposals';
 import { FileSignature } from 'lucide-react';
-import { Ads, Knowledge, Orders, Posts, Products, Requests, TeamMembers } from './pages/catalog';
+import { Ads, Orders, Posts, Products, Requests, TeamMembers } from './pages/catalog';
 import { BobPage, Faqs, Links, Profile, Projects, Seasons, SiteContent, Testimonials } from './pages/website';
 import { Content } from './pages/content';
 import { CarouselStudio } from './pages/carousel';
@@ -22,20 +22,21 @@ import { Settings, TeamAccess } from './pages/team';
 import { Demos } from './pages/demos';
 import { Analytics } from './pages/analytics';
 import { Emails } from './pages/emails';
+import { Engage } from './pages/engage';
 import { Rfps } from './pages/rfps';
 import {
-  LayoutDashboard, Users, Radar, Send, MessageCircle, CalendarClock, Receipt, PenSquare, Megaphone, Package, ShoppingBag, Inbox,
-  UserSquare2, Quote, Newspaper, BrainCircuit, ShieldCheck, Settings as SettingsIcon, ExternalLink, Menu, MonitorPlay, SunMoon, Search, LogOut,
+  LayoutDashboard, AtSign, Heart, Users, Radar, Send, MessageCircle, CalendarClock, Receipt, PenSquare, Megaphone, Package, ShoppingBag, Inbox,
+  UserSquare2, Quote, Newspaper, ShieldCheck, Settings as SettingsIcon, ExternalLink, Menu, MonitorPlay, SunMoon, Search, LogOut,
 } from 'lucide-react';
 
 const I = (C: React.ComponentType<any>) => <C size={17} strokeWidth={1.8} aria-hidden="true" />;
 
 const NAV: { group: string; items: [string, string, React.ReactNode, User['role']?][] }[] = [
-  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/emails', 'Emails', I(MailOpen)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)], ['/rfps', 'RFPs', I(FileSearch)]] },
-  { group: 'Marketing', items: [['/content', 'Content', I(PenSquare)], ['/ads', 'Ads', I(Megaphone)]] },
+  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/social', 'Social DMs', I(AtSign)], ['/emails', 'Emails', I(MailOpen)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)], ['/rfps', 'RFPs', I(FileSearch)]] },
+  { group: 'Marketing', items: [['/content', 'Content', I(PenSquare)], ['/interactions', 'Interactions', I(Heart)], ['/ads', 'Ads', I(Megaphone)]] },
   { group: 'Marketplace', items: [['/marketplace/products', 'Products', I(Package)], ['/marketplace/demos', 'Demos', I(MonitorPlay)], ['/marketplace/orders', 'Orders', I(ShoppingBag)], ['/marketplace/requests', 'Enquiries', I(Inbox)]] },
   { group: 'Projects', items: [['/projects', 'Projects', I(FolderKanban)]] },
-  { group: 'Website', items: [['/website/content', 'Website copy', I(TextCursorInput)], ['/website/bob', 'Bob (assistant)', I(Bot)], ['/website/team', 'Team page', I(UserSquare2)], ['/website/testimonials', 'Testimonials', I(Quote)], ['/website/posts', 'Insights', I(Newspaper)], ['/website/faqs', 'FAQs', I(HelpCircle)], ['/website/knowledge', 'Bob knowledge notes', I(BrainCircuit)], ['/website/profile', 'Company profile', I(BookUser)], ['/website/links', 'Important links', I(Link2)], ['/website/seasons', 'Seasonal themes', I(Sun), 'admin']] },
+  { group: 'Website', items: [['/website/content', 'Website copy', I(TextCursorInput)], ['/website/bob', 'Bob (assistant)', I(Bot)], ['/website/team', 'Team page', I(UserSquare2)], ['/website/testimonials', 'Testimonials', I(Quote)], ['/website/posts', 'Insights', I(Newspaper)], ['/website/faqs', 'FAQs', I(HelpCircle)], ['/website/profile', 'Company profile', I(BookUser)], ['/website/links', 'Important links', I(Link2)], ['/website/seasons', 'Seasonal themes', I(Sun), 'admin']] },
   { group: 'Workspace', items: [['/team', 'Team & access', I(ShieldCheck)], ['/settings', 'Settings', I(SettingsIcon)]] },
 ];
 
@@ -47,6 +48,8 @@ function Router() {
   if (p.startsWith('/leads')) return <Leads />;
   if (p.startsWith('/prospect')) return <Prospect />;
   if (p.startsWith('/outreach')) return <Outreach />;
+  if (p.startsWith('/social')) return <Engage kind="dm" />;
+  if (p.startsWith('/interactions')) return <Engage kind="comment" />;
   if (p.startsWith('/emails')) return <Emails />;
   if (p.startsWith('/whatsapp')) return <WhatsApp />;
   if (p.startsWith('/meetings')) return <Meetings />;
@@ -70,7 +73,7 @@ function Router() {
   if (p.startsWith('/website/team')) return <TeamMembers />;
   if (p.startsWith('/website/testimonials')) return <Testimonials />;
   if (p.startsWith('/website/posts')) return <Posts />;
-  if (p.startsWith('/website/knowledge')) return <Knowledge />;
+  if (p.startsWith('/website/knowledge')) return <BobPage />; // old link: Bob › Knowledge notes
   if (p.startsWith('/team')) return <TeamAccess />;
   if (p.startsWith('/settings')) return <Settings />;
   return <Dashboard />;

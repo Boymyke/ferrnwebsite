@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ago, api, type User } from './api';
-import { AlertTriangle, CheckCircle2, ImagePlus, Inbox, Info, Loader2, RefreshCw, Trash2, X, XCircle, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, ImagePlus, Inbox, Info, Loader2, RefreshCw, Trash2, X, XCircle, type LucideIcon } from 'lucide-react';
 
 /* ── routing (history API, /studio/...) ── */
 export const RouterCtx = createContext<{ path: string; go: (p: string) => void }>({ path: '/', go: () => {} });
@@ -371,3 +371,46 @@ export const waLink = (phone?: string | null, text = '') => {
   else if (d.length === 10) d = '234' + d;
   return `https://wa.me/${d}${text ? '?text=' + encodeURIComponent(text) : ''}`;
 };
+
+/* ── pagination (client side: lists arrive whole, the page shows a slice) ── */
+const PAGE_SIZES = [25, 50, 100];
+const readSize = (key: string, d: number) => { try { const n = Number(localStorage.getItem(`ferrn-pg:${key}`)); return PAGE_SIZES.includes(n) ? n : d; } catch { return d; } };
+export type Paged<T> = { rows: T[]; page: number; pages: number; total: number; size: number; from: number; to: number; setPage: (n: number) => void; setSize: (n: number) => void };
+/** Slices `rows` into pages. Goes back to page 1 when `reset` changes (a filter, search or tab). */
+export function usePaged<T>(rows: T[] | null | undefined, key: string, reset: unknown = null, defaultSize = 25): Paged<T> {
+  const [size, setSizeState] = useState(() => readSize(key, defaultSize));
+  const [page, setPage] = useState(1);
+  const resetKey = JSON.stringify(reset);
+  useEffect(() => { setPage(1); }, [resetKey]);
+  const list = rows ?? [];
+  const total = list.length;
+  const pages = Math.max(1, Math.ceil(total / size));
+  const cur = Math.min(Math.max(1, page), pages);
+  const slice = useMemo(() => list.slice((cur - 1) * size, cur * size), [list, cur, size]); // eslint-disable-line react-hooks/exhaustive-deps
+  const setSize = (n: number) => { setSizeState(n); setPage(1); try { localStorage.setItem(`ferrn-pg:${key}`, String(n)); } catch { /* private mode */ } };
+  return { rows: slice, page: cur, pages, total, size, from: total ? (cur - 1) * size + 1 : 0, to: Math.min(total, cur * size), setPage, setSize };
+}
+/** Page numbers with gaps: 1 … 4 5 6 … 12 */
+function pageList(cur: number, pages: number): (number | '…')[] {
+  const want = new Set([1, pages, cur - 1, cur, cur + 1].filter((n) => n >= 1 && n <= pages));
+  const out: (number | '…')[] = []; let last = 0;
+  for (const n of [...want].sort((a, b) => a - b)) { if (n - last > 1) out.push('…'); out.push(n); last = n; }
+  return out;
+}
+export function Pager<T>({ pg, noun = 'items', top }: { pg: Paged<T>; noun?: string; top?: boolean }) {
+  if (pg.total <= PAGE_SIZES[0]) return null;
+  const go = (n: number) => { pg.setPage(n); if (!top) window.scrollTo({ top: 0 }); };
+  return (
+    <nav className={`pager${top ? ' top' : ''}`} aria-label="Pages">
+      <span className="pager-count muted small">{pg.from}–{pg.to} of {pg.total} {noun}</span>
+      <div className="pager-pages">
+        <button className="icon" disabled={pg.page <= 1} onClick={() => go(pg.page - 1)} aria-label="Previous page"><ChevronLeft size={16} /></button>
+        {pageList(pg.page, pg.pages).map((n, i) => n === '…' ? <span key={`g${i}`} className="pager-gap">…</span> : (
+          <button key={n} className={`pager-n${n === pg.page ? ' on' : ''}`} aria-current={n === pg.page ? 'page' : undefined} onClick={() => go(n)}>{n}</button>
+        ))}
+        <button className="icon" disabled={pg.page >= pg.pages} onClick={() => go(pg.page + 1)} aria-label="Next page"><ChevronRight size={16} /></button>
+      </div>
+      <label className="pager-size muted small">Show <select value={pg.size} onChange={(e) => pg.setSize(Number(e.target.value))}>{PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
+    </nav>
+  );
+}

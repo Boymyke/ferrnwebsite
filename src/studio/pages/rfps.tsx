@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CalendarClock, CheckCircle2, ExternalLink, FileSearch, Globe, Info, ListChecks, RefreshCw, ShieldAlert, Sparkles, Target } from 'lucide-react';
 import { ago, api, can, fmtDate } from '../api';
-import { Badge, Card, Drawer, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute, useToast, useUser } from '../ui';
+import { Badge, Card, Drawer, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute, useToast, useUser, Pager, usePaged } from '../ui';
 
 export type Rfp = {
   id: string; found: string; title: string; buyer: string; country: string; url: string; source: string; deadline: string | null;
@@ -51,6 +51,7 @@ export function Rfps() {
   const submitted = rfps.filter((r) => ['submitted', 'won', 'lost'].includes(r.status)).length;
   const sel = rfps.find((r) => r.id === open) ?? null;
 
+  const pg = usePaged<Rfp>(list, 'rfps', [q, tab]);
   if (loading && !data) return <Loading />;
   return (
     <Page title="RFPs" sub="Tenders and requests for proposals Ferrn qualifies for. The RFP scout searches public tender portals every weekday morning, checks each one against what Ferrn can win, and adds the good ones here."
@@ -78,7 +79,7 @@ export function Rfps() {
       ) : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr><th>RFP</th><th>Deadline</th><th>Budget</th><th>Fit</th><th>Status</th></tr></thead>
-          <tbody>{list.map((r) => (
+          <tbody>{pg.rows.map((r) => (
             <tr key={r.id} onClick={() => setOpen(r.id)}>
               <td><strong>{r.title}</strong><div className="muted small">{[r.buyer, r.country].filter(Boolean).join(' · ')}{r.source ? ` · via ${r.source}` : ''}</div></td>
               <td><Due iso={r.deadline} /></td>
@@ -87,7 +88,7 @@ export function Rfps() {
               <td><Badge tone={STATUS[r.status]?.tone ?? 'default'}>{STATUS[r.status]?.label ?? r.status}</Badge></td>
             </tr>
           ))}</tbody>
-        </table></div>
+        </table><Pager pg={pg} noun="RFPs" /></div>
       )}
       <p className="muted small" style={{ marginTop: 14 }}><Info size={13} style={{ verticalAlign: -2 }} /> The scout never registers on portals, contacts buyers or submits anything. You decide what to bid on, and submit yourself.</p>
       {sel ? <RfpDrawer r={sel} onClose={() => { setOpen(null); if (location.search.includes('id=')) history.replaceState(null, '', '/studio/rfps'); }} onData={(d) => setData({ ...data, data: d })} /> : null}

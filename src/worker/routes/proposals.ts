@@ -416,7 +416,10 @@ api.delete('/:id', async (c) => {
   if (!can(c, 'editor')) return deny(c, 'Only editors and admins can delete proposals.');
   const p = await first<Record<string, any>>(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', c.req.param('id'));
   if (!p) return c.json({ ok: false }, 404);
-  if (p.status === 'signed') return c.json({ ok: false, error: 'Signed proposals are kept for your records. Revoke the link instead.' }, 409);
+  if (p.status === 'signed' && !can(c, 'admin')) return deny(c, 'Only admins can delete a signed proposal.');
+  // Its invoices stay (Invoices tab); they just lose the link back to this proposal.
+  await run(c.env.DB, 'UPDATE invoices SET proposal_id = NULL WHERE proposal_id = ?', p.id).catch(() => null);
+  await run(c.env.DB, 'DELETE FROM proposal_events WHERE proposal_id = ?', p.id).catch(() => null);
   await run(c.env.DB, 'DELETE FROM proposals WHERE id = ?', p.id);
   await audit(c, 'proposals', p.id, 'delete', `${c.get('user')!.name} deleted proposal ${p.number}`, strip(p), null);
   return c.json({ ok: true });

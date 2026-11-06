@@ -132,7 +132,7 @@ studio.get('/overview', async (c): Promise<Response> => {
 studio.get('/activity', async (c): Promise<Response> => {
   const user = c.req.query('user');
   const rows = await all(c.env.DB,
-    `SELECT id, at, user_id, user_name, entity, entity_id, action, summary FROM audit_log ${user ? 'WHERE user_id = ?' : ''} ORDER BY id DESC LIMIT 200`,
+    `SELECT id, at, user_id, user_name, entity, entity_id, action, summary FROM audit_log ${user ? 'WHERE user_id = ?' : ''} ORDER BY id DESC LIMIT 1000`,
     ...(user ? [user] : []));
   return c.json({ ok: true, rows });
 });

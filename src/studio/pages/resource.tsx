@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { api, can, create, remove, update, list, type User } from '../api';
-import { Card, Confirm, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Tabs, useData, useToast, useUser, type FieldDef } from '../ui';
+import { Card, Confirm, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Pager, Tabs, useData, usePaged, useToast, useUser, type FieldDef } from '../ui';
 import { FolderOpen, Plus, Upload } from 'lucide-react';
 
 export type Column = { key: string; label: string; render?: (row: any) => React.ReactNode };
@@ -15,6 +15,8 @@ export function ResourcePage(p: {
   preview?: (v: Record<string, any>) => React.ReactNode;
   /** render rows as cards instead of a table */
   card?: (row: any) => React.ReactNode;
+  /** inside another page (a tab): no page header, the New button sits in the toolbar */
+  embedded?: boolean;
 }) {
   const user = useUser();
   const toast = useToast();
@@ -22,15 +24,17 @@ export function ResourcePage(p: {
   const { data, loading, error, reload } = useData(() => list(p.res, { q, ...(p.params ?? {}) }), [q, JSON.stringify(p.params ?? {})]);
   const [open, setOpen] = useState<any | null>(null);
   const writable = can(user, p.writeRole ?? 'editor');
-  return (
-    <Page title={p.title} sub={p.sub} actions={<>{p.extraActions}{writable && p.canCreate !== false ? <button className="btn primary" onClick={() => setOpen({ ...(p.defaults ?? {}) })}><Plus size={15} strokeWidth={2.2} />New</button> : null}</>}>
-      <div className="toolbar"><input className="search" placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} />{p.filters}</div>
-      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty icon={FolderOpen} title="Nothing here yet">Add the first one with the button above.</Empty> : p.card ? (
-        <div className="res-cards">{data.map((r: any) => <button key={r.id} className="res-card" onClick={() => setOpen(r)}>{p.card!(r)}</button>)}</div>
+  const pg = usePaged<any>(data, p.res, [q, p.params]);
+  const actions = <>{p.extraActions}{writable && p.canCreate !== false ? <button className="btn primary" onClick={() => setOpen({ ...(p.defaults ?? {}) })}><Plus size={15} strokeWidth={2.2} />New</button> : null}</>;
+  const body = (
+    <>
+      <div className="toolbar"><input className="search" placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} />{p.filters}{p.embedded ? <div className="toolbar-end">{actions}</div> : null}</div>
+      {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty icon={FolderOpen} title="Nothing here yet">Add the first one with the {p.embedded ? 'New button' : 'button above'}.</Empty> : p.card ? (
+        <div className="res-cards">{pg.rows.map((r: any) => <button key={r.id} className="res-card" onClick={() => setOpen(r)}>{p.card!(r)}</button>)}</div>
       ) : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr>{p.columns.map((c) => <th key={c.key}>{c.label}</th>)}<th>Last edit</th></tr></thead>
-          <tbody>{data.map((r: any) => (
+          <tbody>{pg.rows.map((r: any) => (
             <tr key={r.id} onClick={() => setOpen(r)}>
               {p.columns.map((c) => <td key={c.key}>{c.render ? c.render(r) : String(r[c.key] ?? '')}</td>)}
               <td className="muted small">{r.updated_by ?? r.created_by ?? ''}</td>
@@ -38,9 +42,12 @@ export function ResourcePage(p: {
           ))}</tbody>
         </table></div>
       )}
+      <Pager pg={pg} />
       {open ? <Editor {...p} row={open} writable={writable} onClose={() => { setOpen(null); reload(); }} toast={toast} reload={reload} /> : null}
-    </Page>
+    </>
   );
+  if (p.embedded) return body;
+  return <Page title={p.title} sub={p.sub} actions={actions}>{body}</Page>;
 }
 
 function Editor(p: any) {

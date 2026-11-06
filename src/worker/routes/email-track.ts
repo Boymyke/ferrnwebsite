@@ -3,6 +3,7 @@ import type { AppEnv, Bindings } from '../lib/env';
 import { all, clamp, first, parseJson, run } from '../lib/db';
 import { requireUser } from '../lib/auth';
 import { addEvent } from '../lib/docs';
+import { engineCall } from '../lib/engine';
 
 /* Email tracking.
  *   GET  /api/e/o/<id>.gif      open pixel (1x1, never cached)
@@ -125,6 +126,30 @@ export async function syncOutreachEmails(env: Bindings, dash: { recentSent?: any
         m.status === 'failed' ? 'failed' : 'sent', m.status === 'failed' ? clamp(m.error, 500) || null : null, sentAt);
   });
   for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
+  // Keep the text of each outreach email so Studio › Emails can show what was sent.
+  await Promise.all(sent.filter((m) => m.body).map(async (m) => {
+    const key = `private/emails/lh-${String(m.id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60)}.txt`;
+    if (await env.MEDIA?.head(key)) return;
+    await env.MEDIA?.put(key, String(m.body).slice(0, 50_000), { httpMetadata: { contentType: 'text/plain; charset=utf-8' } });
+  })).catch(() => null);
+}
+
+/** What an email said: the stored copy, or for older outreach emails the engine's copy (saved for next time). */
+async function emailBody(env: Bindings, row: Record<string, unknown>): Promise<{ html?: string; text?: string } | null> {
+  const id = String(row.id);
+  const html = await env.MEDIA?.get(`private/emails/${id}.html`).catch(() => null);
+  if (html) return { html: await html.text() };
+  const txt = await env.MEDIA?.get(`private/emails/${id}.txt`).catch(() => null);
+  if (txt) return { text: await txt.text() };
+  if (row.source !== 'outreach' || !row.lead_id) return null;
+  try {
+    const d = await engineCall<any>(env, 'getLeadDetail', [row.lead_id]);
+    const msgs: any[] = d?.messages ?? d?.data?.messages ?? [];
+    const m = msgs.find((x) => 'lh-' + String(x.id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60) === id);
+    if (!m?.body) return null;
+    await env.MEDIA?.put(`private/emails/${id}.txt`, String(m.body).slice(0, 50_000), { httpMetadata: { contentType: 'text/plain; charset=utf-8' } }).catch(() => null);
+    return { text: String(m.body) };
+  } catch { return null; }
 }
 
 /* ── Studio ── */
@@ -172,7 +197,8 @@ emailStudio.get('/:id', async (c) => {
   const row = await first<Record<string, unknown>>(c.env.DB, 'SELECT * FROM email_log WHERE id = ?', id);
   if (!row) return c.json({ ok: false, error: 'Not found' }, 404);
   const events = await all(c.env.DB, 'SELECT kind, url, ua, country, city, at FROM email_events WHERE email_id = ? ORDER BY id DESC LIMIT 200', id);
-  return c.json({ ok: true, row: { ...row, links: parseJson<string[]>(row.links_json, []) }, events });
+  const body = await emailBody(c.env, row);
+  return c.json({ ok: true, row: { ...row, links: parseJson<string[]>(row.links_json, []) }, events, body });
 });
 
 /* ── cron: delivery status for site emails (Resend) ── */

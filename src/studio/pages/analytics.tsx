@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowRight, ChevronsDown, CornerUpLeft, ExternalLink, Eye, Globe, Languages, MapPin, Minus, Monitor, MousePointerClick, RefreshCw, Route, Smartphone, Tablet, Timer, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import { Activity, ArrowRight, ChevronLeft, ChevronRight, ChevronsDown, CornerUpLeft, ExternalLink, Eye, Globe, Languages, MapPin, Minus, Monitor, MousePointerClick, RefreshCw, Route, Smartphone, Tablet, Timer, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { api } from '../api';
-import { Badge, Card, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute } from '../ui';
+import { Badge, Card, Drawer, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute } from '../ui';
 import { AreaChart, BarList, ColumnChart, useWidth } from '../charts';
 
 /* ── types ── */
-type Range = '24h' | '7d' | '30d';
+type Range = '24h' | '7d' | '30d' | '90d';
 type DeviceKey = 'desktop' | 'tablet' | 'mobile';
 type Kpis = { visitors: number; sessions: number; pageviews: number; bounceRate: number; avgDuration: number };
 type Row = { label: string | null; n: number };
@@ -24,6 +24,16 @@ type LiveSession = {
   device: DeviceKey; browser: string | null; os: string | null; referrer: string | null; pageviews: number; clicks: number; seen_ago: number; duration: number;
 };
 type Live = { now: number; count: number; sessions: LiveSession[]; minutes: { t: number; n: number }[] };
+type Place = { lat: number; lon: number; city: string | null; region: string | null; country: string | null; visitors: number; sessions: number; pageviews: number; last_seen: number; live: number };
+type Places = { now: number; places: Place[]; unlocated: number };
+type Visitor = {
+  id: string; last_seen: number; sessions: number; total_sessions: number; first_ever: number | null; pageviews: number; clicks: number; time_on_site: number;
+  city: string | null; region: string | null; country: string | null; lat: number | null; lon: number | null; device: DeviceKey; browser: string | null; os: string | null;
+  current_path: string; referrer: string | null; utm_source: string | null; utm_campaign: string | null; live: boolean;
+};
+type Visitors = { now: number; page: number; size: number; total: number; visitors: Visitor[]; countries: { country: string; n: number }[] };
+/** A map pin: one place, how many visitors, whether someone is there right now. */
+type Pin = { lat: number; lon: number; title: string; detail: string; n: number; live: boolean };
 type Heat = {
   path: string; device: DeviceKey; pages: { path: string; views: number; clicks: number }[]; devices: { device: DeviceKey; clicks: number }[];
   points: [number, number][]; targets: { target: string; n: number }[];
@@ -71,7 +81,7 @@ function Seg<T extends string>({ value, options, onChange, small }: { value: T; 
 export function Analytics() {
   const { path, go } = useRoute();
   const params = new URLSearchParams(path.split('?')[1] || '');
-  const tab = (['overview', 'live', 'heatmap', 'sessions'].includes(params.get('tab') || '') ? params.get('tab') : 'overview') as string;
+  const tab = (['overview', 'live', 'visitors', 'heatmap', 'sessions'].includes(params.get('tab') || '') ? params.get('tab') : 'overview') as string;
   const [range, setRange] = useState<Range>(() => {
     try { return (localStorage.getItem('ferrn-an-range') as Range) || '7d'; } catch { return '7d'; }
   });
@@ -81,13 +91,14 @@ export function Analytics() {
     <Page
       title="Analytics"
       sub="First-party and cookie-free: who is on the website, where they come from and what they do."
-      actions={tab === 'overview' || tab === 'heatmap'
-        ? <Seg value={range} onChange={pickRange} options={[['24h', '24 hours'], ['7d', '7 days'], ['30d', '30 days']]} />
+      actions={tab === 'overview' || tab === 'heatmap' || tab === 'visitors'
+        ? <Seg value={range} onChange={pickRange} options={[['24h', '24 hours'], ['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days']]} />
         : null}
     >
-      <Tabs tabs={[['overview', 'Overview'], ['live', 'Live'], ['heatmap', 'Heatmap'], ['sessions', 'Sessions']]} value={tab} onChange={setTab} />
+      <Tabs tabs={[['overview', 'Overview'], ['live', 'Live'], ['visitors', 'Visitors'], ['heatmap', 'Heatmap'], ['sessions', 'Sessions']]} value={tab} onChange={setTab} />
       {tab === 'overview' ? <OverviewTab range={range} onLive={() => setTab('live')} /> : null}
       {tab === 'live' ? <LiveTab /> : null}
+      {tab === 'visitors' ? <VisitorsTab range={range} /> : null}
       {tab === 'heatmap' ? <HeatmapTab range={range} initialPath={params.get('path')} /> : null}
       {tab === 'sessions' ? <SessionsTab /> : null}
     </Page>
@@ -115,7 +126,7 @@ function OverviewTab({ range, onLive }: { range: Range; onLive: () => void }) {
   const fmtT = (t: number, long = false) => new Date(t * 1000).toLocaleString('en-GB', hourly
     ? { hour: '2-digit', minute: '2-digit', ...(long ? { weekday: 'short' as const } : {}) }
     : { day: 'numeric', month: 'short', ...(long ? { weekday: 'short' as const } : {}) });
-  const label = { '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days' }[data.range];
+  const label = { '24h': 'the last 24 hours', '7d': 'the last 7 days', '30d': 'the last 30 days', '90d': 'the last 90 days' }[data.range];
   const hasData = k.sessions > 0;
   const tiles: [string, React.ReactNode, React.ReactNode, React.ReactNode][] = [
     ['Sessions', <Activity size={16} />, n0(k.sessions), <Delta cur={k.sessions} prev={p.sessions} />],
@@ -228,9 +239,7 @@ function LiveTab() {
         </Card>
       </div>
 
-      <Card title={<span className="an-h"><MapPin size={15} /> Where visitors are now</span>} actions={<span className="muted small">Approximate city, from the network</span>}>
-        <LiveMap sessions={data.sessions} />
-      </Card>
+      <PlacesCard />
 
       <Card title="Active sessions">
         {data.sessions.length ? (
@@ -277,9 +286,42 @@ function loadLeaflet(): Promise<any> {
 }
 const themeNow = () => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 
-function LiveMap({ sessions }: { sessions: LiveSession[] }) {
+const placePins = (places: Place[]): Pin[] => places.map((p) => ({
+  lat: p.lat, lon: p.lon, n: p.visitors, live: p.live > 0,
+  title: place(p),
+  detail: `${p.visitors} ${p.visitors === 1 ? 'visitor' : 'visitors'} · ${p.sessions} ${p.sessions === 1 ? 'visit' : 'visits'} · ${p.pageviews} pages${p.live ? ` · <b>${p.live} here now</b>` : ''}`,
+}));
+
+/** Every place visitors came from, on one map. Pins pulse where someone is on the site right now. */
+const PlacesCard = React.memo(function PlacesCard({ range: fixed }: { range?: Range }) {
+  const [own, setRange] = useState<Range>('30d');
+  const range = fixed ?? own;
+  const { data, error, reload } = useData(() => api<Places>(`/analytics/places?range=${range}&tz=${tz()}`), [range]);
+  useEffect(() => { const t = setInterval(reload, 30_000); return () => clearInterval(t); }, [range]); // eslint-disable-line react-hooks/exhaustive-deps
+  const places = useMemo(() => data?.places ?? [], [data]);
+  const pins = useMemo(() => placePins(places), [places]);
+  const visitors = places.reduce((a, p) => a + p.visitors, 0);
+  const countries = new Set(places.map((p) => p.country).filter(Boolean)).size;
+  return (
+    <Card title={<span className="an-h"><MapPin size={15} /> Where your visitors come from</span>}
+      actions={fixed ? null : <Seg small value={range} onChange={setRange} options={[['24h', '24h'], ['7d', '7d'], ['30d', '30d'], ['90d', '90d']]} />}>
+      {error && !data ? <ErrorNote error={error} onRetry={reload} /> : (
+        <>
+          <PinMap pins={pins} empty="No located visitors in this period" />
+          <div className="an-map-sum">
+            <span><strong>{data ? `${visitors} ${visitors === 1 ? 'visitor' : 'visitors'}` : '…'}</strong>{data ? ` from ${places.length} ${places.length === 1 ? 'place' : 'places'} in ${countries} ${countries === 1 ? 'country' : 'countries'}${data.unlocated ? ` · ${data.unlocated} without a location` : ''}` : ''}</span>
+            <span className="an-legend"><i className="live" /> on the site now</span><span className="an-legend"><i /> visited</span>
+          </div>
+          <p className="muted small" style={{ margin: '6px 0 0' }}>Locations are approximate (city level, from the network) and only include visitors who accepted analytics.</p>
+        </>
+      )}
+    </Card>
+  );
+});
+
+function PinMap({ pins, empty, height }: { pins: Pin[]; empty?: string; height?: number }) {
   const el = useRef<HTMLDivElement>(null);
-  const st = useRef<{ L?: any; map?: any; tiles?: any; layer?: any; grid?: any; fitted?: boolean; theme?: string }>({});
+  const st = useRef<{ L?: any; map?: any; tiles?: any; layer?: any; grid?: any; fitted?: string; theme?: string }>({});
   const [err, setErr] = useState('');
   const [tileFail, setTileFail] = useState(false);
   const [ready, setReady] = useState(false);
@@ -324,36 +366,30 @@ function LiveMap({ sessions }: { sessions: LiveSession[] }) {
     const { L, map, layer } = st.current;
     if (!ready || !L || !map || !layer) return;
     layer.clearLayers();
-    const groups = new Map<string, LiveSession[]>();
-    for (const s of sessions) {
-      if (s.lat == null || s.lon == null) continue;
-      const key = `${s.lat},${s.lon}`;
-      groups.set(key, [...(groups.get(key) ?? []), s]);
-    }
     const pts: [number, number][] = [];
-    for (const g of groups.values()) {
-      const s = g[0];
-      const n = g.length;
-      const size = Math.min(34, 14 + Math.sqrt(n) * 5);
-      const icon = L.divIcon({ className: 'an-pin', iconSize: [size, size], html: `<span class="an-pin-ring"></span><span class="an-pin-dot">${n > 1 ? n : ''}</span>` });
-      const pages = [...new Set(g.map((x) => x.path))].slice(0, 3).map(esc).join(', ');
-      L.marker([s.lat, s.lon], { icon, riseOnHover: true })
-        .bindTooltip(`<strong>${esc(place(s))}</strong><br>${n} ${n === 1 ? 'visitor' : 'visitors'} · ${pages}`, { direction: 'top', offset: [0, -size / 2], className: 'an-tip' })
+    const max = Math.max(1, ...pins.map((p) => p.n));
+    // Biggest first, so small pins stay on top and clickable.
+    for (const p of [...pins].sort((a, b) => b.n - a.n)) {
+      const size = Math.round(Math.min(38, 12 + (Math.sqrt(p.n) / Math.sqrt(max)) * 22 + (p.n > 1 ? 4 : 0)));
+      const icon = L.divIcon({ className: `an-pin${p.live ? ' live' : ''}`, iconSize: [size, size], html: `${p.live ? '<span class="an-pin-ring"></span>' : ''}<span class="an-pin-dot">${p.n > 1 ? p.n : ''}</span>` });
+      L.marker([p.lat, p.lon], { icon, riseOnHover: true, zIndexOffset: p.live ? 1000 : 0 })
+        .bindTooltip(`<strong>${esc(p.title)}</strong><br>${p.detail}`, { direction: 'top', offset: [0, -size / 2], className: 'an-tip' })
         .addTo(layer);
-      pts.push([s.lat!, s.lon!]);
+      pts.push([p.lat, p.lon]);
     }
-    if (pts.length && !st.current.fitted) {
-      st.current.fitted = true;
+    const sig = pins.length ? `${pins.length}:${pins[0].lat},${pins[0].lon}` : '';
+    if (pts.length && st.current.fitted !== sig) {
+      st.current.fitted = sig;
       if (pts.length === 1) map.setView(pts[0], 4);
-      else map.fitBounds(pts, { padding: [60, 60], maxZoom: 5 });
+      else map.fitBounds(pts, { padding: [50, 50], maxZoom: 5 });
     }
-  }, [sessions, ready]);
+  }, [pins, ready]);
 
   return (
     <div className="an-map-wrap">
-      <div ref={el} className="an-map" />
+      <div ref={el} className="an-map" style={height ? { height } : undefined} />
       {err ? <div className="an-map-msg">{err}. Check your connection and reload.</div> : null}
-      {ready && !sessions.some((s) => s.lat != null) ? <div className="an-map-msg soft">No located visitors right now</div> : null}
+      {ready && !pins.length ? <div className="an-map-msg soft">{empty ?? 'No located visitors'}</div> : null}
       {tileFail ? <div className="an-map-note">Basemap unavailable on this network: showing positions only</div> : null}
     </div>
   );
@@ -513,47 +549,157 @@ function PageHeat({ path, device, points, reach, show }: { path: string; device:
 }
 
 /* ═══════════════════════════ sessions ═══════════════════════════ */
+/** A visit with its page-by-page journey. */
+function SessionList({ sessions, now }: { sessions: SessionRow[]; now: number }) {
+  return (
+    <ol className="an-sessions">
+      {sessions.map((s) => {
+        const live = now - s.last_seen < 300;
+        const src = s.utm_campaign || s.utm_source ? `${s.utm_source ?? ''}${s.utm_campaign ? ` · ${s.utm_campaign}` : ''}` : s.referrer || 'Direct';
+        return (
+          <li key={s.id} className="an-sess">
+            <div className="an-sess-icon">{DEVICE_ICON[s.device]}</div>
+            <div className="an-sess-main">
+              <div className="an-sess-head">
+                <strong><Cc cc={s.country} />{place(s)}</strong>
+                {live ? <Badge tone="green">Live</Badge> : null}
+                {s.returning ? <Badge tone="purple">Returning</Badge> : null}
+                <span className="muted small">{new Date(s.first_seen * 1000).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · {s.browser} · {s.os}{s.viewport ? ` · ${s.viewport}` : ''} · from {src}</span>
+              </div>
+              <div className="an-journey">
+                {s.journey.length ? s.journey.map((j, i) => (
+                  <React.Fragment key={i}>
+                    {i ? <span className="an-arrow"><ArrowRight size={12} /><small>{dur(j.ts - s.journey[i - 1].ts)}</small></span> : null}
+                    <span className="an-step">{j.path}</span>
+                  </React.Fragment>
+                )) : <span className="an-step">{s.entry_path}</span>}
+              </div>
+            </div>
+            <div className="an-sess-stats">
+              <span title="Time on site"><Timer size={13} />{dur(s.duration)}</span>
+              <span title="Pages"><Eye size={13} />{s.pageviews}</span>
+              <span title="Clicks"><MousePointerClick size={13} />{s.clicks}</span>
+              <span title="Deepest scroll"><ChevronsDown size={13} />{s.max_scroll}%</span>
+              <span className="muted small">{sinceText(now - s.last_seen)}</span>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** Server-side pager (the lists are too long to send whole). */
+function ServerPager({ page, size, total, noun, onPage }: { page: number; size: number; total: number; noun: string; onPage: (n: number) => void }) {
+  const pages = Math.max(1, Math.ceil(total / size));
+  if (total <= size) return null;
+  const nums = [...new Set([1, page - 1, page, page + 1, pages].filter((n) => n >= 1 && n <= pages))].sort((a, b) => a - b);
+  const go = (n: number) => { onPage(n); window.scrollTo({ top: 0 }); };
+  return (
+    <nav className="pager" aria-label="Pages">
+      <span className="pager-count muted small">{(page - 1) * size + 1}–{Math.min(total, page * size)} of {total.toLocaleString()} {noun}</span>
+      <div className="pager-pages">
+        <button className="icon" disabled={page <= 1} onClick={() => go(page - 1)} aria-label="Previous page"><ChevronLeft size={16} /></button>
+        {nums.map((n, i) => (
+          <React.Fragment key={n}>
+            {i && n - nums[i - 1] > 1 ? <span className="pager-gap">…</span> : null}
+            <button className={`pager-n${n === page ? ' on' : ''}`} aria-current={n === page ? 'page' : undefined} onClick={() => go(n)}>{n}</button>
+          </React.Fragment>
+        ))}
+        <button className="icon" disabled={page >= pages} onClick={() => go(page + 1)} aria-label="Next page"><ChevronRight size={16} /></button>
+      </div>
+      <span />
+    </nav>
+  );
+}
+
 function SessionsTab() {
-  const { data, error, reload } = useData(() => api<{ now: number; sessions: SessionRow[] }>('/analytics/sessions?limit=50'));
+  const [page, setPage] = useState(1);
+  const { data, error, reload } = useData(() => api<{ now: number; page: number; size: number; total: number; sessions: SessionRow[] }>(`/analytics/sessions?limit=25&page=${page}`), [page]);
   if (error && !data) return <ErrorNote error={error} />;
   if (!data) return <Loading />;
-  if (!data.sessions.length) return <Card><Empty title="No sessions yet"><p className="muted small">Each visit to the public site becomes a session with its page journey.</p></Empty></Card>;
+  if (!data.sessions.length && page === 1) return <Card><Empty title="No sessions yet"><p className="muted small">Each visit to the public site becomes a session with its page journey.</p></Empty></Card>;
   return (
     <Card title={<span className="an-h"><Route size={15} /> Recent visits</span>} actions={<button className="btn sm ghost" onClick={reload}><RefreshCw size={14} /> Refresh</button>}>
-      <ol className="an-sessions">
-        {data.sessions.map((s) => {
-          const live = data.now - s.last_seen < 300;
-          const src = s.utm_campaign || s.utm_source ? `${s.utm_source ?? ''}${s.utm_campaign ? ` · ${s.utm_campaign}` : ''}` : s.referrer || 'Direct';
-          return (
-            <li key={s.id} className="an-sess">
-              <div className="an-sess-icon">{DEVICE_ICON[s.device]}</div>
-              <div className="an-sess-main">
-                <div className="an-sess-head">
-                  <strong><Cc cc={s.country} />{place(s)}</strong>
-                  {live ? <Badge tone="green">Live</Badge> : null}
-                  {s.returning ? <Badge tone="purple">Returning</Badge> : <Badge>New</Badge>}
-                  <span className="muted small">{s.browser} · {s.os}{s.viewport ? ` · ${s.viewport}` : ''} · from {src}</span>
-                </div>
-                <div className="an-journey">
-                  {s.journey.length ? s.journey.map((j, i) => (
-                    <React.Fragment key={i}>
-                      {i ? <span className="an-arrow"><ArrowRight size={12} /><small>{dur(j.ts - s.journey[i - 1].ts)}</small></span> : null}
-                      <span className="an-step">{j.path}</span>
-                    </React.Fragment>
-                  )) : <span className="an-step">{s.entry_path}</span>}
-                </div>
-              </div>
-              <div className="an-sess-stats">
-                <span title="Time on site"><Timer size={13} />{dur(s.duration)}</span>
-                <span title="Pages"><Eye size={13} />{s.pageviews}</span>
-                <span title="Clicks"><MousePointerClick size={13} />{s.clicks}</span>
-                <span title="Deepest scroll"><ChevronsDown size={13} />{s.max_scroll}%</span>
-                <span className="muted small">{sinceText(data.now - s.last_seen)}</span>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      <SessionList sessions={data.sessions} now={data.now} />
+      <ServerPager page={data.page} size={data.size} total={data.total} noun="visits" onPage={setPage} />
     </Card>
+  );
+}
+
+const vname = (id: string) => `Visitor ${id.replace(/[^a-z0-9]/gi, '').slice(-6).toUpperCase()}`;
+
+function VisitorsTab({ range }: { range: Range }) {
+  const [page, setPage] = useState(1);
+  const [kind, setKind] = useState('');
+  const [country, setCountry] = useState('');
+  const [open, setOpen] = useState<Visitor | null>(null);
+  useEffect(() => { setPage(1); }, [range, kind, country]);
+  const qs = new URLSearchParams({ range, page: String(page), size: '25', tz: String(tz()), ...(kind ? { kind } : {}), ...(country ? { country } : {}) }).toString();
+  const { data, error, reload } = useData(() => api<Visitors>(`/analytics/visitors?${qs}`), [qs]);
+  return (
+    <>
+      <PlacesCard range={range} />
+      <Card title={<span className="an-h"><Users size={15} /> Every visitor</span>} actions={<button className="btn sm ghost" onClick={reload}><RefreshCw size={14} /> Refresh</button>}>
+        <div className="toolbar">
+          <Seg small value={kind as any} onChange={(v: string) => setKind(v)} options={[['', 'All'], ['live', 'On the site now'], ['new', 'One visit'], ['returning', 'Came back']]} />
+          <select value={country} onChange={(e) => setCountry(e.target.value)}>
+            <option value="">All countries</option>
+            {(data?.countries ?? []).map((c) => <option key={c.country} value={c.country}>{countryName(c.country)} ({c.n})</option>)}
+          </select>
+          <span className="muted small toolbar-end">{data ? `${data.total.toLocaleString()} ${data.total === 1 ? 'visitor' : 'visitors'} in this period` : ''}</span>
+        </div>
+        {error && !data ? <ErrorNote error={error} onRetry={reload} /> : !data ? <Loading /> : !data.visitors.length ? (
+          <Empty title="No visitors match"><p className="muted small">Try a longer period or another filter. Only visitors who accept analytics are counted.</p></Empty>
+        ) : (
+          <div className="table-wrap flat">
+            <table className="table an-table clickable">
+              <thead><tr><th>Visitor</th><th>From</th><th>Device</th><th>Came via</th><th className="r">Visits</th><th className="r">Pages</th><th className="r">Time on site</th><th className="r">Last seen</th></tr></thead>
+              <tbody>{data.visitors.map((v) => (
+                <tr key={v.id} onClick={() => setOpen(v)}>
+                  <td><strong>{vname(v.id)}</strong> {v.live ? <Badge tone="green">Live</Badge> : v.total_sessions > 1 ? <Badge tone="purple">Returning</Badge> : <Badge>New</Badge>}
+                    <div className="muted small">{v.live ? `on ${v.current_path}` : `last on ${v.current_path}`}</div></td>
+                  <td><Cc cc={v.country} />{place(v)}</td>
+                  <td><span className="an-ref">{DEVICE_ICON[v.device]}{v.browser} · {v.os}</span></td>
+                  <td className="muted">{v.utm_source || v.utm_campaign ? [v.utm_source, v.utm_campaign].filter(Boolean).join(' · ') : v.referrer || 'Direct'}</td>
+                  <td className="r">{v.sessions}{v.total_sessions > v.sessions ? <div className="muted small">{v.total_sessions} total</div> : null}</td>
+                  <td className="r">{v.pageviews}</td>
+                  <td className="r">{dur(v.time_on_site)}</td>
+                  <td className="r"><span className={`an-seen ${v.live ? 'fresh' : ''}`}>{sinceText(data.now - v.last_seen)}</span></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+        {data ? <ServerPager page={data.page} size={data.size} total={data.total} noun="visitors" onPage={setPage} /> : null}
+      </Card>
+      {open ? <VisitorDrawer v={open} onClose={() => setOpen(null)} /> : null}
+    </>
+  );
+}
+
+function VisitorDrawer({ v, onClose }: { v: Visitor; onClose: () => void }) {
+  const { data, error } = useData(() => api<{ now: number; sessions: (SessionRow & { lat: number | null; lon: number | null })[] }>(`/analytics/visitors/${encodeURIComponent(v.id)}`), [v.id]);
+  const pins = useMemo<Pin[]>(() => {
+    const m = new Map<string, Pin>();
+    for (const s of data?.sessions ?? []) {
+      if (s.lat == null || s.lon == null) continue;
+      const k = `${s.lat},${s.lon}`; const cur = m.get(k);
+      if (cur) { cur.n++; cur.detail = `${cur.n} visits from here`; } else m.set(k, { lat: s.lat, lon: s.lon, n: 1, live: data!.now - s.last_seen < 300, title: place(s), detail: '1 visit from here' });
+    }
+    return [...m.values()];
+  }, [data]);
+  return (
+    <Drawer open wide onClose={onClose} title={vname(v.id)}>
+      <dl className="dl">
+        <dt>From</dt><dd>{place(v)}</dd>
+        <dt>First visit</dt><dd>{v.first_ever ? new Date(v.first_ever * 1000).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</dd>
+        <dt>Visits</dt><dd>{v.total_sessions}</dd>
+        <dt>Device</dt><dd>{cap(v.device)} · {v.browser} · {v.os}</dd>
+      </dl>
+      <p className="muted small">Anonymous: this is a random id kept in their browser, not a name or IP address. If they filled in a form, they appear under Leads.</p>
+      {pins.length ? <div style={{ margin: '12px 0' }}><PinMap pins={pins} height={220} /></div> : null}
+      {error && !data ? <ErrorNote error={error} /> : !data ? <Loading /> : <SessionList sessions={data.sessions} now={data.now} />}
+    </Drawer>
   );
 }

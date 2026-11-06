@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Eye, ExternalLink, Info, Mail, MailCheck, MailOpen, MapPin, MousePointerClick, RefreshCw, Send } from 'lucide-react';
 import { ago, api, fmtDate } from '../api';
-import { Badge, Card, Drawer, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute } from '../ui';
+import { Badge, Card, Drawer, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute, Pager, usePaged } from '../ui';
 
 type Row = {
   id: string; source: 'site' | 'outreach'; kind: string; to_addr: string; subject: string | null; company: string | null;
@@ -53,6 +53,7 @@ export function Emails() {
   const { data, loading, error, reload } = useData<ListRes>(() => api(`/emails?${qs}`), [qs]);
   useEffect(() => { const t = setInterval(reload, 60_000); return () => clearInterval(t); }, [qs]); // eslint-disable-line react-hooks/exhaustive-deps
   const s = data?.stats;
+  const pg = usePaged<Row>(data?.rows, 'emails', qs);
 
   return (
     <Page title="Emails" sub={<>Who opened and clicked your proposals, invoices and outreach · sending as michael@ferrnagency.com</>}
@@ -88,7 +89,7 @@ export function Emails() {
       ) : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr><th>To</th><th>Email</th><th>Sent</th><th>Status</th><th>Last activity</th></tr></thead>
-          <tbody>{data.rows.map((r) => {
+          <tbody>{pg.rows.map((r) => {
             const last = [r.last_clicked_at, r.last_opened_at].filter(Boolean).sort().pop();
             return (
               <tr key={r.id} onClick={() => setOpen(r.id)}>
@@ -100,7 +101,7 @@ export function Emails() {
               </tr>
             );
           })}</tbody>
-        </table></div>
+        </table><Pager pg={pg} noun="emails" /></div>
       )}
 
       <p className="muted small" style={{ marginTop: 14 }}>
@@ -113,7 +114,7 @@ export function Emails() {
 }
 
 function EmailDrawer({ id, onClose, onProposal }: { id: string; onClose: () => void; onProposal: (id: string) => void }) {
-  const { data, loading, error } = useData<{ row: Row & { links: string[]; from_addr: string | null }; events: Ev[] }>(() => api(`/emails/${id}`), [id]);
+  const { data, loading, error } = useData<{ row: Row & { links: string[]; from_addr: string | null }; events: Ev[]; body?: { html?: string; text?: string } | null }>(() => api(`/emails/${id}`), [id]);
   const r = data?.row;
   return (
     <Drawer open onClose={onClose} title={r?.subject || 'Email'}>
@@ -130,6 +131,20 @@ function EmailDrawer({ id, onClose, onProposal }: { id: string; onClose: () => v
             {r.error ? <><dt>Problem</dt><dd className="err">{r.error}</dd></> : null}
           </dl>
           {r.proposal_id ? <button className="btn sm ghost" style={{ marginTop: 14 }} onClick={() => onProposal(r.proposal_id!)}><ExternalLink size={14} /> Open the proposal</button> : null}
+          <div style={{ height: 16 }} />
+          <Card title="What was sent">
+            {data!.body?.html ? (
+              <iframe className="email-frame" title="Email content" sandbox="allow-popups allow-popups-to-escape-sandbox" srcDoc={data!.body.html.replace(/<head>/i, '<head><base target="_blank">')} />
+            ) : data!.body?.text ? (
+              <>
+                {r.subject ? <div className="email-subject"><span className="muted small">Subject</span><strong>{r.subject}</strong></div> : null}
+                <div className="email-text">{data!.body.text}</div>
+                {r.source === 'outreach' ? <p className="muted small" style={{ marginTop: 10 }}>Your signature{r.kind === 'reply' ? '' : ' and the opt-out line'} were added below this when it was sent.</p> : null}
+              </>
+            ) : (
+              <Empty compact icon={Mail} title="Content not saved">This email was sent before Studio started keeping copies. Every email from now on shows here in full.</Empty>
+            )}
+          </Card>
           <div style={{ height: 16 }} />
           <Card title="Activity">
             {!data!.events.length ? <Empty compact icon={Mail} title="No opens yet">You’ll see each open and click here, with the time and roughly where it happened.</Empty> : (

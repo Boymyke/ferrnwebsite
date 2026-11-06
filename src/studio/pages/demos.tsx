@@ -1,7 +1,7 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { unzip } from 'fflate';
 import { api, ago, can, list } from '../api';
-import { Badge, Card, Confirm, copy, Drawer, Empty, Loading, Page, useData, useToast, useUser } from '../ui';
+import { Badge, Card, Confirm, copy, Drawer, Empty, Loading, Page, Pager, useData, usePaged, useToast, useUser } from '../ui';
 import { Copy, ExternalLink, FileArchive, FolderUp, Globe, MonitorPlay, Plus, RefreshCw, Trash2, UploadCloud, CheckCircle2 } from 'lucide-react';
 
 export type DemoRow = { id: string; slug: string; title: string; kind: 'static' | 'upload'; url: string; files: number; bytes: number; product_slug?: string; products: string[]; updated_at: string; updated_by?: string };
@@ -23,6 +23,28 @@ export function DemoLink({ url }: { url?: string | null }) {
   );
 }
 
+/** A live, scaled-down view of the demo that always fills its card (1280px wide page, scaled to fit). */
+function DemoThumb({ url }: { url: string }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.25);
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const ro = new ResizeObserver(([e]) => setScale(e.contentRect.width / 1280));
+    ro.observe(el);
+    // Only load the page once the card is near the screen: a grid of live sites is heavy.
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShow(true); io.disconnect(); } }, { rootMargin: '200px' });
+    io.observe(el);
+    return () => { ro.disconnect(); io.disconnect(); };
+  }, []);
+  return (
+    <div className="demo-thumb" ref={box}>
+      {show ? <iframe src={url} title="" loading="lazy" tabIndex={-1} aria-hidden="true" scrolling="no" style={{ transform: `scale(${scale})` }} /> : null}
+      <a className="demo-thumb-link" href={url} target="_blank" rel="noreferrer" aria-label="Open demo" />
+    </div>
+  );
+}
+
 export function Demos() {
   const user = useUser();
   const toast = useToast();
@@ -30,11 +52,13 @@ export function Demos() {
   const [upload, setUpload] = useState<null | { slug?: string; title?: string; product_slug?: string }>(null);
   const uploaded = (data ?? []).filter((d) => d.kind === 'upload');
   const builtIn = (data ?? []).filter((d) => d.kind === 'static');
+  const pgUp = usePaged(uploaded, 'demos-up', null, 25);
+  const pgBuilt = usePaged(builtIn, 'demos-built', null, 25);
   const card = (d: DemoRow) => (
     <article key={d.slug} className="demo-card">
-      <div className="demo-thumb"><iframe src={d.url} title="" loading="lazy" tabIndex={-1} aria-hidden="true" scrolling="no" /></div>
+      <DemoThumb url={d.url} />
       <div className="demo-meta">
-        <div className="demo-title"><strong>{d.title}</strong>{d.kind === 'static' ? <Badge>built-in</Badge> : <Badge tone="blue">uploaded</Badge>}</div>
+        <div className="demo-title"><strong title={d.title}>{d.title}</strong>{d.kind === 'static' ? <Badge>built-in</Badge> : <Badge tone="blue">uploaded</Badge>}</div>
         <DemoLink url={d.url} />
         <p className="muted small">
           {d.products.length ? <>Used by {d.products.join(', ')} · </> : null}
@@ -55,13 +79,13 @@ export function Demos() {
       {loading ? <Loading /> : (
         <>
           <Card title={`Uploaded demos · ${uploaded.length}`}>
-            {uploaded.length ? <div className="demo-grid">{uploaded.map(card)}</div> : (
+            {uploaded.length ? <><div className="demo-grid">{pgUp.rows.map(card)}</div><Pager pg={pgUp} noun="demos" /></> : (
               <Empty icon={MonitorPlay} title="No uploaded demos yet" action={can(user, 'sales') ? <button className="btn sm primary" onClick={() => setUpload({})}><Plus size={14} />Upload a demo</button> : null}>
                 Export the demo from wherever you built it (Lovable, Framer, v0, Webflow, a Vite or Next build) as HTML or a zip, then upload it here.
               </Empty>
             )}
           </Card>
-          <Card title={`Built-in demos · ${builtIn.length}`}><div className="demo-grid">{builtIn.map(card)}</div></Card>
+          <Card title={`Built-in demos · ${builtIn.length}`}><div className="demo-grid">{pgBuilt.rows.map(card)}</div><Pager pg={pgBuilt} noun="demos" /></Card>
         </>
       )}
       {upload ? <DemoUploader initial={upload} onClose={() => setUpload(null)} onDone={() => reload()} /> : null}

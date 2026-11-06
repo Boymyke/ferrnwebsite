@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { api, create, fmtDate, list, money, update } from '../api';
-import { Card, copy, EditedBy, Empty, ErrorNote, History, Loading, Page, Status, Tabs, useData, useRoute, useToast } from '../ui';
+import { api, can, create, fmtDate, list, money, remove, update } from '../api';
+import { Card, copy, EditedBy, Empty, ErrorNote, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, useUser, Pager, usePaged } from '../ui';
 import { ArrowLeft, FileText, ListChecks, Plus, Receipt, Trash2 } from 'lucide-react';
 
 type Item = { description: string; qty: number; unit_price: number; recurring: 'once' | 'monthly' | 'termly' | 'yearly' };
@@ -8,20 +8,28 @@ type Item = { description: string; qty: number; unit_price: number; recurring: '
 export function Quotes() {
   const { path, go } = useRoute();
   const { data, loading, error, reload } = useData(() => list('quotes'));
+  const toast = useToast();
+  const user = useUser();
   const id = path.match(/^\/quotes\/([^/?]+)/)?.[1];
+  const pg = usePaged<any>(data, 'quotes');
+  const del = async (q: any) => {
+    if (!confirm(`Delete quote ${q.number}${q.client_company || q.client_name ? ` for ${q.client_company || q.client_name}` : ''}? Its share link stops working. This can’t be undone.`)) return;
+    try { await remove('quotes', q.id); toast('Quote deleted'); reload(); } catch (x: any) { toast(x.message, 'err'); }
+  };
   if (id) return <QuoteEditor id={id === 'new' ? null : id} onDone={() => { reload(); go('/quotes'); }} />;
   return (
     <Page title="Quotes" sub="Draft, share and track quotes. Clients open a branded link, download a PDF and accept online." actions={<button className="btn primary" onClick={() => go('/quotes/new')}><Plus size={14} strokeWidth={2.2} />New quote</button>}>
       {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? <Empty icon={Receipt} title="No quotes yet">Create one from a lead, a meeting, or here.</Empty> : (
         <div className="table-wrap"><table className="table clickable">
-          <thead><tr><th>Number</th><th>Client</th><th>Title</th><th>Total (one-off)</th><th>Status</th><th>Created</th><th>By</th></tr></thead>
-          <tbody>{data.map((q: any) => (
+          <thead><tr><th>Number</th><th>Client</th><th>Title</th><th>Total (one-off)</th><th>Status</th><th>Created</th><th>By</th><th aria-label="Actions" /></tr></thead>
+          <tbody>{pg.rows.map((q: any) => (
             <tr key={q.id} onClick={() => go(`/quotes/${q.id}`)}>
               <td><strong>{q.number}</strong></td><td>{q.client_company || q.client_name}</td><td>{q.title}</td>
               <td>{money(q.total, q.currency)}</td><td><Status s={q.status} /></td><td className="muted">{fmtDate(q.created_at)}</td><td className="muted">{q.updated_by || q.created_by}</td>
+              <td className="cell-act">{can(user, 'editor') ? <button className="icon" title="Delete quote" aria-label={`Delete ${q.number}`} onClick={(e) => { e.stopPropagation(); del(q); }}><Trash2 size={15} strokeWidth={1.9} /></button> : null}</td>
             </tr>
           ))}</tbody>
-        </table></div>
+        </table><Pager pg={pg} noun="quotes" /></div>
       )}
     </Page>
   );
@@ -58,6 +66,7 @@ function totals(items: Item[], disc: number, tax: number) {
 
 function QuoteEditor({ id, onDone }: { id: string | null; onDone: () => void }) {
   const toast = useToast();
+  const user = useUser();
   const { go } = useRoute();
   const leadParam = new URLSearchParams(location.search).get('lead');
   const { data: existing } = useData(() => (id ? api(`/r/quotes/${id}`).then((r) => r.row) : Promise.resolve(null)), [id]);
@@ -96,6 +105,10 @@ function QuoteEditor({ id, onDone }: { id: string | null; onDone: () => void }) 
         <button className="btn ghost" onClick={onDone}><ArrowLeft size={15} strokeWidth={2} />Quotes</button>
         {shareUrl ? <a className="btn ghost" href={shareUrl} target="_blank" rel="noreferrer"><FileText size={15} strokeWidth={2} />Open / PDF</a> : null}
         {shareUrl ? <button className="btn ghost" onClick={() => copy(shareUrl, toast, 'Share link copied')}>Copy link</button> : null}
+        {id && can(user, 'editor') ? <button className="btn ghost danger" disabled={busy} onClick={async () => {
+          if (!confirm(`Delete quote ${q.number || ''}? Its share link stops working. This can’t be undone.`)) return;
+          try { await remove('quotes', id); toast('Quote deleted'); onDone(); } catch (x: any) { toast(x.message, 'err'); }
+        }}><Trash2 size={15} strokeWidth={2} />Delete</button> : null}
         <button className="btn primary" disabled={busy} onClick={async () => { setBusy(true); try { await save(); toast('Saved'); } catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); } }}>Save</button>
       </>}>
       {id ? <Tabs tabs={[['edit', 'Quote'], ['history', 'History']]} value={tab} onChange={setTab} /> : null}

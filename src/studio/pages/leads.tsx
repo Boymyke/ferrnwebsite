@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ago, api, can, create, fmtDate, list, ngn, remove, update } from '../api';
-import { Badge, Card, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, useUser, waLink, type FieldDef } from '../ui';
+import { Badge, Card, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, useUser, waLink, type FieldDef, Pager, usePaged } from '../ui';
 import { Bot, CalendarPlus, ExternalLink, Globe, Hand, MailOpen, MessageCircle, Radar, SearchX, Trash2, UserPlus, Workflow, MapPin, Play, Sparkles, Zap, Plus, X as XIcon } from 'lucide-react';
 
 /** Where a lead came from, as an icon chip. */
@@ -46,6 +46,7 @@ export function Leads() {
   const openId = path.match(/^\/leads\/([^/]+)/)?.[1];
   const [adding, setAdding] = useState(false);
   const total = useMemo(() => (data ?? []).reduce((a: number, l: any) => a + (Number(l.est_value) || 0), 0), [data]);
+  const pg = usePaged<any>(data, 'leads', [q, status, niche, kind]);
 
   return (
     <Page title="Leads" sub={`${data?.length ?? 0} leads · ${ngn(total)} estimated value`}
@@ -74,7 +75,7 @@ export function Leads() {
         <div className="table-wrap">
           <table className="table clickable">
             <thead><tr><th>Company</th><th>Niche · City</th><th>Tier</th><th>Status</th><th>Value</th><th>Last contact</th><th>Next action</th></tr></thead>
-            <tbody>{data.map((l: any) => (
+            <tbody>{pg.rows.map((l: any) => (
               <tr key={l.id} onClick={() => go(`/leads/${l.id}`)}>
                 <td><strong>{l.company}</strong>{l.needs_you === 'Y' ? <Badge tone="orange">needs you</Badge> : null}{l.handled_by ? <Badge tone="purple">{`with ${String(l.handled_by).split(' ')[0]}`}</Badge> : null}<div className="lead-sub"><LeadOrigin l={l} /><span className="muted small">{l.email || l.phone || ''}</span></div></td>
                 <td>{l.niche} · {l.city}</td><td>{l.tier}</td><td><Status s={l.status} /></td><td>{ngn(l.est_value)}</td>
@@ -82,6 +83,7 @@ export function Leads() {
               </tr>
             ))}</tbody>
           </table>
+          <Pager pg={pg} noun="leads" />
         </div>
       ) : (
         <div className="board">
@@ -159,6 +161,7 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
         {lead.preview_url ? <a className="btn sm ghost" href={lead.preview_url} target="_blank" rel="noreferrer"><ExternalLink size={14} strokeWidth={2} />Concept preview</a> : null}
         <button className="btn sm" onClick={() => go(`/meetings/new?lead=${id}`)}><CalendarPlus size={14} strokeWidth={2} />Book meeting</button>
         <button className="btn sm primary" onClick={() => go(`/quotes/new?lead=${id}`)}>Draft quote</button>
+        <button className="btn sm ghost" onClick={() => go(`/social?lead=${id}`)}>Draft a DM</button>
         {can(user, 'sales') ? (lead.handled_by
           ? <button className="btn sm ghost" disabled={!!busy} onClick={() => takeOver(false)} title="AI replies, follow-ups and the WhatsApp bot start again"><Bot size={14} strokeWidth={2} />Hand back to automation</button>
           : <button className="btn sm" disabled={!!busy} onClick={() => takeOver(true)} title="Stops AI replies, automatic follow-ups and the WhatsApp bot for this lead"><Hand size={14} strokeWidth={2} />Take over</button>) : null}

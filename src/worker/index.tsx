@@ -20,6 +20,7 @@ import { analyticsCollect, analyticsStudio, pruneAnalytics } from './routes/anal
 import proposalsApi from './routes/proposals';
 import clientDocs from './routes/client-docs';
 import { emailStudio, emailTrack, syncEmailStatus } from './routes/email-track';
+import { engageApi } from './routes/engage';
 import { notificationsApi } from './routes/notifications';
 import { studioShell } from './routes/studio-shell';
 import { QuoteDocument, type QuoteRow } from './views/quote';
@@ -61,6 +62,7 @@ app.route('/api/a', analyticsCollect);
 app.route('/api/studio/analytics', analyticsStudio);
 app.route('/api/studio/proposals', proposalsApi);
 app.route('/api/studio/emails', emailStudio);
+app.route('/api/studio/engage', engageApi);
 app.route('/api/studio/notifications', notificationsApi);
 app.route('/api/e', emailTrack); // email open pixel, click redirects, LeadsHunter send log
 app.route('/api/studio', studioApi);

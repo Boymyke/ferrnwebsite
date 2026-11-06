@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Bot, Calculator, Camera, Download, ExternalLink, History as HistoryIcon, RefreshCw, Save, Sparkles, ThumbsDown, ThumbsUp, Upload, Eye, EyeOff } from 'lucide-react';
 import { api, can, fmtDate, money } from '../api';
-import { Badge, Card, Empty, ErrorNote, Loading, Page, Status, Tabs, mediaUrl, useData, useToast, useUser } from '../ui';
+import { Badge, Card, Empty, ErrorNote, Loading, Page, Status, Tabs, mediaUrl, useData, useRoute, useToast, useUser, Pager, usePaged } from '../ui';
 import { ResourcePage } from './resource';
+import { Knowledge as KnowledgeNotes } from './catalog';
 
 /* ═══════════════════════════ Projects ═══════════════════════════ */
 const STATUSES = ['discovery', 'design', 'build', 'review', 'launched', 'support', 'paused', 'cancelled'];
@@ -213,7 +214,9 @@ export function BobPage() {
   const user = useUser();
   const toast = useToast();
   const { data, loading, error, reload } = useData(() => api<any>('/site/bob'), []);
-  const [tab, setTab] = useState('overview');
+  const { path, go } = useRoute();
+  const tab = new URLSearchParams(path.split('?')[1] ?? '').get('tab') || (path.startsWith('/website/knowledge') ? 'notes' : 'overview');
+  const setTab = (t: string) => go(t === 'overview' ? '/website/bob' : `/website/bob?tab=${t}`);
   const [q, setQ] = useState('');
   const [preview, setPreview] = useState<any[] | null>(null);
   const set = async (k: string, v: string) => { try { await api('/site/bob', { method: 'PUT', body: { [k]: v } }); toast('Saved'); reload(); } catch (x: any) { toast(x.message, 'err'); } };
@@ -224,7 +227,8 @@ export function BobPage() {
   const admin = can(user, 'admin');
   return (
     <Page title="Bob" sub="The website assistant: what it knows, what it's doing, and how it sounds." actions={<button className="btn ghost" onClick={reindex}><RefreshCw size={15} />Rebuild knowledge</button>}>
-      <Tabs tabs={[['overview', 'Overview'], ['knowledge', 'Knowledge'], ['logs', 'Conversations'], ['costs', 'Costs'], ['settings', 'Settings']]} value={tab} onChange={setTab} />
+      <Tabs tabs={[['overview', 'Overview'], ['notes', 'Knowledge notes'], ['knowledge', 'What Bob knows'], ['logs', 'Conversations'], ['costs', 'Costs'], ['settings', 'Settings']]} value={tab} onChange={setTab} />
+      {tab === 'notes' ? <p className="muted small" style={{ margin: '-4px 0 14px' }}>Notes you write for Bob. He answers only from these, your website content and the price list. After editing, press <strong>Rebuild knowledge</strong>.</p> : null}
       {tab === 'overview' ? (
         <>
           <div className="stats">
@@ -241,7 +245,7 @@ export function BobPage() {
             {!data.unsure?.length ? <p className="muted small">None in the last 30 days.</p> : <table className="table"><tbody>{data.unsure.map((u: any, i: number) => <tr key={i}><td><strong>{u.question}</strong><div className="muted small">{u.path} · {fmtDate(u.created_at, true)}</div></td></tr>)}</tbody></table>}
           </Card>
         </>
-      ) : tab === 'knowledge' ? <Knowledge preview={preview} q={q} setQ={setQ} setPreview={setPreview} index={data.index} /> : tab === 'logs' ? <Logs /> : tab === 'costs' ? <Costs settings={s} set={set} admin={admin} /> : (
+      ) : tab === 'notes' ? <KnowledgeNotes embedded /> : tab === 'knowledge' ? <Knowledge preview={preview} q={q} setQ={setQ} setPreview={setPreview} index={data.index} /> : tab === 'logs' ? <Logs /> : tab === 'costs' ? <Costs settings={s} set={set} admin={admin} /> : (
         <div className="fields">
           <label className="field"><span>Bob on the website</span><select disabled={!admin} value={s['bob.enabled'] || '1'} onChange={(e) => set('bob.enabled', e.target.value)}><option value="1">On</option><option value="0">Off (hidden, API answers 503)</option></select></label>
           <label className="field"><span>Voice</span><select disabled={!admin} value={s['bob.voice'] || 'auto'} onChange={(e) => set('bob.voice', e.target.value)}><option value="auto">Automatic (server voice when available)</option><option value="server">Ferrn's voice only</option><option value="browser">Visitor's device voice only</option></select><small>{data.voice}</small></label>
@@ -330,13 +334,14 @@ function Knowledge({ index, q, setQ, preview, setPreview }: { index: any; q: str
 }
 
 function Logs() {
-  const { data, loading } = useData(() => api<{ rows: any[] }>('/site/bob/logs?limit=100').then((r) => r.rows), []);
+  const { data, loading } = useData(() => api<{ rows: any[] }>('/site/bob/logs?limit=1000').then((r) => r.rows), []);
+  const pg = usePaged<any>(data, 'bob-logs');
   if (loading) return <Loading />;
   if (!data?.length) return <Empty icon={Bot} title="No conversations yet" />;
   return (
     <div className="table-wrap"><table className="table"><thead><tr><th>When</th><th>Page</th><th>Question</th><th>Answer</th><th>Did</th></tr></thead><tbody>
-      {data.map((r) => <tr key={r.id}><td className="small muted">{fmtDate(r.created_at, true)}</td><td className="small">{r.path}</td><td>{r.question}</td><td className="small">{String(r.answer).slice(0, 160)}</td><td className="small">{r.provider?.startsWith('guard') ? <Badge tone="red">blocked</Badge> : r.action ? <Badge tone="blue">{JSON.parse(r.action).type}</Badge> : ''}{r.rating === 1 ? ' 👍' : r.rating === -1 ? ' 👎' : ''}</td></tr>)}
-    </tbody></table></div>
+      {pg.rows.map((r) => <tr key={r.id}><td className="small muted">{fmtDate(r.created_at, true)}</td><td className="small">{r.path}</td><td>{r.question}</td><td className="small">{String(r.answer).slice(0, 160)}</td><td className="small">{r.provider?.startsWith('guard') ? <Badge tone="red">blocked</Badge> : r.action ? <Badge tone="blue">{JSON.parse(r.action).type}</Badge> : ''}{r.rating === 1 ? ' 👍' : r.rating === -1 ? ' 👎' : ''}</td></tr>)}
+    </tbody></table><Pager pg={pg} noun="conversations" /></div>
   );
 }
 

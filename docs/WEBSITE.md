@@ -65,6 +65,16 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Studio update (6 Nov)
+- **No concept sites in outreach.** The morning run and reply check no longer build previews or put preview/concept links in any message; they flag good candidates for Michael ("Good candidate for a concept site", "Wants a concept site — Michael to build it"). 16 queued follow-ups that referred to a concept were put on hold (Outreach › Held) for Michael to approve, edit or cancel.
+- **Emails › What was sent.** Site emails keep a copy of their HTML (`private/emails/<id>.html` in R2, shown in a sandboxed frame); outreach emails keep their text (`private/emails/lh-<id>.txt`), and older outreach emails are fetched once from LeadsHunter and saved. `private/` is never served under /media.
+- **Delete proposals and quotes** from the lists (bin icon) and from the quote editor. Signed proposals: admins only; their invoices stay.
+- **Bob** is one page with tabs: Overview, Knowledge notes (was its own page; old link redirects), What Bob knows, Conversations, Costs, Settings.
+- **Demos** cards no longer overflow; previews scale to fill each card and load only when scrolled near.
+- **Pagination** on every Studio list (25/50/100 per page, remembered): leads, emails, quotes, proposals, invoices, RFPs, content, WhatsApp chats, outreach lists, Bob conversations, activity log, all resource pages, demos; analytics visits and visitors are paged on the server.
+- **Analytics › Visitors**: every visitor (anonymous browser id) with location, device, source, visits, pages and time on site; filters for live / one visit / came back and country; a drawer with each visit's journey. The map (Live and Visitors tabs) shows every place visitors came from in the period, pins pulse where someone is on the site now. New range: 90 days.
+- **Social DMs** (`/social`) and **Interactions** (`/interactions`): AI drafts Instagram DMs, LinkedIn connection notes + messages for leads, and comments on other people's posts. Instagram and LinkedIn don't allow apps to cold-DM, like or comment, and bot accounts get restricted, so sending stays one tap: Copy & open, paste, send, mark done. DMs get a follow-up reminder after 4 days. Stored in R2 `private/studio/engage.json`.
+
 ## Site v5 — section 3 (4 Nov): Bob, the ghost
 
 **Loading.** Only a tiny launcher is in the main bundle (`client/site/bob-launcher.ts`): an orange ghost bottom-right that floats, blinks and follows the pointer with its eyes. The assistant itself (`client/bob/index.ts` → `/assets/bob.js`, ~29 KB, plus `/assets/bob.css`) loads the first time someone opens Bob, so it costs nothing on page load. `data-bob-prompt="…"` on any button opens chat with that question; `data-bob-prompt="tour"` starts the tour.

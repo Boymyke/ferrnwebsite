@@ -72,6 +72,8 @@ export async function sendEmail(env: Bindings, m: {
       .bind(tid, tr.kind.slice(0, 40), fromOf(env).slice(0, 200), to[0].slice(0, 200), m.subject.slice(0, 300), tr.company ?? null, tr.proposalId ?? null, tr.invoiceId ?? null,
         result.id ?? null, result.ok ? 'sent' : 'failed', result.error?.slice(0, 500) ?? null, JSON.stringify(t.links))
       .run().catch((e) => console.warn('email_log insert', e)); // never block sending on the log
+    // Keep what was sent (before tracking was added) so Studio › Emails can show the content.
+    await env.MEDIA?.put(`private/emails/${tid}.html`, m.html, { httpMetadata: { contentType: 'text/html; charset=utf-8' } }).catch(() => null);
   }
   return result;
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, ExternalLink, Eye, Heart, MousePointerClick, Plus, Send, Sparkles, Users } from 'lucide-react';
 import { api, can, create, fmtDate, fromLocalInput, getOne, list, remove, toLocalInput, update } from '../api';
-import { Badge, Card, Confirm, copy, Drawer, EditedBy, Empty, Fields, History, Loading, Page, Status, Tabs, useData, useToast, useUser } from '../ui';
+import { Badge, Card, Confirm, copy, Drawer, EditedBy, Empty, Fields, History, Loading, Page, Status, Tabs, useData, useToast, useUser, Pager, usePaged } from '../ui';
 import { PenSquare } from 'lucide-react';
 import { Track, trackedLink } from '../track';
 import { BarList, HeatGrid, KpiTile, LineChart, PLATFORM_META, SeriesToggles, SocialStyles, Sparkline, fmtNum, fmtPct } from '../social-charts';
@@ -24,6 +24,7 @@ export function Content() {
   const from = new Date(month.getFullYear(), month.getMonth(), 1).toISOString();
   const to = new Date(month.getFullYear(), month.getMonth() + 1, 1).toISOString();
   const { data, loading, reload } = useData(() => list('content', { platform, from: tab === 'calendar' ? from : undefined, to: tab === 'calendar' ? to : undefined }), [platform, from, tab]);
+  const pg = usePaged<any>(data, 'content', [platform, tab]);
   const label = month.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
   useEffect(() => { // back from TikTok / Instagram connect
     const q = new URLSearchParams(location.search);
@@ -48,11 +49,11 @@ export function Content() {
       ) : !data?.length ? <Empty icon={PenSquare} title="No posts yet">Import the November calendar or generate drafts with AI.</Empty> : (
         <div className="table-wrap"><table className="table clickable">
           <thead><tr><th>When</th><th>Platform</th><th>Post</th><th>Format</th><th>Status</th><th>Auto-post</th><th>By</th></tr></thead>
-          <tbody>{data.map((p: any) => (
+          <tbody>{pg.rows.map((p: any) => (
             <tr key={p.id} onClick={() => setOpen(p)}><td className="nowrap">{fmtDate(p.scheduled_at, true)}</td><td><span className={`plat ${p.platform}`}>{p.platform}</span></td>
               <td><strong>{p.title}</strong><div className="muted small">{(p.body || '').slice(0, 90)}</div></td><td className="small">{p.format}</td><td><Status s={p.status} /></td><td><PublishBadge post={p} /></td><td className="muted small">{p.updated_by}</td></tr>
           ))}</tbody>
-        </table></div>
+        </table><Pager pg={pg} noun="posts" /></div>
       )}
       {open ? <PostEditor post={open} onClose={() => { setOpen(null); reload(); }} /> : null}
       {gen ? <Generator onClose={() => { setGen(false); reload(); }} /> : null}

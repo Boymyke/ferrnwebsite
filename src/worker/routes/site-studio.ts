@@ -147,7 +147,7 @@ siteStudio.get('/bob/preview', async (c) => {
 });
 
 siteStudio.get('/bob/logs', async (c) => {
-  const limit = Math.min(200, Number(c.req.query('limit') ?? 60));
+  const limit = Math.min(1000, Number(c.req.query('limit') ?? 60));
   const rows = await all(c.env.DB, 'SELECT id, session, path, lang, question, answer, provider, action, sources, rating, created_at FROM chat_logs ORDER BY id DESC LIMIT ?', limit);
   return c.json({ ok: true, rows });
 });
