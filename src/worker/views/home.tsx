@@ -140,7 +140,7 @@ export function ContactForm({ lang, type = 'contact', product, ctx }: { lang: La
 }
 
 export function HomePage(p: {
-  lang: Lang; ctx: SiteCtx; projects: PublicProject[]; products: ProductRow[]; testimonials: TestimonialRow[]; posts: PostRow[];
+  lang: Lang; ctx: SiteCtx; projects: PublicProject[]; products: ProductRow[]; testimonials: TestimonialRow[]; posts: PostRow[]; team?: TeamRow[];
 }) {
   const { lang, ctx } = p;
   const faqs = ctx.faqs.length ? ctx.faqs.map((f) => [f.question, f.answer] as [string, string]) : FAQS;
@@ -191,20 +191,27 @@ export function HomePage(p: {
         </div>
       </section>
 
-      {/* ── about: a staggered bento (two offset rows) inside the page margins; plain cards on phones ── */}
+      {/* ── about: a staggered bento (two offset rows) on one shared, softly moving glow + pixel texture that
+            shows through the gaps, so the cards read as one piece. Plain cards on phones. ── */}
       <section class="about-bento" id="about" aria-labelledby="about-title">
-        <div class="wrap ab-grid">
-          <div class="ab-head">
-            <p class="kicker reveal">{ctx.get('home.about.kicker')}</p>
-            <Lines text={ctx.get('home.about.title')} tag="h2" class="h-display ab-title" />
-          </div>
-          {(() => {
-            const T = ctx.get('home.about.tiles').split('\n').map((l) => { const [a, ...b] = l.split('|'); return [a.trim(), b.join('|').trim()]; });
-            const tt = (k: number) => T[k] ?? ['', ''];
-            const Cap = ({ k }: { k: number }) => <p class="ab-cap"><strong>{tt(k)[0]}</strong> {tt(k)[1]}</p>;
-            return (
-              <>
-                <article class="ab-tile ab-t1 reveal">
+        <div class="wrap">
+          <div class="room-head"><Lines text={ctx.get('home.about.title')} tag="h2" class="h-display" /></div>
+        </div>
+        {(() => {
+          const T = ctx.get('home.about.tiles').split('\n').map((l) => { const [a, ...b] = l.split('|'); return [a.trim(), b.join('|').trim()]; });
+          const tt = (k: number) => T[k] ?? ['', ''];
+          const Cap = ({ k }: { k: number }) => <p class="ab-cap"><strong>{tt(k)[0]}</strong> {tt(k)[1]}</p>;
+          const team = (p.team ?? []).slice(0, 6);
+          const services: [string, string, string][] = [
+            ['Websites', 'monitor', '/services#websites'], ['Web apps and portals', 'layout-dashboard', '/services#apps'], ['AI assistants', 'bot', '/services#ai'],
+            ['WhatsApp and automation', 'message-circle', '/services#automation'], ['Booking and payments', 'calendar', '/services'], ['SEO and analytics', 'chart-bar', '/services'],
+            ['Ready-built products', 'package', '/marketplace'], ['Hosting and care', 'shield-check', '/services'],
+          ];
+          return (
+            <div class="wrap ab-stage" data-ab>
+              <div class="ab-bg" aria-hidden="true"><span class="ab-glow-a"></span><span class="ab-glow-b"></span><span class="ab-pixels"></span><span class="ab-lines"></span></div>
+              <div class="ab-grid">
+                <article class="ab-tile ab-t1 reveal" data-tilt>
                   <Cap k={0} />
                   <div class="ab-vis ab-checks" aria-hidden="true">
                     <span class="done">{icon('check', { size: 13 })}<s>Business goals</s></span>
@@ -212,19 +219,19 @@ export function HomePage(p: {
                     <span><i></i>What to build first</span>
                   </div>
                 </article>
-                <article class="ab-tile ab-t2 reveal" style="--d:.06s">
+                <article class="ab-tile ab-t2 reveal" style="--d:.05s" data-tilt>
                   <Cap k={1} />
                   <div class="ab-vis ab-doc" aria-hidden="true">
                     <div class="ab-doc-card"><b>Proposal</b><span>Scope, timeline and price</span><small>Signed online · invoice follows</small></div>
                     <div class="ab-doc-card back"></div>
                   </div>
                 </article>
-                <a class="ab-tile ab-t3 ab-stat reveal" style="--d:.12s" href={href(lang, '/work')}>
+                <a class="ab-tile ab-t3 ab-stat reveal" style="--d:.1s" href={href(lang, '/work')} data-tilt>
                   <span class="ab-num">{CLIENT_LOGOS.length}</span>
                   <span class="ab-num-cap">{tt(2)[0]}</span>
                   <span class="ab-plus" aria-hidden="true">{icon('arrow-up-right', { size: 20 })}</span>
                 </a>
-                <article class="ab-tile ab-t4 reveal" style="--d:.18s">
+                <article class="ab-tile ab-t4 reveal" style="--d:.15s" data-tilt>
                   <Cap k={3} />
                   <div class="ab-vis ab-chat" aria-hidden="true">
                     <span class="ab-bub me">Can we add a booking page?</span>
@@ -232,40 +239,34 @@ export function HomePage(p: {
                     <span class="ab-input">Type a message…{icon('send', { size: 14 })}</span>
                   </div>
                 </article>
-                <article class="ab-tile ab-b1 reveal">
+                <a class="ab-tile ab-b1 ab-team reveal" href={href(lang, '/team')} data-tilt>
                   <Cap k={4} />
-                  <div class="ab-vis ab-blocks" aria-hidden="true">
-                    <span>{icon('target', { size: 15 })}<b>Strategy</b></span>
-                    <span>{icon('pen-tool', { size: 15 })}<b>UI and UX design</b></span>
-                    <span>{icon('code', { size: 15 })}<b>Engineering</b></span>
+                  <div class="ab-people">
+                    <ul class="ab-stack">
+                      {team.map((m, i) => (
+                        <li style={`--i:${i}`} title={`${m.name}, ${m.role}`}>
+                          {m.photo ? <img src={sized(m.photo, 96)!} alt="" width="48" height="48" loading="lazy" /> : <span class="ab-ini">{initials(m.name)}</span>}
+                          <span class="ab-tip"><b>{m.name.split(' ')[0]}</b>{m.role}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p class="ab-names">{team.length ? `${team.map((m) => m.name.split(' ')[0]).slice(0, -1).join(', ')} and ${team[team.length - 1].name.split(' ')[0]}` : ''}</p>
                   </div>
-                </article>
-                <article class="ab-tile ab-b2 ab-glow reveal" style="--d:.06s">
+                </a>
+                <article class="ab-tile ab-b2 ab-services reveal" style="--d:.05s" data-tilt>
+                  <span class="ab-spin" aria-hidden="true"></span>
                   <Cap k={5} />
-                  <div class="ab-vis ab-orbit" aria-hidden="true">
-                    <span class="ab-av a1">PM</span><span class="ab-av a2">UX</span><span class="ab-av a3">DEV</span><span class="ab-av a4">You</span>
-                    <span class="ab-core">{icon('play', { size: 22 })}</span>
-                  </div>
+                  <ul class="ab-chips">{services.map(([label, ic, to], i) => <li style={`--i:${i}`}><a href={href(lang, to)}><span class="ab-chip-ic">{icon(ic, { size: 16 })}</span>{label}<span class="ab-chip-go">{icon('arrow-up-right', { size: 14 })}</span></a></li>)}</ul>
                 </article>
-                <article class="ab-tile ab-b3 reveal" style="--d:.12s">
+                <article class="ab-tile ab-b3 ab-photo reveal" style="--d:.1s" data-tilt>
+                  <img class="ab-photo-img" src="/assets/home/about-care.webp" alt="" loading="lazy" decoding="async" width="900" height="900" />
+                  <span class="ab-badge">{icon('shield-check', { size: 14 })}Hosting · security · updates</span>
                   <Cap k={6} />
-                  <div class="ab-vis ab-panel" aria-hidden="true">
-                    <div class="ab-panel-card">
-                      <b>Your website</b>
-                      <span>{icon('shield-check', { size: 14 })}Hosting and backups</span>
-                      <span>{icon('refresh-cw', { size: 14 })}Updates and small changes</span>
-                      <span>{icon('chart-bar', { size: 14 })}Monthly report</span>
-                    </div>
-                  </div>
                 </article>
-                <div class="ab-more reveal">
-                  <a class="link" href={href(lang, '/about')}>Our story {icon('arrow-right', { size: 15 })}</a>
-                  <a class="link" href={href(lang, '/team')}>Meet the team {icon('arrow-right', { size: 15 })}</a>
-                </div>
-              </>
-            );
-          })()}
-        </div>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* ── growth: how the work turns into revenue ── */}

@@ -65,6 +65,12 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## About bento v2 (6 Nov, late)
+- Heading on its own with the normal section h2; corner heading and "Our story / Meet the team" links removed.
+- Tiles: Strategy first · One plan, one price · 13 brands (square-pixel texture) · Talk to the builders · The team (faces from Studio › Team, fan out on hover with name tags) · Everything Ferrn does (all services as links, slowly turning gradient that speeds up on hover) · We stay after launch (image card: `/assets/home/about-care.webp`, generated in ChatGPT).
+- Joining effect: one shared stage behind the cards (drifting orange/violet glow, square-pixel texture from `/assets/home/pixels.svg`, faint vertical lines) shows through the gaps and empty corners; each card has a thin page-colour frame.
+- Interactions: cards lift, a light follows the pointer inside each card, small parts move on hover. Glows and the gradient animate on the compositor only; everything stops for reduced motion.
+
 ## About bento + true dark/light (6 Nov, night)
 - **About Ferrn** sits right after Trusted By: a staggered bento (top row pushed right, bottom row pulled left, heading and links in the corners) on a 24-column grid inside the page margins; 2 columns on tablets, plain stacked cards on phones. One tile (the client count) has the orange dot texture, one has the orange glow. Copy is editable in Studio (Website copy › Home › About).
 - **8px corners** for cards and panels site-wide (`--r` and `--r-lg`).

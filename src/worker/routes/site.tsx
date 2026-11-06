@@ -62,7 +62,8 @@ export function siteRoutes(lang: Lang) {
       all<TestimonialRow>(c.env.DB, TESTIMONIALS).catch(() => all<TestimonialRow>(c.env.DB, 'SELECT id, name, role, quote, avatar FROM testimonials WHERE published = 1 ORDER BY sort')),
       all<PostRow>(c.env.DB, "SELECT slug, title, category, excerpt, published_at FROM posts WHERE status = 'published' ORDER BY published_at DESC LIMIT 3"),
     ]);
-    return c.html(<HomePage lang={lang} ctx={ctx} projects={projects} products={await localiseProducts(c.env, products, lang)} testimonials={testimonials} posts={posts} />);
+    const team = await all<TeamRow>(c.env.DB, TEAM).catch(() => [] as TeamRow[]);
+    return c.html(<HomePage lang={lang} ctx={ctx} projects={projects} products={await localiseProducts(c.env, products, lang)} testimonials={testimonials} posts={posts} team={team} />);
   });
 
   app.get('/work', async (c) => c.html(<WorkPage lang={lang} ctx={await ctxOf(c)} projects={await loadProjects(c.env)} />));

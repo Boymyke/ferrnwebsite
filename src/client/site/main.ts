@@ -320,8 +320,26 @@ function chrome() {
 }
 
 /* ── page-level widgets (re-run after a soft page change) ── */
+/* About bento: a soft light follows the pointer inside each card (two CSS variables, one write per frame). */
+function aboutTiles() {
+  if (reduced || !matchMedia('(hover: hover)').matches) return;
+  $$<HTMLElement>('[data-ab] [data-tilt]').forEach((el) => {
+    let raf = 0, x = 0, y = 0;
+    el.addEventListener('pointermove', (e) => {
+      x = e.clientX; y = e.clientY;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = el.getBoundingClientRect();
+        el.style.setProperty('--mx', `${x - r.left}px`); el.style.setProperty('--my', `${y - r.top}px`);
+      });
+    }, { passive: true });
+  });
+}
+
 function pageBits() {
   home(reduced);
+  aboutTiles();
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;
     $$('[data-filter]', btn.parentElement!).forEach((b) => b.classList.toggle('active', b === btn));
