@@ -820,8 +820,8 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 /* Trusted By — its own section, endless strip with faded edges */
 .trusted { background: var(--bg); color: var(--ink); padding: clamp(48px, 6vw, 84px) 0; position: relative; }
 .trusted-title { margin: 0 0 clamp(24px, 3.4vw, 40px); text-align: center; font-size: clamp(28px, 3.6vw, 46px); font-weight: 600; letter-spacing: -.04em; line-height: 1.15; padding-inline: var(--gutter); }
-/* Full width of the site, inside the same side margins as everything else. */
-.trusted-strip { overflow: hidden; width: calc(100% - var(--gutter) * 2); margin-inline: auto; -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
+/* Same width as the page content (logo to menu button); logos fade out at those edges. */
+.trusted-strip { overflow: hidden; width: min(var(--wrap), 100% - var(--gutter) * 2); margin-inline: auto; -webkit-mask-image: linear-gradient(90deg, transparent, #000 clamp(40px, 9%, 120px), #000 calc(100% - clamp(40px, 9%, 120px)), transparent); mask-image: linear-gradient(90deg, transparent, #000 clamp(40px, 9%, 120px), #000 calc(100% - clamp(40px, 9%, 120px)), transparent); }
 .trusted-track { display: flex; align-items: center; gap: clamp(44px, 6vw, 84px); width: max-content; animation: marquee 48s linear infinite; padding-inline: 30px; will-change: transform; }
 .trusted-strip:hover .trusted-track { animation-play-state: paused; }
 .trusted-track img { flex: none; display: block; object-fit: contain; filter: grayscale(1) brightness(0) invert(1); opacity: .6; transition: filter .35s, opacity .35s, transform .35s var(--ease); }
