@@ -139,6 +139,8 @@ export function ContactForm({ lang, type = 'contact', product, ctx }: { lang: La
   );
 }
 
+const STATS: [string, string][] = [['50+', 'Projects delivered'], ['10+', 'Industries served'], ['25+', 'Years of combined experience'], ['99%', 'Project completion rate']];
+
 export function HomePage(p: {
   lang: Lang; ctx: SiteCtx; projects: PublicProject[]; products: ProductRow[]; testimonials: TestimonialRow[]; posts: PostRow[]; team?: TeamRow[];
 }) {
@@ -202,14 +204,9 @@ export function HomePage(p: {
           const tt = (k: number) => T[k] ?? ['', ''];
           const Cap = ({ k }: { k: number }) => <p class="ab-cap"><strong>{tt(k)[0]}</strong> {tt(k)[1]}</p>;
           const team = (p.team ?? []).slice(0, 6);
-          const services: [string, string, string][] = [
-            ['Websites', 'monitor', '/services#websites'], ['Web apps and portals', 'layout-dashboard', '/services#apps'], ['AI assistants', 'bot', '/services#ai'],
-            ['WhatsApp and automation', 'message-circle', '/services#automation'], ['Booking and payments', 'calendar', '/services'], ['SEO and analytics', 'chart-bar', '/services'],
-            ['Ready-built products', 'package', '/marketplace'], ['Hosting and care', 'shield-check', '/services'],
-          ];
+          const faces = p.testimonials.filter((x) => x.avatar).slice(0, 5);
           return (
             <div class="wrap ab-stage" data-ab>
-              <div class="ab-bg" aria-hidden="true"><span class="ab-glow-a"></span><span class="ab-glow-b"></span><span class="ab-pixels"></span><span class="ab-lines"></span></div>
               <div class="ab-grid">
                 <article class="ab-tile ab-t1 reveal" data-tilt>
                   <Cap k={0} />
@@ -226,11 +223,11 @@ export function HomePage(p: {
                     <div class="ab-doc-card back"></div>
                   </div>
                 </article>
-                <a class="ab-tile ab-t3 ab-stat reveal" style="--d:.1s" href={href(lang, '/work')} data-tilt>
-                  <span class="ab-num">{CLIENT_LOGOS.length}</span>
-                  <span class="ab-num-cap">{tt(2)[0]}</span>
-                  <span class="ab-plus" aria-hidden="true">{icon('arrow-up-right', { size: 20 })}</span>
-                </a>
+                <article class="ab-tile ab-t3 ab-stat reveal" style="--d:.1s" data-tilt>
+                  <dl class="ab-stats">
+                    {STATS.map(([n, l]) => <div><dt>{n}</dt><dd>{l}</dd></div>)}
+                  </dl>
+                </article>
                 <article class="ab-tile ab-t4 reveal" style="--d:.15s" data-tilt>
                   <Cap k={3} />
                   <div class="ab-vis ab-chat" aria-hidden="true">
@@ -253,10 +250,14 @@ export function HomePage(p: {
                     <p class="ab-names">{team.length ? `${team.map((m) => m.name.split(' ')[0]).slice(0, -1).join(', ')} and ${team[team.length - 1].name.split(' ')[0]}` : ''}</p>
                   </div>
                 </a>
-                <article class="ab-tile ab-b2 ab-services reveal" style="--d:.05s" data-tilt>
-                  <span class="ab-spin" aria-hidden="true"></span>
-                  <Cap k={5} />
-                  <ul class="ab-chips">{services.map(([label, ic, to], i) => <li style={`--i:${i}`}><a href={href(lang, to)}><span class="ab-chip-ic">{icon(ic, { size: 16 })}</span>{label}<span class="ab-chip-go">{icon('arrow-up-right', { size: 14 })}</span></a></li>)}</ul>
+                <article class="ab-tile ab-b2 ab-clients reveal" style="--d:.05s" data-tilt>
+                  <div class="ab-mosaic" aria-hidden="true">
+                    {faces.map((x, k) => <img src={sized(x.avatar, k === 0 ? 640 : 360, k === 0 ? 720 : 360)!} alt="" loading="lazy" decoding="async" />)}
+                  </div>
+                  <div class="ab-clients-cap">
+                    <Cap k={5} />
+                    <p class="ab-clients-names">{faces.map((x) => <span title={x.role ?? undefined}><b>{x.name}</b>{(x.role ?? '').split(',').pop()!.trim()}</span>)}</p>
+                  </div>
                 </article>
                 <article class="ab-tile ab-b3 ab-photo reveal" style="--d:.1s" data-tilt>
                   <img class="ab-photo-img" src="/assets/home/about-care.webp" alt="" loading="lazy" decoding="async" width="900" height="900" />
