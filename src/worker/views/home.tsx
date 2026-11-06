@@ -139,6 +139,17 @@ export function ContactForm({ lang, type = 'contact', product, ctx }: { lang: La
   );
 }
 
+const OFFER_ICONS = ['monitor', 'layout-dashboard', 'bot', 'workflow', 'wallet', 'chart-bar', 'shield-check'];
+const OFFERS: [string, string, string, string, string][] = [
+  ['Websites', 'that turn visitors into enquiries.', 'Fast, clear and found on Google, with WhatsApp, booking or quote one tap away.', '#F94406', '#ffb36b'],
+  ['Web apps', 'that run the business day to day.', 'Portals, dashboards and workflow systems your staff and customers actually use.', '#7c5cff', '#F94406'],
+  ['AI assistants', 'that answer at 2am.', 'Trained on your services and prices, they reply, book and hand over to a person.', '#14b8a6', '#7c5cff'],
+  ['Automation', 'that does the follow-up for you.', 'WhatsApp reminders, lead follow-ups and reports that go out on their own.', '#22c55e', '#F94406'],
+  ['Payments', 'that close the sale online.', 'Paystack checkout, invoices and receipts tied to every order.', '#f59e0b', '#ef4444'],
+  ['SEO and analytics', 'that show what is working.', 'Search set up properly and simple reports on visitors, enquiries and sales.', '#3b82f6', '#14b8a6'],
+  ['Hosting and care', 'so it keeps working after launch.', 'Security, backups, updates and small changes, handled every month.', '#F94406', '#7c5cff'],
+];
+
 const STATS: [string, string][] = [['50+', 'Projects delivered'], ['10+', 'Industries served'], ['25+', 'Years of combined experience'], ['99%', 'Project completion rate']];
 
 export function HomePage(p: {
@@ -207,31 +218,59 @@ export function HomePage(p: {
           return (
             <div class="wrap ab-stage" data-ab>
               <div class="ab-grid">
-                {STATS.map(([n, l], k) => (
-                  <article class={`ab-tile ab-num-tile ab-s${k + 1} ${k === 0 ? 'ab-textured' : ''} reveal`} style={`--d:${k * 0.05}s`} data-tilt>
-                    <span class="ab-num">{n}</span>
-                    <span class="ab-num-cap">{l}</span>
-                  </article>
-                ))}
-                <article class="ab-tile ab-talk reveal" style="--d:.1s" data-tilt>
-                  <Cap k={3} />
-                  <div class="ab-vis ab-chat" aria-hidden="true">
-                    <span class="ab-bub me">Can we add a booking page?</span>
-                    <span class="ab-bub them"><b>Michael</b> Yes, it’s on your preview link now.</span>
-                    <span class="ab-input">Type a message…{icon('send', { size: 14 })}</span>
+                <article class="ab-tile ab-num-tile ab-s1 ab-tex-pixels reveal" data-tilt>
+                  <span class="ab-corner" aria-hidden="true">{icon('arrow-up-right', { size: 22 })}</span>
+                  <span class="ab-num">{STATS[0][0]}</span><span class="ab-num-cap">{STATS[0][1]}</span>
+                </article>
+                <article class="ab-tile ab-num-tile ab-s2 ab-tex-dots reveal" style="--d:.05s" data-tilt>
+                  <div class="ab-icons" aria-hidden="true">
+                    {['building', 'package', 'heart', 'book-open', 'wallet', 'briefcase', 'globe', 'sparkles'].map((n, k) => <span style={`--k:${k}`}>{icon(n, { size: 18 })}</span>)}
+                  </div>
+                  <span class="ab-num">{STATS[1][0]}</span><span class="ab-num-cap">{STATS[1][1]}</span>
+                </article>
+                <article class="ab-tile ab-num-tile ab-s4 ab-tex-rings reveal" style="--d:.1s" data-tilt>
+                  <svg class="ab-ring" viewBox="0 0 120 120" aria-hidden="true">
+                    <circle cx="60" cy="60" r="50" class="ab-ring-bg" />
+                    <circle cx="60" cy="60" r="50" class="ab-ring-fg" pathLength="100" />
+                    <path d="M44 61l11 11 22-24" class="ab-ring-tick" />
+                  </svg>
+                  <span class="ab-num">{STATS[3][0]}</span><span class="ab-num-cap">{STATS[3][1]}</span>
+                </article>
+                <article class="ab-tile ab-offers reveal" style="--d:.15s" data-offers aria-roledescription="carousel" aria-label="What Ferrn offers">
+                  <div class="ab-offers-glow" aria-hidden="true">{OFFERS.map((o, k) => <span class={k === 0 ? 'on' : ''} style={`--g1:${o[3]};--g2:${o[4]}`}></span>)}</div>
+                  <div class="ab-offers-head"><p class="ab-offers-eye">What Ferrn offers</p><a class="ab-offers-link" href={href(lang, '/services')}>All services {icon('arrow-right', { size: 14 })}</a></div>
+                  <div class="ab-offers-slides">
+                    {OFFERS.map(([title, line, more], k) => (
+                      <div class={`ab-offer ${k === 0 ? 'on' : ''}`} aria-hidden={k === 0 ? undefined : 'true'}>
+                        <span class="ab-offer-art" aria-hidden="true">{icon(OFFER_ICONS[k], { size: 120, stroke: 1 })}</span>
+                        <p class="ab-offer-title">{title}<span aria-hidden="true">{icon('arrow-up-right', { size: 22 })}</span></p>
+                        <p class="ab-offer-line">{line}</p>
+                        <p class="ab-offer-more">{more}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div class="ab-offers-bars" role="tablist" aria-label="Services">
+                    {OFFERS.map((o, k) => <button type="button" role="tab" aria-selected={k === 0 ? 'true' : 'false'} aria-label={o[0]} class={k === 0 ? 'on' : ''}><i></i></button>)}
                   </div>
                 </article>
-                <article class="ab-tile ab-team reveal">
+                <article class="ab-tile ab-team ab-tex-lines reveal">
                   <Cap k={4} />
-                  <ul class="ab-people">
-                    {team.map((m) => (
-                      <li>
-                        {m.photo ? <img src={sized(m.photo, 80)!} alt="" width="40" height="40" loading="lazy" /> : <span class="ab-ini">{initials(m.name)}</span>}
-                        <span class="ab-who"><b>{m.name}</b><small>{m.role}</small></span>
-                      </li>
-                    ))}
-                  </ul>
-                  <a class="link ab-team-link" href={href(lang, '/team')}>Meet the team {icon('arrow-right', { size: 15 })}</a>
+                  <div class="ab-people">
+                    <ul class="ab-faces">
+                      {team.map((m, i) => (
+                        <li tabindex={0}>
+                          {m.photo ? <img src={sized(m.photo, 128)!} alt={m.name} width="64" height="64" loading="lazy" /> : <span class="ab-ini" style={`--h:${(i * 57 + 18) % 360}`} aria-label={m.name}>{initials(m.name)}</span>}
+                          <span class="ab-face-cap"><b>{m.name}</b><small>{m.role}</small></span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p class="ab-face-hint"><b>{team.length} people</b><small><span class="hov">Hover</span><span class="tap">Tap</span> a face to meet them</small></p>
+                  </div>
+                  <a class="ab-team-btn" href={href(lang, '/team')}><span>Meet the team</span><i>{icon('arrow-up-right', { size: 16 })}</i></a>
+                </article>
+                <article class="ab-tile ab-num-tile ab-s3 ab-pic reveal" style="--d:.05s" data-tilt>
+                  <img class="ab-pic-img" src="/assets/home/about-studio.webp" alt="" loading="lazy" decoding="async" width="1200" height="675" />
+                  <span class="ab-num">{STATS[2][0]}</span><span class="ab-num-cap">{STATS[2][1]}</span>
                 </article>
               </div>
             </div>

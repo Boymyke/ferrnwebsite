@@ -65,6 +65,13 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## About bento v3 (6 Nov, 4.13.0)
+- Six cards: 50+ (pixel texture, corner arrow), 10+ (industry icons, dot texture), 99% (completion ring, ring texture), What Ferrn offers (tall carousel), The team, 25+ (studio photo `/assets/home/about-studio.webp`).
+- No shadows. Hover is neutral: `--hov` mixes 6% ink into the panel (lighter in dark mode, darker in light mode), no orange.
+- What Ferrn offers: 7 services in `OFFERS` + `OFFER_ICONS` in home.tsx. It auto-advances every 4.2s, pauses on hover or focus, and the segmented bars jump to a slide (`offers()` in main.ts). The glow colours come from each row's g1/g2.
+- Team: faces only (photo or tinted initials). The name and role show on hover, tap or focus, in a fixed slot so nothing shifts. Photos come from Studio > Team; none are uploaded yet, so initials show.
+- Under 1100px the 25+ photo sits beside 99%, then offers, then team.
+
 ## About bento v2 (6 Nov, late)
 - Heading on its own with the normal section h2; corner heading and "Our story / Meet the team" links removed.
 - Tiles: Strategy first · One plan, one price · 13 brands (square-pixel texture) · Talk to the builders · The team (faces from Studio › Team, fan out on hover with name tags) · Everything Ferrn does (all services as links, slowly turning gradient that speeds up on hover) · We stay after launch (image card: `/assets/home/about-care.webp`, generated in ChatGPT).

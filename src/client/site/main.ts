@@ -337,9 +337,34 @@ function aboutTiles() {
   });
 }
 
+/* "What Ferrn offers": cycles through the services; the bar under the active one fills while it shows.
+   Pauses on hover/focus and when off screen; clicking a bar jumps to it. */
+function offers() {
+  $$<HTMLElement>('[data-offers]').forEach((card) => {
+    const slides = $$<HTMLElement>('.ab-offer', card), glows = $$<HTMLElement>('.ab-offers-glow span', card), bars = $$<HTMLButtonElement>('.ab-offers-bars button', card);
+    const n = slides.length; if (n < 2) return;
+    const DUR = 4200; let i = 0, timer = 0, visible = false, held = false;
+    card.style.setProperty('--dur', `${DUR}ms`);
+    const show = (k: number) => {
+      i = (k + n) % n;
+      slides.forEach((el, j) => { el.classList.toggle('on', j === i); el.setAttribute('aria-hidden', j === i ? 'false' : 'true'); });
+      glows.forEach((el, j) => el.classList.toggle('on', j === i));
+      bars.forEach((b, j) => { b.classList.toggle('on', j === i); b.setAttribute('aria-selected', j === i ? 'true' : 'false'); const bar = b.firstElementChild as HTMLElement; bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; });
+    };
+    const tick = () => { clearTimeout(timer); if (!visible || held || reduced) return; timer = window.setTimeout(() => { show(i + 1); tick(); }, DUR); };
+    bars.forEach((b, j) => b.addEventListener('click', () => { show(j); tick(); }));
+    const hold = (v: boolean) => { held = v; card.classList.toggle('paused', v); if (!v) { show(i); tick(); } else clearTimeout(timer); };
+    card.addEventListener('pointerenter', () => hold(true)); card.addEventListener('pointerleave', () => hold(false));
+    card.addEventListener('focusin', () => hold(true)); card.addEventListener('focusout', () => hold(false));
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) { show(i); tick(); } else clearTimeout(timer); }, { threshold: 0.3 }).observe(card);
+    if (reduced) card.classList.add('paused');
+  });
+}
+
 function pageBits() {
   home(reduced);
   aboutTiles();
+  offers();
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;
     $$('[data-filter]', btn.parentElement!).forEach((b) => b.classList.toggle('active', b === btn));
