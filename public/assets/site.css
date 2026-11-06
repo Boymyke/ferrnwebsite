@@ -39,11 +39,11 @@ input, select, textarea { font: inherit; color: inherit; }
 .i { flex: none; vertical-align: middle; }
 
 /* ── grain ── */
-.grain { position: fixed; inset: -50%; width: 200%; height: 200%; pointer-events: none; z-index: 1; opacity: .035; mix-blend-mode: overlay;
+/* Static on purpose: an animated, blended full-screen layer repaints the whole page every frame and made hovers lag. */
+.grain { position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: .028; contain: strict;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain 1.2s steps(6) infinite; }
-[data-theme="light"] .grain { opacity: .07; mix-blend-mode: multiply; }
-@keyframes grain { 0% { transform: translate(0, 0); } 20% { transform: translate(-2%, 3%); } 40% { transform: translate(3%, -2%); } 60% { transform: translate(-1%, -3%); } 80% { transform: translate(2%, 2%); } 100% { transform: translate(0, 0); } }
+ }
+[data-theme="light"] .grain { opacity: .04; }
 
 /* ── type ── */
 .h1 { font-size: clamp(40px, 6.4vw, 92px); line-height: .96; letter-spacing: -.045em; font-weight: 600; margin: 14px 0 22px; max-width: 14ch; text-wrap: balance; }
@@ -107,8 +107,8 @@ body.menu-open .cc-backdrop { opacity: 1; pointer-events: auto; backdrop-filter:
 .cc { position: fixed; top: 10px; right: max(10px, calc((100% - var(--wrap)) / 2)); z-index: 2; width: min(760px, calc(100% - 20px)); max-height: calc(100svh - 20px); overflow: auto; overscroll-behavior: contain;
   background: color-mix(in srgb, var(--panel) 84%, transparent); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);
   border: var(--bw) solid var(--line-2); border-radius: 22px; padding: 14px; box-shadow: 0 30px 90px -20px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
-  transform: translateY(-14px); clip-path: inset(0 0 100% 0 round 22px); opacity: 0; pointer-events: none; transition: clip-path .7s cubic-bezier(.76, 0, .24, 1), transform .7s cubic-bezier(.22, 1, .36, 1), opacity .25s ease; scrollbar-width: thin; }
-.cc.open { transform: none; clip-path: inset(0 0 0 0 round 22px); opacity: 1; pointer-events: auto; }
+  transform: translateY(-14px); clip-path: inset(0 0 100% 0 round 22px); opacity: 0; pointer-events: none; transition: clip-path .7s cubic-bezier(.76, 0, .24, 1), transform .7s cubic-bezier(.22, 1, .36, 1), opacity .25s ease, visibility 0s linear .7s; scrollbar-width: thin; visibility: hidden; }
+.cc.open { transform: none; clip-path: inset(0 0 0 0 round 22px); opacity: 1; pointer-events: auto; visibility: visible; transition: clip-path .7s cubic-bezier(.76, 0, .24, 1), transform .7s cubic-bezier(.22, 1, .36, 1), opacity .25s ease, visibility 0s; }
 .cc-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 12px; }
 .cc-title { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .cc-close { width: 36px; height: 36px; }
@@ -374,9 +374,21 @@ html:not(.js) .reveal, html:not(.js) .reveal-text, html:not(.js) .lines .line-in
 .plan-price small { font-size: 14px; color: var(--muted); font-weight: 400; }
 .plan-own { font-size: 14px; color: var(--muted); flex: 1; }
 .checkout { border-radius: var(--r); border: var(--bw) solid var(--line); background: var(--panel); color: var(--ink); padding: 28px; width: min(520px, 94vw); }
-.checkout::backdrop { background: rgba(0,0,0,.65); backdrop-filter: blur(4px); }
+.checkout::backdrop { background: rgba(0,0,0,.68); }
 .checkout-form { display: grid; gap: 12px; }
 .checkout-form .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.checkout:focus, .checkout:focus-visible { outline: none; }
+.checkout-note { position: fixed; z-index: 90; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(520px, calc(100% - 24px)); display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: var(--r); background: var(--panel); color: var(--ink); border: var(--bw) solid var(--line-2); box-shadow: 0 18px 50px -12px rgba(0,0,0,.55); animation: note-in .3s var(--ease); }
+.checkout-note p { margin: 0; flex: 1; font-size: 14.5px; line-height: 1.5; }
+.checkout-note .btn { padding: 8px 14px; }
+.checkout-note-x { background: none; border: 0; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 4px; }
+.checkout-note-ic { width: 18px; height: 18px; border-radius: 50%; flex: none; }
+.checkout-note.busy .checkout-note-ic { border: 2px solid var(--line-2); border-top-color: var(--orange); animation: note-spin .8s linear infinite; }
+.checkout-note.ok .checkout-note-ic { background: #22c55e; }
+.checkout-note.err .checkout-note-ic { background: #ef4444; }
+@keyframes note-spin { to { transform: rotate(360deg); } }
+@keyframes note-in { from { opacity: 0; transform: translate(-50%, 10px); } }
 .machine-note { font-size: 13px; color: var(--muted); border-left: 2px solid var(--accent); padding-left: 10px; }
 .customise { margin-top: 60px; }
 
@@ -582,16 +594,21 @@ html:not(.js) .reveal, html:not(.js) .reveal-text, html:not(.js) .lines .line-in
 /* ── Bob launcher: an orange ghost bottom-right (the assistant loads on click — see bob.css / bob.js) ── */
 .bob { position: fixed; right: 22px; bottom: 22px; z-index: 95; }
 .bob-ghost { display: flex; align-items: center; gap: 10px; flex-direction: row-reverse; background: transparent; border: 0; padding: 0; cursor: pointer; }
-.bob-ghost .ghost { display: block; overflow: visible; filter: drop-shadow(0 12px 22px color-mix(in srgb, var(--orange) 45%, transparent)); animation: ghost-float 3.6s ease-in-out infinite; transform-origin: 50% 90%; transition: transform .3s var(--ease); }
-.bob-ghost:hover .ghost { animation-play-state: paused; transform: translateY(-4px) scale(1.06) rotate(-4deg); }
-.bob-ghost .ghost-eyes { transition: transform .25s ease-out; animation: ghost-blink 5.2s infinite; transform-box: fill-box; transform-origin: center; }
+/* The float runs on an HTML wrapper (compositor only); the SVG itself stays still, so its glow is painted once. */
+.bob-ghost .ghost-float { display: block; position: relative; animation: ghost-float 3.6s ease-in-out infinite; transform-origin: 50% 90%; will-change: transform; }
+/* Glow as a static gradient layer (a drop-shadow filter would be repainted every time the eyes move). */
+.bob-ghost .ghost-float::before { content: ''; position: absolute; left: 6%; right: 6%; top: 30%; bottom: -22%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--orange) 42%, transparent), transparent); pointer-events: none; }
+.bob-ghost .ghost { display: block; position: relative; overflow: visible; transform-origin: 50% 90%; transition: transform .3s var(--ease); }
+.bob-ghost:hover .ghost-float { animation-play-state: paused; }
+.bob-ghost:hover .ghost { transform: translateY(-4px) scale(1.06) rotate(-4deg); }
+.bob-ghost .ghost-eyes { transition: transform .25s ease-out, scale .09s ease-in-out; transform-box: fill-box; transform-origin: center; }
+.bob-ghost.blink .ghost-eyes { scale: 1 .1; }
 .bob-ghost-label { background: var(--panel); color: var(--ink); border: var(--bw) solid var(--line-2); border-radius: var(--r-btn); padding: 8px 12px; font-size: 13px; font-weight: 500; white-space: nowrap; opacity: 0; transform: translateX(6px); transition: opacity .3s, transform .3s var(--ease); pointer-events: none; }
 .bob-ghost:hover .bob-ghost-label, .bob-ghost:focus-visible .bob-ghost-label { opacity: 1; transform: none; }
-.bob.loading .ghost { animation: ghost-float .9s ease-in-out infinite; }
+.bob.loading .ghost-float { animation: ghost-float .9s ease-in-out infinite; }
 .bob.is-open .bob-ghost { opacity: 0; pointer-events: none; transform: scale(.6); transition: opacity .25s, transform .3s var(--ease); }
 .bob.away .bob-ghost { opacity: 0; pointer-events: none; }
 @keyframes ghost-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-7px) rotate(2deg); } }
-@keyframes ghost-blink { 0%, 92%, 100% { scale: 1 1; } 95% { scale: 1 .1; } }
 .idle[hidden] { display: none; }
 @keyframes blink { 50% { opacity: .2; } }
 @keyframes pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 25%, transparent); } }
@@ -803,7 +820,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .trusted { background: var(--bg); color: var(--ink); padding: clamp(70px, 9vw, 120px) 0; position: relative; }
 .trusted-title { margin: 0 0 clamp(28px, 4vw, 44px); text-align: center; font-size: clamp(28px, 3.6vw, 46px); font-weight: 600; letter-spacing: -.04em; }
 .trusted-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
-.trusted-track { display: flex; align-items: center; gap: clamp(44px, 6vw, 84px); width: max-content; animation: marquee 48s linear infinite; padding-inline: 30px; }
+.trusted-track { display: flex; align-items: center; gap: clamp(44px, 6vw, 84px); width: max-content; animation: marquee 48s linear infinite; padding-inline: 30px; will-change: transform; }
 .trusted-strip:hover .trusted-track { animation-play-state: paused; }
 .trusted-track img { flex: none; display: block; object-fit: contain; filter: grayscale(1) brightness(0) invert(1); opacity: .6; transition: filter .35s, opacity .35s, transform .35s var(--ease); }
 [data-theme="light"] .trusted-track img { filter: grayscale(1) brightness(0); opacity: .55; }

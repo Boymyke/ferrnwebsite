@@ -256,12 +256,12 @@ function BobMount({ lang, ctx }: { lang: Lang; ctx?: SiteCtx }) {
   return (
     <div class="bob" data-bob data-bob-name={name} data-bob-voice={ctx?.bob?.voice ?? 'auto'} data-bob-suggest={suggestions.join('|')} data-bob-src={`/assets/bob.js?v=${ASSET_V}`} data-bob-css={`/assets/bob.css?v=${ASSET_V}`}>
       <button class="bob-ghost" type="button" data-bob-open aria-label={`Open ${name}, the Ferrn assistant`} aria-expanded="false">
-        <svg class="ghost" viewBox="0 0 120 132" width="58" height="64" aria-hidden="true">
+        <span class="ghost-float"><svg class="ghost" viewBox="0 0 120 132" width="58" height="64" aria-hidden="true">
           <defs><radialGradient id="ghost-g" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#ffb08a" /><stop offset=".45" stop-color="#F94406" /><stop offset="1" stop-color="#b52c00" /></radialGradient></defs>
           <path class="ghost-body" fill="url(#ghost-g)" d="M60 6C31 6 12 28 12 58v58c0 6 6 9 11 5l9-7 9 8c4 3 8 3 12 0l7-7 7 7c4 3 8 3 12 0l9-8 9 7c5 4 11 1 11-5V58C108 28 89 6 60 6Z" />
           <g class="ghost-eyes"><ellipse cx="44" cy="56" rx="7.5" ry="10" fill="#1a0d06" /><ellipse cx="76" cy="56" rx="7.5" ry="10" fill="#1a0d06" /><circle cx="46.5" cy="52" r="2.6" fill="#fff" /><circle cx="78.5" cy="52" r="2.6" fill="#fff" /></g>
           <path class="ghost-mouth" d="M53 78q7 6 14 0" stroke="#1a0d06" stroke-width="3.5" fill="none" stroke-linecap="round" />
-        </svg>
+        </svg></span>
         <span class="bob-ghost-label">Ask {name}</span>
       </button>
     </div>

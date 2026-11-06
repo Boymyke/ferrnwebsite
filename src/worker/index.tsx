@@ -20,7 +20,8 @@ import { analyticsCollect, analyticsStudio, pruneAnalytics } from './routes/anal
 import proposalsApi from './routes/proposals';
 import clientDocs from './routes/client-docs';
 import { emailStudio, emailTrack, syncEmailStatus } from './routes/email-track';
-import { engageApi } from './routes/engage';
+import { engageApi, importInteractions, runEngageAutopilot } from './routes/engage';
+import { orderActions } from './routes/order-actions';
 import { notificationsApi } from './routes/notifications';
 import { studioShell } from './routes/studio-shell';
 import { QuoteDocument, type QuoteRow } from './views/quote';
@@ -63,6 +64,7 @@ app.route('/api/studio/analytics', analyticsStudio);
 app.route('/api/studio/proposals', proposalsApi);
 app.route('/api/studio/emails', emailStudio);
 app.route('/api/studio/engage', engageApi);
+app.route('/api/studio/order', orderActions);
 app.route('/api/studio/notifications', notificationsApi);
 app.route('/api/e', emailTrack); // email open pixel, click redirects, LeadsHunter send log
 app.route('/api/studio', studioApi);
@@ -134,6 +136,8 @@ export default {
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     ctx.waitUntil((async () => {
       try { await syncEngine(env); } catch (e) { console.warn('engine sync failed', e); }
+      try { const snap = await env.CACHE.get('engine:snapshot', 'json') as any; await importInteractions(env, snap?.interactions); } catch (e) { console.warn('interactions import failed', e); }
+      try { await runEngageAutopilot(env); } catch (e) { console.warn('social autopilot failed', e); }
       try { await processQueue(env); } catch (e) { console.warn('whatsapp queue failed', e); }
       try { await runAutoProspect(env); } catch (e) { console.warn('autoprospect failed', e); }
       try { await pushPendingToEngine(env); } catch (e) { console.warn('autopilot → engine push failed', e); }

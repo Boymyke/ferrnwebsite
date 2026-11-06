@@ -29,7 +29,8 @@ var HEADERS = {
   Log: ['time', 'level', 'event', 'detail'],
   RFPs: ['id', 'found', 'title', 'buyer', 'country', 'url', 'source', 'deadline', 'budget', 'scope', 'fit_score',
     'fit_reasons', 'requirements', 'risks', 'next_step', 'status', 'notes', 'updated'],
-  Previews: ['slug', 'lead_id', 'company', 'file_id', 'url', 'created', 'synced_at', 'bytes']
+  Previews: ['slug', 'lead_id', 'company', 'file_id', 'url', 'created', 'synced_at', 'bytes'],
+  Interactions: ['id', 'found', 'platform', 'url', 'author', 'company', 'lead_id', 'post_text', 'comments']
 };
 var RFP_STATUSES = ['new', 'reviewing', 'bidding', 'submitted', 'won', 'lost', 'skipped'];
 
@@ -264,8 +265,40 @@ function processBatch_(data) {
   }
   var previewsAdded = (data.previews && data.previews.length) ? addPreviews_(data.previews, leadsT, keyToId) : 0;
   var rfpAdded = (data.rfps && data.rfps.length) ? addRfps_(data.rfps) : 0;
+  var intAdded = (data.interactions && data.interactions.length) ? addInteractions_(data.interactions, keyToId) : 0;
   if (data.log) log_('info', 'ai-run', String(data.log).slice(0, 4000));
-  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.previews ? ', previews +' + previewsAdded : '') + (data.rfps ? ', rfps +' + rfpAdded : '');
+  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.previews ? ', previews +' + previewsAdded : '') + (data.rfps ? ', rfps +' + rfpAdded : '') + (data.interactions ? ', interactions +' + intAdded : '');
+}
+
+// ───────────────────────────── Interactions ─────────────────────────────
+// Comment drafts for other people's public posts, found by the morning routine. The Ferrn site files them in
+// Studio › Interactions (from getDashboardData). Nothing here posts anything: Michael posts by hand.
+function addInteractions_(list, keyToId) {
+  ensureSheet_('Interactions');
+  var t = table_('Interactions'), seen = {};
+  t.rows.forEach(function (r) { seen[String(r.url)] = true; });
+  var rows = [];
+  list.slice(0, 20).forEach(function (x) {
+    var url = String(x.url || '').trim();
+    if (!/^https:\/\/(www\.)?(instagram\.com|([a-z]{2,3}\.)?linkedin\.com)\//i.test(url) || seen[url]) return;
+    var comments = (x.comments || []).map(function (c) { return String(c).slice(0, 600); }).filter(String).slice(0, 3);
+    if (!comments.length) return;
+    seen[url] = true;
+    rows.push({ id: 'X-' + Utilities.getUuid().slice(0, 8), found: new Date(), platform: /linkedin/i.test(url) ? 'linkedin' : 'instagram', url: url,
+      author: String(x.author || '').slice(0, 120), company: String(x.company || '').slice(0, 160),
+      lead_id: x.lead_id || (x.lead_key && keyToId ? keyToId[x.lead_key] : '') || '', post_text: String(x.post_text || '').slice(0, 2000),
+      comments: JSON.stringify(comments) });
+  });
+  if (rows.length) appendObjects_('Interactions', rows);
+  return rows.length;
+}
+function interactionRows_() {
+  var sh = SpreadsheetApp.getActive().getSheetByName('Interactions');
+  if (!sh) return [];
+  return table_('Interactions').rows.slice(-60).map(function (r) {
+    var c = []; try { c = JSON.parse(r.comments || '[]'); } catch (e) {}
+    return { id: r.id, found: iso_(r.found), platform: r.platform, url: r.url, author: r.author, company: r.company, lead_id: r.lead_id, post_text: r.post_text, comments: c };
+  });
 }
 
 // ───────────────────────────── Previews ─────────────────────────────
@@ -849,6 +882,7 @@ function getDashboardData() {
     statusCounts: statusCounts,
     needsYou: needsYou, held: held, sendingSoon: sendingSoon, whatsapp: whatsapp, recentSent: recentSent,
     inbox: inbox, leads: lT.rows.slice().reverse().map(lite), logs: logs,
+    interactions: interactionRows_(),
     rfps: rfpRows_().slice(-150).reverse().map(function (r) {
       return { id: r.id, found: iso_(r.found), title: r.title, buyer: r.buyer, country: r.country, url: r.url, source: r.source,
         deadline: iso_(r.deadline), budget: r.budget, scope: r.scope, fit_score: Number(r.fit_score) || 0, fit_reasons: r.fit_reasons,

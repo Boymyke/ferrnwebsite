@@ -56,6 +56,12 @@ Writing rules (Michael's voice: warm, direct, Nigerian-professional English):
 - Abroad: plain UK/US business English (UK spelling for UK leads), no Nigerian idioms, prices in their currency only if they ask. One line is enough to say Ferrn works remotely across time zones.
 WhatsApp (Lagos phone-only leads only): step 0 under 60 words, same structure; one follow-up step 1 with delay_days 3. Michael sends WhatsApp himself with one tap from his dashboard.
 
+STEP 4B. INTERACTIONS (comment drafts, about 10 minutes)
+Find 3–5 recent public posts (last 10 days) worth commenting on, from businesses Ferrn wants to be seen by: leads in ALL LEADS (Interested, Replied, Contacted first), then businesses in today's niches in Lagos and abroad. Prefer LinkedIn company or founder posts (use web search such as "site:linkedin.com/posts <company>" and read the post with WebFetch); public Instagram posts only if you can actually read the caption.
+For each post: write 3 different comments in Michael's voice that are genuinely useful and never salesy (no pitching, no "DM me", no mention of Ferrn's services): one adds a specific insight, one asks a thoughtful question, one is a short warm reaction that still says something real. LinkedIn: 1–3 sentences; Instagram: 1–2 short sentences. Only use what the post actually says.
+Skip anything you couldn't read, anything older than 10 days, political or sensitive posts, and personal posts by private individuals. Nothing is posted automatically: Michael posts them himself from Studio › Interactions.
+Add them to the batch as "interactions": [{ "platform": "linkedin|instagram", "url": "<the post URL>", "author": "", "company": "", "lead_id": "<L-id if a lead>", "post_text": "<the post text, up to 1500 chars>", "comments": ["", "", ""] }].
+
 STEP 5. WRITE THE BATCH FILE (exactly one per run)
 Create ONE file with the Google Drive create_file tool: title "batch-<YYYY-MM-DD-HHmm>.json", parentId = INBOX_FOLDER_ID, contentMimeType "application/json", disableConversionToGoogleType true, textContent = the JSON below. The engine picks it up within 10 minutes and starts sending.
 {
@@ -66,6 +72,7 @@ Create ONE file with the Google Drive create_file tool: title "batch-<YYYY-MM-DD
                   "to": "<optional, defaults to lead email/phone>", "subject": "<step 0 email only>", "body": "", "delay_days": 3, "hold": false } ],
   "lead_updates": [ { "id": "L-xxxx", "status": "", "tier": "", "est_value": 0, "pitch": "", "needs_you": "Y|", "needs_you_reason": "", "next_action": "", "append_note": "" } ],
   "inbox_updates": [ { "id": "I-xxxx", "status": "handled", "classification": "" } ],
+  "interactions": [ { "platform": "linkedin", "url": "", "author": "", "company": "", "lead_id": "", "post_text": "", "comments": ["", "", ""] } ],
   "log": "<3-6 line summary of this run>"
 }
 Build the JSON with code (python json.dumps), never by typing it by hand — a single stray character loses the whole batch. Validate it (python -c "import json,sys; json.load(open(...))"), upload it, then read the uploaded file back with read_file_content and confirm it still parses.
@@ -78,4 +85,4 @@ SAFETY RULES (always)
 - Never invent facts about Ferrn or the lead.
 - Don't spend more than ~45 minutes. If time is short, finish replies first, then write the batch with what you have.
 
-FINAL SUMMARY (your last message): replies handled, autopilot leads emailed or skipped, new leads added (by niche/city, email vs WhatsApp), leads flagged as good concept-site candidates, anything flagged for Michael, problems.
+FINAL SUMMARY (your last message): replies handled, autopilot leads emailed or skipped, new leads added (by niche/city, email vs WhatsApp), leads flagged as good concept-site candidates, interaction posts found, anything flagged for Michael, problems.

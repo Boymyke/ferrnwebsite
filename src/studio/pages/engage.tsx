@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AtSign, Briefcase as Linkedin, Camera as Instagram, Check, Copy, ExternalLink, Heart, Info, MessageSquareText, RefreshCw, Send, Sparkles, Trash2, Undo2, X } from 'lucide-react';
+import { AtSign, Bot, Briefcase as Linkedin, Camera as Instagram, Check, Copy, ExternalLink, Heart, Info, MessageSquareText, RefreshCw, Send, Sparkles, Trash2, Undo2, X } from 'lucide-react';
 import { ago, api, list } from '../api';
 import { Badge, Card, Empty, ErrorNote, Loading, Page, Pager, Tabs, useData, usePaged, useRoute, useToast } from '../ui';
 
@@ -8,7 +8,7 @@ type Item = {
   id: string; kind: 'dm' | 'comment'; platform: Platform; status: 'draft' | 'sent' | 'skipped';
   lead_id?: string | null; company?: string | null; person?: string | null; url: string; context?: string | null;
   drafts: string[]; note?: string | null; sent_text?: string | null; liked?: boolean;
-  created_at: string; created_by: string; done_at?: string | null; done_by?: string | null; follow_up_at?: string | null;
+  created_at: string; created_by: string; done_at?: string | null; done_by?: string | null; follow_up_at?: string | null; auto?: boolean;
 };
 type Stats = { waiting: number; week: number; instagram: number; linkedin: number; followUps: number };
 type Res = { items: Item[]; stats: { dm: Stats; comment: Stats } };
@@ -52,6 +52,8 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
     <Page title={isDm ? 'Social DMs' : 'Interactions'}
       sub={isDm ? 'AI writes Instagram DMs and LinkedIn messages for your leads. You send each one with a tap.' : 'AI writes thoughtful comments on other people’s posts. Like the post and drop the comment with a tap.'}>
       <div className="callout"><Info size={15} /> Instagram and LinkedIn don’t allow apps to send cold DMs, like or comment on other people’s posts, and accounts that use bots for it get restricted. So Studio does the research and the writing, and you do the last tap yourself: <strong>Copy &amp; open</strong> copies the text and opens the {isDm ? 'profile' : 'post'}; paste, send, then mark it done here.</div>
+
+      <Autopilot kind={kind} />
 
       <div className="kpi-row">
         <div className="kpi feature"><div className="kpi-icon">{isDm ? <Send size={24} strokeWidth={1.8} /> : <Heart size={24} strokeWidth={1.8} />}</div>
@@ -150,6 +152,7 @@ function ItemCard({ it, patch, del }: { it: Item; patch: (id: string, b: Record<
         <strong>{it.person || it.company || (isDm ? 'Profile' : 'Post')}</strong>
         {it.company && it.person ? <span className="muted small">{it.company}</span> : null}
         {it.status === 'sent' ? <Badge tone="green">{isDm ? 'Sent' : 'Posted'} {ago(it.done_at!)}</Badge> : it.status === 'skipped' ? <Badge>Skipped</Badge> : null}
+        {it.auto ? <Badge tone="purple"><Bot size={11} /> Autopilot</Badge> : null}
         {it.liked ? <Badge tone="red"><Heart size={11} /> Liked</Badge> : null}
         {due ? <Badge tone="orange">Follow up now</Badge> : null}
         <a className="eng-url muted small" href={it.url} target="_blank" rel="noreferrer">{it.url.replace(/^https:\/\/(www\.)?/, '').slice(0, 60)} <ExternalLink size={11} /></a>
@@ -201,5 +204,30 @@ function ItemCard({ it, patch, del }: { it: Item; patch: (id: string, b: Record<
         <span className="muted small eng-by">{it.created_by} · {ago(it.created_at)}</span>
       </footer>
     </article>
+  );
+}
+
+type Auto = { dm: boolean; daily: number; comments: boolean; today: number; scanned: number };
+function Autopilot({ kind }: { kind: 'dm' | 'comment' }) {
+  const toast = useToast();
+  const { data, setData } = useData<Auto>(() => api('/engage/settings/autopilot'), []);
+  const set = async (b: Partial<Auto>) => {
+    try { const r = await api<Auto>('/engage/settings/autopilot', { method: 'PUT', body: b }); setData({ ...(data as Auto), ...r }); toast('Autopilot updated'); }
+    catch (x: any) { toast(x.message, 'err'); }
+  };
+  if (!data) return null;
+  const on = kind === 'dm' ? data.dm : data.comments;
+  return (
+    <div className={`eng-auto ${on ? 'on' : ''}`}>
+      <Bot size={18} />
+      <div className="eng-auto-text">
+        <strong>Autopilot {on ? 'on' : 'off'}</strong>
+        <span className="muted small">{kind === 'dm'
+          ? (on ? `Every day Studio opens your leads’ websites, finds their Instagram or LinkedIn, reads what they do and drafts up to ${data.daily} DMs (${data.today} today). They wait below for your tap.` : 'Turn on to have DMs drafted for your leads every day.')
+          : (on ? 'Each morning the sales routine finds recent public posts from businesses you’re targeting and drafts three comments for each. They wait below: open, like, paste, done.' : 'Turn on to get comment drafts on fresh posts every morning.')}</span>
+      </div>
+      {kind === 'dm' && on ? <label className="muted small eng-auto-n">Per day <select value={data.daily} onChange={(e) => set({ daily: Number(e.target.value) })}>{[3, 6, 10, 15, 25].map((n) => <option key={n}>{n}</option>)}</select></label> : null}
+      <button className={`btn sm ${on ? 'ghost' : 'primary'}`} onClick={() => set(kind === 'dm' ? { dm: !on } : { comments: !on })}>{on ? 'Pause' : 'Turn on'}</button>
+    </div>
   );
 }

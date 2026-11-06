@@ -38,6 +38,8 @@ export function trackHtml(site: string, id: string, html: string) {
 
 export async function sendEmail(env: Bindings, m: {
   to: string | string[]; subject: string; html: string; text?: string; replyTo?: string; track?: EmailTrack;
+  /** e.g. a calendar invite: { filename: 'kickoff.ics', content: <base64>, contentType: 'text/calendar' } */
+  attachments?: { filename: string; content: string; contentType?: string }[];
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   if (!env.RESEND_API_KEY) return { ok: false, error: 'Email is not configured (RESEND_API_KEY).' };
   const to = Array.isArray(m.to) ? m.to : [m.to];
@@ -58,6 +60,7 @@ export async function sendEmail(env: Bindings, m: {
         html: t.html,
         text: m.text ?? htmlToText(m.html), // plain-text part keeps the original links
         reply_to: m.replyTo ?? replyOf(env),
+        ...(m.attachments?.length ? { attachments: m.attachments.map((a) => ({ filename: a.filename, content: a.content, ...(a.contentType ? { content_type: a.contentType } : {}) })) } : {}),
       }),
     });
     const data = (await r.json().catch(() => ({}))) as { id?: string; message?: string };

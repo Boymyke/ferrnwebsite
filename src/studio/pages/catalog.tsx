@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ago, fmtDate, money, update } from '../api';
-import { Badge, mediaUrl, Status, useToast } from '../ui';
-import { Code2, ExternalLink, Link2, UploadCloud } from 'lucide-react';
+import { ago, api, fmtDate, fromLocalInput, money, toLocalInput, update } from '../api';
+import { Badge, mediaUrl, Status, useRoute, useToast } from '../ui';
+import { CalendarPlus, Code2, ExternalLink, Link2, Mail, Sparkles, UploadCloud } from 'lucide-react';
 import { DemoLink, DemoUploader } from './demos';
 import { jsonList, listJson, ResourcePage, UploadButton } from './resource';
 
@@ -49,11 +49,80 @@ export function Orders() {
     <ResourcePage res="orders" entity="orders" title="Orders" sub="Marketplace checkouts and invoice requests." writeRole="admin" canCreate={false}
       columns={[
         { key: 'customer_name', label: 'Customer', render: (r) => <><strong>{r.customer_name}</strong><div className="muted small">{r.email} · {r.phone}</div></> },
-        { key: 'company', label: 'Company' }, { key: 'tier', label: 'Plan' },
+        { key: 'company', label: 'Company' }, { key: 'tier', label: 'Plan', render: (r) => <>{r.product_name ? <strong>{r.product_name}</strong> : null}<div className="muted small">{r.tier}</div></> },
         { key: 'amount', label: 'Amount', render: (r) => money(r.amount / 100, r.currency) },
         { key: 'status', label: 'Status', render: (r) => <Status s={r.status} /> }, { key: 'created_at', label: 'Created', render: (r) => fmtDate(r.created_at) },
       ]}
+      drawerExtra={(r, reload) => <OrderActions order={r} onChange={reload} />}
       fields={[{ name: 'status', label: 'Status', type: 'select', options: ['pending', 'paid', 'failed', 'cancelled', 'refunded'] }, { name: 'notes', label: 'Notes', type: 'textarea' }]} />
+  );
+}
+
+/** Welcome email + kickoff call, right from the order. */
+function OrderActions({ order: o, onChange }: { order: any; onChange: () => void }) {
+  const toast = useToast();
+  const { go } = useRoute();
+  const [mode, setMode] = useState<'' | 'email' | 'meet'>('');
+  const [busy, setBusy] = useState(false);
+  const [mail, setMail] = useState<{ subject: string; body: string } | null>(null);
+  const next = new Date(Date.now() + 86400000); next.setHours(10, 0, 0, 0);
+  const [m, setM] = useState({ starts_at: toLocalInput(next.toISOString()), duration_min: 30, channel: 'google_meet', location_url: '', agenda: '', invite: true });
+  const draft = async () => {
+    setMode('email'); setBusy(true);
+    try { const r = await api<{ draft: { subject: string; body: string } }>(`/order/${o.id}/welcome-draft`, { body: {} }); setMail(r.draft); }
+    catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); }
+  };
+  const send = async () => {
+    if (!mail || !confirm(`Send “${mail.subject}” to ${o.email}?`)) return;
+    setBusy(true);
+    try { await api(`/order/${o.id}/email`, { body: mail }); toast(`Email sent to ${o.email}`); setMode(''); setMail(null); onChange(); }
+    catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); }
+  };
+  const book = async () => {
+    setBusy(true);
+    try {
+      const r = await api<{ meeting_id: string; invited: boolean; inviteError?: string | null }>(`/order/${o.id}/meeting`, { body: { ...m, starts_at: fromLocalInput(m.starts_at) } });
+      toast(r.invited ? `Call booked and invite sent to ${o.email}` : r.inviteError ? `Call booked, but the invite didn’t send: ${r.inviteError}` : 'Call booked', r.inviteError ? 'err' : undefined);
+      setMode(''); onChange();
+      if (confirm('Call booked. Open it in Meetings?')) go(`/meetings/${r.meeting_id}`);
+    } catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); }
+  };
+  return (
+    <div className="card soft order-actions">
+      <dl className="dl">
+        <dt>Product</dt><dd>{o.product_name || o.product_id} · {o.tier}</dd>
+        <dt>Amount</dt><dd>{money(o.amount / 100, o.currency)} · <Status s={o.status} /></dd>
+        <dt>Client</dt><dd>{o.customer_name}{o.company ? ` · ${o.company}` : ''}<div className="muted small">{o.email}{o.phone ? ` · ${o.phone}` : ''}</div></dd>
+      </dl>
+      {o.notes ? <p className="pre small muted">{o.notes}</p> : null}
+      <div className="row-actions" style={{ marginTop: 10 }}>
+        <button className={`btn sm ${mode === 'email' ? 'primary' : ''}`} disabled={busy} onClick={draft}><Sparkles size={14} />Write welcome email</button>
+        <button className={`btn sm ${mode === 'meet' ? 'primary' : ''}`} onClick={() => setMode(mode === 'meet' ? '' : 'meet')}><CalendarPlus size={14} />Schedule kickoff call</button>
+      </div>
+      {mode === 'email' ? (
+        busy && !mail ? <p className="muted small">Writing…</p> : mail ? (
+          <div className="fields" style={{ marginTop: 10 }}>
+            <label className="field wide"><span>Subject</span><input value={mail.subject} onChange={(e) => setMail({ ...mail, subject: e.target.value })} /></label>
+            <label className="field wide"><span>Message (to {o.email})</span><textarea rows={12} value={mail.body} onChange={(e) => setMail({ ...mail, body: e.target.value })} /></label>
+            <div className="wide" style={{ display: 'flex', gap: 8 }}>
+              <button className="btn primary" disabled={busy} onClick={send}><Mail size={15} />{busy ? 'Sending…' : 'Send from michael@ferrnagency.com'}</button>
+              <button className="btn ghost" disabled={busy} onClick={draft}>Rewrite</button>
+            </div>
+          </div>
+        ) : null
+      ) : null}
+      {mode === 'meet' ? (
+        <div className="fields" style={{ marginTop: 10 }}>
+          <label className="field"><span>Starts (Lagos time)</span><input type="datetime-local" value={m.starts_at} onChange={(e) => setM({ ...m, starts_at: e.target.value })} /></label>
+          <label className="field"><span>Length</span><select value={m.duration_min} onChange={(e) => setM({ ...m, duration_min: Number(e.target.value) })}>{[15, 30, 45, 60, 90].map((n) => <option key={n} value={n}>{n} minutes</option>)}</select></label>
+          <label className="field"><span>How</span><select value={m.channel} onChange={(e) => setM({ ...m, channel: e.target.value })}><option value="google_meet">Google Meet</option><option value="zoom">Zoom</option><option value="whatsapp">WhatsApp call</option><option value="phone">Phone call</option><option value="in_person">In person</option></select></label>
+          <label className="field"><span>Meeting link (optional)</span><input placeholder="https://meet.google.com/…" value={m.location_url} onChange={(e) => setM({ ...m, location_url: e.target.value })} /></label>
+          <label className="field wide"><span>Agenda (optional)</span><textarea rows={3} value={m.agenda} onChange={(e) => setM({ ...m, agenda: e.target.value })} placeholder="Goals, brand, content checklist, timeline" /></label>
+          <label className="field wide check"><input type="checkbox" checked={m.invite} onChange={(e) => setM({ ...m, invite: e.target.checked })} /> <span>Email {o.email} the invite with a calendar file</span></label>
+          <div className="wide"><button className="btn primary" disabled={busy || !m.starts_at} onClick={book}><CalendarPlus size={15} />{busy ? 'Booking…' : 'Book the call'}</button></div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

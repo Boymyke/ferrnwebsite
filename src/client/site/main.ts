@@ -406,21 +406,39 @@ function forms() {
       (f.elements.namedItem('currency') as HTMLSelectElement).value = cur;
       dialog.showModal();
     }));
+    // One status card on the page: the dialog closes as soon as a button is pressed.
+    const note = (html: string, tone: 'busy' | 'ok' | 'err', retry = false) => {
+      let el = $<HTMLDivElement>('.checkout-note');
+      if (!el) { el = document.createElement('div'); el.className = 'checkout-note'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); document.body.appendChild(el); }
+      el.className = `checkout-note ${tone}`;
+      el.innerHTML = `<span class="checkout-note-ic" aria-hidden="true"></span><p>${html}</p>${retry ? '<button type="button" class="btn btn-ghost" data-retry>Try again</button>' : ''}<button type="button" class="checkout-note-x" aria-label="Close">×</button>`;
+      el.querySelector('.checkout-note-x')!.addEventListener('click', () => el!.remove());
+      el.querySelector('[data-retry]')?.addEventListener('click', () => { el!.remove(); dialog.showModal(); });
+      if (tone === 'ok') setTimeout(() => el?.remove(), 12000);
+    };
+    const esc = (t: string) => t.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
+    let sending = false;
     f.addEventListener('submit', async (e) => {
       const submitter = (e as SubmitEvent).submitter as HTMLButtonElement | null;
-      if (submitter?.value === 'cancel') return;
+      if (submitter?.value === 'cancel') return; // method="dialog" closes it
       e.preventDefault();
-      if (!f.reportValidity()) return;
-      const status = $('.form-status', f)!;
+      if (sending || !f.reportValidity()) return;
       const data = Object.fromEntries(new FormData(f).entries()) as Record<string, string>;
-      if (submitter?.value === 'invoice') data.mode = 'invoice';
-      status.textContent = '…';
+      const invoice = submitter?.value === 'invoice';
+      if (invoice) data.mode = 'invoice';
+      sending = true;
+      dialog.close();
+      note(invoice ? 'Sending your invoice request…' : 'Taking you to Paystack to pay securely…', 'busy');
       try {
         const r = await fetch('/api/checkout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
-        const j = await r.json();
+        const j = await r.json().catch(() => ({ ok: false }));
         if (!j.ok) throw new Error(j.error);
-        if (j.url) location.href = j.url; else status.textContent = j.message;
-      } catch (err: any) { status.textContent = err?.message || S.error; }
+        if (j.url) { location.href = j.url; return; }
+        note(esc(j.message || 'Thanks. We’ll be in touch shortly.'), 'ok');
+        f.reset();
+      } catch (err: any) {
+        note(esc(err?.message || S.error), 'err', true);
+      } finally { sending = false; }
     });
   }
 }

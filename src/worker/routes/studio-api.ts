@@ -210,7 +210,11 @@ studio.get('/r/:res', async (c): Promise<Response> => {
     if (to) { where.push('scheduled_at <= ?'); params.push(to); }
   }
   const limit = Math.min(Number(c.req.query('limit') ?? 500), 1000);
-  const rows = await all(c.env.DB, `SELECT * FROM ${res.table} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${res.order} LIMIT ${limit}`, ...params);
+  const rows = await all<Record<string, unknown>>(c.env.DB, `SELECT * FROM ${res.table} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${res.order} LIMIT ${limit}`, ...params);
+  if (res.table === 'orders' && rows.length) {
+    const names = new Map((await all<{ id: string; name: string }>(c.env.DB, 'SELECT id, name FROM products')).map((p) => [p.id, p.name]));
+    for (const r of rows) r.product_name = names.get(String(r.product_id)) ?? null;
+  }
   return c.json({ ok: true, rows });
 });
 

@@ -72,17 +72,38 @@ export function bobLauncher() {
     if (q === 'tour') return open('present');
     loadBob().then((b) => { b.open('chat'); if (q) b.ask(q); }).catch(() => {});
   });
+  // Blink now and then (a class flip, not an endless animation that would restyle the page every frame).
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const blink = () => {
+      if (document.visibilityState === 'visible') { btn.classList.add('blink'); setTimeout(() => btn.classList.remove('blink'), 140); }
+      setTimeout(blink, 3800 + Math.random() * 3200);
+    };
+    setTimeout(blink, 3000);
+  }
   // The eyes follow the pointer (cheap: one transform per frame at most).
   if (eyes && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     let raf = 0, x = 0, y = 0;
+    // The launcher is fixed, so its centre only moves on resize: measure then, never per frame.
+    let cx = 0, cy = 0;
+    const measure = () => { const r = btn.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; };
+    measure(); addEventListener('resize', measure, { passive: true });
+    // Only while the pointer is near the ghost, about 30 times a second, and only when the eyes would actually move.
+    let last = '', t = 0;
+    const look = (tx: number, ty: number) => {
+      const k = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`;
+      if (k !== last) { last = k; eyes.style.transform = k; }
+    };
     addEventListener('pointermove', (e) => {
       x = e.clientX; y = e.clientY;
-      if (raf) return;
+      if (raf || e.timeStamp - t < 33) return;
+      t = e.timeStamp;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        const r = btn.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-        const a = Math.atan2(y - cy, x - cx), d = Math.min(1, Math.hypot(x - cx, y - cy) / 300);
-        eyes.style.transform = `translate(${(Math.cos(a) * 4 * d).toFixed(1)}px, ${(Math.sin(a) * 3 * d).toFixed(1)}px)`;
+        if (!cx) measure();
+        const dist = Math.hypot(x - cx, y - cy);
+        if (dist > 420) return look(0, 0);
+        const a = Math.atan2(y - cy, x - cx), d = Math.min(1, dist / 300);
+        look(Math.cos(a) * 4 * d, Math.sin(a) * 3 * d);
       });
     }, { passive: true });
   }

@@ -9,6 +9,7 @@ import { assistantSystemPrompt } from '../lib/assistant';
 import { bobPrompt, guard, parseReply, type BobAction } from '../lib/bob';
 import { onEnquiry, onPayment } from '../lib/wa-automations';
 import { settleInvoiceFromPaystack } from '../lib/docs';
+import { brandEmail, sendEmail } from '../lib/email';
 
 const api = new Hono<AppEnv>();
 
@@ -177,19 +178,35 @@ api.post('/checkout', async (c) => {
      VALUES (?,?,?,?,?,?,?,?,?,'pending',?,?)`,
     id, p.id, tier, clamp(b.name, 120), email, clamp(b.phone, 40) || null, clamp(b.company, 160) || null, currency, base * 100, id,
     b.mode === 'invoice' ? 'Invoice requested' : null);
-  if (b.mode === 'invoice' || !c.env.PAYSTACK_SECRET_KEY) {
+  const invoiceRequest = async (why: string) => {
     await run(c.env.DB, `INSERT INTO requests (id, type, name, email, phone, company, product_id, message, meta_json) VALUES (?, 'customise', ?, ?, ?, ?, ?, ?, ?)`,
       newId('r_'), clamp(b.name, 120), email, clamp(b.phone, 40) || null, clamp(b.company, 160) || null, p.id,
-      `Invoice requested: ${p.name} — ${tier} (${currency} ${base.toLocaleString()})`, JSON.stringify({ order: id }));
-    return c.json({ ok: true, invoice: true, message: 'Thanks — we’ll email your invoice within one working day.' });
+      `${why}: ${p.name} — ${tier} (${currency} ${base.toLocaleString()})`, JSON.stringify({ order: id }));
+  };
+  if (b.mode === 'invoice' || !c.env.PAYSTACK_SECRET_KEY) {
+    await invoiceRequest('Invoice requested');
+    c.executionCtx.waitUntil(notifyOrder(c.env, id, 'invoice').catch(() => null));
+    return c.json({ ok: true, invoice: true, message: 'Thanks. We’ll email your invoice within one working day.' });
   }
   const origin = new URL(c.req.url).origin;
-  const tx = await initTransaction(c.env, {
-    email, amount: base * 100, currency, reference: id,
-    callback_url: `${origin}/api/checkout/callback?product=${encodeURIComponent(p.slug)}`,
-    metadata: { order_id: id, product: p.slug, tier },
-  });
-  return c.json({ ok: true, url: tx.authorization_url });
+  try {
+    const tx = await initTransaction(c.env, {
+      email, amount: base * 100, currency, reference: id,
+      callback_url: `${origin}/api/checkout/callback?product=${encodeURIComponent(p.slug)}`,
+      metadata: { order_id: id, product: p.slug, tier },
+    });
+    return c.json({ ok: true, url: tx.authorization_url });
+  } catch (e) {
+    // Paystack said no (e.g. a currency the account can't take yet). Keep the order and send an invoice instead.
+    const why = String((e as Error).message || e).slice(0, 300);
+    console.warn('paystack init', id, currency, why);
+    await run(c.env.DB, "UPDATE orders SET notes = ? WHERE id = ?", `Online payment failed to start (${currency}): ${why}. Invoice to follow.`, id);
+    await invoiceRequest(`Online payment failed (${why}); invoice needed`);
+    c.executionCtx.waitUntil(notifyOrder(c.env, id, 'invoice').catch(() => null));
+    return c.json({ ok: true, invoice: true, fallback: true, message: currency === 'USD'
+      ? 'Card payment in dollars isn’t available right now, so we’ve saved your order and will email an invoice within one working day. You can also pay in naira.'
+      : 'Online payment couldn’t start just now, so we’ve saved your order and will email an invoice within one working day.' });
+  }
 });
 
 api.get('/checkout/callback', async (c) => {
@@ -218,7 +235,23 @@ api.post('/paystack/webhook', async (c) => {
 });
 
 /** WhatsApp thank-you once an order is paid (only the first time it flips to paid). */
+/** Tells Ferrn a new order came in (Studio shows it too, under Marketplace › Orders). */
+async function notifyOrder(env: AppEnv['Bindings'], id: string, kind: 'invoice' | 'paid') {
+  if (!env.CONTACT_EMAIL) return;
+  const o = await first<any>(env.DB, 'SELECT o.*, p.name AS product FROM orders o LEFT JOIN products p ON p.id = o.product_id WHERE o.id = ?', id);
+  if (!o) return;
+  const site = (env.SITE_URL || 'https://www.ferrnagency.com').replace(/\/$/, '');
+  const amount = `${o.currency === 'USD' ? '$' : '₦'}${(o.amount / 100).toLocaleString()}`;
+  await sendEmail(env, { to: env.CONTACT_EMAIL, track: false, subject: `${kind === 'paid' ? 'Paid' : 'New'} order: ${o.product ?? 'Marketplace'} — ${o.customer_name}`,
+    html: brandEmail(env, { heading: kind === 'paid' ? 'An order was paid' : 'A new order needs an invoice',
+      paragraphs: [o.notes || (kind === 'paid' ? 'Payment received through Paystack.' : 'The client asked for an invoice.'), 'Open the order in Studio to send a welcome email and book a kickoff call.'],
+      rows: [['Product', `${o.product ?? ''} (${o.tier})`], ['Client', o.customer_name], ['Company', o.company || '—'], ['Email', o.email], ['Phone', o.phone || '—'], ['Amount', amount]],
+      button: { label: 'Open the order', url: `${site}/studio/marketplace/orders?id=${o.id}` } }) });
+}
+
 async function notifyPaid(env: AppEnv['Bindings'], ref: string) {
+  const row = await first<{ id: string }>(env.DB, 'SELECT id FROM orders WHERE provider_ref = ?', ref);
+  if (row) await notifyOrder(env, row.id, 'paid').catch(() => null);
   const o = await first<{ customer_name: string; phone: string | null; tier: string; name: string | null }>(env.DB,
     'SELECT o.customer_name, o.phone, o.tier, p.name FROM orders o LEFT JOIN products p ON p.id = o.product_id WHERE o.provider_ref = ?', ref);
   if (o) await onPayment(env, { name: o.customer_name, phone: o.phone, product: `${o.name ?? 'your order'} (${o.tier} plan)` }).catch(() => null);

@@ -824,3 +824,8 @@ ul.plain, ol.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; } u
 .eng-text { width: 100%; font-size: 14px; line-height: 1.6; resize: vertical; }
 .eng-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .eng-by { margin-left: auto; }
+.eng-auto { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); margin-bottom: 14px; flex-wrap: wrap; }
+.eng-auto.on { border-color: color-mix(in srgb, var(--purple) 40%, var(--line)); }
+.eng-auto.on > svg { color: var(--purple); }
+.eng-auto-text { display: grid; gap: 2px; flex: 1; min-width: 240px; }
+.eng-auto-n select { margin-left: 6px; padding: 4px 8px; border-radius: 8px; width: auto; }

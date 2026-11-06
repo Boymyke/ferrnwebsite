@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { AppEnv, Bindings } from '../lib/env';
-import { clamp, first } from '../lib/db';
+import { all, clamp, first, getSetting, setSetting } from '../lib/db';
 import { requireUser } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { complete, extractJson } from '../lib/ai';
@@ -22,6 +22,7 @@ export type EngageItem = {
   drafts: string[]; note?: string | null; // note: LinkedIn connection note (300 chars)
   sent_text?: string | null; liked?: boolean;
   created_at: string; created_by: string; done_at?: string | null; done_by?: string | null; follow_up_at?: string | null;
+  auto?: boolean; // drafted by the autopilot
 };
 const KEY = 'private/studio/engage.json';
 const MAX = 3000;
@@ -181,4 +182,125 @@ engageApi.delete('/:id', async (c) => {
   await save(c.env, items);
   await audit(c, 'engage', gone.id, 'delete', `${u.name} removed a ${gone.platform} ${gone.kind === 'dm' ? 'DM' : 'comment'} draft`);
   return c.json({ ok: true });
+});
+
+
+/* ═══════════════ autopilot ═══════════════
+ * DMs: a few leads at a time (every cron tick, up to the daily number), Studio opens the lead's website, finds
+ *      the Instagram account or a LinkedIn person profile it links to, reads the page for context and drafts the DM.
+ * Comments: the morning run (which can search the web) finds recent public posts from target businesses and
+ *      drafts comments; they arrive through LeadsHunter's snapshot (`interactions`) and are filed here.
+ * Nothing is ever sent automatically: drafts wait under "Ready to send". */
+const SCAN = 'private/studio/engage-scan.json';
+type Scan = { day: string; drafted: number; seen: string[] };
+const today = () => new Date(Date.now() + 3600e3).toISOString().slice(0, 10); // Lagos day
+
+export async function autopilotSettings(env: Bindings) {
+  const [dm, daily, comments] = await Promise.all([
+    getSetting(env.DB, 'engage.auto_dm', '1'), getSetting(env.DB, 'engage.auto_dm_daily', '6'), getSetting(env.DB, 'engage.auto_comments', '1'),
+  ]).catch(() => ['1', '6', '1']);
+  return { dm: dm === '1', daily: Math.min(25, Math.max(1, Number(daily) || 6)), comments: comments === '1' };
+}
+
+const IG_SKIP = /^(p|reel|reels|explore|accounts|stories|tv|about|developer|legal|direct|share|sharer)$/i;
+function socialLinks(html: string) {
+  const ig = new Set<string>(); const li = new Set<string>(); const liCo = new Set<string>();
+  for (const m of html.matchAll(/https?:\/\/(?:www\.)?instagram\.com\/([A-Za-z0-9._]{2,30})\/?(?=["'?#\s<])/gi)) if (!IG_SKIP.test(m[1])) ig.add(m[1].toLowerCase());
+  for (const m of html.matchAll(/https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/in\/([A-Za-z0-9\-_%]{3,100})\/?/gi)) li.add(m[1]);
+  for (const m of html.matchAll(/https?:\/\/(?:[a-z]{2,3}\.)?linkedin\.com\/company\/([A-Za-z0-9\-_%]{2,100})\/?/gi)) liCo.add(m[1]);
+  return { ig: [...ig], li: [...li], liCo: [...liCo] };
+}
+function pageText(html: string) {
+  const title = html.match(/<title[^>]*>([^<]{0,200})/i)?.[1]?.trim() ?? '';
+  const desc = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']{0,400})/i)?.[1] ?? '';
+  const body = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  return `${title}. ${desc}. ${body}`.slice(0, 1600);
+}
+
+export async function runEngageAutopilot(env: Bindings) {
+  const cfg = await autopilotSettings(env);
+  if (!cfg.dm || !env.MEDIA) return;
+  let scan: Scan = { day: today(), drafted: 0, seen: [] };
+  try { const o = await env.MEDIA.get(SCAN); if (o) scan = await o.json(); } catch { /* fresh */ }
+  if (scan.day !== today()) scan = { day: today(), drafted: 0, seen: scan.seen ?? [] };
+  if (scan.drafted >= cfg.daily) return;
+  const items = await load(env);
+  const have = new Set(items.map((i) => i.lead_id).filter(Boolean) as string[]);
+  const seen = new Set(scan.seen);
+  const leads = await all<Record<string, any>>(env.DB,
+    `SELECT id, company, niche, city, country, website, contact_name, role, gaps, pitch FROM leads
+      WHERE website IS NOT NULL AND website <> '' AND status NOT IN ('Lost', 'Won', 'Opted out', 'Bounced')
+      ORDER BY COALESCE(updated_at, created) DESC LIMIT 200`);
+  const todo = leads.filter((l) => !have.has(l.id) && !seen.has(l.id)).slice(0, 3); // a few per tick keeps each run light
+  const fresh: EngageItem[] = [];
+  for (const l of todo) {
+    seen.add(l.id);
+    if (scan.drafted + fresh.length >= cfg.daily) break;
+    let html = '';
+    try {
+      const url = /^https?:\/\//i.test(l.website) ? l.website : `https://${l.website}`;
+      const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; FerrnStudio/1.0; +https://www.ferrnagency.com)' }, redirect: 'follow', signal: AbortSignal.timeout(8000) });
+      if (r.ok && /html/i.test(r.headers.get('content-type') ?? '')) html = (await r.text()).slice(0, 400_000);
+    } catch { continue; }
+    if (!html) continue;
+    const links = socialLinks(html);
+    const platform: Platform | null = links.ig.length ? 'instagram' : links.li.length ? 'linkedin' : null;
+    if (!platform) continue;
+    const url = platform === 'instagram' ? `https://www.instagram.com/${links.ig[0]}/` : `https://www.linkedin.com/in/${links.li[0]}/`;
+    const context = pageText(html);
+    try {
+      const d = await draftDm(env, platform, { platform, profile_url: url, person: l.contact_name, role: l.role, company: l.company, niche: l.niche, city: l.city,
+        country: l.country, website: l.website, gaps_we_saw: l.gaps, our_angle: l.pitch, about_them: `From their website: ${context}` });
+      if (!d.drafts.length) continue;
+      fresh.push({ id: newId(), kind: 'dm', platform, status: 'draft', lead_id: l.id, company: l.company, person: l.contact_name ?? null, url,
+        context: `From their website${links.liCo.length ? ` (LinkedIn page: linkedin.com/company/${links.liCo[0]})` : ''}: ${context.slice(0, 500)}`,
+        drafts: d.drafts, note: d.note, created_at: iso(), created_by: 'Autopilot', auto: true });
+    } catch (e) { console.warn('engage autopilot draft', l.id, e); }
+  }
+  if (fresh.length) {
+    const now = await load(env); // reload: someone may have edited while we were drafting
+    await save(env, [...fresh, ...now]);
+  }
+  scan.drafted += fresh.length;
+  scan.seen = [...seen].slice(-3000);
+  await env.MEDIA.put(SCAN, JSON.stringify(scan), { httpMetadata: { contentType: 'application/json' } });
+}
+
+/** Comment drafts the morning run found (via LeadsHunter's snapshot). Deduped by post URL. */
+export async function importInteractions(env: Bindings, list: unknown) {
+  if (!Array.isArray(list) || !list.length || !env.MEDIA) return 0;
+  const cfg = await autopilotSettings(env);
+  if (!cfg.comments) return 0;
+  const items = await load(env);
+  const known = new Set(items.map((i) => i.url));
+  const fresh: EngageItem[] = [];
+  for (const raw of list.slice(0, 60) as Record<string, unknown>[]) {
+    const platform = platformOf(raw.platform);
+    const url = cleanUrl(raw.url, platform);
+    if (!url || known.has(url)) continue;
+    const drafts = (Array.isArray(raw.comments) ? raw.comments : []).map((d) => clamp(d, 600)).filter(Boolean).slice(0, 3);
+    if (!drafts.length) continue;
+    known.add(url);
+    fresh.push({ id: newId(), kind: 'comment', platform, status: 'draft', lead_id: clamp(raw.lead_id, 40) || null, company: clamp(raw.company, 160) || null,
+      person: clamp(raw.author, 120) || null, url, context: clamp(raw.post_text, 2000) || null, drafts, created_at: iso(), created_by: 'Morning run', auto: true });
+  }
+  if (fresh.length) await save(env, [...fresh, ...items]);
+  return fresh.length;
+}
+
+engageApi.get('/settings/autopilot', async (c) => {
+  const cfg = await autopilotSettings(c.env);
+  let scan: Scan | null = null;
+  try { const o = await c.env.MEDIA.get(SCAN); if (o) scan = await o.json(); } catch { /* none yet */ }
+  return c.json({ ok: true, ...cfg, today: scan?.day === today() ? scan.drafted : 0, scanned: scan?.seen.length ?? 0 });
+});
+engageApi.put('/settings/autopilot', async (c) => {
+  const u = c.get('user')!;
+  const b = (await c.req.json().catch(() => ({}))) as { dm?: boolean; daily?: number; comments?: boolean };
+  if (typeof b.dm === 'boolean') await setSetting(c.env.DB, 'engage.auto_dm', b.dm ? '1' : '0', u.name);
+  if (typeof b.comments === 'boolean') await setSetting(c.env.DB, 'engage.auto_comments', b.comments ? '1' : '0', u.name);
+  if (b.daily != null) await setSetting(c.env.DB, 'engage.auto_dm_daily', String(Math.min(25, Math.max(1, Math.round(Number(b.daily) || 6)))), u.name);
+  await audit(c, 'engage', null, 'autopilot', `${u.name} changed the social autopilot`);
+  return c.json({ ok: true, ...(await autopilotSettings(c.env)) });
 });

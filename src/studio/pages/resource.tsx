@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api, can, create, remove, update, list, type User } from '../api';
 import { Card, Confirm, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Pager, Tabs, useData, usePaged, useToast, useUser, type FieldDef } from '../ui';
 import { FolderOpen, Plus, Upload } from 'lucide-react';
@@ -25,6 +25,11 @@ export function ResourcePage(p: {
   const [open, setOpen] = useState<any | null>(null);
   const writable = can(user, p.writeRole ?? 'editor');
   const pg = usePaged<any>(data, p.res, [q, p.params]);
+  // /studio/...?id=<id> opens that record (links from emails and notifications).
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('id');
+    if (id && data?.length && !open) { const r = data.find((x: any) => x.id === id); if (r) setOpen(r); }
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
   const actions = <>{p.extraActions}{writable && p.canCreate !== false ? <button className="btn primary" onClick={() => setOpen({ ...(p.defaults ?? {}) })}><Plus size={15} strokeWidth={2.2} />New</button> : null}</>;
   const body = (
     <>
