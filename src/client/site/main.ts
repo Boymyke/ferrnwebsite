@@ -98,7 +98,7 @@ function heroPointer() {
     }, { passive: true });
   }
 }
-function refreshScroll() { para = $$<HTMLElement>('[data-parallax] img'); lightRooms = $$('.room-light, .section-light'); onScrollNow(); }
+function refreshScroll() { para = $$<HTMLElement>('[data-parallax] img'); lightRooms = $$('.section-light'); /* rooms follow the theme now, so the nav only flips over explicitly light sections */ onScrollNow(); }
 function motion() {
   heroPointer();
   const nav = $('[data-nav]');

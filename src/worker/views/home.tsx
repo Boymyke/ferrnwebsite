@@ -191,6 +191,83 @@ export function HomePage(p: {
         </div>
       </section>
 
+      {/* ── about: a staggered bento (two offset rows) inside the page margins; plain cards on phones ── */}
+      <section class="about-bento" id="about" aria-labelledby="about-title">
+        <div class="wrap ab-grid">
+          <div class="ab-head">
+            <p class="kicker reveal">{ctx.get('home.about.kicker')}</p>
+            <Lines text={ctx.get('home.about.title')} tag="h2" class="h-display ab-title" />
+          </div>
+          {(() => {
+            const T = ctx.get('home.about.tiles').split('\n').map((l) => { const [a, ...b] = l.split('|'); return [a.trim(), b.join('|').trim()]; });
+            const tt = (k: number) => T[k] ?? ['', ''];
+            const Cap = ({ k }: { k: number }) => <p class="ab-cap"><strong>{tt(k)[0]}</strong> {tt(k)[1]}</p>;
+            return (
+              <>
+                <article class="ab-tile ab-t1 reveal">
+                  <Cap k={0} />
+                  <div class="ab-vis ab-checks" aria-hidden="true">
+                    <span class="done">{icon('check', { size: 13 })}<s>Business goals</s></span>
+                    <span class="on"><i></i>Customer journey</span>
+                    <span><i></i>What to build first</span>
+                  </div>
+                </article>
+                <article class="ab-tile ab-t2 reveal" style="--d:.06s">
+                  <Cap k={1} />
+                  <div class="ab-vis ab-doc" aria-hidden="true">
+                    <div class="ab-doc-card"><b>Proposal</b><span>Scope, timeline and price</span><small>Signed online · invoice follows</small></div>
+                    <div class="ab-doc-card back"></div>
+                  </div>
+                </article>
+                <a class="ab-tile ab-t3 ab-stat reveal" style="--d:.12s" href={href(lang, '/work')}>
+                  <span class="ab-num">{CLIENT_LOGOS.length}</span>
+                  <span class="ab-num-cap">{tt(2)[0]}</span>
+                  <span class="ab-plus" aria-hidden="true">{icon('arrow-up-right', { size: 20 })}</span>
+                </a>
+                <article class="ab-tile ab-t4 reveal" style="--d:.18s">
+                  <Cap k={3} />
+                  <div class="ab-vis ab-chat" aria-hidden="true">
+                    <span class="ab-bub me">Can we add a booking page?</span>
+                    <span class="ab-bub them"><b>Michael</b> Yes, it’s on your preview link now.</span>
+                    <span class="ab-input">Type a message…{icon('send', { size: 14 })}</span>
+                  </div>
+                </article>
+                <article class="ab-tile ab-b1 reveal">
+                  <Cap k={4} />
+                  <div class="ab-vis ab-blocks" aria-hidden="true">
+                    <span>{icon('target', { size: 15 })}<b>Strategy</b></span>
+                    <span>{icon('pen-tool', { size: 15 })}<b>UI and UX design</b></span>
+                    <span>{icon('code', { size: 15 })}<b>Engineering</b></span>
+                  </div>
+                </article>
+                <article class="ab-tile ab-b2 ab-glow reveal" style="--d:.06s">
+                  <Cap k={5} />
+                  <div class="ab-vis ab-orbit" aria-hidden="true">
+                    <span class="ab-av a1">PM</span><span class="ab-av a2">UX</span><span class="ab-av a3">DEV</span><span class="ab-av a4">You</span>
+                    <span class="ab-core">{icon('play', { size: 22 })}</span>
+                  </div>
+                </article>
+                <article class="ab-tile ab-b3 reveal" style="--d:.12s">
+                  <Cap k={6} />
+                  <div class="ab-vis ab-panel" aria-hidden="true">
+                    <div class="ab-panel-card">
+                      <b>Your website</b>
+                      <span>{icon('shield-check', { size: 14 })}Hosting and backups</span>
+                      <span>{icon('refresh-cw', { size: 14 })}Updates and small changes</span>
+                      <span>{icon('chart-bar', { size: 14 })}Monthly report</span>
+                    </div>
+                  </div>
+                </article>
+                <div class="ab-more reveal">
+                  <a class="link" href={href(lang, '/about')}>Our story {icon('arrow-right', { size: 15 })}</a>
+                  <a class="link" href={href(lang, '/team')}>Meet the team {icon('arrow-right', { size: 15 })}</a>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      </section>
+
       {/* ── growth: how the work turns into revenue ── */}
       <section class="growth" id="growth">
         <div class="wrap">

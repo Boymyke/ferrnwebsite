@@ -65,6 +65,11 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## About bento + true dark/light (6 Nov, night)
+- **About Ferrn** sits right after Trusted By: a staggered bento (top row pushed right, bottom row pulled left, heading and links in the corners) on a 24-column grid inside the page margins; 2 columns on tablets, plain stacked cards on phones. One tile (the client count) has the orange dot texture, one has the orange glow. Copy is editable in Studio (Website copy › Home › About).
+- **8px corners** for cards and panels site-wide (`--r` and `--r-lg`).
+- **Themes are consistent:** "light rooms" now follow the theme (a slightly lifted surface), capability cards and work shots use theme colours, so dark mode has no white sections and light mode has no black ones. The nav no longer flips ink over those rooms.
+
 ## Home page edits (6 Nov, evening)
 - **Order:** hero → Trusted By → growth → services → marketplace → work → testimonials → close. The Trusted By strip runs the full width of the site inside the page margins.
 - **Bob section removed** from the home page (Bob is still the ghost in the corner; the tour now visits Trusted By right after the hero).
