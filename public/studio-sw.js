@@ -1,6 +1,6 @@
 /* Ferrn Studio service worker: caches the app shell so the Studio opens instantly and
    offline; API calls always go to the network (data is never cached here). */
-const CACHE = 'ferrn-studio-v4.11.1';
+const CACHE = 'ferrn-studio-v4.12.0';
 const SHELL = ['/studio', '/studio/app.js?v=3.1.1', '/studio/studio.css?v=3.1.1', '/brand/ferrn-mark.svg', '/brand/ferrn-logo.svg', '/icons/icon-192.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
