@@ -252,7 +252,7 @@ export function HomePage(p: {
                 </a>
                 <article class="ab-tile ab-b2 ab-clients reveal" style="--d:.05s" data-tilt>
                   <div class="ab-mosaic" aria-hidden="true">
-                    {faces.map((x, k) => <img src={sized(x.avatar, k === 0 ? 640 : 360, k === 0 ? 720 : 360)!} alt="" loading="lazy" decoding="async" />)}
+                    {faces.map((x, k) => <img src={sized(x.avatar, k === 0 ? 380 : 220, k === 0 ? 440 : 220)!} alt="" decoding="async" width={k === 0 ? 380 : 220} height={k === 0 ? 440 : 220} />)}
                   </div>
                   <div class="ab-clients-cap">
                     <Cap k={5} />
