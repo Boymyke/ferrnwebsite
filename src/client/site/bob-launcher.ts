@@ -1,4 +1,4 @@
-/* Bob's launcher — the only part of Bob in the main bundle. A ghost that floats, blinks and watches the
+/* Bob's launcher, the only part of Bob in the main bundle. A ghost that floats, blinks and watches the
    pointer. Clicking it (or anything with data-bob-prompt) loads the full assistant (/assets/bob.js + bob.css)
    once. Also: the visitor's first name personalises a few headlines, and the contact form picks up what the
    guided tour collected. */

@@ -42,7 +42,7 @@ function dots(hero: HTMLElement, reduced: boolean) {
   let U1: Record<string, WebGLUniformLocation | null> = {}, U2: Record<string, WebGLUniformLocation | null> = {};
   const dpr = Math.min(devicePixelRatio || 1, 2), CELL = 7 * dpr;
   let W = 0, H = 0, GW = 1, GH = 1;
-  // Set WebGL up lazily, on the first pointer move — so it costs nothing on load.
+  // Set WebGL up lazily, on the first pointer move, so it costs nothing on load.
   const init = () => {
     gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false, alpha: true });
     if (!gl) return false;
@@ -107,7 +107,7 @@ function dots(hero: HTMLElement, reduced: boolean) {
   hero.addEventListener('pointerleave', () => { lastX = -1; });
 }
 
-/* The changing word: one clean move — the old word lifts away, the next rises into place. */
+/* The changing word: one clean move, the old word lifts away, the next rises into place. */
 function flick(hero: HTMLElement, reduced: boolean) {
   const box = $('[data-flick]', hero), word = box && $('.hx-flick-word', box);
   if (!box || !word) return;

@@ -1,4 +1,4 @@
-/* Control-centre music player — free Pixabay tracks streamed from R2 (/media/music/…). Previous / play / next,
+/* Control-centre music player, free Pixabay tracks streamed from R2 (/media/music/…). Previous / play / next,
    a seek bar and volume. The chosen track loops until the visitor changes it. While it plays, links swap pages
    in place (softNav in main.ts) so the music carries on; if a page does fully reload, it picks up where it
    was. Never starts on its own the first time; pauses when the tab is hidden. */

@@ -144,6 +144,7 @@ Rules:
 - When a page answers it better than text (portfolio, long detail), add a navigate action to that page (or page#section) and keep the message short.
 - If they ask you to read the page, read aloud, or listen, respond briefly and add action {"type":"read"}.
 - If they show buying intent, ask for a name and email or WhatsApp number so the team can follow up, or point to ${booking}.
+- Never use em dashes; use commas, full stops or colons instead.
 - Never claim your voice is Nigerian unless it is; if asked, say the site uses a Nigerian English voice when available and the device's voice otherwise.
 
 Output strictly as JSON: {"message": string, "action": {"type":"navigate","href":"/path#section","label":"short button text"} | {"type":"read"} | null, "sources": [passage numbers used, e.g. 1, 3]}
@@ -160,7 +161,8 @@ ${passages || '(no matching passages — say you are not sure and offer the cont
 export async function parseReply(env: Bindings, text: string, hits: IndexRow[]): Promise<BobReply> {
   let obj: any = null;
   try { obj = JSON.parse(text); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) { try { obj = JSON.parse(m[0]); } catch {} } }
-  const message = String((obj && typeof obj.message === 'string' ? obj.message : text) || '').trim().slice(0, 2000);
+  // No em dashes anywhere on the site, Bob's answers included.
+  const message = String((obj && typeof obj.message === 'string' ? obj.message : text) || '').trim().slice(0, 2000).replace(/\s*\u2014\s*/g, ', ');
   let action: BobAction | undefined;
   const a = obj?.action;
   if (a?.type === 'read') action = { type: 'read' };

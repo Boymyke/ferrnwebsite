@@ -158,7 +158,7 @@ docs.post('/p/:token/sign', async (c) => {
   const inv = await createInvoiceFromProposal(c.env, signed, p.invoice_on_sign === 'full' ? 'full' : 'deposit', 'System');
   await grant(c, 'invoice', inv);
   if (p.lead_id) await run(c.env.DB, "UPDATE leads SET status = 'Won', next_action = ?, updated_at = datetime('now'), updated_by = ? WHERE id = ?",
-    `Proposal ${p.number} signed — invoice ${inv.number} issued`, who, p.lead_id).catch(() => null);
+    `Proposal ${p.number} signed, invoice ${inv.number} issued`, who, p.lead_id).catch(() => null);
 
   const origin = new URL(c.req.url).origin;
   c.executionCtx.waitUntil((async () => {
@@ -167,7 +167,7 @@ docs.post('/p/:token/sign', async (c) => {
     ], { label: 'Open in Studio', path: `/studio/proposals/${p.id}` });
     if (emailConfigured(c.env) && p.client_email) {
       await sendEmail(c.env, {
-        to: p.client_email, subject: `Thank you — ${p.number} is signed`,
+        to: p.client_email, subject: `Thank you, ${p.number} is signed`,
         track: { kind: 'signed', proposalId: p.id, invoiceId: inv.id, company: p.client_company },
         html: brandEmail(c.env, {
           heading: 'Thank you for signing', preheader: `Your invoice ${inv.number} is ready.`,
@@ -222,8 +222,8 @@ docs.get('/i/:token', async (c) => {
     inv.proposal_id ? first<{ token: string; revoked: number }>(c.env.DB, 'SELECT token, revoked FROM proposals WHERE id = ?', inv.proposal_id) : null,
   ]);
   const q = c.req.query();
-  const flash = q.uploaded ? { kind: 'ok' as const, text: 'Receipt received — thank you. We’ll confirm your payment within one working day.' }
-    : q.paid ? { kind: 'ok' as const, text: 'Payment received — thank you! A confirmation is on its way.' }
+  const flash = q.uploaded ? { kind: 'ok' as const, text: 'Receipt received, thank you. We’ll confirm your payment within one working day.' }
+    : q.paid ? { kind: 'ok' as const, text: 'Payment received, thank you! A confirmation is on its way.' }
       : q.payment ? { kind: 'err' as const, text: 'That payment didn’t go through. You can try again, or pay by bank transfer below.' } : undefined;
   return c.html(<InvoiceView inv={inv} methods={methods} paystack={paystack} receipts={receipts} flash={flash}
     proposalUrl={prop && !prop.revoked ? `/p/${prop.token}` : null} />);
@@ -304,7 +304,7 @@ docs.post('/i/:token/receipts', async (c) => {
   }
   await run(c.env.DB, "UPDATE invoices SET status = 'receipt_submitted', updated_by = 'Client', updated_at = datetime('now') WHERE id = ? AND status IN ('unpaid','part_paid')", inv.id);
   const who = `Client: ${inv.client_name || inv.client_company || 'client'}`;
-  await addEvent(c.env.DB, inv.proposal_id, 'receipt', who, `${checked.length} receipt${checked.length > 1 ? 's' : ''} uploaded for ${inv.number}${note ? ` — “${note}”` : ''}`, inv.id);
+  await addEvent(c.env.DB, inv.proposal_id, 'receipt', who, `${checked.length} receipt${checked.length > 1 ? 's' : ''} uploaded for ${inv.number}${note ? `, “${note}”` : ''}`, inv.id);
   await clientAudit(c.env.DB, who, 'invoices', inv.id, 'receipt', `Payment receipt uploaded for ${inv.number} (${checked.length} file${checked.length > 1 ? 's' : ''})`);
   c.executionCtx.waitUntil(notifyFerrn(c.env, `Receipt uploaded for ${inv.number}`, [
     `${inv.client_company || inv.client_name || 'The client'} uploaded ${checked.length} payment receipt${checked.length > 1 ? 's' : ''}. Please check the account and mark the invoice paid.`, ...(note ? [`Note: ${note}`] : []),

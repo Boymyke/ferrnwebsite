@@ -45,7 +45,7 @@ const Pill = ({ s }: { s: string }) => <span class={`pill s-${s}`}>{STATUS_TEXT[
 /* ── gate ── */
 export function GatePage({ kind, action, error, locked }: { kind: 'proposal' | 'invoice'; action: string; error?: string; locked?: boolean }) {
   return (
-    <Shell title="Private document — Ferrn Digital Agency" bodyClass="gate-body">
+    <Shell title="Private document | Ferrn Digital Agency" bodyClass="gate-body">
       <main class="gate">
         <div class="gate-card">
           <Logo dark width={150} />
@@ -70,7 +70,7 @@ export function GatePage({ kind, action, error, locked }: { kind: 'proposal' | '
 
 export function ClosedPage({ title, message }: { title: string; message: string }) {
   return (
-    <Shell title={`${title} — Ferrn Digital Agency`} bodyClass="gate-body">
+    <Shell title={`${title} | Ferrn Digital Agency`} bodyClass="gate-body">
       <main class="gate">
         <div class="gate-card">
           <Logo dark width={150} />
@@ -104,7 +104,7 @@ export function ProposalView({ p, contentHash, preview, flash, signatureUrl, inv
   const issued = (p.sent_at || p.created_at || '').slice(0, 10);
   const n = sections.length;
   return (
-    <Shell title={`${p.title || 'Proposal'} — ${p.number} — Ferrn`} bodyClass={`doc proposal ${preview ? 'is-preview' : ''}`}
+    <Shell title={`${p.title || 'Proposal'}, ${p.number} | Ferrn`} bodyClass={`doc proposal ${preview ? 'is-preview' : ''}`}
       data={preview ? {} : { kind: 'proposal', base: `/p/${p.token}` }}>
       <div class="bar no-print">
         <div class="bar-in">
@@ -137,7 +137,7 @@ export function ProposalView({ p, contentHash, preview, flash, signatureUrl, inv
 
         <div class="doc-body">
           {status === 'declined' ? <div class="notice red">This proposal was declined{p.declined_at ? ` on ${fmtDate(p.declined_at)}` : ''}. If anything has changed, email <a href={`mailto:${CONTACT}`}>{CONTACT}</a> and we’ll send an updated version.</div> : null}
-          {status === 'expired' ? <div class="notice">This proposal expired{p.valid_until ? ` on ${fmtDate(p.valid_until)}` : ''}. Prices and availability may have changed — email <a href={`mailto:${CONTACT}`}>{CONTACT}</a> for a refreshed version.</div> : null}
+          {status === 'expired' ? <div class="notice">This proposal expired{p.valid_until ? ` on ${fmtDate(p.valid_until)}` : ''}. Prices and availability may have changed. Email <a href={`mailto:${CONTACT}`}>{CONTACT}</a> for a refreshed version.</div> : null}
 
           <nav class="toc">
             <h4>Contents</h4>
@@ -296,7 +296,7 @@ export function InvoiceView({ inv, methods, paystack, receipts, flash, proposalU
   const kindLine = inv.kind === 'deposit' ? `Deposit (${Number(inv.deposit_pct)}%)` : inv.kind === 'balance' ? 'Balance' : 'Amount invoiced';
   const bank = methods.filter((m) => m.type !== 'paystack');
   return (
-    <Shell title={`Invoice ${inv.number} — Ferrn Digital Agency`} bodyClass="doc invoice" data={{ kind: 'invoice', base: `/i/${inv.token}` }}>
+    <Shell title={`Invoice ${inv.number} | Ferrn Digital Agency`} bodyClass="doc invoice" data={{ kind: 'invoice', base: `/i/${inv.token}` }}>
       <div class="bar no-print">
         <div class="bar-in">
           <span class="bar-brand"><Logo dark width={96} /></span>
@@ -339,14 +339,14 @@ export function InvoiceView({ inv, methods, paystack, receipts, flash, proposalU
           {t.discount ? <p class="row"><span>Discount ({Number(inv.discount_pct)}%)</span><span>−{fmtMoney(t.discount, cur)}</span></p> : null}
           {Number(inv.vat) ? <p class="row"><span>VAT (7.5%)</span><span>{fmtMoney(t.tax, cur)}</span></p> : null}
           <p class="row strong"><span>Project total</span><span>{fmtMoney(inv.total, cur)}</span></p>
-          {Number(inv.amount_due) !== Number(inv.total) ? <p class="row"><span>{kindLine} — this invoice</span><span>{fmtMoney(inv.amount_due, cur)}</span></p> : null}
+          {Number(inv.amount_due) !== Number(inv.total) ? <p class="row"><span>{kindLine}, this invoice</span><span>{fmtMoney(inv.amount_due, cur)}</span></p> : null}
           {Number(inv.amount_paid) ? <p class="row"><span>Paid</span><span>−{fmtMoney(inv.amount_paid, cur)}</span></p> : null}
           <p class="row grand"><span>{paid ? 'Balance' : 'Amount due'}</span><span>{fmtMoney(remaining, cur)}</span></p>
           {Object.entries(t.recurring).map(([cycle, r]) => <p class="row fine"><span>Then per {cycleWord(cycle)}, billed separately</span><span>{fmtMoney(r.total, cur)}</span></p>)}
         </div>
 
         {paid ? (
-          <div class="paid-box"><strong>Thank you — this invoice is paid.</strong><span>{inv.paid_at ? `Payment confirmed on ${fmtDate(inv.paid_at)}.` : ''} A receipt is available on request.</span></div>
+          <div class="paid-box"><strong>Thank you, this invoice is paid.</strong><span>{inv.paid_at ? `Payment confirmed on ${fmtDate(inv.paid_at)}.` : ''} A receipt is available on request.</span></div>
         ) : inv.status === 'void' ? (
           <div class="notice">This invoice has been cancelled. Nothing is due on it.</div>
         ) : (

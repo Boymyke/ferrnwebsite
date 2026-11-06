@@ -9,7 +9,7 @@ import { ASSET_V } from '../version';
 export const href = (lang: Lang, path: string) => (lang === 'en' ? path : `/${lang}${path === '/' ? '/' : path}`);
 export const SITE = 'https://www.ferrnagency.com';
 export const MARK_PATH = 'M163.419 0V163.419H0V109.064H107.208V52.9022H17.0028V0H163.419Z';
-/** Same mark, but the path starts bottom-left and runs right, then up — so a stroke draw "writes" it in that order. */
+/** Same mark, but the path starts bottom-left and runs right, then up, so a stroke draw "writes" it in that order. */
 export const MARK_DRAW = 'M0 163.419H163.419V0H17.0028V52.9022H107.208V109.064H0Z';
 
 type LayoutProps = {
@@ -285,11 +285,11 @@ function Idle({ ctx }: { ctx?: SiteCtx }) {
 
 /* ── shared pieces ── */
 
-/** Numbered hairline section opener: "01 — Work" + headline + optional lead. No chips. */
+/** Numbered hairline section opener: "01, Work" + headline + optional lead. No chips. */
 export function Head(p: { n?: string; label: string; title: string; lead?: string; id?: string; right?: Child; class?: string }) {
   return (
     <div class={`head ${p.class ?? ''}`} id={p.id}>
-      <div class="head-rule"><span>{p.n ? `${p.n} — ` : ''}{p.label}</span>{p.right}</div>
+      <div class="head-rule"><span>{p.n ? `${p.n} · ` : ''}{p.label}</span>{p.right}</div>
       <div class="head-row">
         <h2 class="h2 reveal-text">{p.title}</h2>
         {p.lead ? <p class="lead reveal">{p.lead}</p> : null}

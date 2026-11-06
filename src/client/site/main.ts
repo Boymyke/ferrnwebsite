@@ -1,4 +1,4 @@
-/* Ferrn public site — progressive enhancement. Everything works without JS except Bob,
+/* Ferrn public site, progressive enhancement. Everything works without JS except Bob,
    checkout and animations. */
 import { bobLauncher, personalise, prefillContact } from './bob-launcher';
 import { music } from './music';
@@ -156,7 +156,7 @@ function idle() {
   arm();
 }
 
-/* ── seasonal particles (snow, confetti, hearts, sparkle) — light, CSS-driven ── */
+/* ── seasonal particles (snow, confetti, hearts, sparkle), light, CSS-driven ── */
 function season() {
   const preset = html.dataset.season; if (!preset || reduced) return;
   const fx: Record<string, { cls: string; n: number; colors: string[] }> = {
@@ -359,20 +359,55 @@ function pageBits() {
     const go = (d: number) => { i = (i + d + n) % n; (track.children[i] as HTMLElement).scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest', inline: 'start' }); pos && (pos.textContent = `${i + 1} / ${n}`); };
     $('[data-next]', s)?.addEventListener('click', () => go(1));
     $('[data-prev]', s)?.addEventListener('click', () => go(-1));
-    track.addEventListener('scroll', () => { const k = Math.round(track.scrollLeft / Math.max(1, track.clientWidth)); if (k !== i) { i = k; pos && (pos.textContent = `${i + 1} / ${n}`); } }, { passive: true });
+    // Several cards can be in view at once: step by one card's width (plus the gap).
+    const step = () => { const c = track.children[0] as HTMLElement | undefined; return c ? c.offsetWidth + (parseFloat(getComputedStyle(track).columnGap) || 0) : track.clientWidth; };
+    track.addEventListener('scroll', () => { const k = Math.min(n - 1, Math.round(track.scrollLeft / Math.max(1, step()))); if (k !== i) { i = k; pos && (pos.textContent = `${i + 1} / ${n}`); } }, { passive: true });
   });
 
-  // Voice testimonials: one plays at a time; bars animate while playing.
-  const players = $$('[data-voice]');
+  // Voice-note testimonials: one plays at a time; bars animate while playing. A card with the client's own
+  // recording plays it; otherwise the site reads their words aloud (server voice, else the device's voice).
+  const players = $$<HTMLElement>('[data-voice]');
+  const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+  let stopCurrent: (() => void) | null = null;
   players.forEach((v) => {
-    const a = $<HTMLAudioElement>('audio', v)!, btn = $('[data-voice-play]', v)!, time = $('[data-voice-time]', v);
-    const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
-    btn.addEventListener('click', () => { if (a.paused) { players.forEach((o) => o !== v && $<HTMLAudioElement>('audio', o)?.pause()); a.play(); } else a.pause(); });
-    a.addEventListener('play', () => v.classList.add('playing'));
-    a.addEventListener('pause', () => v.classList.remove('playing'));
-    a.addEventListener('ended', () => { v.classList.remove('playing'); a.currentTime = 0; });
-    a.addEventListener('timeupdate', () => time && (time.textContent = fmt(a.currentTime)));
-    a.addEventListener('loadedmetadata', () => time && (time.textContent = fmt(a.duration)));
+    const btn = $('[data-voice-play]', v)!, time = $('[data-voice-time]', v);
+    const initial = time?.textContent || '';
+    let a = $<HTMLAudioElement>('audio', v);
+    let speaking = false;
+    const done = () => { v.classList.remove('playing', 'loading'); speaking = false; if (time) time.textContent = a && a.duration ? fmt(a.duration) : initial; if (stopCurrent === stop) stopCurrent = null; };
+    const stop = () => { if (a && !a.paused) a.pause(); if (speaking) { try { speechSynthesis.cancel(); } catch {} } done(); };
+    const wire = (el: HTMLAudioElement) => {
+      el.addEventListener('play', () => { v.classList.remove('loading'); v.classList.add('playing'); });
+      el.addEventListener('pause', done);
+      el.addEventListener('ended', () => { el.currentTime = 0; done(); });
+      el.addEventListener('timeupdate', () => time && (time.textContent = fmt(el.currentTime)));
+      el.addEventListener('loadedmetadata', () => time && !v.classList.contains('playing') && (time.textContent = fmt(el.duration)));
+    };
+    if (a) wire(a);
+    const say = v.dataset.say;
+    btn.addEventListener('click', async () => {
+      if (v.classList.contains('playing') || v.classList.contains('loading')) return stop();
+      stopCurrent?.(); stopCurrent = stop;
+      if (a) { a.play().catch(done); return; }
+      if (!say) return;
+      v.classList.add('loading');
+      try {
+        const r = await fetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: say, lang }) });
+        const type = r.headers.get('content-type') || '';
+        if (!r.ok || !/audio/.test(type)) throw new Error('no server voice');
+        a = new Audio(URL.createObjectURL(await r.blob())); wire(a);
+        if (stopCurrent !== stop) return done(); // pressed something else meanwhile
+        await a.play();
+      } catch {
+        // The device's own voice.
+        try {
+          const u = new SpeechSynthesisUtterance(say); u.rate = 1; speaking = true;
+          u.onstart = () => { v.classList.remove('loading'); v.classList.add('playing'); };
+          u.onend = u.onerror = () => done();
+          speechSynthesis.cancel(); speechSynthesis.speak(u);
+        } catch { done(); }
+      }
+    });
   });
 }
 

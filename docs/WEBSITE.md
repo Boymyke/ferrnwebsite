@@ -65,6 +65,14 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Home page edits (6 Nov, evening)
+- **Order:** hero → Trusted By → growth → services → marketplace → work → testimonials → close. The Trusted By strip runs the full width of the site inside the page margins.
+- **Bob section removed** from the home page (Bob is still the ghost in the corner; the tour now visits Trusted By right after the hero).
+- **Hero paragraph** no longer names countries.
+- **No em dashes on the website:** removed from all copy, titles (now "Page | Ferrn") and alt text; a middleware also replaces any that come from the database (products, posts, FAQs) and Bob strips them from his answers.
+- **Headings no longer clip:** the line-reveal boxes and the background-clipped text now leave room for descenders (g, p, q, y); the hero word box is taller; the footer FERRN mark is shown whole.
+- **Testimonials are voice notes:** each card has a play button and waveform. With a recording uploaded in Studio it plays the client's voice; otherwise the site reads the quote aloud and says so ("Their words, read aloud by our site"). Three cards per row on desktop, two on tablet, one on phones.
+
 ## Checkout, orders and social autopilot (6 Nov, afternoon)
 - **Lighter pages.** The full-screen grain no longer animates or blends (it repainted the whole page every frame), the ghost's glow is a static layer and its blink is a class flip instead of an endless SVG animation, its eyes only follow the pointer nearby, the hidden menu keeps no blur layer, and the checkout backdrop has no blur. A product page now does no style or layout work at all when idle (was ~60 recalculations a second).
 - **Checkout.** Pay securely / Request invoice close the dialog at once and show a status card on the page (Try again reopens the form with the details kept). If Paystack refuses to start a payment, the order is kept, the reason goes in the order notes, an invoice request is created and the client sees a clear message instead of "Something went wrong". Ferrn gets an email for every new or paid order.

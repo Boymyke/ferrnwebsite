@@ -31,7 +31,7 @@ export function QuoteDocument({ q }: { q: QuoteRow }) {
     <html lang="en">
       <head>
         <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><meta name="robots" content="noindex,nofollow" />
-        <title>Quote {q.number} — Ferrn Digital Agency</title>
+        <title>Quote {q.number} | Ferrn Digital Agency</title>
         <link rel="icon" href="/icons/favicon-32.png" />
         <link rel="stylesheet" href="/fonts/fonts.css" />
         <link rel="stylesheet" href="/assets/quote.css" />
@@ -67,7 +67,7 @@ export function QuoteDocument({ q }: { q: QuoteRow }) {
           <section><h4>Terms</h4><p class="pre">{q.terms || 'Payment: 60% to start, 40% on launch. Managed plans are billed in advance; 12-month minimum, then monthly. Your content, domain and data remain yours. Prices exclude third-party fees (domains, SMS/WhatsApp usage) unless listed.'}</p></section>
           <footer>Ferrn Digital Agency · We build what’s next.</footer>
         </article>
-        {raw(`<script>document.querySelector('[data-accept]')?.addEventListener('click',async e=>{const b=e.currentTarget;const name=prompt('Type your full name to accept this quote');if(!name)return;b.disabled=true;const r=await fetch('/api/quotes/${q.share_key}/accept',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name})});if(r.ok){b.outerHTML='<span class="ok">✓ Accepted — thank you, we will be in touch today.</span>'}else{b.disabled=false;alert('Could not accept right now. Please reply to our email.')}});</script>`)}
+        {raw(`<script>document.querySelector('[data-accept]')?.addEventListener('click',async e=>{const b=e.currentTarget;const name=prompt('Type your full name to accept this quote');if(!name)return;b.disabled=true;const r=await fetch('/api/quotes/${q.share_key}/accept',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name})});if(r.ok){b.outerHTML='<span class="ok">✓ Accepted. Thank you, we will be in touch today.</span>'}else{b.disabled=false;alert('Could not accept right now. Please reply to our email.')}});</script>`)}
       </body>
     </html>
   );

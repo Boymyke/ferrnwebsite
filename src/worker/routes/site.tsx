@@ -42,6 +42,17 @@ export function siteRoutes(lang: Lang) {
   const app = new Hono<AppEnv>();
   app.use('*', async (c, next) => { c.set('lang', lang); await next(); });
   app.use('*', edgeCache(300));
+  // House style: no em dashes anywhere on the site, including text that comes from the database (products, posts, FAQs).
+  app.use('*', async (c, next) => {
+    await next();
+    if (!/text\/html/.test(c.res.headers.get('content-type') ?? '')) return;
+    const html = await c.res.text();
+    if (!html.includes('\u2014')) { c.res = new Response(html, c.res); return; }
+    const out = html.replace(/(<title>[^<]*?)\s*\u2014\s*/g, '$1 | ').replace(/\s*\u2014\s*/g, ', ');
+    const res = new Response(out, c.res);
+    res.headers.delete('content-length');
+    c.res = res;
+  });
   const ctxOf = (c: any) => loadSite(c.env, lang);
 
   app.get('/', async (c) => {

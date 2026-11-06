@@ -256,8 +256,9 @@ html.a11y-align main, html.a11y-align main * { text-align: left !important; }
 .season-greet { color: var(--accent); }
 
 /* ── line reveals ── */
-.lines .line { display: block; overflow: hidden; }
-.lines .line-in { display: inline-block; transform: translateY(110%); background: linear-gradient(100deg, var(--ink) 0 45%, var(--accent) 50%, var(--ink) 55% 100%); background-size: 300% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; transition: transform .75s var(--ease), background-position 1.2s var(--ease-io); transition-delay: calc(var(--i, 0) * 90ms); }
+/* Room for descenders and accents: the line clips (for the reveal) and the text is painted with background-clip, so both boxes need to cover the whole glyph, not just the tight line height. */
+.lines .line { display: block; overflow: hidden; padding: .1em 0 .16em; margin: -.1em 0 -.16em; }
+.lines .line-in { display: inline-block; padding: .1em .06em .16em; margin: -.1em -.06em -.16em; transform: translateY(130%); background: linear-gradient(100deg, var(--ink) 0 45%, var(--accent) 50%, var(--ink) 55% 100%); background-size: 300% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; transition: transform .75s var(--ease), background-position 1.2s var(--ease-io); transition-delay: calc(var(--i, 0) * 90ms); }
 .lines.in .line-in { transform: translateY(0); background-position: 0 0; }
 /* Masked wipe (mask, not clip-path: Chromium clips IntersectionObserver geometry with clip-path, so the reveal would never fire). */
 .reveal-text { opacity: 0; transform: translateY(14px); -webkit-mask-image: linear-gradient(180deg, #000 0, #000 0%, transparent 0%); mask-image: linear-gradient(180deg, #000 0, #000 0%, transparent 0%); -webkit-mask-size: 100% 300%; mask-size: 100% 300%; transition: opacity .6s var(--ease), transform .9s var(--ease); }
@@ -584,8 +585,8 @@ html:not(.js) .reveal, html:not(.js) .reveal-text, html:not(.js) .lines .line-in
 .footer-col a:hover { color: var(--accent); }
 .footer-addr { font-size: 13px; color: var(--muted); margin: 10px 0; max-width: 28ch; }
 .footer-social { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-.footer-mark { padding: 10px 0 0; line-height: .8; overflow: hidden; }
-.footer-mark span { display: block; font-size: clamp(90px, 22vw, 340px); font-weight: 600; letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1px var(--line-2); transform: translateY(14%); background: linear-gradient(90deg, var(--accent), var(--accent)); background-size: 0% 100%; background-repeat: no-repeat; -webkit-background-clip: text; background-clip: text; transition: background-size 1.2s var(--ease); }
+.footer-mark { padding: 10px 0 clamp(12px, 2vw, 28px); line-height: .9; }
+.footer-mark span { display: block; font-size: clamp(90px, 22vw, 340px); font-weight: 600; letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1px var(--line-2); background: linear-gradient(90deg, var(--accent), var(--accent)); background-size: 0% 100%; background-repeat: no-repeat; -webkit-background-clip: text; background-clip: text; transition: background-size 1.2s var(--ease); }
 .footer-mark:hover span { background-size: 100% 100%; -webkit-text-stroke: 0; }
 .footer-base { display: flex; justify-content: space-between; gap: 20px; padding: 18px 0 26px; border-top: var(--bw) solid var(--line); font-size: 13px; color: var(--faint); flex-wrap: wrap; }
 .footer-base-links { display: flex; gap: 18px; } .footer-base-links a { display: inline-flex; align-items: center; gap: 5px; } .footer-base-links a:hover { color: var(--accent); }
@@ -805,7 +806,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .hx::after { content: ''; position: absolute; inset: auto 0 0; height: 160px; z-index: -1; background: linear-gradient(transparent, var(--bg)); pointer-events: none; }
 .hx-copy { text-align: center; display: grid; justify-items: center; }
 .hx-title { margin: 0; font-size: clamp(44px, 7.6vw, 108px); font-weight: 600; letter-spacing: -.055em; line-height: 1; display: grid; justify-items: center; }
-.hx-flick { color: var(--orange); display: block; height: 1.08em; overflow: hidden; }
+.hx-flick { color: var(--orange); display: block; height: 1.24em; line-height: 1.16; overflow: hidden; margin-bottom: -.12em; }
 .hx-flick-word { display: inline-block; white-space: nowrap; will-change: transform, opacity, filter; }
 .hx-flick-word.out { animation: word-out .38s cubic-bezier(.55, 0, .7, .2) forwards; }
 .hx-flick-word.in { animation: word-in .55s cubic-bezier(.2, .8, .2, 1) both; }
@@ -817,9 +818,10 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 @media (max-width: 760px) { .hx { padding: 120px 0 70px; min-height: 78svh; } }
 
 /* Trusted By — its own section, endless strip with faded edges */
-.trusted { background: var(--bg); color: var(--ink); padding: clamp(70px, 9vw, 120px) 0; position: relative; }
-.trusted-title { margin: 0 0 clamp(28px, 4vw, 44px); text-align: center; font-size: clamp(28px, 3.6vw, 46px); font-weight: 600; letter-spacing: -.04em; }
-.trusted-strip { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent); }
+.trusted { background: var(--bg); color: var(--ink); padding: clamp(48px, 6vw, 84px) 0; position: relative; }
+.trusted-title { margin: 0 0 clamp(24px, 3.4vw, 40px); text-align: center; font-size: clamp(28px, 3.6vw, 46px); font-weight: 600; letter-spacing: -.04em; line-height: 1.15; padding-inline: var(--gutter); }
+/* Full width of the site, inside the same side margins as everything else. */
+.trusted-strip { overflow: hidden; width: calc(100% - var(--gutter) * 2); margin-inline: auto; -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
 .trusted-track { display: flex; align-items: center; gap: clamp(44px, 6vw, 84px); width: max-content; animation: marquee 48s linear infinite; padding-inline: 30px; will-change: transform; }
 .trusted-strip:hover .trusted-track { animation-play-state: paused; }
 .trusted-track img { flex: none; display: block; object-fit: contain; filter: grayscale(1) brightness(0) invert(1); opacity: .6; transition: filter .35s, opacity .35s, transform .35s var(--ease); }
@@ -859,3 +861,21 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .calc-note { margin: 0; font-size: 12.5px; color: var(--faint); line-height: 1.5; }
 .calc-cta { justify-self: start; }
 @media (max-width: 1000px) { .growth-grid { grid-template-columns: 1fr; } .calc { position: static; } }
+
+/* ── testimonials as voice notes ── */
+.room-quotes .quotes-track { grid-auto-columns: 86%; gap: 18px; padding-bottom: 4px; }
+@media (min-width: 720px) { .room-quotes .quotes-track { grid-auto-columns: calc((100% - 18px) / 2); } }
+@media (min-width: 1100px) { .room-quotes .quotes-track { grid-auto-columns: calc((100% - 36px) / 3); } }
+.quote-card.vn { max-width: none; gap: 14px; padding: 20px; border-radius: var(--r); border: var(--bw) solid var(--line); background: var(--panel); align-content: start; }
+.quote-card.vn figcaption { gap: 12px; }
+.quote-card.vn figcaption img, .quote-card.vn .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex: none; }
+.quote-card.vn .voice { max-width: none; padding: 10px 14px 10px 10px; border-radius: 999px; background: var(--bg-2); border-color: var(--line); gap: 12px; }
+.quote-card.vn .voice-btn { width: 42px; height: 42px; border-radius: 50%; cursor: pointer; transition: transform .2s var(--ease); }
+.quote-card.vn .voice-btn:hover { transform: scale(1.06); }
+.quote-card.vn .voice-bars { gap: 2px; height: 30px; min-width: 0; overflow: hidden; justify-content: space-between; }
+.quote-card.vn .voice-bars i { flex: 0 1 3px; min-width: 2px; height: var(--h, 40%); border-radius: 2px; }
+.quote-card.vn .voice.loading .voice-bars i { animation: vn-wait 1s ease-in-out infinite alternate; animation-delay: calc(var(--k) * -40ms); }
+@keyframes vn-wait { to { opacity: .35; } }
+.quote-card.vn blockquote { font-size: clamp(16px, 1.5vw, 18px); line-height: 1.6; letter-spacing: 0; color: var(--ink); }
+.quote-card.vn .quote-mark { font-size: 1.4em; }
+.vn-note { margin: 0; font-size: 12px; color: var(--muted); }

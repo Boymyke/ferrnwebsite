@@ -85,23 +85,23 @@ export function ProductCard({ p, lang }: { p: ProductRow; lang: Lang }) {
 
 export function Testimonial({ x, i }: { x: TestimonialRow; i: number }) {
   const audio = mediaUrl(x.audio);
+  // Voice-note card: the client's own recording when there is one; otherwise the site reads their words aloud
+  // (and says so, so nobody mistakes it for the client's voice).
   return (
-    <figure class={`quote-card ${audio ? 'has-audio' : ''}`} data-quote style={`--i:${i}`}>
-      <blockquote><span class="quote-mark" aria-hidden="true">“</span>{x.quote}</blockquote>
-      {audio ? (
-        <div class="voice" data-voice>
-          <button class="voice-btn" type="button" data-voice-play aria-label={`Play ${x.name}’s testimonial`}>{icon('play', { size: 16 })}<span class="voice-pause">{icon('pause', { size: 16 })}</span></button>
-          <span class="voice-bars" aria-hidden="true">{Array.from({ length: 28 }, (_, k) => <i style={`--k:${k}`}></i>)}</span>
-          <span class="voice-time" data-voice-time>0:00</span>
-          <audio preload="none" src={audio}></audio>
-          {x.transcript ? <details class="voice-transcript"><summary>Transcript</summary><p>{x.transcript}</p></details> : null}
-        </div>
-      ) : null}
+    <figure class={`quote-card vn ${audio ? 'has-audio' : 'tts'}`} data-quote style={`--i:${i}`}>
       <figcaption>
-        {x.avatar ? <img src={sized(x.avatar, 44)!} alt="" loading="lazy" decoding="async" width="44" height="44" /> : <span class="avatar sm">{initials(x.name)}</span>}
+        {x.avatar ? <img src={sized(x.avatar, 48)!} alt="" loading="lazy" decoding="async" width="48" height="48" /> : <span class="avatar sm">{initials(x.name)}</span>}
         <span><strong>{x.name}</strong><small>{[x.role, x.company].filter(Boolean).join(', ')}</small></span>
         {x.logo ? <img class="quote-logo" src={mediaUrl(x.logo)!} alt={x.company ?? ''} loading="lazy" height="22" /> : null}
       </figcaption>
+      <div class="voice" data-voice data-say={audio ? undefined : x.quote}>
+        <button class="voice-btn" type="button" data-voice-play aria-label={audio ? `Play ${x.name}’s voice note` : `Listen to ${x.name}’s testimonial, read aloud`}>{icon('play', { size: 16 })}<span class="voice-pause">{icon('pause', { size: 16 })}</span></button>
+        <span class="voice-bars" aria-hidden="true">{Array.from({ length: 32 }, (_, k) => <i style={`--k:${k};--h:${[38, 62, 45, 80, 55, 30, 70, 90, 48, 66, 35, 58, 84, 42, 72, 50, 28, 64, 88, 46, 60, 34, 76, 52, 40, 68, 86, 44, 56, 32, 62, 48][k]}%`}></i>)}</span>
+        <span class="voice-time" data-voice-time>{audio ? '0:00' : `0:${String(Math.min(59, Math.max(6, Math.round(x.quote.split(/\s+/).length / 2.6)))).padStart(2, '0')}`}</span>
+        {audio ? <audio preload="none" src={audio}></audio> : null}
+      </div>
+      <blockquote><span class="quote-mark" aria-hidden="true">“</span>{x.quote}</blockquote>
+      {audio ? (x.transcript ? <details class="voice-transcript"><summary>Transcript</summary><p>{x.transcript}</p></details> : null) : <p class="vn-note">Their words, read aloud by our site.</p>}
     </figure>
   );
 }
@@ -156,7 +156,6 @@ export function HomePage(p: {
   };
   const featured = (p.projects.filter((x) => x.featured).length ? p.projects.filter((x) => x.featured) : p.projects).slice(0, 3);
   const cards = ctx.get('home.bento.cards').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
-  const bobPoints = ctx.get('home.bob.points').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length === 2);
   const flick = ctx.list('home.hero.flick').length ? ctx.list('home.hero.flick') : ['Websites'];
   const levers = ctx.get('home.growth.levers').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
   const H = ({ text, cls = 'h-display' }: { text: string; cls?: string }) => <Lines text={text} tag="h2" class={cls} />;
@@ -175,6 +174,19 @@ export function HomePage(p: {
           <div class="hx-actions">
             <a class="btn btn-primary" href={href(lang, '/contact')}>{ctx.get('home.hero.cta2')} {icon('arrow-up-right', { size: 15 })}</a>
             <a class="btn btn-ghost" href={href(lang, '/work')}>See our work</a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Trusted By: every client, an endless strip across the full width, inside the page margins ── */}
+      <section class="trusted" aria-labelledby="trusted-title">
+        <h2 class="trusted-title reveal" id="trusted-title">{ctx.get('home.trusted.title')}</h2>
+        <div class="trusted-strip">
+          <div class="trusted-track">
+            {[0, 1].map((k) => CLIENT_LOGOS.map((l) => {
+              const ratio = l.w / 40, h = Math.round(Math.max(26, Math.min(46, 46 / Math.sqrt(ratio))));
+              return <img src={`/assets/clients/${l.file}.webp`} alt={k ? '' : l.name} aria-hidden={k ? 'true' : undefined} title={l.name === 'Client' ? undefined : l.name} height={h} width={Math.round(h * ratio)} loading="lazy" decoding="async" />;
+            }))}
           </div>
         </div>
       </section>
@@ -272,7 +284,7 @@ export function HomePage(p: {
           <div class="work-grid">
             {featured.map((x, i) => { const img = shotOf(x); return (
               <a class={`work-card reveal ${i === 0 ? 'big' : ''}`} style={`--d:${i * 0.08}s`} href={href(lang, `/work/${x.slug}`)}>
-                <div class="work-shot">{img ? <img src={img} alt={`${x.title} — screenshot`} loading="lazy" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
+                <div class="work-shot">{img ? <img src={img} alt={`${x.title} screenshot`} loading="lazy" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
                 <div class="work-cap"><strong>{x.title}</strong><span>{[x.type, x.industry].filter(Boolean).join(' · ')}</span></div>
               </a>
             ); })}
@@ -281,41 +293,13 @@ export function HomePage(p: {
         </div>
       </section>
 
-      {/* ── Trusted By: every client, an endless strip ── */}
-      <section class="trusted" aria-labelledby="trusted-title">
-        <div class="wrap"><h2 class="trusted-title reveal" id="trusted-title">{ctx.get('home.trusted.title')}</h2></div>
-        <div class="trusted-strip">
-          <div class="trusted-track">
-            {[0, 1].map((k) => CLIENT_LOGOS.map((l) => {
-              const ratio = l.w / 40, h = Math.round(Math.max(26, Math.min(46, 46 / Math.sqrt(ratio))));
-              return <img src={`/assets/clients/${l.file}.webp`} alt={k ? '' : l.name} aria-hidden={k ? 'true' : undefined} title={l.name === 'Client' ? undefined : l.name} height={h} width={Math.round(h * ratio)} loading="lazy" decoding="async" />;
-            }))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── dark room: Bob ── */}
-      <section class="room room-dark room-bob" id="bob">
-        <div class="wrap bob-split">
-          <div class="bob-copy">
-            <H text={ctx.get('home.bob.title')} />
-            <p class="room-lead reveal">{ctx.get('home.bob.lead')}</p>
-            <ul class="bob-points">{bobPoints.map(([a, b], i) => <li class="reveal" style={`--d:${i * 0.1}s`}><strong>{a}</strong> {b}</li>)}</ul>
-            <div class="room-links reveal"><button type="button" class="btn btn-primary btn-glow" data-bob-prompt="tour">Take the tour with Bob {icon('arrow-right', { size: 15 })}</button><button type="button" class="btn btn-ghost" data-bob-prompt="">Chat with Bob</button></div>
-          </div>
-          <div class="bob-stage reveal">
-            <div class="bob-stage-glow" aria-hidden="true"></div>
-            <div class="bento-card"><div class="bento-media tall"><video data-src="/assets/home/bob.mp4" muted loop playsinline preload="none" aria-hidden="true"></video></div></div>
-          </div>
-        </div>
-      </section>
-
       {/* ── quotes (short) ── */}
       {p.testimonials.length ? (
         <section class="room room-dark room-quotes" id="testimonials">
           <div class="wrap">
+            <div class="room-head"><H text={ctx.get('home.testimonials.title')} /></div>
             <div class="quotes" data-quotes>
-              <div class="quotes-track" tabindex={0} aria-label="Client testimonials, scroll sideways">{p.testimonials.map((x, i) => <Testimonial x={x} i={i} />)}</div>
+              <div class="quotes-track" tabindex={0} aria-label="Client voice notes, scroll sideways">{p.testimonials.map((x, i) => <Testimonial x={x} i={i} />)}</div>
               <div class="quotes-nav"><button type="button" data-prev aria-label="Previous">{icon('arrow-left', { size: 18 })}</button><span data-quotes-pos>1 / {p.testimonials.length}</span><button type="button" data-next aria-label="Next">{icon('arrow-right', { size: 18 })}</button></div>
             </div>
           </div>

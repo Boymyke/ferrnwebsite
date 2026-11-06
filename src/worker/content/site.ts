@@ -2,8 +2,8 @@
  *  repo, plus Ataam from its brand assets in Drive). `w` is the drawn width at 40px tall. */
 export const CLIENT_LOGOS: { name: string; file: string; w: number }[] = [
   { name: 'Ataam', file: 'ataam', w: 96 }, { name: 'Gromzia', file: 'clientLogo2', w: 40 }, { name: 'Synergix Africa', file: 'clientLogo5', w: 250 },
-  { name: 'MPI — M-P Infrastructure', file: 'clientLogo1', w: 44 }, { name: 'Knomi', file: 'clientLogo3', w: 132 }, { name: 'Aroda', file: 'clientLogo4', w: 39 },
-  { name: 'Outbox Experience', file: 'clientLogo10', w: 103 }, { name: 'Padher', file: 'clientLogo8', w: 126 }, { name: 'WIB Fair — Women in Business Fair', file: 'clientLogo12', w: 131 },
+  { name: 'MPI (M-P Infrastructure)', file: 'clientLogo1', w: 44 }, { name: 'Knomi', file: 'clientLogo3', w: 132 }, { name: 'Aroda', file: 'clientLogo4', w: 39 },
+  { name: 'Outbox Experience', file: 'clientLogo10', w: 103 }, { name: 'Padher', file: 'clientLogo8', w: 126 }, { name: 'WIB Fair (Women in Business Fair)', file: 'clientLogo12', w: 131 },
   { name: 'Client', file: 'clientLogo6', w: 40 }, { name: 'Client', file: 'clientLogo7', w: 45 }, { name: 'Client', file: 'clientLogo9', w: 48 }, { name: 'Client', file: 'clientLogo11', w: 56 },
 ];
 
@@ -12,7 +12,7 @@ export const REEL: { name: string; slug: string; url: string; work?: string }[] 
   { name: 'Synergix Africa', slug: 'synergix', url: 'https://www.synergixafrica.com/', work: 'synergix' },
   { name: 'MPI Africa', slug: 'mpi', url: 'https://www.mpiafrica.com/', work: 'mpi' },
   { name: 'Gromzia', slug: 'gromzia', url: 'https://www.gromzialtd.com/', work: 'gromzia' },
-  { name: 'Relay — freight app', slug: 'relay', url: 'https://freight-app1.netlify.app/', work: 'relay' },
+  { name: 'Relay freight app', slug: 'relay', url: 'https://freight-app1.netlify.app/', work: 'relay' },
   { name: 'Insightblitz', slug: 'insightblitz', url: 'https://insightblitz.io/', work: 'insightblitz' },
 ];
 // Not in the reel: arodagroup.com and eha.partnersnigeria.org show a bot check to the capture browser;
@@ -35,7 +35,7 @@ export const PROCESS = [
 
 export const FAQS = [
   ['What kinds of projects do you take on?', 'Conversion-focused websites, custom web applications, portals, dashboards and practical AI automation. If a project will not clearly improve trust, revenue, efficiency or visibility, we will say so before we build anything.'],
-  ['How much does a project cost?', 'Marketplace products have published prices — a setup fee plus a monthly plan, or a one-off code purchase. Custom websites, applications and AI systems are scoped first, then we recommend the smallest useful solution.'],
+  ['How much does a project cost?', 'Marketplace products have published prices, a setup fee plus a monthly plan, or a one-off code purchase. Custom websites, applications and AI systems are scoped first, then we recommend the smallest useful solution.'],
   ['How long does a typical project take?', 'Marketplace products go live in 5–14 days. Custom websites take a few weeks; larger applications are delivered in milestones so you can review progress early.'],
   ['Do I own my website?', 'Your content, domain and data are always yours. On managed plans we host and maintain the software; you can buy the code outright at any time, and you can export your data whenever you like.'],
   ['Can you work with our existing team?', 'Yes. We can be the full strategy-design-development team or plug into an existing internal team where design, frontend, backend or AI support is needed.'],
@@ -55,7 +55,7 @@ export const SOCIALS = [
   ['TikTok', 'https://www.tiktok.com/@ferrnagency'],
 ];
 
-/** Control-centre music. Free tracks from Pixabay (Pixabay Content License — free to use on the site, no
+/** Control-centre music. Free tracks from Pixabay (Pixabay Content License, free to use on the site, no
  *  attribution required; we credit anyway). Files live in R2 under music/ and stream from /media/. */
 export const MUSIC: { title: string; artist: string; src: string; length: string; page: string }[] = [
   { title: 'Calm Ambient', artist: 'VelarioMusic', src: '/media/music/2026-11/3f128b2d8e5a.mp3', length: '3:32', page: 'https://pixabay.com/music/ambient-calm-ambient-613378/' },

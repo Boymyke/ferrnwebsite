@@ -1,4 +1,4 @@
-// Generated from the legacy data/projects.php — edit freely.
+// Generated from the legacy data/projects.php, edit freely.
 export type Project = { slug: string; title: string; type: string; category: "website" | "webapp" | "ai"; industry: string; year: string; live: string; client: string; featured: boolean; meta: string; summary: string; context: string; challenge: string; solution: string; impact: string; image?: string; points: { icon: string; title: string; text: string }[] };
 
 export const PROJECTS: Project[] = [
@@ -241,7 +241,7 @@ export const PROJECTS: Project[] = [
         "image": "/media/covers/relay.webp", "slug": "relay"
     },
     {
-        "title": "PWAN — EHA AI Chatbot",
+        "title": "PWAN EHA AI Chatbot",
         "type": "AI Chatbot",
         "category": "ai",
         "industry": "Civic & Legal Access",

@@ -1,7 +1,7 @@
-/* Bob — Ferrn's assistant, loaded on demand (window.FerrnBob). An orange ghost with three ways to talk:
-     Chat     — big quote-style messages; older ones fade but stay; Bob can point and click for you.
-     Talk     — hands-free voice: you speak, he says "hmm…", answers out loud, listens again; transcript at the end.
-     Present  — a guided tour: asks your name, highlights parts of the site, asks a few questions, checks you're
+/* Bob | Ferrn's assistant, loaded on demand (window.FerrnBob). An orange ghost with three ways to talk:
+     Chat    , big quote-style messages; older ones fade but stay; Bob can point and click for you.
+     Talk    , hands-free voice: you speak, he says "hmm…", answers out loud, listens again; transcript at the end.
+     Present , a guided tour: asks your name, highlights parts of the site, asks a few questions, checks you're
                 still there after 10 s of silence, and ends on the contact page with the form filled in.
    Nothing records or speaks until the visitor asks. Nothing is sent for them. */
 import { NAME_KEY, personalise, prefillContact, readName } from '../site/bob-launcher';
@@ -30,7 +30,7 @@ export function checkName(raw: string): { name?: string; ask?: string } {
   if (/[0-9@#$%^&*_=+<>{}[\]\\/|~]/.test(first)) return { ask: 'That doesn’t look like a name to me. What’s your first name?' };
   if (!/^\p{Script=Latin}[\p{Script=Latin}'’-]*$/u.test(first)) return { ask: 'Could you type it in English letters for me? A short first name or nickname works best.' };
   if (first.length < 2) return { ask: 'Is that your full first name? Give me a couple more letters.' };
-  if (first.length > 12) return { ask: `That’s a lovely long name — could I call you something shorter? A nickname under 12 letters keeps everything neat.` };
+  if (first.length > 12) return { ask: `That’s a lovely long name, could I call you something shorter? A nickname under 12 letters keeps everything neat.` };
   const name = first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   return { name };
 }
@@ -77,7 +77,7 @@ export function speak(text: string, opts: { force?: boolean; level?: (n: number)
     let t = 0; const pulse = () => { if (done) return; t += 0.2; ghostLevel(0.3 + Math.abs(Math.sin(t)) * 0.5); requestAnimationFrame(pulse); };
     const t0 = performance.now();
     u.onend = () => {
-      // Some devices have no voice and "finish" at once — keep the pacing so the tour stays readable.
+      // Some devices have no voice and "finish" at once, keep the pacing so the tour stays readable.
       if (performance.now() - t0 < 150 && plain.length > 15) setTimeout(finish, Math.max(900, plain.split(/\s+/).length * 330)); else finish();
     };
     u.onerror = () => finish();
@@ -110,7 +110,7 @@ async function flyTo(x: number, y: number, ms = 900) {
   await wait(reduced ? 0 : ms);
 }
 function placeAt(x: number, y: number) { const g = ghostEl(); gx = x; gy = y; g.style.transition = 'none'; g.style.transform = `translate(${Math.round(x - 32)}px, ${Math.round(y - 36)}px)`; }
-/** Portal: the ghost spins into a ring of light and is gone (out) — or spins out of one (in). */
+/** Portal: the ghost spins into a ring of light and is gone (out), or spins out of one (in). */
 async function portal(dir: 'in' | 'out', x: number, y: number) {
   const ring = document.createElement('div'); ring.className = `bobx-portal ${dir}`; ring.style.left = x + 'px'; ring.style.top = y + 'px';
   document.body.appendChild(ring);
@@ -196,7 +196,7 @@ panel.innerHTML = `
   </div>
   <div class="bobx-view" data-view="present" hidden>
     <div class="bobx-present">
-      <p class="bobx-present-title">Sit back — I’ll show you around.</p>
+      <p class="bobx-present-title">Sit back, I’ll show you around.</p>
       <p class="bobx-fine">About two minutes. I’ll highlight things, ask a couple of quick questions, and leave you a message to the team, ready to check and send.</p>
       <button class="bobx-talk-btn" data-tour-start type="button">Start the tour</button>
     </div>
@@ -269,14 +269,14 @@ function setChips(list: [string, () => void][]) {
 function defaultChips() {
   setChips([
     ['Give me the tour', () => { setMode('present'); tour.start(); }],
-    ['Read this page to me', () => { addQuote('assistant', 'Reading this page — tap Stop whenever you like.'); reader.start(); }],
+    ['Read this page to me', () => { addQuote('assistant', 'Reading this page, tap Stop whenever you like.'); reader.start(); }],
     ...suggestions.filter((s) => !/read/i.test(s)).slice(0, 2).map((s) => [s, () => ask(s)] as [string, () => void]),
   ]);
 }
 let askedName = false;
 function renderChat() {
   quotes.innerHTML = '';
-  const hello = visitor ? `Hi ${visitor}! What can I help you with?` : `${(S.welcome || `Hi, I’m ${BOB}. I know everything about Ferrn — prices, products, how we work.`).replace(/\s*What are you working on\?\s*$/, '')} First — what should I call you?`;
+  const hello = visitor ? `Hi ${visitor}! What can I help you with?` : `${(S.welcome || `Hi, I’m ${BOB}. I know everything about Ferrn, prices, products, how we work.`).replace(/\s*What are you working on\?\s*$/, '')} First, what should I call you?`;
   addQuote('assistant', hello);
   history.forEach((m) => addQuote(m.role, m.content));
   if (!visitor && !history.length) askedName = true;
@@ -299,7 +299,7 @@ async function ask(q: string, opts: { voice?: boolean } = {}): Promise<Reply | n
     const c = checkName(q);
     if (c.name) {
       setVisitor(c.name);
-      const a = `Nice to meet you, ${c.name}! Have a look around — I’ve made the site yours. What would you like to know?`;
+      const a = `Nice to meet you, ${c.name}! Have a look around, I’ve made the site yours. What would you like to know?`;
       addQuote('assistant', a); remember(q, a); if (opts.voice || soundOn) await speak(a); return { message: a };
     }
     askedName = true; addQuote('assistant', c.ask!); remember(q, c.ask!); if (opts.voice) await speak(c.ask!); return { message: c.ask! };
@@ -318,7 +318,7 @@ async function ask(q: string, opts: { voice?: boolean } = {}): Promise<Reply | n
     await act(j);
     return j;
   } catch {
-    typing.remove(); const m = S.error || 'Something went wrong — try again in a moment.'; addQuote('assistant', m); return { message: m };
+    typing.remove(); const m = S.error || 'Something went wrong, try again in a moment.'; addQuote('assistant', m); return { message: m };
   }
 }
 /** Do what the answer suggests: read, scroll to a section (pointing at it), or go to a page (clicking a real link). */
@@ -378,7 +378,7 @@ const talk = (() => {
       cur = listenOnce((s) => (live.textContent = s));
       const said = await cur.done; cur = null;
       if (!running) break;
-      if (!said) { set('I didn’t catch that — I’m still listening.', 'listening'); await wait(400); continue; }
+      if (!said) { set('I didn’t catch that, I’m still listening.', 'listening'); await wait(400); continue; }
       lines.push({ who: visitor || 'You', text: said });
       set('Thinking…', 'thinking');
       const filler = FILLERS[Math.floor(Math.random() * FILLERS.length)];
@@ -441,7 +441,7 @@ const reader = (() => {
 /* ══ present: the guided tour ══ */
 type Answers = { visits?: string; need?: string; email?: string; message?: boolean };
 type Step = { page: string; target?: string; say: string; ask?: 'name' | 'chips' | 'email'; options?: string[]; key?: keyof Answers; then?: (a: string) => string | void; before?: () => Promise<void> | void; done?: () => void };
-const VISITS: Record<string, [string, number]> = { 'Under 1,000': ['under 1,000', 800], '1,000–5,000': ['about 1,000–5,000', 3000], '5,000–20,000': ['about 5,000–20,000', 12000], 'More than that': ['more than 20,000', 30000], 'No website yet': ['none yet — no website', 0] };
+const VISITS: Record<string, [string, number]> = { 'Under 1,000': ['under 1,000', 800], '1,000–5,000': ['about 1,000–5,000', 3000], '5,000–20,000': ['about 5,000–20,000', 12000], 'More than that': ['more than 20,000', 30000], 'No website yet': ['none yet, no website', 0] };
 const NEEDS: Record<string, string> = { 'A new website': 'Website', 'A web app or portal': 'Web application', 'An AI assistant': 'AI assistant / automation', 'Not sure yet': 'Not sure yet' };
 const tour = (() => {
   let running = false, paused = false, idx = 0, ans: Answers = {}, token = 0;
@@ -454,9 +454,10 @@ const tour = (() => {
   const capText = $('[data-cap-text]', cap)!, capAsk = $('[data-cap-ask]', cap)!, capStep = $('[data-cap-step]', cap)!;
 
   const STEPS: Step[] = [
-    { page: '/', say: `Hi, I’m ${BOB}. Before we start — what should I call you?`, ask: 'name' },
-    { page: '/', say: `Lovely to meet you, {name}. Sit back and relax — I’ll take you on a quick journey through Ferrn.`, before: async () => {} },
-    { page: '/', target: '.hx-title', say: `This is Ferrn. We build websites, web apps and AI assistants for businesses that want to grow — not just look nice online. Let me borrow this…`, done: () => pluck() },
+    { page: '/', say: `Hi, I’m ${BOB}. Before we start, what should I call you?`, ask: 'name' },
+    { page: '/', say: `Lovely to meet you, {name}. Sit back and relax, I’ll take you on a quick journey through Ferrn.`, before: async () => {} },
+    { page: '/', target: '.hx-title', say: `This is Ferrn. We build websites, web apps and AI assistants for businesses that want to grow, not just look nice online. Let me borrow this…`, done: () => pluck() },
+    { page: '/', target: '.trusted', say: `These are some of the businesses that already trust us with theirs.` },
     { page: '/', target: '.levers', say: `Every site we build earns its keep in three places: helping people find you, helping them choose you, and making sure no enquiry goes cold.` },
     { page: '/', target: '.calc', say: `Quick question, {name}: roughly how many people visit your website each month?`, ask: 'chips', options: Object.keys(VISITS), key: 'visits',
       then: (a) => {
@@ -464,16 +465,15 @@ const tour = (() => {
         const slider = $<HTMLInputElement>('[data-calc-in="visits"]');
         if (slider && v) { slider.value = String(v); slider.dispatchEvent(new Event('input', { bubbles: true })); }
         const extra = $('[data-calc-out="extra"]')?.textContent || '';
-        return v ? `Look at that — with ${a.toLowerCase()} visitors, one more customer in every hundred is worth about ${extra.replace('+', '')} a month. That’s the kind of thing we design for.` : `No website yet — that’s the best place to start, honestly. Nothing to undo.`;
+        return v ? `Look at that, with ${a.toLowerCase()} visitors, one more customer in every hundred is worth about ${extra.replace('+', '')} a month. That’s the kind of thing we design for.` : `No website yet, that’s the best place to start, honestly. Nothing to undo.`;
       } },
-    { page: '/', target: '#services .bento', say: `This is what that looks like in practice: booking systems, quoting tools, dashboards — and assistants like me, working at 2am.` },
-    { page: '/', target: '#services .h-display', say: `What would help your business most right now, {name}?`, ask: 'chips', options: Object.keys(NEEDS), key: 'need', then: (a) => (a === 'Not sure yet' ? `That’s fine — most people aren’t. We’ll work it out together.` : `${a} — good choice. We do a lot of those.`) },
+    { page: '/', target: '#services .bento', say: `This is what that looks like in practice: booking systems, quoting tools, dashboards, and assistants like me, working at 2am.` },
+    { page: '/', target: '#services .h-display', say: `What would help your business most right now, {name}?`, ask: 'chips', options: Object.keys(NEEDS), key: 'need', then: (a) => (a === 'Not sure yet' ? `That’s fine, most people aren’t. We’ll work it out together.` : `${a}, good choice. We do a lot of those.`) },
     { page: '/', target: '#marketplace .shelf', say: `If you need something fast, these are ready-built. Prices are on the page, and they go live in days, not months.` },
     { page: '/', target: '#work .work-grid', say: `And this is real work, for real clients.` },
-    { page: '/', target: '.trusted', say: `Teams in Nigeria, the UK and the US trust us with theirs.` },
-    { page: '/', target: '.close-glow', say: `Shall I write a short message to the team for you, {name}? I’ll fill in the form — you just check it and press send.`, ask: 'chips', options: ['Yes, please', 'Not now'], key: 'message', then: (a) => (a === 'Yes, please' ? 'Great — one more thing.' : `No problem. Thanks for coming along, {name}. I’ll be in the corner if you need me.`) },
+    { page: '/', target: '.close-glow', say: `Shall I write a short message to the team for you, {name}? I’ll fill in the form, you just check it and press send.`, ask: 'chips', options: ['Yes, please', 'Not now'], key: 'message', then: (a) => (a === 'Yes, please' ? 'Great, one more thing.' : `No problem. Thanks for coming along, {name}. I’ll be in the corner if you need me.`) },
     { page: '/', target: '.close-glow', say: `What email should the team reply to? (You can leave it blank.)`, ask: 'email', key: 'email' },
-    { page: '/contact', target: 'form[data-form="contact"]', say: `Here we are, {name}. I’ve filled it in for you — check it over and press Send when you’re happy. I won’t send anything for you.` },
+    { page: '/contact', target: 'form[data-form="contact"]', say: `Here we are, {name}. I’ve filled it in for you, check it over and press Send when you’re happy. I won’t send anything for you.` },
   ];
 
   const save = () => ss.set('ferrn-bob-tour', JSON.stringify({ idx, ans, letter: $('.bobx-carry')?.textContent || '' }));
@@ -591,7 +591,7 @@ const tour = (() => {
     const need = NEEDS[ans.need || ''] || '';
     const v = VISITS[ans.visits || '']?.[0];
     const lines = [`Hi Ferrn, I’m ${visitor || 'interested'} and I just took ${BOB}’s tour.`];
-    if (need && need !== 'Not sure yet') lines.push(`I’m interested in: ${need.toLowerCase()}.`); else lines.push('I’m not sure yet what I need — I’d like your advice.');
+    if (need && need !== 'Not sure yet') lines.push(`I’m interested in: ${need.toLowerCase()}.`); else lines.push('I’m not sure yet what I need, I’d like your advice.');
     if (v) lines.push(`Our website gets ${v} visitors a month.`);
     lines.push('Could we talk?');
     return { name: visitor, email: ans.email || '', need, message: lines.join(' ') };

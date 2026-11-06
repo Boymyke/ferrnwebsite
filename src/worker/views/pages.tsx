@@ -16,7 +16,7 @@ const paras = (s: string) => raw(s.split(/\n\s*\n/).map((p) => `<p>${esc(p.trim(
 export function WorkPage({ lang, ctx, projects }: { lang: Lang; ctx: SiteCtx; projects: PublicProject[] }) {
   const cats = [['all', 'All'], ['website', 'Websites'], ['webapp', 'Web apps'], ['ai', 'AI'], ['branding', 'Branding']].filter(([k]) => k === 'all' || projects.some((p) => p.category === k));
   return (
-    <Layout lang={lang} ctx={ctx} path="/work" kind="work" title="Work — Ferrn Digital Agency" description={ctx.get('work.lead')}>
+    <Layout lang={lang} ctx={ctx} path="/work" kind="work" title="Work | Ferrn Digital Agency" description={ctx.get('work.lead')}>
       <PageHero label={`${t(lang, 'nav.work')} · ${projects.length} projects`} title={ctx.get('work.title')} lead={ctx.get('work.lead')}>
         <div class="filters reveal" role="tablist" aria-label="Filter projects">{cats.map(([k, l], i) => <button class={`filter ${i === 0 ? 'active' : ''}`} type="button" data-filter={k}>{l}</button>)}</div>
       </PageHero>
@@ -28,14 +28,14 @@ export function WorkPage({ lang, ctx, projects }: { lang: Lang; ctx: SiteCtx; pr
 export function CasePage({ lang, ctx, p, next, testimonial, note }: { lang: Lang; ctx: SiteCtx; p: PublicProject; next: PublicProject | null; testimonial?: TestimonialRow | null; note?: boolean }) {
   const cover = shotOf(p);
   const facts: [string, string][] = [
-    ['Client', p.client ?? p.title], ['Industry', p.industry ?? '—'], ['Type', p.type ?? '—'], ['Year', p.year ?? '—'],
+    ['Client', p.client ?? p.title], ['Industry', p.industry ?? '-'], ['Type', p.type ?? '-'], ['Year', p.year ?? '-'],
     ...(p.services.length ? [['Services', p.services.join(', ')] as [string, string]] : []),
     ...(p.tech.length ? [['Technology', p.tech.join(', ')] as [string, string]] : []),
   ];
   const sections: [string, string | null][] = [['Context', p.context], ['The challenge', p.challenge], ['Our approach', p.approach], ['What we built', p.solution]];
   const schema = { '@context': 'https://schema.org', '@type': 'CreativeWork', name: p.title, about: p.industry, creator: { '@type': 'Organization', name: 'Ferrn Digital Agency' }, url: `https://www.ferrnagency.com/work/${p.slug}`, ...(cover ? { image: cover.startsWith('http') ? cover : `https://www.ferrnagency.com${cover}` } : {}) };
   return (
-    <Layout lang={lang} ctx={ctx} path={`/work/${p.slug}`} kind="case" title={p.meta_title ?? `${p.title} — ${p.type ?? 'Case study'} | Ferrn`} description={p.meta_description ?? p.summary ?? ''} schema={schema} ogImage={cover?.startsWith('http') ? cover : undefined}>
+    <Layout lang={lang} ctx={ctx} path={`/work/${p.slug}`} kind="case" title={p.meta_title ?? `${p.title}, ${p.type ?? 'Case study'} | Ferrn`} description={p.meta_description ?? p.summary ?? ''} schema={schema} ogImage={cover?.startsWith('http') ? cover : undefined}>
       <section class="case-hero" style={p.accent ? `--tint:${p.accent}` : undefined}>
         <div class="wrap">
           <a class="back reveal" href={href(lang, '/work')}>{icon('arrow-left', { size: 15 })} {t(lang, 'nav.work')}</a>
@@ -43,7 +43,7 @@ export function CasePage({ lang, ctx, p, next, testimonial, note }: { lang: Lang
           <h1 class="h1 reveal-text">{p.title}</h1>
           {p.summary ? <p class="lead reveal">{p.summary}</p> : null}
         </div>
-        {cover ? <figure class="case-cover reveal" data-parallax><img src={cover} alt={`${p.title} — screenshot`} width="1400" height="900" fetchpriority="high" /></figure> : null}
+        {cover ? <figure class="case-cover reveal" data-parallax><img src={cover} alt={`${p.title} screenshot`} width="1400" height="900" fetchpriority="high" /></figure> : null}
       </section>
       <div class="wrap case-body">
         {note ? <p class="machine-note">{t(lang, 'machine.note')}</p> : null}
@@ -88,7 +88,7 @@ export function ServicesPage({ lang, ctx, projects }: { lang: Lang; ctx: SiteCtx
     ['Answers at 2am', 'Documents processed in seconds', 'Leads followed up automatically'],
   ];
   return (
-    <Layout lang={lang} ctx={ctx} path="/services" kind="services" title="Services — Ferrn Digital Agency" description={ctx.get('services.lead')}>
+    <Layout lang={lang} ctx={ctx} path="/services" kind="services" title="Services | Ferrn Digital Agency" description={ctx.get('services.lead')}>
       <PageHero label={t(lang, 'nav.services')} title={ctx.get('services.title')} lead={ctx.get('services.lead')} />
       <div class="wrap">
         {SERVICES_DETAIL.map((s, i) => {
@@ -137,7 +137,7 @@ export function TeamCard({ m }: { m: TeamRow }) {
 
 export function TeamPage({ lang, ctx, team }: { lang: Lang; ctx: SiteCtx; team: TeamRow[] }) {
   return (
-    <Layout lang={lang} ctx={ctx} path="/team" kind="team" title="Team — Ferrn Digital Agency" description="The people behind Ferrn: strategy, design, engineering and AI.">
+    <Layout lang={lang} ctx={ctx} path="/team" kind="team" title="Team | Ferrn Digital Agency" description="The people behind Ferrn: strategy, design, engineering and AI.">
       <PageHero label={t(lang, 'team.eyebrow')} title={t(lang, 'team.title')} />
       <div class="wrap"><div class="people">{team.map((m) => <TeamCard m={m} />)}</div></div>
       <Section n="02" label="Careers" title="Want to work with us?" lead="We hire designers, engineers and AI builders who care about business outcomes." class="section-tight">
@@ -170,7 +170,7 @@ export type ProfileSection = { key: string | null; title: string; body: string |
 
 export function ProfilePage({ lang, ctx, sections, projects, team }: { lang: Lang; ctx: SiteCtx; sections: ProfileSection[]; projects: PublicProject[]; team: TeamRow[] }) {
   return (
-    <Layout lang={lang} ctx={ctx} path="/profile" kind="profile" title="Company profile — Ferrn Digital Agency" description="Who Ferrn is, what we build, who we work with, and how to reach us.">
+    <Layout lang={lang} ctx={ctx} path="/profile" kind="profile" title="Company profile | Ferrn Digital Agency" description="Who Ferrn is, what we build, who we work with, and how to reach us.">
       <PageHero label="Company profile" title="Ferrn, in one page." lead="Who we are, what we build, the industries we serve and the work we’ve shipped.">
         <div class="hero-actions reveal"><a class="btn btn-primary btn-sm" href="/profile.pdf">Download PDF {icon('download', { size: 15 })}</a><a class="btn btn-ghost btn-sm" href={href(lang, '/contact')}>{t(lang, 'cta.start')}</a></div>
       </PageHero>
@@ -199,7 +199,7 @@ export function LinksPage({ lang, ctx }: { lang: Lang; ctx: SiteCtx }) {
   const groups = new Map<string, typeof ctx.links>();
   for (const l of ctx.links) { const g = l.category || 'Links'; groups.set(g, [...(groups.get(g) ?? []), l]); }
   return (
-    <Layout lang={lang} ctx={ctx} path="/links" kind="links" title="Important links — Ferrn" description="Ferrn’s company profile, portfolio, brochure, demos and booking in one place.">
+    <Layout lang={lang} ctx={ctx} path="/links" kind="links" title="Important links | Ferrn" description="Ferrn’s company profile, portfolio, brochure, demos and booking in one place.">
       <PageHero label="Links" title="Everything Ferrn, one list." lead="Profile, portfolio, demos, booking and the documents procurement teams ask for." />
       <div class="wrap links">
         {!ctx.links.length ? <p class="muted">Nothing published yet.</p> : [...groups].map(([g, items]) => (
@@ -216,7 +216,7 @@ export function LinksPage({ lang, ctx }: { lang: Lang; ctx: SiteCtx }) {
 
 export function InsightsPage({ lang, ctx, posts }: { lang: Lang; ctx: SiteCtx; posts: PostRow[] }) {
   return (
-    <Layout lang={lang} ctx={ctx} path="/insights" kind="insights" title="Insights — Ferrn Digital Agency" description="Practical guidance on websites, custom software, product strategy and AI automation.">
+    <Layout lang={lang} ctx={ctx} path="/insights" kind="insights" title="Insights | Ferrn Digital Agency" description="Practical guidance on websites, custom software, product strategy and AI automation.">
       <PageHero label={t(lang, 'nav.insights')} title="Useful thinking for better digital decisions." />
       <div class="wrap"><div class="post-grid">
         {posts.map((x) => <a class="post reveal" href={href(lang, `/insights/${x.slug}`)}><span class="post-meta">{x.category} · {x.published_at?.slice(0, 10)}</span><h3>{x.title}</h3><p>{x.excerpt}</p><span class="link">Read {icon('arrow-right', { size: 14 })}</span></a>)}
@@ -241,7 +241,7 @@ export function PostPage({ lang, ctx, post }: { lang: Lang; ctx: SiteCtx; post: 
 
 export function ContactPage({ lang, ctx, rfp }: { lang: Lang; ctx: SiteCtx; rfp?: boolean }) {
   return (
-    <Layout lang={lang} ctx={ctx} path={rfp ? '/rfp' : '/contact'} kind="contact" title={rfp ? 'Submit an RFP — Ferrn' : 'Contact Ferrn Digital Agency'} description={ctx.get('contact.sub')}>
+    <Layout lang={lang} ctx={ctx} path={rfp ? '/rfp' : '/contact'} kind="contact" title={rfp ? 'Submit an RFP | Ferrn' : 'Contact Ferrn Digital Agency'} description={ctx.get('contact.sub')}>
       <section class="contact-page">
         <div class="wrap contact-split">
           <div>
@@ -268,14 +268,14 @@ export function PoliciesPage({ lang, ctx, slug }: { lang: Lang; ctx: SiteCtx; sl
   const pol = slug ? POLICIES.find((p) => p.slug === slug) : null;
   if (pol) {
     return (
-      <Layout lang={lang} ctx={ctx} path={`/policies/${pol.slug}`} kind="policy" title={`${pol.title} — Ferrn`} description={pol.summary}>
+      <Layout lang={lang} ctx={ctx} path={`/policies/${pol.slug}`} kind="policy" title={`${pol.title} | Ferrn`} description={pol.summary}>
         <PageHero label="Policy" title={pol.title} lead={pol.summary} />
         <article class="wrap prose">{raw(pol.content)}</article>
       </Layout>
     );
   }
   return (
-    <Layout lang={lang} ctx={ctx} path="/policies" kind="policy" title="Policies — Ferrn" description="Ferrn's policies and statements.">
+    <Layout lang={lang} ctx={ctx} path="/policies" kind="policy" title="Policies | Ferrn" description="Ferrn's policies and statements.">
       <PageHero label="Trust" title="Policies and statements" />
       <div class="wrap"><div class="post-grid">{POLICIES.map((p) => <a class="post reveal" href={href(lang, `/policies/${p.slug}`)}><h3>{p.title}</h3><p>{p.summary}</p><span class="link">Read {icon('arrow-right', { size: 14 })}</span></a>)}</div></div>
     </Layout>
@@ -284,7 +284,7 @@ export function PoliciesPage({ lang, ctx, slug }: { lang: Lang; ctx: SiteCtx; sl
 
 export function SimplePage({ lang, ctx, path, title, lead, body }: { lang: Lang; ctx: SiteCtx; path: string; title: string; lead: string; body: string }) {
   return (
-    <Layout lang={lang} ctx={ctx} path={path} kind="page" title={`${title} — Ferrn`} description={lead}>
+    <Layout lang={lang} ctx={ctx} path={path} kind="page" title={`${title} | Ferrn`} description={lead}>
       <PageHero label="Ferrn" title={title} lead={lead} />
       <article class="wrap prose">{raw(body)}</article>
     </Layout>
@@ -293,7 +293,7 @@ export function SimplePage({ lang, ctx, path, title, lead, body }: { lang: Lang;
 
 export function NotFound({ lang, ctx }: { lang: Lang; ctx?: SiteCtx }) {
   return (
-    <Layout lang={lang} ctx={ctx} path="/404" kind="404" title="Page not found — Ferrn" description="This page does not exist." noindex>
+    <Layout lang={lang} ctx={ctx} path="/404" kind="404" title="Page not found | Ferrn" description="This page does not exist." noindex>
       <PageHero label="404" title="This page wandered off." accent="Let’s get you back.">
         <div class="hero-actions reveal"><a class="btn btn-primary" href={href(lang, '/')}>Home</a><a class="btn btn-ghost" href={href(lang, '/work')}>{t(lang, 'nav.work')}</a></div>
       </PageHero>
@@ -306,7 +306,7 @@ export function NotFound({ lang, ctx }: { lang: Lang; ctx?: SiteCtx }) {
 export function MarketplacePage({ lang, ctx, products }: { lang: Lang; ctx: SiteCtx; products: ProductRow[] }) {
   const cats = ['all', 'webapp', 'website', 'chatbot', 'automation'].filter((c) => c === 'all' || products.some((p) => p.category === c));
   return (
-    <Layout lang={lang} ctx={ctx} path="/marketplace" kind="market" title="Ferrn Marketplace — Ready-built websites, apps and AI" description="Ready-built websites, web applications, AI assistants and automations. Live demos, naira and dollar pricing, live in days.">
+    <Layout lang={lang} ctx={ctx} path="/marketplace" kind="market" title="Ferrn Marketplace | Ready-built websites, apps and AI" description="Ready-built websites, web applications, AI assistants and automations. Live demos, naira and dollar pricing, live in days.">
       <PageHero label={`${t(lang, 'nav.marketplace')} · ${products.length} products`} title={ctx.get('market.title')} lead={ctx.get('market.sub')}>
         <div class="market-toolbar reveal">
           <div class="filters" role="tablist">{cats.map((c, i) => <button class={`filter ${i === 0 ? 'active' : ''}`} type="button" data-filter={c}>{t(lang, `market.${c}`)}</button>)}</div>
@@ -334,7 +334,7 @@ export function ProductPage({ lang, ctx, p, related, note }: { lang: Lang; ctx: 
   const schema = { '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: p.tagline, brand: { '@type': 'Brand', name: 'Ferrn' }, offers: { '@type': 'Offer', priceCurrency: 'NGN', price: p.price_ngn_setup, availability: 'https://schema.org/InStock' } };
   const cover = mediaUrl(p.cover);
   return (
-    <Layout lang={lang} ctx={ctx} path={`/marketplace/${p.slug}`} kind="product" title={`${p.name} — Ferrn Marketplace`} description={p.tagline ?? ''} schema={schema}>
+    <Layout lang={lang} ctx={ctx} path={`/marketplace/${p.slug}`} kind="product" title={`${p.name} | Ferrn Marketplace`} description={p.tagline ?? ''} schema={schema}>
       <section class="product-hero" style={`--tint:${p.accent ?? 'var(--orange)'}`}>
         <div class="wrap product-hero-grid">
           <div>
@@ -377,7 +377,7 @@ export function ProductPage({ lang, ctx, p, related, note }: { lang: Lang; ctx: 
         </div>
         <dialog class="checkout" data-checkout-dialog>
           <form method="dialog" class="checkout-form" data-checkout-form>
-            <h3>{p.name} — <span data-checkout-tier></span></h3>
+            <h3>{p.name}: <span data-checkout-tier></span></h3>
             <input type="hidden" name="product" value={p.slug} /><input type="hidden" name="tier" />
             <label class="field"><span>{t(lang, 'form.name')}</span><input name="name" required /></label>
             <label class="field"><span>{t(lang, 'form.email')}</span><input name="email" type="email" required /></label>
@@ -402,7 +402,7 @@ export function ProductPage({ lang, ctx, p, related, note }: { lang: Lang; ctx: 
 
 export function CheckoutResult({ lang, ctx, ok, product }: { lang: Lang; ctx: SiteCtx; ok: boolean; product?: string }) {
   return (
-    <Layout lang={lang} ctx={ctx} path="/marketplace/thank-you" kind="page" title="Order — Ferrn" description="Your order" noindex>
+    <Layout lang={lang} ctx={ctx} path="/marketplace/thank-you" kind="page" title="Order | Ferrn" description="Your order" noindex>
       <PageHero label={t(lang, 'nav.marketplace')} title={ok ? 'Payment received. Thank you.' : 'Payment not completed'}
         lead={ok ? 'We’ve emailed your receipt. Next: a short onboarding form so we can set up your product. We’ll reach out on WhatsApp within one working day.' : 'Nothing was charged. You can try again, or request an invoice and pay by bank transfer.'}>
         <div class="hero-actions reveal"><a class="btn btn-primary" href={href(lang, product ? `/marketplace/${product}` : '/marketplace')}>{ok ? 'Back to the product' : 'Try again'}</a></div>
