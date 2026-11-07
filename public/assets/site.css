@@ -1071,6 +1071,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .reel-play-text { white-space: nowrap; }
 .reel-play:hover { background: rgba(30,31,35,.94); scale: 1.04; }
 .reel-play:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+@media (max-width: 959px) { .reel-play { padding: 5px; gap: 0; height: 50px; } .reel-play-text { display: none; } .reel-play-ring { left: 5px; top: 5px; } }
 .reel-mute { position: absolute; right: clamp(14px, 2vw, 26px); bottom: clamp(26px, 3vw, 40px); width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(10,11,13,.78); color: #f4f3f0; border: 1px solid rgba(255,255,255,.14); cursor: pointer; transition: background-color .2s, scale .25s cubic-bezier(.2,.8,.2,1); }
 .reel-mute:hover { background: rgba(30,31,35,.92); scale: 1.06; }
 .reel-mute .on, .reel-btn .on { display: none; } .reel-mute[aria-pressed="true"] .on, .reel-btn[aria-pressed="true"] .on { display: block; } .reel-mute[aria-pressed="true"] .off, .reel-btn[aria-pressed="true"] .off { display: none; }
