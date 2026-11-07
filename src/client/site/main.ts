@@ -361,10 +361,148 @@ function offers() {
   });
 }
 
+/* Showreel: the inline reel loads and plays muted only near the viewport, grows into place as it scrolls
+   in, shows which build is on screen, and can be unmuted. "Play reel" opens a popup that plays it with sound. */
+function reel() {
+  const root = $<HTMLElement>('[data-reel]');
+  if (!root) return;
+  const frame = $<HTMLElement>('.reel-frame', root)!;
+  const v = $<HTMLVideoElement>('[data-reel-video]', root)!;
+  const label = $<HTMLElement>('[data-reel-label]', root), count = $<HTMLElement>('[data-reel-count]', root);
+  const bars = $$<HTMLElement>('.reel-bar b', root);
+  const mute = $<HTMLButtonElement>('[data-reel-mute]', root)!;
+  const modal = $<HTMLDialogElement>('[data-reel-modal]')!;
+  const full = $<HTMLVideoElement>('[data-reel-full]', modal)!;
+  let chapters: { t: number; label: string }[] = [];
+  try { chapters = JSON.parse(root.dataset.chapters || '[]'); } catch { chapters = []; }
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const at = (t: number) => { let k = 0; chapters.forEach((c, i) => { if (t >= c.t) k = i; }); return k; };
+  const quietOthers = (keep: HTMLMediaElement) => $$<HTMLMediaElement>('audio, video').forEach((m) => { if (m !== keep && !m.muted && !m.paused) m.pause(); });
+  let inView = false, cur = -1;
+
+  // which build is on screen + the story-style bar
+  const tick = () => {
+    const t = v.currentTime, k = at(t);
+    if (k !== cur && label) {
+      cur = k;
+      label.classList.add('swap');
+      setTimeout(() => { label.textContent = chapters[k]?.label || ''; label.classList.remove('swap'); }, 180);
+      if (count) count.textContent = `${pad(k + 1)} / ${pad(chapters.length)}`;
+    }
+    const end = (i: number) => (chapters[i + 1]?.t ?? (v.duration || t + 1));
+    bars.forEach((b, i) => {
+      const p = i < k ? 1 : i > k ? 0 : Math.min(1, Math.max(0, (t - chapters[i].t) / Math.max(0.1, end(i) - chapters[i].t)));
+      b.style.setProperty('--p', p.toFixed(3));
+    });
+  };
+  v.addEventListener('timeupdate', tick);
+
+  const load = (el: HTMLVideoElement) => { if (!el.src && el.dataset.reelSrc) { el.src = el.dataset.reelSrc; el.load(); } };
+  new IntersectionObserver((es) => es.forEach((e) => {
+    inView = e.isIntersecting;
+    if (inView) { load(v); if (!modal.open) v.play().catch(() => {}); onScroll(); }
+    else v.pause();
+  }), { rootMargin: '200px 0px' }).observe(root);
+
+  // grows from 88% to full size as it rises into view (transform only, and only while near the screen)
+  let raf = 0;
+  const onScroll = () => {
+    if (reduced || !inView || raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const r = root.getBoundingClientRect(), vh = innerHeight;
+      const p = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.75)));
+      root.style.setProperty('--rs', (0.88 + 0.12 * p).toFixed(4));
+      root.style.setProperty('--ro', (0.35 * (1 - p)).toFixed(3));
+    });
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+
+  // the play button drifts toward the pointer on desktop
+  const play = $<HTMLElement>('.reel-play', root)!;
+  if (!reduced && matchMedia('(hover: hover)').matches) {
+    let pr = 0, px = 0, py = 0;
+    frame.addEventListener('pointermove', (e) => {
+      px = e.clientX; py = e.clientY;
+      if (pr) return;
+      pr = requestAnimationFrame(() => {
+        pr = 0;
+        const r = frame.getBoundingClientRect();
+        play.style.setProperty('--px', `${((px - r.left) / r.width - 0.5) * r.width * 0.18}px`);
+        play.style.setProperty('--py', `${((py - r.top) / r.height - 0.5) * r.height * 0.18}px`);
+      });
+    }, { passive: true });
+    frame.addEventListener('pointerleave', () => { play.style.setProperty('--px', '0px'); play.style.setProperty('--py', '0px'); });
+  }
+
+  // inline sound toggle
+  mute.addEventListener('click', () => {
+    load(v);
+    v.muted = !v.muted;
+    mute.setAttribute('aria-pressed', String(!v.muted));
+    mute.setAttribute('aria-label', v.muted ? 'Turn sound on' : 'Turn sound off');
+    if (!v.muted) { quietOthers(v); v.play().catch(() => {}); }
+  });
+
+  // popup player
+  const toggle = $<HTMLButtonElement>('[data-reel-toggle]', modal)!, seek = $<HTMLInputElement>('[data-reel-seek]', modal)!;
+  const time = $<HTMLElement>('[data-reel-time]', modal), mlabel = $<HTMLElement>('[data-reel-mlabel]', modal);
+  const msound = $<HTMLButtonElement>('[data-reel-msound]', modal)!;
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  let seeking = false;
+  const sync = () => {
+    toggle.classList.toggle('paused', full.paused);
+    toggle.setAttribute('aria-label', full.paused ? 'Play' : 'Pause');
+    msound.setAttribute('aria-pressed', String(!full.muted));
+    msound.setAttribute('aria-label', full.muted ? 'Unmute' : 'Mute');
+  };
+  full.addEventListener('timeupdate', () => {
+    const d = full.duration || 1;
+    if (!seeking) seek.value = String(Math.round((full.currentTime / d) * 1000));
+    seek.style.setProperty('--v', `${(full.currentTime / d) * 100}%`);
+    if (time) time.textContent = fmt(full.currentTime);
+    if (mlabel) mlabel.textContent = chapters[at(full.currentTime)]?.label || '';
+  });
+  full.addEventListener('play', sync); full.addEventListener('pause', sync); full.addEventListener('volumechange', sync);
+  full.addEventListener('ended', () => { full.currentTime = 0; sync(); });
+  seek.addEventListener('input', () => { seeking = true; const d = full.duration || 0; full.currentTime = (Number(seek.value) / 1000) * d; seek.style.setProperty('--v', `${Number(seek.value) / 10}%`); });
+  seek.addEventListener('change', () => { seeking = false; });
+  toggle.addEventListener('click', () => { if (full.paused) full.play().catch(() => {}); else full.pause(); });
+  full.addEventListener('click', () => toggle.click());
+  msound.addEventListener('click', () => { full.muted = !full.muted; });
+
+  let wasMuted = true;
+  $('[data-reel-open]', root)!.addEventListener('click', () => {
+    wasMuted = v.muted;
+    v.pause();
+    load(full);
+    full.muted = false;
+    full.currentTime = 0;
+    modal.showModal();
+    quietOthers(full);
+    full.play().catch(() => { full.muted = true; full.play().catch(() => {}); });
+    sync();
+  });
+  const close = () => {
+    if (!modal.open || modal.classList.contains('closing')) return;
+    full.pause();
+    modal.classList.add('closing');
+    setTimeout(() => { modal.classList.remove('closing'); modal.close(); }, reduced ? 0 : 200);
+  };
+  $('[data-reel-close]', modal)!.addEventListener('click', close);
+  modal.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  modal.addEventListener('close', () => { v.muted = wasMuted; if (inView) v.play().catch(() => {}); });
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === ' ' && (e.target as HTMLElement).tagName !== 'BUTTON' && (e.target as HTMLElement).tagName !== 'INPUT') { e.preventDefault(); toggle.click(); }
+  });
+}
+
 function pageBits() {
   home(reduced);
   aboutTiles();
   offers();
+  reel();
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;
     $$('[data-filter]', btn.parentElement!).forEach((b) => b.classList.toggle('active', b === btn));

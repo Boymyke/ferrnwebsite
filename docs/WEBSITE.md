@@ -65,6 +65,13 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Showreel (7 Nov, 4.14.0)
+- Sits right after About and has no header (`#reel`, `.reel-room`). The inline reel loads only near the viewport, plays muted on a loop, and grows from 88% to full size as it scrolls in (transform only).
+- A chip shows which build is on screen (`01 / 10`), with a story-style bar per chapter. The mute button turns sound on inline. "Play reel" opens a `<dialog>` popup that plays with sound, with play/pause, a seek bar, mute and close (Esc, backdrop click or the X). Opening it pauses other playing audio, and closing it resumes the inline reel muted.
+- Content keys (Studio > Content > Home): `home.reel.video` (default `/v/reel.mp4`), `home.reel.poster`, `home.reel.chapters` (`seconds|label` per line). Swap the video there when a reel of client sites is ready.
+- `/v/:name.mp4` (index.tsx) serves `public/assets/home/<name>.mp4` with proper Range/206 answers. Static assets only answer ranges once they are edge-cached, and Safari won't play video without them.
+- The current reel is built by `scripts/reel/build.py` from the product screenshots and recordings, with an original generated music bed (`scripts/reel/music.py`, normalised to -19 LUFS). Run `python3 scripts/reel/build.py` from the repo root; it prints the chapter times to paste into `home.reel.chapters`.
+
 ## About bento v3 (6 Nov, 4.13.0; 4.13.1 on 7 Nov)
 - 4.13.5: card textures removed (plain panels). Hover is subtler: `--hov` is 2.5% ink into the panel, the pointer light is 3% and the lift is 2px.
 - 4.13.4: desktop About grid is 21 columns: 50+ 1-6, 10+ 6-11, 99% 11-16, offers 16-22 (both rows), team 1-7, photo 7-16. The top row starts at the left edge with the same 16px gaps.

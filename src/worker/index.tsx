@@ -105,6 +105,26 @@ app.get('/media/*', async (c) => {
   return new Response(obj.body, { headers: h });
 });
 
+/* Videos with proper byte-range answers (206). Static assets only honour Range once they are cached at the
+   edge, and Safari will not play a video without it, so reels are served through here. */
+app.get('/v/:name', async (c) => {
+  const name = c.req.param('name');
+  if (!/^[a-z0-9-]+\.mp4$/.test(name)) return c.notFound();
+  const src = await c.env.ASSETS.fetch(new Request(new URL(`/assets/home/${name}`, c.req.url)));
+  if (!src.ok) return c.notFound();
+  const buf = await src.arrayBuffer(), size = buf.byteLength;
+  const h = new Headers({ 'content-type': 'video/mp4', 'accept-ranges': 'bytes', 'cache-control': 'public, max-age=86400, stale-while-revalidate=604800' });
+  const etag = src.headers.get('etag'); if (etag) h.set('etag', etag);
+  const m = /^bytes=(\d*)-(\d*)$/.exec(c.req.header('range') || '');
+  if (!m || (!m[1] && !m[2])) { h.set('content-length', String(size)); return new Response(buf, { status: 200, headers: h }); }
+  let start = m[1] ? Number(m[1]) : size - Number(m[2]), end = m[1] && m[2] ? Number(m[2]) : size - 1;
+  if (start < 0) start = 0;
+  end = Math.min(end, size - 1);
+  if (start > end || start >= size) { h.set('content-range', `bytes */${size}`); return new Response(null, { status: 416, headers: h }); }
+  h.set('content-range', `bytes ${start}-${end}/${size}`); h.set('content-length', String(end - start + 1));
+  return new Response(buf.slice(start, end + 1), { status: 206, headers: h });
+});
+
 /* SEO */
 app.get('/sitemap.xml', async (c) => c.body(await sitemap(c.env), 200, { 'content-type': 'application/xml', 'cache-control': 'public, max-age=3600' }));
 
