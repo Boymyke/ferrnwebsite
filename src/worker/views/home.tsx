@@ -6,6 +6,7 @@ import { icon } from '../lib/icons';
 import { shotOf, type PublicProject } from '../lib/projects';
 import { href, initials, Layout, money } from './layout';
 import { OFFER_ART } from './offer-art';
+import { ASSET_V } from '../version';
 
 export type ProductRow = {
   slug: string; name: string; category: string; industry: string | null; tagline: string | null; description?: string | null;
@@ -287,9 +288,13 @@ export function HomePage(p: {
 
       {/* ── showreel: no header, the work speaks. Inline it plays muted; the popup plays it with sound. ── */}
       {(() => {
-        const src = mediaUrl(ctx.get('home.reel.video'));
-        if (!src) return null;
-        const poster = mediaUrl(ctx.get('home.reel.poster')) || undefined;
+        const raw0 = mediaUrl(ctx.get('home.reel.video'));
+        if (!raw0) return null;
+        // the site version busts browser caches when the film is re-rendered under the same name
+        const bust = (u: string) => (u.startsWith('/') && !u.includes('?') ? `${u}?v=${ASSET_V}` : u);
+        const src = bust(raw0);
+        const p0 = mediaUrl(ctx.get('home.reel.poster'));
+        const poster = p0 ? bust(p0) : undefined;
         const chapters = ctx.get('home.reel.chapters').split('\n').map((l) => l.split('|')).filter((p) => p.length >= 2 && p[1].trim()).map(([t, label]) => ({ t: Number(t) || 0, label: label.trim() }));
         const first = chapters[0]?.label || '';
         return (

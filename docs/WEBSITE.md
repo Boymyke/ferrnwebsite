@@ -70,6 +70,7 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - The voiceover is Kokoro (open model, af_heart voice, US English); it is not a Nigerian voice. Music is the generated bed, side-chain ducked under the voice (voice about -16 LUFS, music about -30 LUFS, mix -15.6 LUFS).
 - Source and steps: `scripts/commercial/` (README). Mix command: `[vo]loudnorm=I=-16` as the key, then `volume=0.32` music, `sidechaincompress=threshold=0.02:ratio=6:attack=40:release=450`, `amix`, `alimiter`. Encode 1440x900, CRF 22.
 - The play button says "Watch with sound", since inline autoplay is muted.
+- The video and poster URLs get `?v=ASSET_V` added, so a re-render under the same file name reaches everyone. Bump ASSET_V whenever the film changes.
 
 ## Showreel (7 Nov, 4.14.0)
 - Sits right after About and has no header (`#reel`, `.reel-room`). The inline reel loads only near the viewport, plays muted on a loop, and grows from 88% to full size as it scrolls in (transform only).
