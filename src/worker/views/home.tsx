@@ -140,6 +140,11 @@ export function ContactForm({ lang, type = 'contact', product, ctx }: { lang: La
   );
 }
 
+/** A big About number that counts up on reveal (the shared [data-count] helper in main.ts). */
+const Num = ({ v }: { v: string }) => {
+  const m = /^(\d+)(.*)$/.exec(v);
+  return m ? <span class="ab-num" data-count={m[1]} data-suffix={m[2]}>{v}</span> : <span class="ab-num">{v}</span>;
+};
 const OFFERS: [string, string, string, string, string][] = [
   ['Websites', 'that turn visitors into enquiries.', 'Fast, clear and found on Google, with WhatsApp, booking or quote one tap away.', '#F94406', '#ffb36b'],
   ['Web apps', 'that run the business day to day.', 'Portals, dashboards and workflow systems your staff and customers actually use.', '#7c5cff', '#F94406'],
@@ -219,22 +224,25 @@ export function HomePage(p: {
             <div class="wrap ab-stage" data-ab>
               <div class="ab-grid">
                 <article class="ab-tile ab-num-tile ab-s1 ab-tex-pixels reveal" data-tilt>
-                  <span class="ab-corner" aria-hidden="true">{icon('arrow-up-right', { size: 22 })}</span>
-                  <span class="ab-num">{STATS[0][0]}</span><span class="ab-num-cap">{STATS[0][1]}</span>
+                  <div class="ab-stack" aria-hidden="true">
+                    {[0, 1, 2].map((k) => <span style={`--k:${k}`}><i></i><b></b><b></b></span>)}
+                  </div>
+                  <Num v={STATS[0][0]} /><span class="ab-num-cap">{STATS[0][1]}</span>
                 </article>
                 <article class="ab-tile ab-num-tile ab-s2 ab-tex-dots reveal" style="--d:.05s" data-tilt>
                   <div class="ab-icons" aria-hidden="true">
-                    {['building', 'package', 'heart', 'book-open', 'wallet', 'briefcase', 'globe', 'sparkles'].map((n, k) => <span style={`--k:${k}`}>{icon(n, { size: 18 })}</span>)}
+                    {([['building', 24], ['package', 200], ['heart', 350], ['book-open', 265], ['wallet', 40], ['briefcase', 160], ['globe', 215], ['sparkles', 290]] as const).map(([n, h], k) => <span style={`--k:${k};--h:${h}`}>{icon(n, { size: 18 })}</span>)}
                   </div>
-                  <span class="ab-num">{STATS[1][0]}</span><span class="ab-num-cap">{STATS[1][1]}</span>
+                  <Num v={STATS[1][0]} /><span class="ab-num-cap">{STATS[1][1]}</span>
                 </article>
                 <article class="ab-tile ab-num-tile ab-s4 ab-tex-rings reveal" style="--d:.1s" data-tilt>
                   <svg class="ab-ring" viewBox="0 0 120 120" aria-hidden="true">
+                    <defs><linearGradient id="ab-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22c55e" /><stop offset="1" stop-color="#14b8a6" /></linearGradient></defs>
                     <circle cx="60" cy="60" r="50" class="ab-ring-bg" />
                     <circle cx="60" cy="60" r="50" class="ab-ring-fg" pathLength="100" />
                     <path d="M44 61l11 11 22-24" class="ab-ring-tick" />
                   </svg>
-                  <span class="ab-num">{STATS[3][0]}</span><span class="ab-num-cap">{STATS[3][1]}</span>
+                  <Num v={STATS[3][0]} /><span class="ab-num-cap">{STATS[3][1]}</span>
                 </article>
                 <article class="ab-tile ab-offers reveal" style="--d:.15s" data-offers aria-roledescription="carousel" aria-label="What Ferrn offers">
                   <div class="ab-offers-glow" aria-hidden="true">{OFFERS.map((o, k) => <span class={k === 0 ? 'on' : ''} style={`--g1:${o[3]};--g2:${o[4]}`}></span>)}</div>
@@ -270,7 +278,7 @@ export function HomePage(p: {
                 </article>
                 <article class="ab-tile ab-num-tile ab-s3 ab-pic reveal" style="--d:.05s" data-tilt>
                   <img class="ab-pic-img" src="/assets/home/about-studio.webp" alt="" loading="lazy" decoding="async" width="1200" height="675" />
-                  <span class="ab-num">{STATS[2][0]}</span><span class="ab-num-cap">{STATS[2][1]}</span>
+                  <Num v={STATS[2][0]} /><span class="ab-num-cap">{STATS[2][1]}</span>
                 </article>
               </div>
             </div>

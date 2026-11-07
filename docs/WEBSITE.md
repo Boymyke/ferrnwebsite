@@ -66,6 +66,7 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
 ## About bento v3 (6 Nov, 4.13.0; 4.13.1 on 7 Nov)
+- 4.13.2: 50+ has a fanned stack of project cards (fans left on hover), 10+ icons each have their own tint and pop in one by one, 99% is a thin green ring that draws and then ticks, and all four numbers count up on reveal through the shared `[data-count]` helper (`Num` in home.tsx).
 - 4.13.1: the offers card uses custom illustrations from `src/worker/views/offer-art.ts`, one mini scene per service, styled under `.il` in site.css and animated only on the active slide. The pixel texture on 50+ now runs to the bottom of the card.
 - Six cards: 50+ (pixel texture, corner arrow), 10+ (industry icons, dot texture), 99% (completion ring, ring texture), What Ferrn offers (tall carousel), The team, 25+ (studio photo `/assets/home/about-studio.webp`).
 - No shadows. Hover is neutral: `--hov` mixes 6% ink into the panel (lighter in dark mode, darker in light mode), no orange.
