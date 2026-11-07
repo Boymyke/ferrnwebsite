@@ -5,6 +5,7 @@ import type { SiteCtx } from '../lib/content';
 import { icon } from '../lib/icons';
 import { shotOf, type PublicProject } from '../lib/projects';
 import { href, initials, Layout, money } from './layout';
+import { OFFER_ART } from './offer-art';
 
 export type ProductRow = {
   slug: string; name: string; category: string; industry: string | null; tagline: string | null; description?: string | null;
@@ -139,7 +140,6 @@ export function ContactForm({ lang, type = 'contact', product, ctx }: { lang: La
   );
 }
 
-const OFFER_ICONS = ['monitor', 'layout-dashboard', 'bot', 'workflow', 'wallet', 'chart-bar', 'shield-check'];
 const OFFERS: [string, string, string, string, string][] = [
   ['Websites', 'that turn visitors into enquiries.', 'Fast, clear and found on Google, with WhatsApp, booking or quote one tap away.', '#F94406', '#ffb36b'],
   ['Web apps', 'that run the business day to day.', 'Portals, dashboards and workflow systems your staff and customers actually use.', '#7c5cff', '#F94406'],
@@ -240,9 +240,9 @@ export function HomePage(p: {
                   <div class="ab-offers-glow" aria-hidden="true">{OFFERS.map((o, k) => <span class={k === 0 ? 'on' : ''} style={`--g1:${o[3]};--g2:${o[4]}`}></span>)}</div>
                   <div class="ab-offers-head"><p class="ab-offers-eye">What Ferrn offers</p><a class="ab-offers-link" href={href(lang, '/services')}>All services {icon('arrow-right', { size: 14 })}</a></div>
                   <div class="ab-offers-slides">
-                    {OFFERS.map(([title, line, more], k) => (
-                      <div class={`ab-offer ${k === 0 ? 'on' : ''}`} aria-hidden={k === 0 ? undefined : 'true'}>
-                        <span class="ab-offer-art" aria-hidden="true">{icon(OFFER_ICONS[k], { size: 120, stroke: 1 })}</span>
+                    {OFFERS.map(([title, line, more, g1, g2], k) => (
+                      <div class={`ab-offer ${k === 0 ? 'on' : ''}`} style={`--g1:${g1};--g2:${g2}`} aria-hidden={k === 0 ? undefined : 'true'}>
+                        <span class="ab-offer-art" aria-hidden="true">{raw(OFFER_ART[k])}</span>
                         <p class="ab-offer-title">{title}<span aria-hidden="true">{icon('arrow-up-right', { size: 22 })}</span></p>
                         <p class="ab-offer-line">{line}</p>
                         <p class="ab-offer-more">{more}</p>

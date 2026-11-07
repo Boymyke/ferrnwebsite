@@ -65,7 +65,8 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
-## About bento v3 (6 Nov, 4.13.0)
+## About bento v3 (6 Nov, 4.13.0; 4.13.1 on 7 Nov)
+- 4.13.1: the offers card uses custom illustrations from `src/worker/views/offer-art.ts`, one mini scene per service, styled under `.il` in site.css and animated only on the active slide. The pixel texture on 50+ now runs to the bottom of the card.
 - Six cards: 50+ (pixel texture, corner arrow), 10+ (industry icons, dot texture), 99% (completion ring, ring texture), What Ferrn offers (tall carousel), The team, 25+ (studio photo `/assets/home/about-studio.webp`).
 - No shadows. Hover is neutral: `--hov` mixes 6% ink into the panel (lighter in dark mode, darker in light mode), no orange.
 - What Ferrn offers: 7 services in `OFFERS` + `OFFER_ICONS` in home.tsx. It auto-advances every 4.2s, pauses on hover or focus, and the segmented bars jump to a slide (`offers()` in main.ts). The glow colours come from each row's g1/g2.
