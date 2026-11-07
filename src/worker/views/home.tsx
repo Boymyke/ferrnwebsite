@@ -146,13 +146,13 @@ const Num = ({ v }: { v: string }) => {
   return m ? <span class="ab-num" data-count={m[1]} data-suffix={m[2]}>{v}</span> : <span class="ab-num">{v}</span>;
 };
 const OFFERS: [string, string, string, string, string][] = [
-  ['Websites', 'that turn visitors into enquiries.', 'Fast, clear and found on Google, with WhatsApp, booking or quote one tap away.', '#F94406', '#ffb36b'],
-  ['Web apps', 'that run the business day to day.', 'Portals, dashboards and workflow systems your staff and customers actually use.', '#7c5cff', '#F94406'],
-  ['AI assistants', 'that answer at 2am.', 'Trained on your services and prices, they reply, book and hand over to a person.', '#14b8a6', '#7c5cff'],
-  ['Automation', 'that does the follow-up for you.', 'WhatsApp reminders, lead follow-ups and reports that go out on their own.', '#22c55e', '#F94406'],
-  ['Payments', 'that close the sale online.', 'Paystack checkout, invoices and receipts tied to every order.', '#f59e0b', '#ef4444'],
-  ['SEO and analytics', 'that show what is working.', 'Search set up properly and simple reports on visitors, enquiries and sales.', '#3b82f6', '#14b8a6'],
-  ['Hosting and care', 'so it keeps working after launch.', 'Security, backups, updates and small changes, handled every month.', '#F94406', '#7c5cff'],
+  ['Websites', 'that turn visitors into enquiries.', 'Fast, clear and found on Google, with WhatsApp, booking or quote one tap away.', '#F94406', '#ff8a4c'],
+  ['Web apps', 'that run the business day to day.', 'Portals, dashboards and workflow systems your staff and customers actually use.', '#F94406', '#ff8a4c'],
+  ['AI assistants', 'that answer at 2am.', 'Trained on your services and prices, they reply, book and hand over to a person.', '#F94406', '#ff8a4c'],
+  ['Automation', 'that does the follow-up for you.', 'WhatsApp reminders, lead follow-ups and reports that go out on their own.', '#F94406', '#ff8a4c'],
+  ['Payments', 'that close the sale online.', 'Paystack checkout, invoices and receipts tied to every order.', '#F94406', '#ff8a4c'],
+  ['SEO and analytics', 'that show what is working.', 'Search set up properly and simple reports on visitors, enquiries and sales.', '#F94406', '#ff8a4c'],
+  ['Hosting and care', 'so it keeps working after launch.', 'Security, backups, updates and small changes, handled every month.', '#F94406', '#ff8a4c'],
 ];
 
 const STATS: [string, string][] = [['50+', 'Projects delivered'], ['10+', 'Industries served'], ['25+', 'Years of combined experience'], ['99%', 'Project completion rate']];
@@ -251,7 +251,7 @@ export function HomePage(p: {
                     {OFFERS.map(([title, line, more, g1, g2], k) => (
                       <div class={`ab-offer ${k === 0 ? 'on' : ''}`} style={`--g1:${g1};--g2:${g2}`} aria-hidden={k === 0 ? undefined : 'true'}>
                         <span class="ab-offer-art" aria-hidden="true">{raw(OFFER_ART[k])}</span>
-                        <p class="ab-offer-title">{title}<span aria-hidden="true">{icon('arrow-up-right', { size: 22 })}</span></p>
+                        <p class="ab-offer-title">{title}</p>
                         <p class="ab-offer-line">{line}</p>
                         <p class="ab-offer-more">{more}</p>
                       </div>
@@ -274,7 +274,6 @@ export function HomePage(p: {
                     </ul>
                     <p class="ab-face-hint"><b>{team.length} people</b><small><span class="hov">Hover</span><span class="tap">Tap</span> a face to meet them</small></p>
                   </div>
-                  <a class="ab-team-btn" href={href(lang, '/team')}><span>Meet the team</span><i>{icon('arrow-up-right', { size: 16 })}</i></a>
                 </article>
                 <article class="ab-tile ab-num-tile ab-s3 ab-pic reveal" style="--d:.05s" data-tilt>
                   <img class="ab-pic-img" src="/assets/home/about-studio.webp" alt="" loading="lazy" decoding="async" width="1200" height="675" />
