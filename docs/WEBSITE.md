@@ -65,6 +65,12 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Ferrn film (8 Nov, 4.14.1)
+- The #reel video is now a 44s commercial with a narrator explaining what Ferrn does. It has kinetic headlines over the product footage in browser frames, floating result chips, a montage wall and an end card ("Start a project", ferrnagency.com).
+- The voiceover is Kokoro (open model, af_heart voice, US English); it is not a Nigerian voice. Music is the generated bed, side-chain ducked under the voice (voice about -16 LUFS, music about -30 LUFS, mix -15.6 LUFS).
+- Source and steps: `scripts/commercial/` (README). Mix command: `[vo]loudnorm=I=-16` as the key, then `volume=0.32` music, `sidechaincompress=threshold=0.02:ratio=6:attack=40:release=450`, `amix`, `alimiter`. Encode 1440x900, CRF 22.
+- The play button says "Watch with sound", since inline autoplay is muted.
+
 ## Showreel (7 Nov, 4.14.0)
 - Sits right after About and has no header (`#reel`, `.reel-room`). The inline reel loads only near the viewport, plays muted on a loop, and grows from 88% to full size as it scrolls in (transform only).
 - A chip shows which build is on screen (`01 / 10`), with a story-style bar per chapter. The mute button turns sound on inline. "Play reel" opens a `<dialog>` popup that plays with sound, with play/pause, a seek bar, mute and close (Esc, backdrop click or the X). Opening it pauses other playing audio, and closing it resumes the inline reel muted.

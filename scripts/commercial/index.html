@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ferrn commercial</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1600px; height: 1000px; overflow: hidden; background: #08090b; }
+  body { font-family: 'Poppins', sans-serif; color: #f4f3f0; -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1600px; height: 1000px; overflow: hidden; background: #08090b; }
+  .glow { position: absolute; width: 1400px; height: 1400px; border-radius: 50%; left: -300px; top: -800px;
+    background: radial-gradient(closest-side, rgba(249,68,6,.30), rgba(249,68,6,.08) 55%, transparent); }
+  .glow2 { position: absolute; width: 1200px; height: 1200px; border-radius: 50%; right: -500px; bottom: -700px;
+    background: radial-gradient(closest-side, rgba(255,138,76,.14), transparent); }
+  .grain { position: absolute; inset: 0; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .scene { position: absolute; inset: 0; opacity: 0; will-change: opacity, transform; }
+  .kicker { position: absolute; left: 110px; top: 92px; font-size: 20px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: #F94406; display: flex; align-items: center; gap: 14px; }
+  .kicker::before { content: ''; width: 34px; height: 2px; background: #F94406; }
+  .head { position: absolute; left: 110px; top: 130px; font-size: 64px; line-height: 1.08; font-weight: 600; letter-spacing: -.035em; max-width: 1380px; }
+  .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 0 .12em; margin-bottom: -.12em; }
+  .w > span { display: inline-block; will-change: transform; }
+  .o { color: #F94406; }
+  /* browser frame */
+  .frame { position: absolute; width: 1180px; border-radius: 14px; overflow: hidden; background: #15161a; border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 40px 120px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(0,0,0,.4); transform-origin: 50% 100%; will-change: transform, opacity; }
+  .bar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: #1b1c20; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .bar .url { margin-left: 18px; height: 24px; border-radius: 12px; background: #26272c; color: rgba(244,243,240,.6); font-size: 13px; display: flex; align-items: center; padding: 0 14px; min-width: 320px; }
+  .view { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: #fff; }
+  .view img { position: absolute; left: 0; top: 0; width: 100%; height: auto; will-change: transform; }
+  /* hook */
+  .big { position: absolute; left: 110px; right: 110px; top: 330px; font-size: 96px; line-height: 1.04; font-weight: 600; letter-spacing: -.045em; }
+  .search { position: absolute; left: 50%; top: 470px; width: 900px; margin-left: -450px; height: 92px; border-radius: 46px; background: #f4f3f0; color: #0b0c10; display: flex; align-items: center; gap: 22px; padding: 0 36px; font-size: 32px; font-weight: 500; box-shadow: 0 30px 80px -30px rgba(249,68,6,.5); }
+  .search svg { flex: none; }
+  .caret { display: inline-block; width: 3px; height: 38px; background: #F94406; margin-left: 2px; vertical-align: middle; }
+  .results { position: absolute; left: 50%; top: 590px; width: 900px; margin-left: -450px; display: grid; gap: 14px; }
+  .res { height: 74px; border-radius: 14px; background: #17181c; border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 18px; padding: 0 24px; }
+  .res b { width: 44px; height: 44px; border-radius: 10px; background: #26272c; flex: none; }
+  .res span { height: 12px; border-radius: 6px; background: #2c2d33; display: block; }
+  .res .q { font-size: 26px; font-weight: 600; color: #F94406; }
+  /* chips beside frames */
+  .chip { position: absolute; display: flex; align-items: center; gap: 14px; padding: 16px 22px 16px 16px; border-radius: 18px; background: #F94406; color: #fff; font-size: 22px; font-weight: 600; box-shadow: 0 24px 60px -20px rgba(249,68,6,.6); will-change: transform, opacity; }
+  .chip .ic { width: 46px; height: 46px; border-radius: 12px; background: #fff; display: grid; place-items: center; color: #0b0c10; }
+  .chip small { display: block; font-size: 15px; font-weight: 400; opacity: .85; }
+  .chip.dark { background: #1b1c20; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 24px 60px -20px rgba(0,0,0,.8); }
+  .chip.green { background: #22c55e; box-shadow: 0 24px 60px -20px rgba(34,197,94,.55); }
+  /* montage */
+  .wall { position: absolute; left: 50%; top: 300px; width: 2400px; margin-left: -1200px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; transform-origin: 50% 0; will-change: transform; }
+  .tile { border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); aspect-ratio: 16 / 10; background: #15161a; will-change: transform, opacity; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* end card */
+  .logo { position: absolute; left: 50%; top: 300px; width: 520px; margin-left: -260px; will-change: transform, opacity; }
+  .tag { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 76px; font-weight: 600; letter-spacing: -.04em; line-height: 1.05; }
+  .cta { position: absolute; left: 50%; top: 680px; transform: translateX(-50%); display: flex; gap: 18px; align-items: center; will-change: opacity, transform; }
+  .btn { height: 72px; border-radius: 36px; padding: 0 34px; display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 600; }
+  .btn.p { background: #F94406; color: #fff; }
+  .btn.g { border: 1.5px solid rgba(255,255,255,.25); color: #f4f3f0; font-weight: 500; }
+  .bars { position: absolute; left: 110px; right: 110px; bottom: 54px; display: flex; gap: 8px; }
+  .bars i { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.14); overflow: hidden; }
+  .bars b { display: block; height: 100%; background: #F94406; transform-origin: left; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="glow" id="glow"></div><div class="glow2" id="glow2"></div>
+
+  <!-- 1. hook -->
+  <section class="scene" id="s-hook">
+    <div class="big" id="hook-text"></div>
+  </section>
+  <section class="scene" id="s-find">
+    <div class="kicker">The first impression</div>
+    <div class="head" id="find-head"></div>
+    <div class="search" id="search"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0b0c10" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span id="typed"></span><span class="caret" id="caret"></span></div>
+    <div class="results" id="results">
+      <div class="res"><b></b><div style="flex:1;display:grid;gap:10px"><span style="width:62%"></span><span style="width:40%;opacity:.6"></span></div></div>
+      <div class="res"><b></b><div style="flex:1;display:grid;gap:10px"><span style="width:54%"></span><span style="width:48%;opacity:.6"></span></div><span class="q" style="background:none;height:auto">?</span></div>
+      <div class="res"><b></b><div style="flex:1;display:grid;gap:10px"><span style="width:70%"></span><span style="width:36%;opacity:.6"></span></div></div>
+    </div>
+  </section>
+
+  <!-- footage scenes are built by script -->
+  <div id="footage"></div>
+
+  <!-- montage -->
+  <section class="scene" id="s-team">
+    <div class="kicker">One team</div>
+    <div class="head" id="team-head"></div>
+    <div class="wall" id="wall"></div>
+  </section>
+
+  <!-- end card -->
+  <section class="scene" id="s-end">
+    <img class="logo" id="logo" src="assets/ferrn-logo-on-dark.svg" alt="">
+    <div class="tag" id="end-tag"></div>
+    <div class="cta" id="cta"><span class="btn p">Start a project <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></span><span class="btn g">ferrnagency.com</span></div>
+  </section>
+
+  <div class="grain"></div>
+  
+</div>
+
+<script>
+const TL = window.TIMELINE; // injected
+const L = Object.fromEntries(TL.lines.map((l) => [l.id, l]));
+const FPS = 30;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOut = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const easeInOut = (x) => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = (x) => { x = clamp(x); const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+
+/* words that slide up one by one; <o> marks orange words */
+function words(el, html) {
+  el.innerHTML = html.split(' ').map((w) => {
+    const o = w.startsWith('*'); w = w.replace(/^\*/, '');
+    return `<span class="w"><span class="${o ? 'o' : ''}">${w}</span></span>`;
+  }).join(' ');
+  return [...el.querySelectorAll('.w > span')];
+}
+function revealWords(spans, lt, step = .07, dur = .55) {
+  spans.forEach((s, i) => { const p = easeOut((lt - i * step) / dur); s.style.transform = `translateY(${(1 - p) * 110}%)`; });
+}
+
+const ICON = {
+  cal: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  msg: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></svg>',
+  truck: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>',
+  spark: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.94 14.06 4 20M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>',
+  check: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  chart: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M18 17V9M13 17V5M8 17v-3"/></svg>',
+};
+
+/* footage scenes: [id, kicker, headline, media, url, align, chips] */
+const SCENES = [
+  ['web', '01 · Websites', 'Websites that turn visitors into *enquiries.', { still: 'shot-cedar-clinic.webp' }, 'cedarclinic.com', 'r',
+    [{ cls: '', ic: 'msg', t: 'New enquiry', s: 'From your website', x: 150, y: 640, at: 1.2 }]],
+  ['book', '02 · Booking', 'Booking that fills your diary while you *sleep.', { clip: 'clinic', n: 270 }, 'cedarclinic.com/book', 'l',
+    [{ cls: 'green', ic: 'check', t: 'Appointment confirmed', s: 'Sent on WhatsApp', x: 1060, y: 720, at: 1.4 }]],
+  ['portal', '03 · Customer portals', 'Portals that quote, track and *update on their own.', { clip: 'track', n: 270 }, 'northbridge.com/track', 'r',
+    [{ cls: '', ic: 'truck', t: 'In transit', s: 'Customer updated', x: 150, y: 660, at: 1.3 }]],
+  ['ai', '04 · AI assistants', 'Assistants that answer at *2am.', { still: 'shot-assistant.webp' }, 'harbourlinehomes.com', 'l',
+    [{ cls: 'dark', ic: 'spark', t: '“Are you open Sunday?”', s: '2:04 AM', x: 1080, y: 560, at: .9 }, { cls: '', ic: 'msg', t: 'Yes, 10am to 4pm.', s: 'Answered instantly', x: 1120, y: 700, at: 1.7 }]],
+  ['auto', '05 · Automation', 'WhatsApp follow-ups, so *no lead goes cold.', { clip: 'automation', n: 240 }, 'studio.ferrnagency.com/automations', 'r',
+    [{ cls: 'green', ic: 'msg', t: 'Reminder sent', s: '24 patients tonight', x: 150, y: 680, at: 1.3 }]],
+  ['studio', '06 · Ferrn Studio', 'Run all of it from *one place.', { clip: 'studio', n: 300 }, 'studio.ferrnagency.com', 'l',
+    [{ cls: '', ic: 'chart', t: '+38% enquiries', s: 'This month', x: 1080, y: 690, at: 1.3 }]],
+];
+const foot = document.getElementById('footage');
+const S = {};
+for (const [id, kick, head, media, url, align, chips] of SCENES) {
+  const sec = document.createElement('section'); sec.className = 'scene'; sec.id = 's-' + id;
+  const left = align === 'r' ? 330 : 90;
+  sec.innerHTML = `<div class="kicker">${kick}</div><div class="head"></div>
+    <div class="frame" style="left:${left}px;top:300px"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="url">${url}</span></div>
+    <div class="view"><img alt=""></div></div>` +
+    chips.map((c) => `<div class="chip ${c.cls}" style="left:${c.x}px;top:${c.y}px"><span class="ic">${ICON[c.ic]}</span><span>${c.t}<small>${c.s}</small></span></div>`).join('');
+  foot.appendChild(sec);
+  S[id] = { sec, spans: words(sec.querySelector('.head'), head), frame: sec.querySelector('.frame'), img: sec.querySelector('.view img'), media, chips: [...sec.querySelectorAll('.chip')].map((el, i) => ({ el, at: chips[i].at })), align };
+  if (media.still) S[id].img.src = 'assets/' + media.still;
+}
+
+const hookSpans = words(document.getElementById('hook-text'), 'Your customers are already looking for you *online.');
+const findSpans = words(document.getElementById('find-head'), 'What do they *find?');
+const teamSpans = words(document.getElementById('team-head'), 'One team. Idea to launch *to growth.');
+const endSpans = words(document.getElementById('end-tag'), 'Websites that grow *your business.');
+const wall = document.getElementById('wall');
+const WALL = ['shot-cedar-clinic', 'shot-harbourline-homes', 'shot-brightpath-academy', 'shot-northbridge-freight', 'shot-admissions', 'shot-clinic-desk', 'shot-track', 'shot-automation'];
+wall.innerHTML = WALL.map((n) => `<div class="tile"><img src="assets/${n}.webp" alt=""></div>`).join('');
+const tiles = [...wall.querySelectorAll('.tile')];
+const ORDER = ['hook', 'find', ...SCENES.map((s) => s[0]), 'team', 'end'];
+
+/* scene windows: each starts a little before its line and runs until the next one starts */
+const W = {};
+ORDER.forEach((id, i) => {
+  const st = i === 0 ? 0 : L[id].start - 0.35;
+  const en = i === ORDER.length - 1 ? TL.total : L[ORDER[i + 1]].start - 0.35;
+  W[id] = { st, en };
+});
+const X = 0.4; // crossfade
+function vis(id, t) {
+  const { st, en } = W[id];
+  const a = clamp((t - st) / X), b = clamp((en + X - t) / X);
+  return Math.min(a, ORDER[0] === id ? 1 : a, b);
+}
+
+window.render = async (t) => {
+  const pending = [];
+  // background drift
+  document.getElementById('glow').style.transform = `translate(${Math.sin(t * .25) * 120}px, ${Math.cos(t * .2) * 60}px)`;
+  document.getElementById('glow2').style.transform = `translate(${Math.cos(t * .18) * -100}px, ${Math.sin(t * .22) * 50}px)`;
+
+  // hook
+  { const v = t < W.hook.en + X ? Math.min(1, clamp((W.hook.en + X - t) / X)) : 0; const el = document.getElementById('s-hook');
+    el.style.opacity = v; el.style.transform = `translateY(${(1 - v) * -40}px)`;
+    revealWords(hookSpans, t - L.hook.start + .1, .16, .6); }
+  // find
+  { const v = vis('find', t), lt = t - L.find.start; const el = document.getElementById('s-find'); el.style.opacity = v;
+    el.style.transform = `translateY(${(1 - clamp((t - W.find.st) / X)) * 40}px)`;
+    revealWords(findSpans, lt + .2, .09);
+    const q = 'dentist near me', n = Math.floor(clamp((lt - .1) / 1.2) * q.length);
+    document.getElementById('typed').textContent = q.slice(0, n);
+    document.getElementById('caret').style.opacity = (Math.floor(t * 2.4) % 2 === 0 || n < q.length) ? 1 : 0;
+    const s = easeOut((lt + .2) / .6); document.getElementById('search').style.transform = `translateY(${(1 - s) * 40}px) scale(${.96 + .04 * s})`;
+    document.getElementById('search').style.opacity = s;
+    [...document.querySelectorAll('#results .res')].forEach((r, i) => { const p = easeOut((lt - 1.4 - i * .15) / .5); r.style.opacity = p; r.style.transform = `translateY(${(1 - p) * 24}px)`; }); }
+
+  // footage scenes
+  for (const [id] of SCENES) {
+    const s = S[id], v = vis(id, t), lt = t - W[id].st;
+    s.sec.style.opacity = v;
+    if (v <= 0) continue;
+    revealWords(s.spans, lt - .05, .065);
+    const e = back((lt - .1) / .9), side = s.align === 'r' ? 1 : -1;
+    const drift = lt * 6;
+    s.frame.style.transform = `perspective(1800px) translate(${side * (1 - e) * 120}px, ${(1 - e) * 140 - drift}px) rotateX(${(1 - e) * 14}deg) rotateY(${side * -4 * (1 - e)}deg) scale(${.9 + .1 * e})`;
+    s.frame.style.opacity = clamp((lt - .05) / .35);
+    // media
+    if (s.media.still) {
+      const p = clamp(lt / (W[id].en - W[id].st + X));
+      s.img.style.transform = `translateY(${-p * 6}%) scale(${1.02 + p * .05})`;
+    } else {
+      const idx = Math.min(s.media.n, Math.max(1, Math.floor(Math.max(0, lt - .15) * FPS) + 1));
+      const src = `frames/${s.media.clip}/${String(idx).padStart(4, '0')}.jpg`;
+      if (!s.img.src.endsWith(src)) { s.img.src = src; pending.push(s.img.decode().catch(() => {})); }
+      const p = clamp(lt / 9); s.img.style.transform = `scale(${1.0 + p * .04})`; s.img.style.transformOrigin = '50% 30%';
+    }
+    s.chips.forEach((c) => { const p = back((lt - c.at) / .55); c.el.style.opacity = clamp((lt - c.at) / .25); c.el.style.transform = `translateY(${(1 - p) * 30 - drift * .6}px) scale(${.85 + .15 * p})`; });
+  }
+
+  // team montage
+  { const v = vis('team', t), lt = t - W.team.st; const el = document.getElementById('s-team'); el.style.opacity = v;
+    revealWords(teamSpans, lt - .05, .07);
+    wall.style.transform = `perspective(2000px) rotateX(${22 - lt * 1.5}deg) rotateZ(-6deg) translateY(${40 - lt * 30}px) translateX(${-lt * 40}px)`;
+    tiles.forEach((tl, i) => { const p = back((lt - .15 - i * .08) / .6); tl.style.opacity = clamp((lt - .15 - i * .08) / .3); tl.style.transform = `translateY(${(1 - p) * 120}px) scale(${.8 + .2 * p})`; }); }
+
+  // end card
+  { const v = clamp((t - W.end.st) / X), lt = t - W.end.st; const el = document.getElementById('s-end'); el.style.opacity = v;
+    const lp = back((lt - .1) / .7); const logo = document.getElementById('logo'); logo.style.opacity = clamp((lt - .1) / .3); logo.style.transform = `translateY(${(1 - lp) * 40}px) scale(${.9 + .1 * lp})`;
+    revealWords(endSpans, lt - .6, .08);
+    const cp = easeOut((lt - 1.6) / .6); const cta = document.getElementById('cta'); cta.style.opacity = cp; cta.style.transform = `translateX(-50%) translateY(${(1 - cp) * 30}px)`;
+    const out = clamp((TL.total - t) / .6); document.getElementById('stage').style.opacity = 1; el.style.opacity = v; }
+
+  // progress bars
+
+  await Promise.all(pending);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+};
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]);
+</script>
+</body>
+</html>

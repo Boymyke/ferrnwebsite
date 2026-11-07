@@ -293,17 +293,17 @@ export function HomePage(p: {
         const chapters = ctx.get('home.reel.chapters').split('\n').map((l) => l.split('|')).filter((p) => p.length >= 2 && p[1].trim()).map(([t, label]) => ({ t: Number(t) || 0, label: label.trim() }));
         const first = chapters[0]?.label || '';
         return (
-          <section class="reel-room" id="reel" aria-label="Showreel: websites and web apps built by Ferrn">
+          <section class="reel-room" id="reel" aria-label="Ferrn film: what we do">
             <div class="wrap">
               <div class="reel" data-reel data-chapters={JSON.stringify(chapters)}>
                 <div class="reel-frame">
                   <video class="reel-video" data-reel-video data-reel-src={src} poster={poster} muted loop playsinline preload="none" aria-hidden="true"></video>
                   <div class="reel-shade" aria-hidden="true"></div>
                   <div class="reel-chapter" aria-live="polite"><span class="reel-dot" aria-hidden="true"></span><span class="reel-label" data-reel-label>{first}</span><span class="reel-count" data-reel-count>{chapters.length ? `01 / ${String(chapters.length).padStart(2, '0')}` : ''}</span></div>
-                  <button type="button" class="reel-play" data-reel-open aria-label="Play the showreel with sound">
+                  <button type="button" class="reel-play" data-reel-open aria-label="Watch the Ferrn film with sound">
                     <span class="reel-play-ring" aria-hidden="true"></span>
-                    <span class="reel-play-icon" aria-hidden="true">{icon('play', { size: 26 })}</span>
-                    <span class="reel-play-text">Play reel</span>
+                    <span class="reel-play-icon" aria-hidden="true">{icon('play', { size: 18 })}</span>
+                    <span class="reel-play-text">Watch with sound</span>
                   </button>
                   <button type="button" class="reel-mute" data-reel-mute aria-pressed="false" aria-label="Turn sound on">
                     <span class="on" aria-hidden="true">{icon('volume-2', { size: 18 })}</span><span class="off" aria-hidden="true">{icon('volume-x', { size: 18 })}</span>

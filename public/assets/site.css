@@ -1063,15 +1063,14 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .reel-label { display: inline-block; transition: opacity .25s, transform .35s cubic-bezier(.2,.8,.2,1); }
 .reel-label.swap { opacity: 0; transform: translateY(6px); }
 .reel-count { color: rgba(244,243,240,.5); font-variant-numeric: tabular-nums; font-size: 12px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.14); }
-.reel-play { --ps: clamp(78px, 8vw, 112px); position: absolute; left: 50%; top: 50%; width: var(--ps); height: var(--ps); margin: calc(var(--ps) / -2) 0 0 calc(var(--ps) / -2); padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; color: #fff; transform: translate(var(--px, 0px), var(--py, 0px)); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
-.reel-play-icon, .reel-play-ring { position: absolute; inset: 0; border-radius: 50%; }
-.reel-play-icon { display: grid; place-items: center; background: var(--orange); transition: scale .3s cubic-bezier(.2,.8,.2,1); }
-.reel-play-icon .i { margin-left: 4px; }
-.reel-play-ring { border: 1.5px solid rgba(255,255,255,.55); animation: reel-ring 2.2s cubic-bezier(.2,.8,.2,1) infinite; }
-@keyframes reel-ring { from { scale: 1; opacity: .8; } to { scale: 1.6; opacity: 0; } }
-.reel-play-text { position: absolute; left: 50%; top: calc(100% + 14px); translate: -50% 0; white-space: nowrap; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 999px; background: rgba(10,11,13,.78); border: 1px solid rgba(255,255,255,.1); }
-.reel-play:hover .reel-play-icon, .reel-play:focus-visible .reel-play-icon { scale: 1.08; }
-.reel-play:focus-visible { outline: none; } .reel-play:focus-visible .reel-play-icon { box-shadow: 0 0 0 3px #fff; }
+.reel-play { position: absolute; left: 50%; bottom: calc(clamp(26px, 3vw, 40px) - 5px); translate: -50% 0; display: inline-flex; align-items: center; gap: 12px; height: 52px; padding: 6px 20px 6px 6px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(10,11,13,.82); color: #f4f3f0; cursor: pointer; font: inherit; font-size: 14.5px; font-weight: 500; transition: background-color .2s, scale .25s cubic-bezier(.2,.8,.2,1); }
+.reel-play-icon { position: relative; width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--orange); color: #fff; }
+.reel-play-icon .i { margin-left: 2px; }
+.reel-play-ring { position: absolute; left: 6px; top: 6px; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid rgba(249,68,6,.8); pointer-events: none; animation: reel-ring 2.2s cubic-bezier(.2,.8,.2,1) infinite; }
+@keyframes reel-ring { from { scale: 1; opacity: .9; } to { scale: 1.7; opacity: 0; } }
+.reel-play-text { white-space: nowrap; }
+.reel-play:hover { background: rgba(30,31,35,.94); scale: 1.04; }
+.reel-play:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .reel-mute { position: absolute; right: clamp(14px, 2vw, 26px); bottom: clamp(26px, 3vw, 40px); width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(10,11,13,.78); color: #f4f3f0; border: 1px solid rgba(255,255,255,.14); cursor: pointer; transition: background-color .2s, scale .25s cubic-bezier(.2,.8,.2,1); }
 .reel-mute:hover { background: rgba(30,31,35,.92); scale: 1.06; }
 .reel-mute .on, .reel-btn .on { display: none; } .reel-mute[aria-pressed="true"] .on, .reel-btn[aria-pressed="true"] .on { display: block; } .reel-mute[aria-pressed="true"] .off, .reel-btn[aria-pressed="true"] .off { display: none; }
@@ -1101,7 +1100,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .reel-seek::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
 .reel-modal-label { font-size: 13px; color: rgba(244,243,240,.7); white-space: nowrap; max-width: 26ch; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 639px) {
-  .reel-play { --ps: 58px; } .reel-play-text { display: none; }
+  .reel-play { left: auto; right: 12px; top: 12px; bottom: auto; translate: none; height: 48px; padding: 4px; } .reel-play-text { display: none; } .reel-play-ring { left: 4px; top: 4px; }
   .reel-chapter { bottom: 20px; left: 12px; }
   .reel-mute { right: 12px; }
   .reel-bar { left: 12px; right: 12px; bottom: 9px; }

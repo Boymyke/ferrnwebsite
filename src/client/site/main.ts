@@ -418,23 +418,6 @@ function reel() {
   };
   addEventListener('scroll', onScroll, { passive: true });
 
-  // the play button drifts toward the pointer on desktop
-  const play = $<HTMLElement>('.reel-play', root)!;
-  if (!reduced && matchMedia('(hover: hover)').matches) {
-    let pr = 0, px = 0, py = 0;
-    frame.addEventListener('pointermove', (e) => {
-      px = e.clientX; py = e.clientY;
-      if (pr) return;
-      pr = requestAnimationFrame(() => {
-        pr = 0;
-        const r = frame.getBoundingClientRect();
-        play.style.setProperty('--px', `${((px - r.left) / r.width - 0.5) * r.width * 0.18}px`);
-        play.style.setProperty('--py', `${((py - r.top) / r.height - 0.5) * r.height * 0.18}px`);
-      });
-    }, { passive: true });
-    frame.addEventListener('pointerleave', () => { play.style.setProperty('--px', '0px'); play.style.setProperty('--py', '0px'); });
-  }
-
   // inline sound toggle
   mute.addEventListener('click', () => {
     load(v);

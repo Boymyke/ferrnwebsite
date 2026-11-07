@@ -1,0 +1,52 @@
+[
+ {
+  "id": "hook",
+  "vo": "Your customers are already looking for you online.",
+  "pause": 0.35
+ },
+ {
+  "id": "find",
+  "vo": "The question is, what do they find when they get there?",
+  "pause": 0.6
+ },
+ {
+  "id": "web",
+  "vo": "At Fern, we design and build websites that turn visitors into enquiries.",
+  "pause": 0.45
+ },
+ {
+  "id": "book",
+  "vo": "Booking systems that fill your diary, even while you sleep.",
+  "pause": 0.45
+ },
+ {
+  "id": "portal",
+  "vo": "Customer portals that quote, track and update people on their own.",
+  "pause": 0.45
+ },
+ {
+  "id": "ai",
+  "vo": "AI assistants that answer questions at two in the morning.",
+  "pause": 0.45
+ },
+ {
+  "id": "auto",
+  "vo": "And WhatsApp automation that follows up, so no lead goes cold.",
+  "pause": 0.45
+ },
+ {
+  "id": "studio",
+  "vo": "Then you run all of it from one place: your own Fern Studio.",
+  "pause": 0.55
+ },
+ {
+  "id": "team",
+  "vo": "One accountable team, from the first idea, to launch, to growth.",
+  "pause": 0.6
+ },
+ {
+  "id": "end",
+  "vo": "Fern. Websites that grow your business. Start your project today.",
+  "pause": 1.6
+ }
+]
