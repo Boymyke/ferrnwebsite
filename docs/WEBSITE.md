@@ -66,6 +66,7 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
 ## About bento v3 (6 Nov, 4.13.0; 4.13.1 on 7 Nov)
+- 4.13.5: card textures removed (plain panels). Hover is subtler: `--hov` is 2.5% ink into the panel, the pointer light is 3% and the lift is 2px.
 - 4.13.4: desktop About grid is 21 columns: 50+ 1-6, 10+ 6-11, 99% 11-16, offers 16-22 (both rows), team 1-7, photo 7-16. The top row starts at the left edge with the same 16px gaps.
 - 4.13.3: offers illustrations rebuilt as solid interface scenes in the Ferrn theme (solid dark/white panels, solid orange hero element, white icon tiles, real labels), and every slide glows orange. Green title arrows and the Meet the team button removed. The three top number cards are now equal width so 99% isn't cramped, and number tracking is -.035em.
 - 4.13.2: 50+ has a fanned stack of project cards (fans left on hover), 10+ icons each have their own tint and pop in one by one, 99% is a thin green ring that draws and then ticks, and all four numbers count up on reveal through the shared `[data-count]` helper (`Num` in home.tsx).

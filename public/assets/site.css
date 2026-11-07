@@ -892,26 +892,15 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .about-bento .room-head { margin-bottom: clamp(28px, 4vw, 48px); }
 .ab-stage { position: relative; }
 .ab-grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
-.ab-tile { --mx: 50%; --my: 0%; --hov: color-mix(in srgb, var(--panel) 94%, var(--ink)); position: relative; border-radius: var(--r); border: var(--bw) solid var(--line); background: var(--panel); color: var(--ink); padding: 26px; overflow: hidden; display: flex; flex-direction: column; gap: 18px; min-height: 300px; isolation: isolate; text-decoration: none;
+.ab-tile { --mx: 50%; --my: 0%; --hov: color-mix(in srgb, var(--panel) 97.5%, var(--ink)); position: relative; border-radius: var(--r); border: var(--bw) solid var(--line); background: var(--panel); color: var(--ink); padding: 26px; overflow: hidden; display: flex; flex-direction: column; gap: 18px; min-height: 300px; isolation: isolate; text-decoration: none;
   transition: background-color .22s ease, border-color .22s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
 .ab-tile::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .22s;
-  background: radial-gradient(300px circle at var(--mx) var(--my), color-mix(in srgb, var(--ink) 6%, transparent), transparent 70%); }
-.ab-tile[data-tilt]:hover { background-color: var(--hov); border-color: var(--line-2); transform: translateY(-3px); }
+  background: radial-gradient(300px circle at var(--mx) var(--my), color-mix(in srgb, var(--ink) 3%, transparent), transparent 70%); }
+.ab-tile[data-tilt]:hover { background-color: var(--hov); transform: translateY(-2px); }
 .ab-tile[data-tilt]:hover::before { opacity: 1; }
 .ab-cap { margin: 0; font-size: clamp(16px, 1.3vw, 19px); line-height: 1.4; color: var(--muted); letter-spacing: -.01em; max-width: 36ch; }
 .ab-cap strong { color: var(--ink); font-weight: 600; }
 
-/* quiet textures, one per card (masks coloured with the ink, so they follow the theme) */
-.ab-tex-pixels::after, .ab-tex-dots::after, .ab-tex-rings::after, .ab-tex-lines::after { content: ''; position: absolute; inset: 0; z-index: -2; pointer-events: none; background: var(--ink); opacity: .07; transition: opacity .3s; }
-.ab-tex-pixels::after { background: color-mix(in srgb, var(--orange) 60%, var(--ink)); opacity: .32;
-  -webkit-mask-image: url(/assets/home/pixels.svg), linear-gradient(200deg, #000 10%, rgba(0,0,0,.5) 100%); mask-image: url(/assets/home/pixels.svg), linear-gradient(200deg, #000 10%, rgba(0,0,0,.5) 100%);
-  -webkit-mask-size: 144px 144px, 100% 100%; mask-size: 144px 144px, 100% 100%; -webkit-mask-composite: source-in; mask-composite: intersect; }
-.ab-tex-dots::after { opacity: .14; -webkit-mask-image: radial-gradient(circle, #000 1px, transparent 1.4px), linear-gradient(160deg, #000, transparent 75%); mask-image: radial-gradient(circle, #000 1px, transparent 1.4px), linear-gradient(160deg, #000, transparent 75%);
-  -webkit-mask-size: 14px 14px, 100% 100%; mask-size: 14px 14px, 100% 100%; -webkit-mask-composite: source-in; mask-composite: intersect; }
-.ab-tex-rings::after { opacity: .1; -webkit-mask-image: repeating-radial-gradient(circle at 100% 0%, #000 0 1px, transparent 1px 16px); mask-image: repeating-radial-gradient(circle at 100% 0%, #000 0 1px, transparent 1px 16px); }
-.ab-tex-lines::after { opacity: .07; -webkit-mask-image: repeating-linear-gradient(135deg, #000 0 1px, transparent 1px 12px), linear-gradient(90deg, transparent, #000); mask-image: repeating-linear-gradient(135deg, #000 0 1px, transparent 1px 12px), linear-gradient(90deg, transparent, #000); -webkit-mask-composite: source-in; mask-composite: intersect; }
-.ab-tile[data-tilt]:hover::after { opacity: calc(var(--tex-hover, 1) * .2); }
-.ab-tex-pixels:hover::after { opacity: .45 !important; }
 
 /* numbers */
 .ab-num-tile { justify-content: flex-end; gap: 6px; }

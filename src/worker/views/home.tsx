@@ -223,19 +223,19 @@ export function HomePage(p: {
           return (
             <div class="wrap ab-stage" data-ab>
               <div class="ab-grid">
-                <article class="ab-tile ab-num-tile ab-s1 ab-tex-pixels reveal" data-tilt>
+                <article class="ab-tile ab-num-tile ab-s1 reveal" data-tilt>
                   <div class="ab-stack" aria-hidden="true">
                     {[0, 1, 2].map((k) => <span style={`--k:${k}`}><i></i><b></b><b></b></span>)}
                   </div>
                   <Num v={STATS[0][0]} /><span class="ab-num-cap">{STATS[0][1]}</span>
                 </article>
-                <article class="ab-tile ab-num-tile ab-s2 ab-tex-dots reveal" style="--d:.05s" data-tilt>
+                <article class="ab-tile ab-num-tile ab-s2 reveal" style="--d:.05s" data-tilt>
                   <div class="ab-icons" aria-hidden="true">
                     {([['building', 24], ['package', 200], ['heart', 350], ['book-open', 265], ['wallet', 40], ['briefcase', 160], ['globe', 215], ['sparkles', 290]] as const).map(([n, h], k) => <span style={`--k:${k};--h:${h}`}>{icon(n, { size: 18 })}</span>)}
                   </div>
                   <Num v={STATS[1][0]} /><span class="ab-num-cap">{STATS[1][1]}</span>
                 </article>
-                <article class="ab-tile ab-num-tile ab-s4 ab-tex-rings reveal" style="--d:.1s" data-tilt>
+                <article class="ab-tile ab-num-tile ab-s4 reveal" style="--d:.1s" data-tilt>
                   <svg class="ab-ring" viewBox="0 0 120 120" aria-hidden="true">
                     <defs><linearGradient id="ab-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22c55e" /><stop offset="1" stop-color="#14b8a6" /></linearGradient></defs>
                     <circle cx="60" cy="60" r="50" class="ab-ring-bg" />
@@ -261,7 +261,7 @@ export function HomePage(p: {
                     {OFFERS.map((o, k) => <button type="button" role="tab" aria-selected={k === 0 ? 'true' : 'false'} aria-label={o[0]} class={k === 0 ? 'on' : ''}><i></i></button>)}
                   </div>
                 </article>
-                <article class="ab-tile ab-team ab-tex-lines reveal">
+                <article class="ab-tile ab-team reveal">
                   <Cap k={4} />
                   <div class="ab-people">
                     <ul class="ab-faces">
