@@ -107,11 +107,27 @@ app.get('/media/*', async (c) => {
   // private/ (signatures, receipts) and demos/ (served sandboxed via /demos/u/) are never served raw
   let plain = key; try { plain = decodeURIComponent(key); } catch { /* keep raw */ }
   if (/^\/*(private|demos)(\/|$)/i.test(plain)) return c.notFound();
+  // Byte ranges (206) for audio and video: Safari will not play media without them.
+  const m = /^bytes=(\d*)-(\d*)$/.exec(c.req.header('range') || '');
+  if (m && (m[1] || m[2])) {
+    const head = await c.env.MEDIA.head(key);
+    if (!head) return c.notFound();
+    const size = head.size;
+    let start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));
+    const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+    const h = new Headers(); head.writeHttpMetadata(h); h.set('etag', head.httpEtag); h.set('accept-ranges', 'bytes'); h.set('cache-control', 'public, max-age=31536000, immutable');
+    if (start >= size || start > end) { h.set('content-range', `bytes */${size}`); return new Response(null, { status: 416, headers: h }); }
+    const part = await c.env.MEDIA.get(key, { range: { offset: start, length: end - start + 1 } });
+    if (!part) return c.notFound();
+    h.set('content-range', `bytes ${start}-${end}/${size}`); h.set('content-length', String(end - start + 1));
+    return new Response(part.body, { status: 206, headers: h });
+  }
   const obj = await c.env.MEDIA.get(key);
   if (!obj) return c.notFound();
   const h = new Headers();
   obj.writeHttpMetadata(h);
   h.set('etag', obj.httpEtag);
+  h.set('accept-ranges', 'bytes');
   h.set('cache-control', 'public, max-age=31536000, immutable');
   return new Response(obj.body, { headers: h });
 });

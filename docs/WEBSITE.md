@@ -67,6 +67,7 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 
 ## Voice notes live (8 Nov, 4.18.1)
 - Real recordings attached: Vanessa (tm1), Chisom (tm2), John Sax (tm3) from Design/ferrnwebsite/Hero Section Video/Testimonials, and Nkem (tm5) from WhatsApp. They were converted to AAC m4a (opus doesn't play in Safari), stored in R2 `voices/2026-11/`, and transcribed with Whisper. Transcripts fix only mis-heard words (Ferrn, PWAN, fonts) and punctuation. Ifechukwu (tm4) still has no recording: send them a recording link from Studio.
+- `/media/*` answers byte ranges (206 and 416) so Safari plays the voice notes and any uploaded video.
 - Bob lifts above the cookie banner while it shows (`--consent-h`, `.consent-open`). The offer scene side cards are 170px and tuck 20px behind the main card at every width.
 
 ## Real client voice notes (8 Nov, 4.18.0)
