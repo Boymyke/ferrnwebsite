@@ -1114,7 +1114,6 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 /* ── services: six boxes with geometric brand icons (after the film) ── */
 .svc-room { padding: clamp(24px, 4vw, 48px) 0 clamp(72px, 9vw, 140px); background: var(--bg); }
 .svc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: clamp(28px, 4vw, 56px); }
-.svc-head .link { flex: none; margin-bottom: .6em; }
 .svc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .svc-box { position: relative; display: flex; flex-direction: column; min-height: clamp(320px, 28vw, 400px); padding: clamp(26px, 2.6vw, 40px); border-radius: var(--r); border: var(--bw) solid var(--line); background: var(--panel); color: var(--ink); text-decoration: none; overflow: hidden; isolation: isolate;
   transition: background-color .25s, border-color .25s, transform .35s cubic-bezier(.2,.8,.2,1); }
@@ -1131,7 +1130,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .svc-box:hover .svc-go, .svc-box:focus-visible .svc-go { opacity: 1; transform: none; background: var(--orange); border-color: var(--orange); color: #fff; }
 /* icon motion on hover: the layers fan, the grid lights, the S shifts */
 .svc-ic .l0, .svc-ic .l1, .svc-ic .l2 { transition: transform .45s cubic-bezier(.2,.8,.2,1); }
-.svc-box:hover .svc-ic .l0 { transform: translate(4px, -4px); } .svc-box:hover .svc-ic .l1 { transform: translate(2px, -2px); }
+.svc-box:hover .svc-ic .l0 { transform: translate(4px, -4px); } .svc-box:hover .svc-ic .l1 { transform: translate(2px, -3px); } .svc-box:hover .svc-ic .l2 { transform: translateY(-1px); }
 @media (max-width: 1023px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 639px) {
   .svc-head { flex-direction: column; align-items: flex-start; gap: 10px; }

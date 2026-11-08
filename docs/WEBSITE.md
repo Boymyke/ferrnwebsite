@@ -65,9 +65,13 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Film with client work, new icons (8 Nov, 4.15.1)
+- The film is now 54.5s. A "Built by Ferrn" chapter after Studio has the narrator name Synergix Africa, MPI Africa, Gromzia and Insightblitz while their live sites scroll in a browser frame (the full-page captures from R2 `reel/<slug>.webp`, listed in `REEL` in content/site.ts), plus the Relay freight app. The montage wall leads with client work.
+- Services icons redrawn for websites (browser window), WhatsApp automation (chat bubbles with a bolt) and payments (cards with a paid tick). The "Services" link above the boxes is removed.
+
 ## Services boxes (8 Nov, 4.15.0)
 - Right after the film: `#services` (`.svc-room`). Headline `home.svc.title`, plus six boxes from `home.svc.items` (`title|text` per line). Each box links to /services and shows an arrow on hover.
-- Icons are geometric shapes in Ferrn orange gradients (`src/worker/views/service-icons.ts`), in item order: stacked pages, dashboard grid, node network, looping S, tile with tick, forward diamonds.
+- Icons are geometric shapes in Ferrn orange gradients (`src/worker/views/service-icons.ts`), in item order: browser window, dashboard grid, node network, chat bubbles with a bolt, payment cards with a tick, forward diamonds.
 - The old capability bento with clips (`home.bento.*`) is no longer on the home page; the film carries that footage now.
 
 ## Ferrn film layout (8 Nov, 4.14.4)

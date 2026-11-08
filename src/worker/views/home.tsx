@@ -334,7 +334,6 @@ export function HomePage(p: {
             <div class="wrap">
               <div class="svc-head">
                 <Lines text={ctx.get('home.svc.title')} tag="h2" class="h-display" id="svc-title" />
-                <a class="link reveal" href={href(lang, '/services')}>{t(lang, 'nav.services')} {icon('arrow-right', { size: 15 })}</a>
               </div>
               <div class="svc-grid">
                 {items.map(([title, text], i) => (

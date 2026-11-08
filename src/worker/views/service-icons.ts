@@ -11,12 +11,14 @@ const g = (k: number) => `<defs>
 const svg = (k: number, body: string) => `<svg class="svc-ic" viewBox="0 0 80 80" width="80" height="80" aria-hidden="true">${g(k)}${body}</svg>`;
 
 export const SERVICE_ICONS: string[] = [
-  // Websites: stacked pages
+  // Websites: a browser window with a hero block and columns
   svg(0, `
-    <path class="l3" d="M14 58h50l-6 10H8z" fill="url(#sv0c)"/>
-    <path class="l2" d="M14 42h50l-6 10H8z" fill="url(#sv0b)"/>
-    <path class="l1" d="M14 26h50l-6 10H8z" fill="url(#sv0a)"/>
-    <path class="l0" d="M20 10h50l-6 10H14z" fill="url(#sv0a)" opacity=".85"/>`),
+    <rect x="6" y="10" width="68" height="60" rx="9" fill="url(#sv0c)"/>
+    <path d="M15 10h50a9 9 0 0 1 9 9v3H6v-3a9 9 0 0 1 9-9z" fill="url(#sv0a)"/>
+    <circle cx="15" cy="16" r="2.4" fill="#fff" opacity=".9"/><circle cx="22" cy="16" r="2.4" fill="#fff" opacity=".6"/><circle cx="29" cy="16" r="2.4" fill="#fff" opacity=".4"/>
+    <rect class="l1" x="13" y="29" width="54" height="17" rx="4" fill="url(#sv0a)"/>
+    <rect class="l2" x="13" y="51" width="25" height="12" rx="3.5" fill="url(#sv0b)"/>
+    <rect class="l2" x="42" y="51" width="25" height="12" rx="3.5" fill="url(#sv0b)" opacity=".75"/>`),
   // Web apps: a dashboard grid that fades out
   svg(1, `
     <rect x="8" y="8" width="18" height="18" rx="3" fill="url(#sv1a)"/><rect x="31" y="8" width="18" height="18" rx="3" fill="url(#sv1a)"/><rect x="54" y="8" width="18" height="18" rx="3" fill="url(#sv1a)"/>
@@ -28,15 +30,20 @@ export const SERVICE_ICONS: string[] = [
     <circle cx="16" cy="16" r="8" fill="url(#sv2a)"/><circle cx="40" cy="16" r="8" fill="url(#sv2b)"/><circle cx="64" cy="16" r="8" fill="url(#sv2c)"/>
     <circle cx="16" cy="40" r="8" fill="url(#sv2c)"/><circle cx="40" cy="40" r="9" fill="url(#sv2a)"/><circle cx="64" cy="40" r="8" fill="url(#sv2c)"/>
     <circle cx="16" cy="64" r="8" fill="url(#sv2b)"/><circle cx="40" cy="64" r="8" fill="url(#sv2a)"/><circle cx="64" cy="64" r="8" fill="url(#sv2b)"/>`),
-  // Automation: a looping S, things that run on their own
+  // WhatsApp automation: two chat bubbles, the front one sends itself
   svg(3, `
-    <path d="M60 18H30a12 12 0 0 0 0 24h20a12 12 0 0 1 0 24H18" stroke="url(#sv3c)" stroke-width="12" stroke-linecap="round" fill="none" transform="translate(2 2)"/>
-    <path d="M60 18H30a12 12 0 0 0 0 24h20a12 12 0 0 1 0 24H18" stroke="url(#sv3a)" stroke-width="12" stroke-linecap="round" fill="none"/>`),
-  // Payments: a tile with a coin and a tick
+    <path d="M30 8h36a8 8 0 0 1 8 8v20a8 8 0 0 1-8 8h-4v9l-10-9H30a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z" fill="url(#sv3c)"/>
+    <path class="l1" d="M14 26h36a8 8 0 0 1 8 8v22a8 8 0 0 1-8 8H28l-12 10v-10h-2a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="url(#sv3a)"/>
+    <path d="M35 33 24 48h9l-3 11 12-16h-9z" fill="#fff"/>`),
+  // Online payments: two cards, the front one with chip and stripe, and a paid tick
   svg(4, `
-    <rect x="6" y="6" width="68" height="68" rx="14" fill="url(#sv4c)"/>
-    <circle cx="40" cy="40" r="22" fill="url(#sv4a)"/>
-    <path d="M30 40.5l7 7 13-14" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
+    <rect x="16" y="8" width="58" height="40" rx="8" fill="url(#sv4c)" transform="rotate(-8 45 28)"/>
+    <rect class="l1" x="6" y="24" width="62" height="42" rx="8" fill="url(#sv4a)"/>
+    <rect x="6" y="33" width="62" height="7" fill="#7a2103" opacity=".55"/>
+    <rect x="14" y="46" width="12" height="9" rx="2" fill="#fff" opacity=".85"/>
+    <rect x="31" y="49" width="20" height="3.5" rx="1.75" fill="#fff" opacity=".6"/>
+    <circle cx="62" cy="62" r="13" fill="#fff"/><circle cx="62" cy="62" r="10.5" fill="url(#sv4b)"/>
+    <path d="M56.5 62.3l3.6 3.6 7-7.2" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
   // SEO and growth: diamonds moving forward
   svg(5, `
     <path d="M44 22 62 40 44 58 26 40z" fill="url(#sv5c)" transform="translate(12 0)"/>

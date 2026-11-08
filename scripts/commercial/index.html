@@ -47,7 +47,8 @@
   /* montage */
   .wall { position: absolute; left: 50%; top: 300px; width: 2400px; margin-left: -1200px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; transform-origin: 50% 0; will-change: transform; }
   .tile { border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); aspect-ratio: 16 / 10; background: #15161a; will-change: transform, opacity; }
-  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; display: block; }
+  #work-view img { opacity: 0; }
   /* end card */
   .logo { position: absolute; left: 50%; top: 300px; width: 520px; margin-left: -260px; will-change: transform, opacity; }
   .tag { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 76px; font-weight: 600; letter-spacing: -.04em; line-height: 1.05; }
@@ -81,6 +82,15 @@
 
   <!-- footage scenes are built by script -->
   <div id="footage"></div>
+
+  <!-- built by Ferrn: real client sites -->
+  <section class="scene" id="s-work">
+    <div class="kicker">07 · Built by Ferrn</div>
+    <div class="head" id="work-head"></div>
+    <div class="frame" id="work-frame" style="left:210px;top:300px"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="url" id="work-url"></span></div>
+      <div class="view" id="work-view"></div></div>
+    <div class="chip" id="work-chip" style="left:110px;top:770px"><span class="ic" id="work-ic"></span><span><span id="work-name"></span><small id="work-kind"></small></span></div>
+  </section>
 
   <!-- montage -->
   <section class="scene" id="s-team">
@@ -161,13 +171,26 @@ for (const [id, kick, head, media, url, align, chips] of SCENES) {
 
 const hookSpans = words(document.getElementById('hook-text'), 'Your customers are already looking for you *online.');
 const findSpans = words(document.getElementById('find-head'), 'What do they *find?');
+const WORK = [
+  { img: 'synergix', url: 'synergixafrica.com', name: 'Synergix Africa', kind: 'Programmes for entrepreneurs' },
+  { img: 'mpi', url: 'mpiafrica.com', name: 'MPI Africa', kind: 'Infrastructure company website' },
+  { img: 'gromzia', url: 'gromzialtd.com', name: 'Gromzia', kind: 'Clearing and forwarding' },
+  { img: 'insightblitz', url: 'insightblitz.io', name: 'Insightblitz', kind: 'Web3 growth agency' },
+  { img: 'relay', url: 'relay freight app', name: 'Relay', kind: 'Freight operations app' },
+];
+const workView = document.getElementById('work-view');
+workView.innerHTML = WORK.map((w) => `<img src="assets/clients/${w.img}.webp" alt="">`).join('');
+const workImgs = [...workView.querySelectorAll('img')];
+document.getElementById('work-ic').innerHTML = ICON.check;
+const workSpans = words(document.getElementById('work-head'), 'Live and working for *real businesses.');
+let workCur = -1;
 const teamSpans = words(document.getElementById('team-head'), 'One team. Idea to launch *to growth.');
 const endSpans = words(document.getElementById('end-tag'), 'Websites that grow *your business.');
 const wall = document.getElementById('wall');
-const WALL = ['shot-cedar-clinic', 'shot-harbourline-homes', 'shot-brightpath-academy', 'shot-northbridge-freight', 'shot-admissions', 'shot-clinic-desk', 'shot-track', 'shot-automation'];
+const WALL = ['clients/synergix', 'clients/mpi', 'shot-cedar-clinic', 'clients/gromzia', 'clients/insightblitz', 'shot-harbourline-homes', 'clients/relay', 'shot-northbridge-freight'];
 wall.innerHTML = WALL.map((n) => `<div class="tile"><img src="assets/${n}.webp" alt=""></div>`).join('');
 const tiles = [...wall.querySelectorAll('.tile')];
-const ORDER = ['hook', 'find', ...SCENES.map((s) => s[0]), 'team', 'end'];
+const ORDER = ['hook', 'find', ...SCENES.map((s) => s[0]), 'work', 'team', 'end'];
 
 /* scene windows: each starts a little before its line and runs until the next one starts */
 const W = {};
@@ -226,6 +249,25 @@ window.render = async (t) => {
     }
     s.chips.forEach((c) => { const p = back((lt - c.at) / .55); c.el.style.opacity = clamp((lt - c.at) / .25); c.el.style.transform = `translateY(${(1 - p) * 30 - drift * .6}px) scale(${.85 + .15 * p})`; });
   }
+
+  // built by Ferrn: client sites scroll in turn
+  { const v = vis('work', t), lt = t - W.work.st; const el = document.getElementById('s-work'); el.style.opacity = v;
+    if (v > 0) {
+      revealWords(workSpans, lt - .05, .065);
+      const fr = document.getElementById('work-frame'), e = back((lt - .1) / .9);
+      fr.style.transform = `perspective(1800px) translateY(${(1 - e) * 140 - lt * 4}px) rotateX(${(1 - e) * 14}deg) scale(${.9 + .1 * e})`;
+      fr.style.opacity = clamp((lt - .05) / .35);
+      const span = (W.work.en - W.work.st) / WORK.length, k = Math.min(WORK.length - 1, Math.floor(lt / span)), sl = lt - k * span;
+      workImgs.forEach((im, i) => {
+        const local = lt - i * span, fadeIn = clamp(local / .3), fadeOut = i < WORK.length - 1 ? clamp((span + .3 - local) / .3) : 1;
+        im.style.opacity = i === 0 ? fadeOut * (local >= -0.01 ? 1 : 0) : Math.min(fadeIn, fadeOut);
+        const h = im.naturalHeight * (1180 / im.naturalWidth), max = Math.max(0, Math.min(h - 737, 1500));
+        im.style.transform = `translateY(${-easeInOut(clamp((local - .15) / (span + .1))) * max}px)`;
+      });
+      if (k !== workCur) { workCur = k; document.getElementById('work-url').textContent = WORK[k].url; document.getElementById('work-name').textContent = WORK[k].name; document.getElementById('work-kind').textContent = WORK[k].kind; }
+      const cp = back((sl - .05) / .45), chip = document.getElementById('work-chip');
+      chip.style.opacity = clamp((lt - .5) / .25) * clamp((sl + .02) / .15); chip.style.transform = `translateY(${(1 - cp) * 24}px) scale(${.9 + .1 * cp})`;
+    } }
 
   // team montage
   { const v = vis('team', t), lt = t - W.team.st; const el = document.getElementById('s-team'); el.style.opacity = v;
