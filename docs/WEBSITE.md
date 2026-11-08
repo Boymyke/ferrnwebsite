@@ -65,6 +65,12 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Ferrn film layout (8 Nov, 4.14.4)
+- The film is full-bleed (no wrap): it grows from 88% with 8px corners to the full width with square edges as it scrolls in. The chapter chip, pill and progress bar are gone.
+- Desktop: hovering turns the cursor into a round orange "Watch video" button that trails the pointer (`[data-reel-cursor]`, `.hovering`). Clicking anywhere (`.reel-hit`) opens the popup. Touch screens show the same button fixed in the middle.
+- Inline mute sits bottom-left (the assistant ghost owns bottom-right). The popup close button is top-right of the screen (`.reel-close`).
+- About accents are brand only: the project stack, industry icons, completion ring and team initials use orange tints. Team captions are driven by `.on` from `teamFaces()` (one face at a time; on touch, tap to show and tap again to clear).
+
 ## Ferrn film (8 Nov, 4.14.1)
 - The #reel video is now a 44s commercial with a narrator explaining what Ferrn does. It has kinetic headlines over the product footage in browser frames, floating result chips, a montage wall and an end card ("Start a project", ferrnagency.com).
 - The voiceover is Kokoro (open model, af_heart voice, US English); it is not a Nigerian voice. Music is the generated bed, side-chain ducked under the voice (voice about -16 LUFS, music about -30 LUFS, mix -15.6 LUFS).

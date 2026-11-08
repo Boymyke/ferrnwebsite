@@ -238,7 +238,7 @@ export function HomePage(p: {
                 </article>
                 <article class="ab-tile ab-num-tile ab-s4 reveal" style="--d:.1s" data-tilt>
                   <svg class="ab-ring" viewBox="0 0 120 120" aria-hidden="true">
-                    <defs><linearGradient id="ab-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22c55e" /><stop offset="1" stop-color="#14b8a6" /></linearGradient></defs>
+                    <defs><linearGradient id="ab-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F94406" /><stop offset="1" stop-color="#ff8a4c" /></linearGradient></defs>
                     <circle cx="60" cy="60" r="50" class="ab-ring-bg" />
                     <circle cx="60" cy="60" r="50" class="ab-ring-fg" pathLength="100" />
                     <path d="M44 61l11 11 22-24" class="ab-ring-tick" />
@@ -299,25 +299,18 @@ export function HomePage(p: {
         const first = chapters[0]?.label || '';
         return (
           <section class="reel-room" id="reel" aria-label="Ferrn film: what we do">
-            <div class="wrap">
-              <div class="reel" data-reel data-chapters={JSON.stringify(chapters)}>
-                <div class="reel-frame">
-                  <video class="reel-video" data-reel-video data-reel-src={src} poster={poster} muted loop playsinline preload="none" aria-hidden="true"></video>
-                  <div class="reel-shade" aria-hidden="true"></div>
-                  <div class="reel-chapter" aria-live="polite"><span class="reel-dot" aria-hidden="true"></span><span class="reel-label" data-reel-label>{first}</span><span class="reel-count" data-reel-count>{chapters.length ? `01 / ${String(chapters.length).padStart(2, '0')}` : ''}</span></div>
-                  <button type="button" class="reel-play" data-reel-open aria-label="Watch the Ferrn film with sound">
-                    <span class="reel-play-ring" aria-hidden="true"></span>
-                    <span class="reel-play-icon" aria-hidden="true">{icon('play', { size: 18 })}</span>
-                    <span class="reel-play-text">Watch with sound</span>
-                  </button>
-                  <button type="button" class="reel-mute" data-reel-mute aria-pressed="false" aria-label="Turn sound on">
-                    <span class="on" aria-hidden="true">{icon('volume-2', { size: 18 })}</span><span class="off" aria-hidden="true">{icon('volume-x', { size: 18 })}</span>
-                  </button>
-                  <div class="reel-bar" aria-hidden="true">{chapters.map(() => <i><b></b></i>)}</div>
-                </div>
+            <div class="reel" data-reel data-chapters={JSON.stringify(chapters)}>
+              <div class="reel-frame">
+                <video class="reel-video" data-reel-video data-reel-src={src} poster={poster} muted loop playsinline preload="none" aria-hidden="true"></video>
+                <button type="button" class="reel-hit" data-reel-open aria-label="Watch the Ferrn film with sound"></button>
+                <span class="reel-cursor" data-reel-cursor aria-hidden="true"><span class="reel-cursor-in">{icon('play', { size: 22 })}<b>Watch video</b></span></span>
+                <button type="button" class="reel-mute" data-reel-mute aria-pressed="false" aria-label="Turn sound on">
+                  <span class="on" aria-hidden="true">{icon('volume-2', { size: 18 })}</span><span class="off" aria-hidden="true">{icon('volume-x', { size: 18 })}</span>
+                </button>
               </div>
             </div>
-            <dialog class="reel-modal" data-reel-modal aria-label="Showreel">
+            <dialog class="reel-modal" data-reel-modal aria-label="Ferrn film">
+              <button type="button" class="reel-close" data-reel-close aria-label="Close">{icon('x', { size: 22 })}</button>
               <div class="reel-modal-box">
                 <video class="reel-modal-video" data-reel-full data-reel-src={src} poster={poster} playsinline preload="none"></video>
                 <div class="reel-modal-bar">
@@ -326,7 +319,6 @@ export function HomePage(p: {
                   <input class="reel-seek" data-reel-seek type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" />
                   <span class="reel-modal-label" data-reel-mlabel>{first}</span>
                   <button type="button" class="reel-btn" data-reel-msound aria-label="Mute"><span class="on">{icon('volume-2', { size: 18 })}</span><span class="off">{icon('volume-x', { size: 18 })}</span></button>
-                  <button type="button" class="reel-btn" data-reel-close aria-label="Close">{icon('x', { size: 18 })}</button>
                 </div>
               </div>
             </dialog>

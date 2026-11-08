@@ -418,6 +418,24 @@ function reel() {
   };
   addEventListener('scroll', onScroll, { passive: true });
 
+  // desktop: the cursor becomes a round "Watch video" button that trails the pointer
+  const pointer = $<HTMLElement>('[data-reel-cursor]', root);
+  if (pointer && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    let tx = 0, ty = 0, x = 0, y = 0, loop = 0;
+    const step = () => {
+      x += (tx - x) * (reduced ? 1 : 0.22); y += (ty - y) * (reduced ? 1 : 0.22);
+      pointer.style.setProperty('--cx', `${x.toFixed(1)}px`); pointer.style.setProperty('--cy', `${y.toFixed(1)}px`);
+      loop = Math.abs(tx - x) + Math.abs(ty - y) > 0.3 ? requestAnimationFrame(step) : 0;
+    };
+    const at = (e: PointerEvent) => { const r = frame.getBoundingClientRect(), k = r.width / frame.offsetWidth || 1; tx = (e.clientX - r.left) / k; ty = (e.clientY - r.top) / k; };
+    const hit = $<HTMLElement>('.reel-hit', root)!;
+    hit.addEventListener('pointerenter', (e) => { at(e); x = tx; y = ty; step(); frame.classList.add('hovering'); });
+    hit.addEventListener('pointermove', (e) => { at(e); if (!loop) loop = requestAnimationFrame(step); }, { passive: true });
+    hit.addEventListener('pointerleave', () => frame.classList.remove('hovering', 'pressing'));
+    hit.addEventListener('pointerdown', () => frame.classList.add('pressing'));
+    hit.addEventListener('pointerup', () => frame.classList.remove('pressing'));
+  }
+
   // inline sound toggle
   mute.addEventListener('click', () => {
     load(v);
@@ -481,10 +499,28 @@ function reel() {
   });
 }
 
+/* Team faces: exactly one name shows at a time. Hover on desktop, tap on phones (tap again or tap
+   elsewhere to clear), and keyboard focus. Touch leaves stale :hover/:focus behind, so CSS reads .on only. */
+function teamFaces() {
+  const list = $<HTMLElement>('.ab-faces');
+  if (!list) return;
+  const items = $$<HTMLElement>('li', list);
+  const set = (li: HTMLElement | null) => { items.forEach((x) => x.classList.toggle('on', x === li)); list.classList.toggle('has-on', !!li); };
+  items.forEach((li) => {
+    li.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') set(li); });
+    li.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') set(null); });
+    li.addEventListener('click', () => { if (matchMedia('(hover: none)').matches) set(li.classList.contains('on') ? null : li); });
+    li.addEventListener('keyup', (e) => { if (e.key === 'Tab') set(li); });
+    li.addEventListener('blur', () => { if (li.classList.contains('on') && !li.matches(':hover')) set(null); });
+  });
+  document.addEventListener('click', (e) => { if (!list.contains(e.target as Node)) set(null); });
+}
+
 function pageBits() {
   home(reduced);
   aboutTiles();
   offers();
+  teamFaces();
   reel();
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;
