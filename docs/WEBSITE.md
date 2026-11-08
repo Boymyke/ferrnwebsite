@@ -65,6 +65,10 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## SEO headlines and Branding service (8 Nov, 4.17.2)
+- Section headlines are short, search-friendly phrases with the `{, Name}` slot, two lines max at every width (checked with long names): Trusted by Nigerian businesses / Web designers in Lagos / Our web design services / Websites that win customers / Websites ready in days / Our web design portfolio / What our clients say / Start your website project.
+- The fifth service box is Branding (logos, colours, brand guides) with a brand-card icon, replacing Online payments.
+
 ## Concept sites, static headlines (8 Nov, 4.17.0)
 - Concept sites (built for one lead) are separate from marketplace demos. They share the `demos` table and the R2 `demos/<slug>/` store, but a row with a `lead_id` is a concept and is served at `/concept/<client>/`. Old `/preview/<slug>/` links 301 to `/concept/`. Studio has a Concepts page (Main > Concepts) for uploading with a lead picker, and an upload sets the lead's `preview_url`. The Demos page lists product demos only. The morning routine now writes `/concept/` links.
 - Section headlines (h2) have no animation and no rotating words: plain text, one size, at most two lines (max-width 22ch, 30px minimum), with only the `{, Name}` slot. Only the hero h1 animates.

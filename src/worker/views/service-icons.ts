@@ -35,15 +35,14 @@ export const SERVICE_ICONS: string[] = [
     <path d="M30 8h36a8 8 0 0 1 8 8v20a8 8 0 0 1-8 8h-4v9l-10-9H30a8 8 0 0 1-8-8V16a8 8 0 0 1 8-8z" fill="url(#sv3c)"/>
     <path class="l1" d="M14 26h36a8 8 0 0 1 8 8v22a8 8 0 0 1-8 8H28l-12 10v-10h-2a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="url(#sv3a)"/>
     <path d="M35 33 24 48h9l-3 11 12-16h-9z" fill="#fff"/>`),
-  // Online payments: two cards, the front one with chip and stripe, and a paid tick
+  // Branding: a fan of brand swatches with a logo mark on the front card
   svg(4, `
-    <rect x="16" y="8" width="58" height="40" rx="8" fill="url(#sv4c)" transform="rotate(-8 45 28)"/>
-    <rect class="l1" x="6" y="24" width="62" height="42" rx="8" fill="url(#sv4a)"/>
-    <rect x="6" y="33" width="62" height="7" fill="#fff" opacity=".3"/>
-    <rect x="14" y="46" width="12" height="9" rx="2" fill="#fff" opacity=".85"/>
-    <rect x="31" y="49" width="20" height="3.5" rx="1.75" fill="#fff" opacity=".6"/>
-    <circle cx="62" cy="62" r="13" fill="#fff"/><circle cx="62" cy="62" r="10.5" fill="url(#sv4b)"/>
-    <path d="M56.5 62.3l3.6 3.6 7-7.2" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`),
+    <rect x="30" y="8" width="34" height="60" rx="8" fill="url(#sv4c)" transform="rotate(18 47 64)"/>
+    <rect class="l2" x="24" y="8" width="34" height="60" rx="8" fill="url(#sv4b)" transform="rotate(6 41 64)"/>
+    <rect class="l1" x="14" y="10" width="34" height="60" rx="8" fill="url(#sv4a)" transform="rotate(-8 31 66)"/>
+    <g transform="rotate(-8 31 66)"><rect x="20" y="17" width="22" height="22" rx="5" fill="#fff" opacity=".92"/>
+    <path d="M25 22h12v12H25z" fill="none"/><path d="M26 23h10v4h-6v3h6v4H26z" fill="#F94406"/>
+    <rect x="20" y="46" width="22" height="4" rx="2" fill="#fff" opacity=".6"/><rect x="20" y="54" width="14" height="4" rx="2" fill="#fff" opacity=".4"/></g>`),
   // SEO and growth: diamonds moving forward
   svg(5, `
     <path d="M44 22 62 40 44 58 26 40z" fill="url(#sv5c)" transform="translate(12 0)"/>
