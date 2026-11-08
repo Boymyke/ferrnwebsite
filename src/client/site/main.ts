@@ -516,11 +516,57 @@ function teamFaces() {
   document.addEventListener('click', (e) => { if (!list.contains(e.target as Node)) set(null); });
 }
 
+/* Rotating orange words inside section headlines ([a/b/c] in the content). Same lift-and-rise move as
+   the hero word; each one only runs while its headline is on screen, and they start out of step. */
+function headFlicks() {
+  $$<HTMLElement>('[data-hf]').forEach((box, n) => {
+    const word = $<HTMLElement>('.hf-w', box), words = (box.dataset.hf || '').split('|').filter(Boolean);
+    if (!word || words.length < 2) return;
+    // reserve the widest word so the headline never re-wraps mid-rotation (words sit at line ends)
+    const fit = () => {
+      const probe = document.createElement('span'); probe.className = 'hf-w'; probe.style.cssText = 'position:absolute;visibility:hidden;left:0;top:0';
+      box.appendChild(probe);
+      let max = 0; for (const x of words) { probe.textContent = x; max = Math.max(max, probe.getBoundingClientRect().width); }
+      probe.remove(); box.style.minWidth = `${Math.ceil(max)}px`;
+    };
+    fit(); document.fonts?.ready.then(fit);
+    let rt = 0; addEventListener('resize', () => { clearTimeout(rt); rt = window.setTimeout(fit, 150); }, { passive: true });
+    let i = 0, timer = 0;
+    const swap = () => {
+      if (document.hidden) return;
+      i = (i + 1) % words.length;
+      if (reduced) { word.textContent = words[i]; return; }
+      word.classList.remove('in'); word.classList.add('out');
+      word.addEventListener('animationend', () => { word.textContent = words[i]; word.classList.remove('out'); void word.offsetWidth; word.classList.add('in'); }, { once: true });
+    };
+    new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting && !timer) { setTimeout(() => { if (!timer) timer = window.setInterval(swap, 2800); }, 1400 + (n % 3) * 450); }
+      else if (!e.isIntersecting && timer) { clearInterval(timer); timer = 0; }
+    })).observe(box);
+  });
+}
+
+/* The growth headline sits on one line edge to edge; a visitor's name makes it longer, so shrink to fit. */
+function fitGrowth() {
+  const h = $<HTMLElement>('.growth-title');
+  if (!h) return;
+  const run = () => {
+    h.style.fontSize = '';
+    if (innerWidth < 640) return;
+    if (h.scrollWidth > h.clientWidth + 1) h.style.fontSize = `${parseFloat(getComputedStyle(h).fontSize) * (h.clientWidth / h.scrollWidth) * 0.995}px`;
+  };
+  run(); document.fonts?.ready.then(run);
+  let t = 0; addEventListener('resize', () => { clearTimeout(t); t = window.setTimeout(run, 150); }, { passive: true });
+  addEventListener('ferrn:name', () => requestAnimationFrame(run));
+}
+
 function pageBits() {
   home(reduced);
   aboutTiles();
   offers();
   teamFaces();
+  headFlicks();
+  fitGrowth();
   reel();
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;

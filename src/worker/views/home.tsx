@@ -30,7 +30,15 @@ export const sized = (v: string | null | undefined, w: number, h = w) => {
 /** Headline split into lines on "|", each line revealed through a gradient mask. */
 export function Lines({ text, class: cls, tag = 'h1', id }: { text: string; class?: string; tag?: 'h1' | 'h2' | 'p'; id?: string }) {
   const lines = text.split('|').map((s) => s.trim()).filter(Boolean);
-  const inner = lines.map((l, i) => `<span class="line" style="--i:${i}"><span class="line-in">${l.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))}</span></span>`).join('');
+  const esc = (x: string) => x.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+  // [a/b/c] anywhere in a line becomes an orange word that rotates through a, b and c (main.ts headFlicks)
+  const flicks = (l: string) => esc(l).replace(/\[([^\]]+)\]/g, (_m, inner: string) => {
+    const words = inner.split('/').map((w) => w.trim()).filter(Boolean);
+    return `<span class="hf" data-hf="${words.join('|')}"><span class="hf-w">${words[0] ?? ''}</span></span>`;
+  });
+  // {, Name} marks where the visitor's first name goes (punctuation inside the braces); empty until Bob knows it
+  const named = (l: string) => l.replace(/\{([^{}]*Name[^{}]*)\}/g, (_m, tpl: string) => `<span class="nm" data-nm="${tpl.replace('Name', '%')}"></span>`);
+  const inner = lines.map((l, i) => `<span class="line" style="--i:${i}"><span class="line-in">${named(flicks(l))}</span></span>`).join('');
   return raw(`<${tag}${id ? ` id="${id}"` : ''} class="${cls ?? ''} lines" data-lines>${inner}</${tag}>`);
 }
 
@@ -224,25 +232,17 @@ export function HomePage(p: {
           return (
             <div class="wrap ab-stage" data-ab>
               <div class="ab-grid">
-                <article class="ab-tile ab-num-tile ab-s1 reveal" data-tilt>
-                  <div class="ab-stack" aria-hidden="true">
-                    {[0, 1, 2].map((k) => <span style={`--k:${k}`}><i></i><b></b><b></b></span>)}
-                  </div>
+                <article class="ab-tile ab-num-tile ab-s1 ab-k1 reveal" data-tilt>
+                  <div class="ab-silk" aria-hidden="true"><img src="/assets/home/about-waves.webp" alt="" width="900" height="563" loading="lazy" decoding="async" /><span class="ab-plus">{icon('arrow-up-right', { size: 16 })}</span></div>
                   <Num v={STATS[0][0]} /><span class="ab-num-cap">{STATS[0][1]}</span>
                 </article>
-                <article class="ab-tile ab-num-tile ab-s2 reveal" style="--d:.05s" data-tilt>
-                  <div class="ab-icons" aria-hidden="true">
-                    {([['building', 24], ['package', 200], ['heart', 350], ['book-open', 265], ['wallet', 40], ['briefcase', 160], ['globe', 215], ['sparkles', 290]] as const).map(([n, h], k) => <span style={`--k:${k};--h:${h}`}>{icon(n, { size: 18 })}</span>)}
-                  </div>
+                <a class="ab-tile ab-num-tile ab-s2 ab-k2 reveal" style="--d:.05s" href={href(lang, '/work')} data-tilt>
+                  <span class="ab-notch" aria-hidden="true"><span class="ab-notch-btn">{icon('arrow-up-right', { size: 18 })}</span></span>
+                  <span class="ab-chips" aria-hidden="true">{(['building', 'heart', 'package', 'globe'] as const).map((n, k) => <i style={`--k:${k}`}>{icon(n, { size: 16 })}</i>)}<i class="more">+6</i></span>
                   <Num v={STATS[1][0]} /><span class="ab-num-cap">{STATS[1][1]}</span>
-                </article>
-                <article class="ab-tile ab-num-tile ab-s4 reveal" style="--d:.1s" data-tilt>
-                  <svg class="ab-ring" viewBox="0 0 120 120" aria-hidden="true">
-                    <defs><linearGradient id="ab-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F94406" /><stop offset="1" stop-color="#ff8a4c" /></linearGradient></defs>
-                    <circle cx="60" cy="60" r="50" class="ab-ring-bg" />
-                    <circle cx="60" cy="60" r="50" class="ab-ring-fg" pathLength="100" />
-                    <path d="M44 61l11 11 22-24" class="ab-ring-tick" />
-                  </svg>
+                </a>
+                <article class="ab-tile ab-num-tile ab-s4 ab-k3 reveal" style="--d:.1s" data-tilt>
+                  <span class="ab-orb" aria-hidden="true"></span>
                   <Num v={STATS[3][0]} /><span class="ab-num-cap">{STATS[3][1]}</span>
                 </article>
                 <article class="ab-tile ab-offers reveal" style="--d:.15s" data-offers aria-roledescription="carousel" aria-label="What Ferrn offers">
@@ -269,11 +269,10 @@ export function HomePage(p: {
                       {team.map((m, i) => (
                         <li tabindex={0}>
                           {m.photo ? <img src={sized(m.photo, 128)!} alt={m.name} width="64" height="64" loading="lazy" /> : <span class="ab-ini" style={`--h:${(i * 57 + 18) % 360}`} aria-label={m.name}>{initials(m.name)}</span>}
-                          <span class="ab-face-cap"><b>{m.name}</b><small>{m.role}</small></span>
+                          <span class="ab-face-tip" role="tooltip"><b>{m.name}</b><small>{m.role}</small></span>
                         </li>
                       ))}
                     </ul>
-                    <p class="ab-face-hint"><b>{team.length} people</b><small><span class="hov">Hover</span><span class="tap">Tap</span> a face to meet them</small></p>
                   </div>
                 </article>
                 <article class="ab-tile ab-num-tile ab-s3 ab-pic reveal" style="--d:.05s" data-tilt>
@@ -354,9 +353,7 @@ export function HomePage(p: {
       <section class="growth" id="growth">
         <div class="wrap">
           <div class="growth-head">
-            <p class="kicker reveal">{ctx.get('home.growth.kicker')}</p>
-            <H text={ctx.get('home.growth.title')} />
-            <p class="room-lead reveal">{ctx.get('home.growth.lead')}</p>
+            <H text={ctx.get('home.growth.title')} cls="h-display growth-title" />
           </div>
           <div class="growth-grid">
             <ol class="levers">
@@ -394,7 +391,6 @@ export function HomePage(p: {
         <div class="wrap">
           <div class="room-head">
             <H text={ctx.get('home.market.title')} />
-            <p class="room-lead reveal">{ctx.get('home.market.lead')}</p>
           </div>
           <div class="shelf">
             {p.products.slice(0, 3).map((x, i) => (

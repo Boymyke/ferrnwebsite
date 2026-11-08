@@ -65,6 +65,13 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Headlines, stat cards, offer scenes, team tooltips (8 Nov, 4.16.0)
+- Headline syntax in Studio content (Lines in home.tsx): `|` breaks a line; `[a/b/c]` is an orange word that rotates (headFlicks in main.ts) and reserves the widest word's width, so keep it at a line end with its punctuation inside, e.g. `[website,/web app,]`; `{, Name}` is the visitor's first name from Bob, anywhere in the sentence, with punctuation inside the braces and nothing shown when unknown (personalise() in bob-launcher.ts).
+- New SEO-minded headlines for About, Services, Growth, Marketplace, Work, Testimonials and the closing CTA. Growth is one line edge to edge (container units, plus fitGrowth() shrinks it when a name is added). The kicker and paragraph above growth, and the marketplace paragraph, are removed.
+- Stat cards after the bento reference: 50+ has an orange silk image panel (`about-waves.webp`, generated) with a round arrow; 10+ is solid orange with industry chips and a cut-out corner holding an arrow (links to /work); 99% has a glowing orange orb.
+- Offer scenes are HTML UI cards (offer-art.ts, `.ofs` styles): a dotted backdrop, orange glow, lit top edge and faded side cards.
+- Team: faces sit right under the line; names show as a tooltip (hover, tap or keyboard); the "6 people" hint is removed.
+
 ## Film with client work, new icons (8 Nov, 4.15.1)
 - The film is now 54.5s. A "Built by Ferrn" chapter after Studio has the narrator name Synergix Africa, MPI Africa, Gromzia and Insightblitz while their live sites scroll in a browser frame (the full-page captures from R2 `reel/<slug>.webp`, listed in `REEL` in content/site.ts), plus the Relay freight app. The montage wall leads with client work.
 - Services icons redrawn for websites (browser window), WhatsApp automation (chat bubbles with a bolt) and payments (cards with a paid tick). The "Services" link above the boxes is removed.

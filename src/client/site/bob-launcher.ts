@@ -28,7 +28,7 @@ export const NAME_KEY = 'ferrn-name';
 export function readName(): string { try { return localStorage.getItem(NAME_KEY) || ''; } catch { return ''; } }
 
 /** Headlines that greet the visitor by name: "Not for show, Michael." */
-const PERSONAL = ['.hx-rest', '#services .h-display .line:last-child .line-in', '.close-glow .h-display .line:last-child .line-in', '.footer-title .grad'];
+const PERSONAL = ['.hx-rest', '.footer-title .grad'];
 export function personalise(name = readName()) {
   for (const sel of PERSONAL) {
     for (const el of $$<HTMLElement>(sel)) {
@@ -38,6 +38,9 @@ export function personalise(name = readName()) {
       el.classList.toggle('is-personal', !!name);
     }
   }
+  // section headlines carry a {, Name} slot anywhere in the sentence: filled when known, empty otherwise
+  for (const el of $$<HTMLElement>('[data-nm]')) el.textContent = name ? (el.dataset.nm || '').replace('%', name) : '';
+  dispatchEvent(new CustomEvent('ferrn:name', { detail: name }));
 }
 
 /** The tour leaves a prefilled message for the contact form; fill it in when the form is on the page. */
