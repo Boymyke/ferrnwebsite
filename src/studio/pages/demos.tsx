@@ -4,7 +4,7 @@ import { api, ago, can, list } from '../api';
 import { Badge, Card, Confirm, copy, Drawer, Empty, Loading, Page, Pager, useData, usePaged, useToast, useUser } from '../ui';
 import { Copy, ExternalLink, FileArchive, FolderUp, Globe, MonitorPlay, Plus, RefreshCw, Trash2, UploadCloud, CheckCircle2 } from 'lucide-react';
 
-export type DemoRow = { id: string; slug: string; title: string; kind: 'static' | 'upload'; url: string; files: number; bytes: number; product_slug?: string; products: string[]; updated_at: string; updated_by?: string };
+export type DemoRow = { id: string; slug: string; title: string; kind: 'static' | 'upload'; url: string; files: number; bytes: number; product_slug?: string; lead_id?: string | null; concept?: boolean; lead_company?: string | null; lead_status?: string | null; notes?: string | null; products: string[]; updated_at: string; updated_by?: string };
 
 const kb = (n: number) => (n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
@@ -24,7 +24,7 @@ export function DemoLink({ url }: { url?: string | null }) {
 }
 
 /** A live, scaled-down view of the demo that always fills its card (1280px wide page, scaled to fit). */
-function DemoThumb({ url }: { url: string }) {
+export function DemoThumb({ url }: { url: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.25);
   const [show, setShow] = useState(false);
@@ -51,7 +51,8 @@ export function Demos() {
   const toast = useToast();
   const { data, loading, reload } = useData(() => api<{ rows: DemoRow[] }>('/demos').then((r) => r.rows), []);
   const [upload, setUpload] = useState<null | { slug?: string; title?: string; product_slug?: string }>(null);
-  const uploaded = (data ?? []).filter((d) => d.kind === 'upload');
+  // concept sites (built for one lead) have their own page now
+  const uploaded = (data ?? []).filter((d) => d.kind === 'upload' && !d.concept);
   const builtIn = (data ?? []).filter((d) => d.kind === 'static');
   const pgUp = usePaged(uploaded, 'demos-up', null, 25);
   const pgBuilt = usePaged(builtIn, 'demos-built', null, 25);
@@ -75,7 +76,7 @@ export function Demos() {
     </article>
   );
   return (
-    <Page title="Demos" sub="Live demo sites with full shareable links. Built a demo somewhere else? Upload its HTML, a zip or the build folder and you get a link straight away — always with the Ferrn favicon."
+    <Page title="Demos" sub="Product demos for the marketplace, with full shareable links. Sites built for a particular lead live under Concepts. Built a demo somewhere else? Upload its HTML, a zip or the build folder and you get a link straight away, always with the Ferrn favicon."
       actions={can(user, 'sales') ? <button className="btn primary" onClick={() => setUpload({})}><UploadCloud size={15} strokeWidth={2} />Upload a demo</button> : null}>
       {loading ? <Loading /> : (
         <>
@@ -114,9 +115,12 @@ const findEntry = (items: Picked) => {
   return html.find((p) => /^index\.html?$/i.test(p)) ?? html.find((p) => /(^|\/)index\.html?$/i.test(p)) ?? html[0];
 };
 
-export function DemoUploader({ initial, onClose, onDone }: { initial: { slug?: string; title?: string; product_slug?: string }; onClose: () => void; onDone: (url: string) => void }) {
+export function DemoUploader({ initial, onClose, onDone, concept = false }: { initial: { slug?: string; title?: string; product_slug?: string; lead_id?: string }; onClose: () => void; onDone: (url: string) => void; concept?: boolean }) {
   const toast = useToast();
-  const products = useData(() => list('products'), []);
+  const products = useData(() => (concept ? Promise.resolve([]) : list('products')), []);
+  const leads = useData(() => (concept ? list('leads') : Promise.resolve([])), []);
+  const [lead, setLead] = useState(initial.lead_id ?? '');
+  const [leadQ, setLeadQ] = useState('');
   const [title, setTitle] = useState(initial.title ?? '');
   const [slug, setSlug] = useState(initial.slug ?? '');
   const [product, setProduct] = useState(initial.product_slug ?? '');
@@ -147,11 +151,12 @@ export function DemoUploader({ initial, onClose, onDone }: { initial: { slug?: s
   };
 
   const go = async () => {
-    if (!title.trim()) return toast('Give the demo a name', 'err');
+    if (!title.trim()) return toast(concept ? 'Give the concept a name' : 'Give the demo a name', 'err');
+    if (concept && !lead) return toast('Pick the lead this concept is for', 'err');
     if (!items.length) return toast('Add the demo files first', 'err');
     try {
       setProgress(0);
-      const r = await api<{ slug: string }>('/demos', { body: { title, slug: editing ? initial.slug : finalSlug, product_slug: product || undefined } });
+      const r = await api<{ slug: string }>('/demos', { body: { title, slug: editing ? initial.slug : finalSlug, product_slug: product || undefined, lead_id: concept ? lead : undefined, notes: concept && !editing ? 'Concept site for a lead' : undefined } });
       await api(`/demos/${r.slug}/clear`, { body: {} });
       let done = 0;
       const queue = [...items];
@@ -164,19 +169,20 @@ export function DemoUploader({ initial, onClose, onDone }: { initial: { slug?: s
       };
       await Promise.all(Array.from({ length: Math.min(5, items.length) }, worker));
       const fin = await api<{ url: string }>(`/demos/${r.slug}/done`, { body: { files: items.length, bytes: total, entry } });
-      setResult(fin.url); onDone(fin.url); toast('Demo is live');
+      setResult(fin.url); onDone(fin.url); toast(concept ? 'Concept is live' : 'Demo is live');
     } catch (e: any) { toast(e.message, 'err'); setProgress(null); }
   };
 
   return (
-    <Drawer open wide onClose={onClose} title={editing ? `New version · ${initial.title}` : 'Upload a demo'}>
+    <Drawer open wide onClose={onClose} title={editing ? `New version · ${initial.title}` : concept ? 'Upload a concept site' : 'Upload a demo'}>
       {result ? (
         <div className="demo-done">
           <div className="empty-ic"><CheckCircle2 size={22} /></div>
-          <h3>Your demo is live</h3>
+          <h3>{concept ? 'The concept site is live' : 'Your demo is live'}</h3>
           <div className="demo-url-big"><Globe size={16} /><a href={result} target="_blank" rel="noreferrer">{result}</a></div>
           <div className="row-actions"><button className="btn primary" onClick={() => copy(result, toast, 'Link copied')}><Copy size={15} />Copy link</button><a className="btn ghost" href={result} target="_blank" rel="noreferrer"><ExternalLink size={15} />Open</a><button className="btn ghost" onClick={onClose}>Done</button></div>
           {product ? <p className="muted small">Also set as the live demo for this marketplace product.</p> : null}
+          {concept ? <p className="muted small">Saved on the lead too: its “Concept preview” button opens this link.</p> : null}
           <div className="demo-preview"><iframe src={result} title="Demo preview" /></div>
         </div>
       ) : (
@@ -192,7 +198,7 @@ export function DemoUploader({ initial, onClose, onDone }: { initial: { slug?: s
             ) : (
               <>
                 <UploadCloud size={28} strokeWidth={1.6} />
-                <strong>Drop the demo here</strong>
+                <strong>{concept ? 'Drop the concept site here' : 'Drop the demo here'}</strong>
                 <p className="muted small">A single <code>.html</code> file, a <code>.zip</code> of the site, or the whole build folder (<code>dist</code>, <code>out</code>, <code>build</code>).</p>
                 <div className="row-actions">
                   <button className="btn sm" onClick={() => fileIn.current?.click()}><FileArchive size={14} />Choose HTML or zip</button>
@@ -204,13 +210,24 @@ export function DemoUploader({ initial, onClose, onDone }: { initial: { slug?: s
             <input ref={dirIn} type="file" hidden multiple {...({ webkitdirectory: '', directory: '' } as any)} onChange={(e) => { take(e.target.files); e.target.value = ''; }} />
           </div>
           <div className="fields">
-            <label className="field"><span>Demo name</span><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lekki Dental — booking site" /></label>
-            <label className="field"><span>Link address</span><input value={editing ? initial.slug : slug} disabled={editing} onChange={(e) => setSlug(slugify(e.target.value))} placeholder={slugify(title) || 'lekki-dental'} /></label>
-            <label className="field wide"><span>Use as the live demo for a marketplace product (optional)</span>
-              <select value={product} onChange={(e) => setProduct(e.target.value)}><option value="">— Not linked —</option>{(products.data ?? []).map((p: any) => <option key={p.slug} value={p.slug}>{p.name}</option>)}</select>
-            </label>
+            <label className="field"><span>{concept ? 'Concept name' : 'Demo name'}</span><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={concept ? 'e.g. Splendid Freight' : 'e.g. Lekki Dental — booking site'} /></label>
+            <label className="field"><span>Link address</span><input value={editing ? initial.slug : slug} disabled={editing} onChange={(e) => setSlug(slugify(e.target.value))} placeholder={slugify(title) || (concept ? 'client-name' : 'lekki-dental')} /></label>
+            {concept ? (
+              <label className="field wide"><span>Lead this concept is for</span>
+                <input value={leadQ} onChange={(e) => setLeadQ(e.target.value)} placeholder="Search leads by company" />
+                <select value={lead} onChange={(e) => setLead(e.target.value)} size={6} style={{ marginTop: 6 }}>
+                  {(leads.data ?? []).filter((l: any) => !leadQ || String(l.company || '').toLowerCase().includes(leadQ.toLowerCase()) || l.id === lead)
+                    .sort((a: any, b: any) => String(a.company || '').localeCompare(String(b.company || ''))).slice(0, 300)
+                    .map((l: any) => <option key={l.id} value={l.id}>{l.company}{l.city ? ` · ${l.city}` : ''}</option>)}
+                </select>
+              </label>
+            ) : (
+              <label className="field wide"><span>Use as the live demo for a marketplace product (optional)</span>
+                <select value={product} onChange={(e) => setProduct(e.target.value)}><option value="">— Not linked —</option>{(products.data ?? []).map((p: any) => <option key={p.slug} value={p.slug}>{p.name}</option>)}</select>
+              </label>
+            )}
           </div>
-          <div className="demo-url-preview"><span className="muted small">Your link will be</span><code>{SITE}/demos/u/{(editing ? initial.slug : finalSlug) || 'your-demo'}/</code></div>
+          <div className="demo-url-preview"><span className="muted small">Your link will be</span><code>{SITE}/{concept ? 'concept' : 'demos/u'}/{(editing ? initial.slug : finalSlug) || (concept ? 'client-name' : 'your-demo')}/</code></div>
           {progress != null ? <div className="progress"><span style={{ width: `${progress}%` }} /><em>{progress}%</em></div> : null}
           <div className="drawer-actions sticky">
             <button className="btn ghost" onClick={onClose}>Cancel</button>

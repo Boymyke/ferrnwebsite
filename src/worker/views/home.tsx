@@ -271,7 +271,6 @@ export function HomePage(p: {
                   </div>
                 </article>
                 <article class="ab-tile ab-team reveal">
-                  <Cap k={4} />
                   <div class="ab-people">
                     <ul class="ab-faces">
                       {team.map((m, i) => (
@@ -282,6 +281,7 @@ export function HomePage(p: {
                       ))}
                     </ul>
                   </div>
+                  <Cap k={4} />
                 </article>
                 <article class="ab-tile ab-num-tile ab-s3 ab-pic reveal" style="--d:.05s" data-tilt>
                   <img class="ab-pic-img" src="/assets/home/about-studio.webp" alt="" loading="lazy" decoding="async" width="1200" height="675" />

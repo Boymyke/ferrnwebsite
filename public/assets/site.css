@@ -261,6 +261,11 @@ html.a11y-align main, html.a11y-align main * { text-align: left !important; }
 .lines .line-in { display: inline-block; padding: .1em .06em .16em; margin: -.1em -.06em -.16em; transform: translateY(130%); background: linear-gradient(100deg, var(--ink) 0 45%, var(--accent) 50%, var(--ink) 55% 100%); background-size: 300% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; transition: transform .75s var(--ease), background-position 1.2s var(--ease-io); transition-delay: calc(var(--i, 0) * 90ms); }
 .lines.in .line-in { transform: translateY(0); background-position: 0 0; }
 .lines .line-in.plain { background: none; color: var(--ink); -webkit-background-clip: border-box; background-clip: border-box; }
+/* section headlines (h2): no reveal animation, plain text, two lines at most */
+h2.lines .line { overflow: visible; }
+h2.lines .line-in { transform: none !important; transition: none !important; background: none !important; color: var(--ink) !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; }
+main h2.h-display { max-width: 22ch; }
+main h2.h-display.center { max-width: 16ch; }
 /* Masked wipe (mask, not clip-path: Chromium clips IntersectionObserver geometry with clip-path, so the reveal would never fire). */
 .reveal-text { opacity: 0; transform: translateY(14px); -webkit-mask-image: linear-gradient(180deg, #000 0, #000 0%, transparent 0%); mask-image: linear-gradient(180deg, #000 0, #000 0%, transparent 0%); -webkit-mask-size: 100% 300%; mask-size: 100% 300%; transition: opacity .6s var(--ease), transform .9s var(--ease); }
 .reveal-text.in { opacity: 1; transform: none; -webkit-mask-image: none; mask-image: none; animation: text-wipe 1s var(--ease) both; }
@@ -686,7 +691,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 [data-theme="light"] .room-light::before, [data-theme="light"] .room-haze::before { opacity: 1; }
 .room > .wrap { position: relative; }
 .room-head { max-width: 760px; margin-bottom: clamp(36px, 5vw, 64px); }
-.h-display { font-size: clamp(36px, 5.2vw, 76px); line-height: .96; letter-spacing: -.045em; font-weight: 600; margin: 0 0 18px; text-wrap: balance; }
+.h-display { font-size: clamp(30px, 5.2vw, 76px); line-height: .96; letter-spacing: -.045em; font-weight: 600; margin: 0 0 18px; text-wrap: balance; }
 .h-display.center { text-align: center; margin-inline: auto; max-width: 16ch; }
 .room-lead { font-size: 17.5px; line-height: 1.5; color: var(--muted); max-width: 52ch; margin: 0; }
 .room-lead.center { text-align: center; margin-inline: auto; }
@@ -847,7 +852,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 /* the headline runs edge to edge of the content width on one line; it stacks on phones */
 .growth-head { container-type: inline-size; margin-bottom: clamp(40px, 6vw, 70px); }
 /* same size as every other headline; the three phrases flow across the full width */
-.growth-title.lines { display: flex; flex-wrap: wrap; column-gap: .26em; margin: 0; }
+.growth-title.lines { margin: 0; }
 .growth-title .line { flex: none; }
 .growth .kicker { margin: 0; color: var(--orange); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; font-weight: 500; }
 .growth-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(24px, 4vw, 56px); align-items: start; }
@@ -1087,8 +1092,8 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .ab-offers-link:hover { opacity: 1; }
 
 /* team: faces only; the name and role show on hover (or focus), in one fixed spot so nothing moves */
-.ab-team { justify-content: flex-start; overflow: visible; }
-.ab-people { position: relative; margin-top: 6px; }
+.ab-team { justify-content: space-between; overflow: visible; }
+.ab-people { position: relative; margin-top: 44px; }
 .ab-faces { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
 .ab-faces li { outline: none; cursor: default; }
 .ab-faces img, .ab-ini { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; display: grid; place-items: center; border: 2px solid transparent; transition: border-color .2s, opacity .2s, filter .2s; }

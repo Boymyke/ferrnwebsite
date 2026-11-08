@@ -39,9 +39,12 @@ export function withFavicon(res: Response, opts: { shim?: boolean } = {}): Respo
 /* ── public: serve uploaded demos ── */
 export const demoSite = new Hono<AppEnv>();
 demoSite.get('/demos/u/:slug', (c) => c.redirect(`/demos/u/${cleanSlug(c.req.param('slug'))}/`, 301));
-// Lead previews (concept sites from the morning routine) share the uploaded-demo store under a friendlier address.
-demoSite.get('/preview/:slug', (c) => c.redirect(`/preview/${cleanSlug(c.req.param('slug'))}/`, 301));
-demoSite.get('/preview/:slug/*', async (c) => serveUpload(c, cleanSlug(c.req.param('slug')), `/preview/${cleanSlug(c.req.param('slug'))}/`));
+// Concept sites (built for a specific lead) share the uploaded-demo store but live at /concept/<client>/.
+// The older /preview/<slug>/ links already sent to leads keep working by redirecting there.
+demoSite.get('/concept/:slug', (c) => c.redirect(`/concept/${cleanSlug(c.req.param('slug'))}/`, 301));
+demoSite.get('/concept/:slug/*', async (c) => serveUpload(c, cleanSlug(c.req.param('slug')), `/concept/${cleanSlug(c.req.param('slug'))}/`));
+demoSite.get('/preview/:slug', (c) => c.redirect(`/concept/${cleanSlug(c.req.param('slug'))}/`, 301));
+demoSite.get('/preview/:slug/*', (c) => { const slug = cleanSlug(c.req.param('slug')); const rest = c.req.path.slice(`/preview/${c.req.param('slug')}/`.length); const q = new URL(c.req.url).search; return c.redirect(`/concept/${slug}/${rest}${q}`, 301); });
 demoSite.get('/demos/u/:slug/*', async (c) => serveUpload(c, cleanSlug(c.req.param('slug')), `/demos/u/${cleanSlug(c.req.param('slug'))}/`));
 async function serveUpload(c: any, slug: string, prefix: string) {
   const row = await first<{ entry: string }>(c.env.DB, "SELECT entry FROM demos WHERE slug = ? AND kind = 'upload'", slug);
@@ -65,12 +68,19 @@ async function serveUpload(c: any, slug: string, prefix: string) {
 /* ── Studio API: /api/studio/demos ── */
 export const demosApi = new Hono<AppEnv>();
 demosApi.use('*', requireUser('viewer'));
-const fullUrl = (env: AppEnv['Bindings'], d: { kind: string; slug: string }) => `${env.SITE_URL}/demos/${d.kind === 'upload' ? 'u/' : ''}${d.slug}/`;
+/** A concept is a site built for one lead (it has a lead_id); everything else is a product demo. */
+export const isConcept = (d: { kind: string; lead_id?: string | null }) => d.kind === 'upload' && !!d.lead_id;
+const fullUrl = (env: AppEnv['Bindings'], d: { kind: string; slug: string; lead_id?: string | null }) =>
+  isConcept(d) ? `${env.SITE_URL}/concept/${d.slug}/` : `${env.SITE_URL}/demos/${d.kind === 'upload' ? 'u/' : ''}${d.slug}/`;
 
 demosApi.get('/', async (c) => {
   const rows = await all<any>(c.env.DB, 'SELECT * FROM demos ORDER BY kind DESC, updated_at DESC');
   const used = await all<{ slug: string; name: string; demo_url: string }>(c.env.DB, 'SELECT slug, name, demo_url FROM products WHERE demo_url IS NOT NULL');
-  return c.json({ ok: true, rows: rows.map((d) => { const url = fullUrl(c.env, d); return { ...d, url, products: used.filter((p) => p.demo_url && url.endsWith(new URL(p.demo_url, c.env.SITE_URL).pathname)).map((p) => p.name) }; }) });
+  const leads = await all<{ id: string; company: string; status: string }>(c.env.DB, 'SELECT id, company, status FROM leads WHERE id IN (SELECT lead_id FROM demos WHERE lead_id IS NOT NULL)');
+  return c.json({ ok: true, rows: rows.map((d) => {
+    const url = fullUrl(c.env, d), lead = leads.find((l) => l.id === d.lead_id);
+    return { ...d, url, concept: isConcept(d), lead_company: lead?.company ?? null, lead_status: lead?.status ?? null, products: used.filter((p) => p.demo_url && url.endsWith(new URL(p.demo_url, c.env.SITE_URL).pathname)).map((p) => p.name) };
+  }) });
 });
 
 demosApi.post('/', async (c) => {
@@ -126,6 +136,8 @@ demosApi.post('/:slug/done', async (c) => {
   const entry = cleanPath(b.entry || 'index.html') || 'index.html';
   await run(c.env.DB, "UPDATE demos SET files = ?, bytes = ?, entry = ?, updated_by = ?, updated_at = datetime('now') WHERE slug = ?", Number(b.files) || 0, Number(b.bytes) || 0, entry, u.name, slug);
   const url = fullUrl(c.env, d);
+  // a concept's link goes on its lead, so the "Concept preview" button in Leads opens it
+  if (isConcept(d)) await run(c.env.DB, 'UPDATE leads SET preview_url = ? WHERE id = ?', url, d.lead_id);
   if (d.product_slug) {
     await run(c.env.DB, "UPDATE products SET demo_url = ?, updated_by = ?, updated_at = datetime('now') WHERE slug = ?", url, u.name, d.product_slug);
     await bumpContentVersion(c.env);

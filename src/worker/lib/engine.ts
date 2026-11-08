@@ -102,7 +102,7 @@ export async function syncPreviews(env: Bindings): Promise<number> {
       await env.DB.prepare("INSERT INTO demos (id, slug, title, kind, lead_id, notes, files, bytes, entry, created_by, updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
         .bind('dm_' + Math.random().toString(36).slice(2, 12), slug, `Preview — ${p.company || slug}`, 'upload', p.lead_id || null, 'Concept site built by the morning routine', 1, p.html.length, 'index.html', 'Morning routine', 'Morning routine').run();
     }
-    const url = `${env.SITE_URL || 'https://www.ferrnagency.com'}/preview/${slug}/`;
+    const url = `${env.SITE_URL || 'https://www.ferrnagency.com'}/concept/${slug}/`;
     if (p.lead_id) await env.DB.prepare("UPDATE leads SET preview_url = ? WHERE id = ?").bind(url, p.lead_id).run().catch(() => null);
     await engineCall(env, 'dashAction', ['previewSynced', { slug, url }]).catch(() => null);
     n++;

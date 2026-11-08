@@ -65,6 +65,11 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Concept sites, static headlines (8 Nov, 4.17.0)
+- Concept sites (built for one lead) are separate from marketplace demos. They share the `demos` table and the R2 `demos/<slug>/` store, but a row with a `lead_id` is a concept and is served at `/concept/<client>/`. Old `/preview/<slug>/` links 301 to `/concept/`. Studio has a Concepts page (Main > Concepts) for uploading with a lead picker, and an upload sets the lead's `preview_url`. The Demos page lists product demos only. The morning routine now writes `/concept/` links.
+- Section headlines (h2) have no animation and no rotating words: plain text, one size, at most two lines (max-width 22ch, 30px minimum), with only the `{, Name}` slot. Only the hero h1 animates.
+- Team card: faces at the top, the team line below.
+
 ## Headline fix, flat offers, real voice notes (8 Nov, 4.16.1)
 - Ghost-word bug: `.lines .line-in` paints text through a gradient clip (reveal shimmer), and Chromium draws animated children a second time at the line start. Lines that contain a rotating word or a name slot get `.plain` (normal text colour, no clip).
 - Every section headline uses `.h-display` at one size; Growth wraps across the width instead of being scaled to one line. "Trusted By" is a proper headline: "Trusted by businesses across [Nigeria./Africa./the world.]".
