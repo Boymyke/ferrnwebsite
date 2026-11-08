@@ -38,7 +38,9 @@ export function Lines({ text, class: cls, tag = 'h1', id }: { text: string; clas
   });
   // {, Name} marks where the visitor's first name goes (punctuation inside the braces); empty until Bob knows it
   const named = (l: string) => l.replace(/\{([^{}]*Name[^{}]*)\}/g, (_m, tpl: string) => `<span class="nm" data-nm="${tpl.replace('Name', '%')}"></span>`);
-  const inner = lines.map((l, i) => `<span class="line" style="--i:${i}"><span class="line-in">${named(flicks(l))}</span></span>`).join('');
+  // lines with a moving word or a name slot paint plain text: the gradient text-clip used for the reveal
+  // shimmer draws animated children twice in Chromium (a ghost copy at the line start)
+  const inner = lines.map((l, i) => { const h = named(flicks(l)); return `<span class="line" style="--i:${i}"><span class="line-in${h !== esc(l) ? ' plain' : ''}">${h}</span></span>`; }).join('');
   return raw(`<${tag}${id ? ` id="${id}"` : ''} class="${cls ?? ''} lines" data-lines>${inner}</${tag}>`);
 }
 
@@ -96,23 +98,29 @@ export function ProductCard({ p, lang }: { p: ProductRow; lang: Lang }) {
 
 export function Testimonial({ x, i }: { x: TestimonialRow; i: number }) {
   const audio = mediaUrl(x.audio);
-  // Voice-note card: the client's own recording when there is one; otherwise the site reads their words aloud
-  // (and says so, so nobody mistakes it for the client's voice).
+  // Only the client's own recording is ever played (no synthetic voices). With a recording the card is a
+  // voice note plus a Transcript toggle; until one is uploaded in Studio, the card shows their written words.
+  const said = (x.transcript || x.quote || '').trim();
   return (
-    <figure class={`quote-card vn ${audio ? 'has-audio' : 'tts'}`} data-quote style={`--i:${i}`}>
+    <figure class={`quote-card vn ${audio ? 'has-audio' : 'text-only'}`} data-quote style={`--i:${i}`}>
       <figcaption>
         {x.avatar ? <img src={sized(x.avatar, 48)!} alt="" loading="lazy" decoding="async" width="48" height="48" /> : <span class="avatar sm">{initials(x.name)}</span>}
         <span><strong>{x.name}</strong><small>{[x.role, x.company].filter(Boolean).join(', ')}</small></span>
         {x.logo ? <img class="quote-logo" src={mediaUrl(x.logo)!} alt={x.company ?? ''} loading="lazy" height="22" /> : null}
       </figcaption>
-      <div class="voice" data-voice data-say={audio ? undefined : x.quote}>
-        <button class="voice-btn" type="button" data-voice-play aria-label={audio ? `Play ${x.name}’s voice note` : `Listen to ${x.name}’s testimonial, read aloud`}>{icon('play', { size: 16 })}<span class="voice-pause">{icon('pause', { size: 16 })}</span></button>
-        <span class="voice-bars" aria-hidden="true">{Array.from({ length: 32 }, (_, k) => <i style={`--k:${k};--h:${[38, 62, 45, 80, 55, 30, 70, 90, 48, 66, 35, 58, 84, 42, 72, 50, 28, 64, 88, 46, 60, 34, 76, 52, 40, 68, 86, 44, 56, 32, 62, 48][k]}%`}></i>)}</span>
-        <span class="voice-time" data-voice-time>{audio ? '0:00' : `0:${String(Math.min(59, Math.max(6, Math.round(x.quote.split(/\s+/).length / 2.6)))).padStart(2, '0')}`}</span>
-        {audio ? <audio preload="none" src={audio}></audio> : null}
-      </div>
-      <blockquote><span class="quote-mark" aria-hidden="true">“</span>{x.quote}</blockquote>
-      {audio ? (x.transcript ? <details class="voice-transcript"><summary>Transcript</summary><p>{x.transcript}</p></details> : null) : <p class="vn-note">Their words, read aloud by our site.</p>}
+      {audio ? (
+        <>
+          <div class="voice" data-voice>
+            <button class="voice-btn" type="button" data-voice-play aria-label={`Play ${x.name}’s voice note`}>{icon('play', { size: 16 })}<span class="voice-pause">{icon('pause', { size: 16 })}</span></button>
+            <span class="voice-bars" aria-hidden="true">{Array.from({ length: 32 }, (_, k) => <i style={`--k:${k};--h:${[38, 62, 45, 80, 55, 30, 70, 90, 48, 66, 35, 58, 84, 42, 72, 50, 28, 64, 88, 46, 60, 34, 76, 52, 40, 68, 86, 44, 56, 32, 62, 48][k]}%`}></i>)}</span>
+            <span class="voice-time" data-voice-time>0:00</span>
+            <audio preload="metadata" src={audio}></audio>
+          </div>
+          {said ? <details class="voice-transcript"><summary>{icon('file-text', { size: 15 })} Transcript</summary><p>{said}</p></details> : null}
+        </>
+      ) : (
+        <blockquote><span class="quote-mark" aria-hidden="true">“</span>{x.quote}</blockquote>
+      )}
     </figure>
   );
 }
@@ -207,7 +215,7 @@ export function HomePage(p: {
 
       {/* ── Trusted By: every client, an endless strip across the full width, inside the page margins ── */}
       <section class="trusted" aria-labelledby="trusted-title">
-        <h2 class="trusted-title reveal" id="trusted-title">{ctx.get('home.trusted.title')}</h2>
+        <div class="wrap trusted-head"><Lines text={ctx.get('home.trusted.title')} tag="h2" class="h-display" id="trusted-title" /></div>
         <div class="trusted-strip">
           <div class="trusted-track">
             {[0, 1].map((k) => CLIENT_LOGOS.map((l) => {

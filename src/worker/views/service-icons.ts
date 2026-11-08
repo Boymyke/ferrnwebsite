@@ -4,9 +4,9 @@
  * Each gets its own gradient ids so several can sit on one page.
  */
 const g = (k: number) => `<defs>
-  <linearGradient id="sv${k}a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb07a"/><stop offset=".55" stop-color="#F94406"/><stop offset="1" stop-color="#c73603"/></linearGradient>
-  <linearGradient id="sv${k}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F94406"/><stop offset="1" stop-color="#9c2b04"/></linearGradient>
-  <linearGradient id="sv${k}c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8360a"/><stop offset="1" stop-color="#5e1a03"/></linearGradient>
+  <linearGradient id="sv${k}a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7a3d"/><stop offset="1" stop-color="#F94406"/></linearGradient>
+  <linearGradient id="sv${k}b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F94406"/><stop offset="1" stop-color="#F94406"/></linearGradient>
+  <linearGradient id="sv${k}c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb894"/><stop offset="1" stop-color="#ff9a66"/></linearGradient>
 </defs>`;
 const svg = (k: number, body: string) => `<svg class="svc-ic" viewBox="0 0 80 80" width="80" height="80" aria-hidden="true">${g(k)}${body}</svg>`;
 
@@ -23,7 +23,7 @@ export const SERVICE_ICONS: string[] = [
   svg(1, `
     <rect x="8" y="8" width="18" height="18" rx="3" fill="url(#sv1a)"/><rect x="31" y="8" width="18" height="18" rx="3" fill="url(#sv1a)"/><rect x="54" y="8" width="18" height="18" rx="3" fill="url(#sv1a)"/>
     <rect x="8" y="31" width="18" height="18" rx="3" fill="url(#sv1b)"/><rect x="31" y="31" width="18" height="18" rx="3" fill="url(#sv1b)"/><rect x="56" y="33" width="12" height="12" rx="2.5" fill="url(#sv1c)"/>
-    <rect x="8" y="54" width="18" height="18" rx="3" fill="url(#sv1b)"/><rect x="33" y="56" width="12" height="12" rx="2.5" fill="url(#sv1c)"/><rect x="58" y="58" width="9" height="9" rx="2" fill="url(#sv1c)" opacity=".8"/>`),
+    <rect x="8" y="54" width="18" height="18" rx="3" fill="url(#sv1b)"/><rect x="33" y="56" width="12" height="12" rx="2.5" fill="url(#sv1c)"/><rect x="58" y="58" width="9" height="9" rx="2" fill="url(#sv1c)"/>`),
   // AI assistants: a small network of nodes
   svg(2, `
     <path d="M16 16 40 40 64 64M40 40l24-24M40 40 16 64M16 16h24M40 64h24" stroke="url(#sv2b)" stroke-width="5" stroke-linecap="round" fill="none"/>
@@ -39,7 +39,7 @@ export const SERVICE_ICONS: string[] = [
   svg(4, `
     <rect x="16" y="8" width="58" height="40" rx="8" fill="url(#sv4c)" transform="rotate(-8 45 28)"/>
     <rect class="l1" x="6" y="24" width="62" height="42" rx="8" fill="url(#sv4a)"/>
-    <rect x="6" y="33" width="62" height="7" fill="#7a2103" opacity=".55"/>
+    <rect x="6" y="33" width="62" height="7" fill="#fff" opacity=".3"/>
     <rect x="14" y="46" width="12" height="9" rx="2" fill="#fff" opacity=".85"/>
     <rect x="31" y="49" width="20" height="3.5" rx="1.75" fill="#fff" opacity=".6"/>
     <circle cx="62" cy="62" r="13" fill="#fff"/><circle cx="62" cy="62" r="10.5" fill="url(#sv4b)"/>

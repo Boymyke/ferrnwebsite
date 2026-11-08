@@ -546,27 +546,12 @@ function headFlicks() {
   });
 }
 
-/* The growth headline sits on one line edge to edge; a visitor's name makes it longer, so shrink to fit. */
-function fitGrowth() {
-  const h = $<HTMLElement>('.growth-title');
-  if (!h) return;
-  const run = () => {
-    h.style.fontSize = '';
-    if (innerWidth < 640) return;
-    if (h.scrollWidth > h.clientWidth + 1) h.style.fontSize = `${parseFloat(getComputedStyle(h).fontSize) * (h.clientWidth / h.scrollWidth) * 0.995}px`;
-  };
-  run(); document.fonts?.ready.then(run);
-  let t = 0; addEventListener('resize', () => { clearTimeout(t); t = window.setTimeout(run, 150); }, { passive: true });
-  addEventListener('ferrn:name', () => requestAnimationFrame(run));
-}
-
 function pageBits() {
   home(reduced);
   aboutTiles();
   offers();
   teamFaces();
   headFlicks();
-  fitGrowth();
   reel();
   $$<HTMLButtonElement>('[data-filter]').forEach((btn) => btn.addEventListener('click', () => {
     const scope = btn.closest('section') || document;

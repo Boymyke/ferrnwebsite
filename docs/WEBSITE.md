@@ -65,6 +65,12 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Headline fix, flat offers, real voice notes (8 Nov, 4.16.1)
+- Ghost-word bug: `.lines .line-in` paints text through a gradient clip (reveal shimmer), and Chromium draws animated children a second time at the line start. Lines that contain a rotating word or a name slot get `.plain` (normal text colour, no clip).
+- Every section headline uses `.h-display` at one size; Growth wraps across the width instead of being scaled to one line. "Trusted By" is a proper headline: "Trusted by businesses across [Nigeria./Africa./the world.]".
+- The offers card has no glow, dots or gradient edge. Service icons use brand orange and a light orange only. Service boxes no longer glow on hover. The 10+ card has no border, so no outline shows around the cut-out corner.
+- Testimonials: no synthetic voices. A card with an uploaded `audio` file is a voice note plus a Transcript button (`transcript`, or the quote if empty). Without audio, the card shows the written quote. Upload recordings in Studio > Website > Testimonials.
+
 ## Headlines, stat cards, offer scenes, team tooltips (8 Nov, 4.16.0)
 - Headline syntax in Studio content (Lines in home.tsx): `|` breaks a line; `[a/b/c]` is an orange word that rotates (headFlicks in main.ts) and reserves the widest word's width, so keep it at a line end with its punctuation inside, e.g. `[website,/web app,]`; `{, Name}` is the visitor's first name from Bob, anywhere in the sentence, with punctuation inside the braces and nothing shown when unknown (personalise() in bob-launcher.ts).
 - New SEO-minded headlines for About, Services, Growth, Marketplace, Work, Testimonials and the closing CTA. Growth is one line edge to edge (container units, plus fitGrowth() shrinks it when a name is added). The kicker and paragraph above growth, and the marketplace paragraph, are removed.
