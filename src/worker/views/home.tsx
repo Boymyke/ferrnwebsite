@@ -6,6 +6,7 @@ import { icon } from '../lib/icons';
 import { shotOf, type PublicProject } from '../lib/projects';
 import { href, initials, Layout, money } from './layout';
 import { OFFER_ART } from './offer-art';
+import { SERVICE_ICONS } from './service-icons';
 import { ASSET_V } from '../version';
 
 export type ProductRow = {
@@ -27,10 +28,10 @@ export const sized = (v: string | null | undefined, w: number, h = w) => {
 };
 
 /** Headline split into lines on "|", each line revealed through a gradient mask. */
-export function Lines({ text, class: cls, tag = 'h1' }: { text: string; class?: string; tag?: 'h1' | 'h2' | 'p' }) {
+export function Lines({ text, class: cls, tag = 'h1', id }: { text: string; class?: string; tag?: 'h1' | 'h2' | 'p'; id?: string }) {
   const lines = text.split('|').map((s) => s.trim()).filter(Boolean);
   const inner = lines.map((l, i) => `<span class="line" style="--i:${i}"><span class="line-in">${l.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))}</span></span>`).join('');
-  return raw(`<${tag} class="${cls ?? ''} lines" data-lines>${inner}</${tag}>`);
+  return raw(`<${tag}${id ? ` id="${id}"` : ''} class="${cls ?? ''} lines" data-lines>${inner}</${tag}>`);
 }
 
 export function WorkRow({ p, lang, i }: { p: PublicProject; lang: Lang; i: number }) {
@@ -174,7 +175,6 @@ export function HomePage(p: {
     ],
   };
   const featured = (p.projects.filter((x) => x.featured).length ? p.projects.filter((x) => x.featured) : p.projects).slice(0, 3);
-  const cards = ctx.get('home.bento.cards').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
   const flick = ctx.list('home.hero.flick').length ? ctx.list('home.hero.flick') : ['Websites'];
   const levers = ctx.get('home.growth.levers').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
   const H = ({ text, cls = 'h-display' }: { text: string; cls?: string }) => <Lines text={text} tag="h2" class={cls} />;
@@ -214,7 +214,7 @@ export function HomePage(p: {
             shows through the gaps, so the cards read as one piece. Plain cards on phones. ── */}
       <section class="about-bento" id="about" aria-labelledby="about-title">
         <div class="wrap">
-          <div class="room-head"><Lines text={ctx.get('home.about.title')} tag="h2" class="h-display" /></div>
+          <div class="room-head"><Lines text={ctx.get('home.about.title')} tag="h2" class="h-display" id="about-title" /></div>
         </div>
         {(() => {
           const T = ctx.get('home.about.tiles').split('\n').map((l) => { const [a, ...b] = l.split('|'); return [a.trim(), b.join('|').trim()]; });
@@ -326,6 +326,31 @@ export function HomePage(p: {
         );
       })()}
 
+      {/* ── services: six boxes, geometric brand icons ── */}
+      {(() => {
+        const items = ctx.get('home.svc.items').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2 && x[0]);
+        return (
+          <section class="svc-room" id="services" aria-labelledby="svc-title">
+            <div class="wrap">
+              <div class="svc-head">
+                <Lines text={ctx.get('home.svc.title')} tag="h2" class="h-display" id="svc-title" />
+                <a class="link reveal" href={href(lang, '/services')}>{t(lang, 'nav.services')} {icon('arrow-right', { size: 15 })}</a>
+              </div>
+              <div class="svc-grid">
+                {items.map(([title, text], i) => (
+                  <a class="svc-box reveal" href={href(lang, '/services')} style={`--d:${(i % 3) * 0.08}s`}>
+                    <span class="svc-icon">{raw(SERVICE_ICONS[i % SERVICE_ICONS.length])}</span>
+                    <h3 class="svc-title">{title}</h3>
+                    <p class="svc-text">{text}</p>
+                    <span class="svc-go" aria-hidden="true">{icon('arrow-up-right', { size: 18 })}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* ── growth: how the work turns into revenue ── */}
       <section class="growth" id="growth">
         <div class="wrap">
@@ -361,27 +386,6 @@ export function HomePage(p: {
               <p class="calc-note">An illustration with your own numbers, not a promise. Every project starts by measuring where you are, so you can see what actually changes.</p>
               <a class="btn btn-primary calc-cta" href={href(lang, '/contact')}>Get a free review of your site {icon('arrow-up-right', { size: 15 })}</a>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── light room: capabilities bento with real clips ── */}
-      <section class="room room-light" id="services">
-        <div class="wrap">
-          <div class="room-head">
-            <H text={ctx.get('home.bento.title')} />
-            <p class="room-lead reveal">{ctx.get('home.bento.lead')}</p>
-          </div>
-          <div class="bento">
-            {cards.map(([title, text, media], i) => (
-              <article class={`bento-card reveal ${i % 4 === 1 || i % 4 === 2 ? 'wide' : ''}`} style={`--d:${(i % 2) * 0.12}s`}>
-                <div class="bento-media">{media ? (/\.(mp4|webm)$/i.test(media) ? <video data-src={mediaUrl(media)!} muted loop playsinline preload="none" aria-hidden="true"></video> : <img src={mediaUrl(media)!} alt="" loading="lazy" />) : null}</div>
-                <p class="bento-text"><strong>{title}</strong> {text}</p>
-              </article>
-            ))}
-          </div>
-          <div class="room-links reveal">
-            <a class="link" href={href(lang, '/services')}>{t(lang, 'nav.services')} {icon('arrow-right', { size: 15 })}</a>
           </div>
         </div>
       </section>
