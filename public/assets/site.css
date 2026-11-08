@@ -603,7 +603,8 @@ html:not(.js) .reveal, html:not(.js) .reveal-text, html:not(.js) .lines .line-in
 
 /* ── Bob ── */
 /* ── Bob launcher: an orange ghost bottom-right (the assistant loads on click — see bob.css / bob.js) ── */
-.bob { position: fixed; right: 22px; bottom: 22px; z-index: 95; }
+.bob { position: fixed; right: 22px; bottom: 22px; z-index: 95; transition: bottom .35s var(--ease); }
+.consent-open .bob { bottom: calc(18px + var(--consent-h, 0px)); }
 .bob-ghost { display: flex; align-items: center; gap: 10px; flex-direction: row-reverse; background: transparent; border: 0; padding: 0; cursor: pointer; }
 /* The float runs on an HTML wrapper (compositor only); the SVG itself stays still, so its glow is painted once. */
 .bob-ghost .ghost-float { display: block; position: relative; animation: ghost-float 3.6s ease-in-out infinite; transform-origin: 50% 90%; will-change: transform; }
@@ -982,8 +983,8 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 [data-theme="light"] .ofs-light { background: radial-gradient(closest-side, rgba(249,68,6,.22), rgba(249,68,6,.05) 55%, transparent); }
 .ofs-card { position: absolute; left: 0; right: 0; margin: 0 auto; top: 26px; width: min(82%, 300px); padding: 12px; border-radius: 14px; background: var(--c0); border: 1px solid var(--ln); box-shadow: var(--sh), inset 0 1px 0 rgba(255,255,255,.06); }
 .ofs-card::before { display: none; content: ''; position: absolute; left: 18%; right: 18%; top: -1px; height: 1px; background: linear-gradient(90deg, transparent, #ff7a3d, transparent); }
-.ofs-side { position: absolute; top: 50px; width: 44%; height: 190px; padding: 14px; border-radius: 12px; background: var(--c0); border: 1px solid var(--ln); opacity: .55; box-shadow: var(--sh); }
-.ofs-side.l { left: calc(-44% + 30px); } .ofs-side.r { right: calc(-44% + 30px); }
+.ofs-side { position: absolute; top: 50px; width: 170px; height: 190px; padding: 14px; border-radius: 12px; background: var(--c0); border: 1px solid var(--ln); opacity: .55; box-shadow: var(--sh); }
+.ofs-side.l { left: calc(50% - min(41%, 150px) - 150px); } .ofs-side.r { right: calc(50% - min(41%, 150px) - 150px); }
 .ofs-side .ofs-mini { gap: 12px; }
 .ofs-mini { display: grid; gap: 9px; } .ofs-side .ofs-mh { display: none; } .ofs-mh { font-size: 12.5px; font-weight: 600; color: var(--mu); margin-bottom: 2px; }
 .ofs-skel { display: block; height: 9px; border-radius: 5px; background: var(--c2); }

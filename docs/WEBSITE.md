@@ -65,6 +65,10 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Voice notes live (8 Nov, 4.18.1)
+- Real recordings attached: Vanessa (tm1), Chisom (tm2), John Sax (tm3) from Design/ferrnwebsite/Hero Section Video/Testimonials, and Nkem (tm5) from WhatsApp. They were converted to AAC m4a (opus doesn't play in Safari), stored in R2 `voices/2026-11/`, and transcribed with Whisper. Transcripts fix only mis-heard words (Ferrn, PWAN, fonts) and punctuation. Ifechukwu (tm4) still has no recording: send them a recording link from Studio.
+- Bob lifts above the cookie banner while it shows (`--consent-h`, `.consent-open`). The offer scene side cards are 170px and tuck 20px behind the main card at every width.
+
 ## Real client voice notes (8 Nov, 4.18.0)
 - Studio > Website > Testimonials > open a client > "Get recording link" makes a private 30-day link, `/voice/<token>` (token stored in KV `voice:<token>`, no schema change). There is a WhatsApp share button too.
 - The client records on their phone (MediaRecorder; Safari gives mp4) or uploads a voice note. It is stored in R2 `voices/YYYY-MM/<id>-*.ext`, set as the testimonial's `audio`, and transcribed by Workers AI Whisper (`whisper-large-v3-turbo`, falling back to `whisper`) into `transcript`. "Transcribe again" reruns it for Studio uploads. Routes are in src/worker/routes/voice.ts.

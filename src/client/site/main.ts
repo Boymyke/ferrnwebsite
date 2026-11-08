@@ -813,12 +813,15 @@ function consent() {
   if (choice === 'all') return start();
   const bar = document.getElementById('consent');
   if (choice || !bar || /^\/(studio|q|p|i)\//.test(location.pathname + '/')) return;
-  setTimeout(() => { bar.hidden = false; requestAnimationFrame(() => bar.classList.add('in')); }, 1200);
+  // Bob lifts above the banner while it is showing, so neither covers the other
+  const lift = (on: boolean) => { document.documentElement.style.setProperty('--consent-h', on ? `${bar.getBoundingClientRect().height + 12}px` : '0px'); document.documentElement.classList.toggle('consent-open', on); };
+  setTimeout(() => { bar.hidden = false; requestAnimationFrame(() => { bar.classList.add('in'); lift(true); }); }, 1200);
+  addEventListener('resize', () => { if (!bar.hidden) lift(true); }, { passive: true });
   bar.addEventListener('click', (e) => {
     const v = (e.target as HTMLElement).closest<HTMLElement>('[data-consent]')?.dataset.consent;
     if (!v) return;
     try { localStorage.setItem('ferrn-consent', v); } catch {}
-    bar.classList.remove('in'); setTimeout(() => (bar.hidden = true), 250);
+    bar.classList.remove('in'); lift(false); setTimeout(() => (bar.hidden = true), 250);
     if (v === 'all') start();
   });
 }
