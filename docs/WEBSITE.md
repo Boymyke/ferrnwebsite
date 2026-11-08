@@ -65,6 +65,12 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Regression: all 8 languages render; contact form, checkout dialog (pay / invoice), USD/NGN toggle (now also on plan extras), work filters, sitemap, robots, 404, `/profile.pdf`.
 - Local lab timings (home, cold): TTFB 34 ms, FCP 0.46 s, LCP 1.9 s (hero reveal), CLS 0; site.js 27 kB (10.5 kB gz), site.css 55 kB (11.4 kB gz).
 
+## Real client voice notes (8 Nov, 4.18.0)
+- Studio > Website > Testimonials > open a client > "Get recording link" makes a private 30-day link, `/voice/<token>` (token stored in KV `voice:<token>`, no schema change). There is a WhatsApp share button too.
+- The client records on their phone (MediaRecorder; Safari gives mp4) or uploads a voice note. It is stored in R2 `voices/YYYY-MM/<id>-*.ext`, set as the testimonial's `audio`, and transcribed by Workers AI Whisper (`whisper-large-v3-turbo`, falling back to `whisper`) into `transcript`. "Transcribe again" reruns it for Studio uploads. Routes are in src/worker/routes/voice.ts.
+- The site card becomes a voice note plus a Transcript button as soon as audio exists; until then the written quote shows. No synthetic voice anywhere.
+- Headlines updated: Trusted by businesses worldwide / About our web agency. The team tile says "for clients worldwide". The work lead line is removed. The testimonials section has top padding again.
+
 ## SEO headlines and Branding service (8 Nov, 4.17.2)
 - Section headlines are short, search-friendly phrases with the `{, Name}` slot, two lines max at every width (checked with long names): Trusted by Nigerian businesses / Web designers in Lagos / Our web design services / Websites that win customers / Websites ready in days / Our web design portfolio / What our clients say / Start your website project.
 - The fifth service box is Branding (logos, colours, brand guides) with a brand-card icon, replacing Online payments.

@@ -742,7 +742,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .bob-stage-glow { position: absolute; inset: -14%; background: radial-gradient(50% 50% at 55% 45%, color-mix(in srgb, var(--accent) 60%, transparent), transparent 70%); filter: blur(46px); pointer-events: none; }
 .bob-stage .bento-card { position: relative; }
 
-.room-quotes { padding-top: 0; }
+.room-quotes { padding-top: clamp(72px, 8vw, 130px); }
 .room-close { text-align: center; padding-bottom: clamp(120px, 14vw, 220px); }
 .close-glow { position: absolute; left: 50%; bottom: -45%; width: 110vw; height: 110%; transform: translateX(-50%); background: radial-gradient(42% 50% at 50% 100%, color-mix(in srgb, var(--accent) 75%, transparent), color-mix(in srgb, var(--accent) 18%, transparent) 50%, transparent 72%); filter: blur(28px); pointer-events: none; }
 .close-inner { position: relative; display: grid; justify-items: center; gap: 22px; }

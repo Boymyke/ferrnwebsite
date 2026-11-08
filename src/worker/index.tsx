@@ -14,6 +14,7 @@ import publicApi from './routes/api-public';
 import authApi from './routes/auth';
 import studioApi from './routes/studio-api';
 import { demoSite, demosApi } from './routes/demos';
+import { voiceApi, voicePage } from './routes/voice';
 import { pushPendingToEngine, runAutoProspect } from './lib/autoprospect';
 import { syncPreviews } from './lib/engine';
 import { analyticsCollect, analyticsStudio, pruneAnalytics } from './routes/analytics';
@@ -67,6 +68,7 @@ app.use('*', async (c, next) => { c.set('lang', 'en'); await next(); });
 /* API */
 app.route('/api/auth', authApi);
 app.route('/api/studio/demos', demosApi);
+app.route('/api/studio/voice', voiceApi);
 app.route('/api/a', analyticsCollect);
 app.route('/api/studio/analytics', analyticsStudio);
 app.route('/api/studio/proposals', proposalsApi);
@@ -82,6 +84,7 @@ app.route('/api', publicApi);
 
 /* Uploaded demo sites (R2) */
 app.route('/', demoSite);
+app.route('/', voicePage);
 
 /* Studio (installable PWA) */
 app.get('/studio', studioShell);

@@ -3,6 +3,7 @@ import { Bot, Calculator, Camera, Download, ExternalLink, History as HistoryIcon
 import { api, can, fmtDate, money } from '../api';
 import { Badge, Card, Empty, ErrorNote, Loading, Page, Status, Tabs, mediaUrl, useData, useRoute, useToast, useUser, Pager, usePaged } from '../ui';
 import { ResourcePage } from './resource';
+import { Copy, Mic, FileText } from 'lucide-react';
 import { Knowledge as KnowledgeNotes } from './catalog';
 
 /* ═══════════════════════════ Projects ═══════════════════════════ */
@@ -390,9 +391,41 @@ export function Profile() {
 }
 
 /* ═══════════════════════════ Testimonials (voice) ═══════════════════════════ */
+function VoiceTools({ row, reload, patch }: { row: any; reload: () => void; patch: (v: Record<string, any>) => void }) {
+  const toast = useToast();
+  const [link, setLink] = useState('');
+  const [busy, setBusy] = useState('');
+  const getLink = async () => {
+    setBusy('link');
+    try { const r = await api<{ url: string }>(`/voice/${row.id}/link`, { body: {} }); setLink(r.url); try { await navigator.clipboard.writeText(r.url); toast('Recording link copied'); } catch { toast('Recording link ready'); } }
+    catch (e: any) { toast(e.message, 'err'); } finally { setBusy(''); }
+  };
+  const transcribe = async () => {
+    setBusy('tr');
+    try { const r = await api<{ transcript: string }>(`/voice/${row.id}/transcribe`, { body: {} }); patch({ transcript: r.transcript }); toast('Transcript added'); reload(); }
+    catch (e: any) { toast(e.message, 'err'); } finally { setBusy(''); }
+  };
+  const first = String(row.name || '').split(' ')[0];
+  const wa = link ? `https://wa.me/?text=${encodeURIComponent(`Hi ${first}, thank you again for your kind words about Ferrn. Could you record them as a short voice note for our website? It takes under a minute: ${link}`)}` : '';
+  return (
+    <div className="card soft">
+      <p><strong>{row.audio ? 'Voice note received' : 'No voice note yet'}</strong></p>
+      <p className="muted small">{row.audio ? 'It plays on the website with a Transcript button.' : 'Send this client a private link. They press record on their phone, and the voice note and its transcript land here.'}</p>
+      <div className="row-actions">
+        <button className="btn sm primary" disabled={!!busy} onClick={getLink}><Mic size={14} />{busy === 'link' ? 'Making link…' : row.audio ? 'New recording link' : 'Get recording link'}</button>
+        {link ? <button className="btn sm ghost" onClick={() => navigator.clipboard.writeText(link).then(() => toast('Copied'))}><Copy size={14} />Copy</button> : null}
+        {wa ? <a className="btn sm ghost" href={wa} target="_blank" rel="noreferrer">Send on WhatsApp</a> : null}
+        {row.audio ? <button className="btn sm ghost" disabled={!!busy} onClick={transcribe}><FileText size={14} />{busy === 'tr' ? 'Transcribing…' : 'Transcribe again'}</button> : null}
+      </div>
+      {link ? <p className="small" style={{ wordBreak: 'break-all', marginTop: 8 }}><code>{link}</code></p> : null}
+    </div>
+  );
+}
+
 export function Testimonials() {
   return (
-    <ResourcePage res="testimonials" entity="testimonials" title="Testimonials" sub="Real client quotes only, with permission. Add a voice note to turn one into a voice testimonial — the site shows a player with a transcript."
+    <ResourcePage res="testimonials" entity="testimonials" title="Testimonials" sub="Real client quotes only, with permission. To get their real voice, open a client and send them their recording link: they record on their phone, and it appears on the site as a voice note with a Transcript button."
+      drawerExtra={(row, reload, patch) => (row.id ? <VoiceTools row={row} reload={reload} patch={patch} /> : null)}
       columns={[{ key: 'name', label: 'Client', render: (r) => <><strong>{r.name}</strong><div className="muted small">{[r.role, r.company].filter(Boolean).join(', ')}</div></> }, { key: 'quote', label: 'Quote', render: (r) => <span className="small">{String(r.quote).slice(0, 110)}</span> }, { key: 'audio', label: 'Voice', render: (r) => (r.audio ? <Badge tone="green">audio</Badge> : '') }, { key: 'published', label: 'Shown', render: (r) => (r.published ? (r.featured ? 'featured' : 'yes') : 'no') }]}
       defaults={{ published: 1, featured: 0, sort: 100 }}
       fields={[{ name: 'name', label: 'Name' }, { name: 'role', label: 'Role' }, { name: 'company', label: 'Company' }, { name: 'quote', label: 'Quote', type: 'textarea' },

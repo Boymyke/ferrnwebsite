@@ -421,7 +421,7 @@ export function HomePage(p: {
         <div class="wrap">
           <div class="room-head">
             <H text={ctx.get('home.work.title')} />
-            <p class="room-lead reveal">{ctx.get('home.work.lead')}</p>
+            {ctx.get('home.work.lead') ? <p class="room-lead reveal">{ctx.get('home.work.lead')}</p> : null}
           </div>
           <div class="work-grid">
             {featured.map((x, i) => { const img = shotOf(x); return (
