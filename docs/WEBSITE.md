@@ -69,6 +69,8 @@ Pages are edge-cached by content version + `ASSET_V`; add `?nocache=1` while ite
 - Concept sites (built for one lead) are separate from marketplace demos. They share the `demos` table and the R2 `demos/<slug>/` store, but a row with a `lead_id` is a concept and is served at `/concept/<client>/`. Old `/preview/<slug>/` links 301 to `/concept/`. Studio has a Concepts page (Main > Concepts) for uploading with a lead picker, and an upload sets the lead's `preview_url`. The Demos page lists product demos only. The morning routine now writes `/concept/` links.
 - Section headlines (h2) have no animation and no rotating words: plain text, one size, at most two lines (max-width 22ch, 30px minimum), with only the `{, Name}` slot. Only the hero h1 animates.
 - Team card: faces at the top, the team line below.
+- Sandboxed demo and concept files get `cross-origin-resource-policy: cross-origin` (and `access-control-allow-origin: *` for non-HTML), because the sandbox gives the page an opaque origin and the site-wide same-origin policy blocked its own images and fonts. Splendid Freight moved to /concept/splendid-freight/ (13 files), linked to lead L-f9c208f1.
+- The Bob tooltip sits above the ghost.
 
 ## Headline fix, flat offers, real voice notes (8 Nov, 4.16.1)
 - Ghost-word bug: `.lines .line-in` paints text through a gradient clip (reveal shimmer), and Chromium draws animated children a second time at the line start. Lines that contain a rotating word or a name slot get `.plain` (normal text colour, no clip).

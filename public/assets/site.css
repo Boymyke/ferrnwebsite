@@ -614,7 +614,10 @@ html:not(.js) .reveal, html:not(.js) .reveal-text, html:not(.js) .lines .line-in
 .bob-ghost:hover .ghost { transform: translateY(-4px) scale(1.06) rotate(-4deg); }
 .bob-ghost .ghost-eyes { transition: transform .25s ease-out, scale .09s ease-in-out; transform-box: fill-box; transform-origin: center; }
 .bob-ghost.blink .ghost-eyes { scale: 1 .1; }
-.bob-ghost-label { background: var(--panel); color: var(--ink); border: var(--bw) solid var(--line-2); border-radius: var(--r-btn); padding: 8px 12px; font-size: 13px; font-weight: 500; white-space: nowrap; opacity: 0; transform: translateX(6px); transition: opacity .3s, transform .3s var(--ease); pointer-events: none; }
+/* tooltip sits above Bob, right-aligned so it never runs off the screen edge */
+.bob-ghost { position: relative; }
+.bob-ghost-label { position: absolute; right: 0; bottom: calc(100% + 10px); background: var(--ink); color: var(--bg); border-radius: var(--r); padding: 8px 12px; font-size: 13px; font-weight: 500; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .3s var(--ease); pointer-events: none; }
+.bob-ghost-label::after { content: ''; position: absolute; right: 22px; top: 100%; width: 10px; height: 10px; translate: 0 -5px; rotate: 45deg; background: var(--ink); border-radius: 2px; }
 .bob-ghost:hover .bob-ghost-label, .bob-ghost:focus-visible .bob-ghost-label { opacity: 1; transform: none; }
 .bob.loading .ghost-float { animation: ghost-float .9s ease-in-out infinite; }
 .bob.is-open .bob-ghost { opacity: 0; pointer-events: none; transform: scale(.6); transition: opacity .25s, transform .3s var(--ease); }

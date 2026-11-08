@@ -45,6 +45,14 @@ app.use('*', async (c, next) => {
     c.res.headers.set('referrer-policy', 'no-referrer');
     return;
   }
+  // Uploaded demos and concept sites run in a CSP sandbox (opaque origin), so to the browser their own
+  // images, fonts and scripts are cross-origin: let those files load there (they hold nothing private).
+  if (/^\/(concept|preview|demos\/u)\//.test(c.req.path)) {
+    await securityHeaders(c, next);
+    c.res.headers.set('cross-origin-resource-policy', 'cross-origin');
+    if (!(c.res.headers.get('content-type') || '').startsWith('text/html')) c.res.headers.set('access-control-allow-origin', '*');
+    return;
+  }
   return securityHeaders(c, next);
 });
 // One canonical address: ferrnagency.com → www.ferrnagency.com (keeps path and query).
