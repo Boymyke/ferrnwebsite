@@ -31,10 +31,11 @@
     '@media(max-width:520px){#cai{right:12px;bottom:12px}#cai .cai-fab span{display:none}#cai .cai-fab{padding:0 8px}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   var logo = C.logo || '';
+  function L(k) { return logo.replace(/id="([^"]+)"/g, 'id="$1' + k + '"').replace(/url\(#([^)]+)\)/g, 'url(#$1' + k + ')'); }
   var w = document.createElement('div'); w.id = 'cai';
   w.innerHTML = '<div class="cai-box" role="dialog" aria-label="Chat with ' + C.name + '"><div class="cai-head"><i>' + logo + '</i><div><b>' + (C.title || C.name + ' Assistant') + '</b><small><span class="cai-dot"></span>Online, replies instantly</small></div><button class="cai-x" aria-label="Close">×</button></div>' +
     '<div class="cai-log" aria-live="polite"></div><div class="cai-chips"></div><form><input placeholder="Ask about shipping, quotes, tracking…" aria-label="Your message"><button aria-label="Send">➤</button></form><div class="cai-by">AI assistant · answers from ' + C.name + ' information</div></div>' +
-    '<button class="cai-fab" aria-label="Open chat"><i>' + logo + '</i><span>' + (C.cta || 'Ask us anything') + '</span></button>';
+    '<button class="cai-fab" aria-label="Open chat"><i>' + L('f') + '</i><span>' + (C.cta || 'Ask us anything') + '</span></button>';
   document.body.appendChild(w);
   var log = w.querySelector('.cai-log'), chips = w.querySelector('.cai-chips'), form = w.querySelector('form'), inp = w.querySelector('input');
   var msgs = [];
