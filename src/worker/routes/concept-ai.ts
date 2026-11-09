@@ -44,6 +44,7 @@ conceptAi.post('/:slug', async (c) => {
 
   let body: { messages?: { role: string; content: string }[]; context?: string } = {};
   try { body = JSON.parse(await c.req.text()); } catch { /* empty */ }
+  const account = slug !== base && typeof (body as { account?: unknown }).account === 'string' ? String((body as { account?: string }).account).slice(0, 2000) : '';
   const history = (body.messages ?? []).filter((m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').slice(-8)
     .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content.slice(0, 1200) }));
   if (!history.length || history[history.length - 1].role !== 'user') return c.json({ ok: false, error: 'Ask a question' }, 400, cors);
@@ -52,9 +53,9 @@ conceptAi.post('/:slug', async (c) => {
   if (!kb) return c.json({ ok: false, error: 'Unknown concept' }, 404, cors);
   const system: ChatMessage = { role: 'system', content:
 `You are the virtual assistant on ${kb.name}'s website${slug !== base ? ' and customer portal' : ''}. Speak for ${kb.name} in a warm, brief, professional tone (2 to 4 short sentences, plain text, no markdown, no emojis).
-Use ONLY the facts below about the business. Never invent prices, transit times, tracking results, staff names or policies. For prices, give what affects the price and offer to start a quote. For a shipment status, explain that the live status appears when they enter the tracking number on the Track page, and offer to connect them to the team. When you cannot answer, offer the phone number or email from the facts.
+Use ONLY the facts below about the business. Never invent prices, transit times, tracking results, staff names or policies. For prices, give what affects the price and offer to start a quote. For a shipment status, ${account ? 'use the signed-in customer account data below; if a shipment is not listed there, ask for the tracking number' : 'explain that the live status appears when they enter the tracking number on the Track page, and offer to connect them to the team'}. When you cannot answer, offer the phone number or email from the facts.
 If the visitor wants a quote, ask for: origin, destination, cargo type, weight or volume, and preferred mode (air, ocean, rail or road), one or two at a time.
-${body.context ? `The visitor is currently on: ${String(body.context).slice(0, 120)}.\n` : ''}Facts about the business (from its website):
+${body.context ? `The visitor is currently on: ${String(body.context).slice(0, 120)}.\n` : ''}${account ? `Signed-in customer account data (sample data for this demo portal, treat as real):\n${account}\n` : ''}Facts about the business (from its website):
 ${kb.text}` };
   try {
     const r = await complete(c.env, [system, ...history], { maxTokens: 260, temperature: 0.3, bucket: 'concept-ai' });

@@ -43,7 +43,7 @@
   function send(text) {
     text = String(text || '').trim(); if (!text) return; chips.innerHTML = ''; add('user', text); msgs.push({ role: 'user', content: text }); inp.value = '';
     var t = document.createElement('div'); t.className = 'cai-m b cai-typing'; t.innerHTML = '<span></span><span></span><span></span>'; log.appendChild(t); log.scrollTop = log.scrollHeight;
-    fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ messages: msgs, context: (document.title || '') + ' ' + (location.hash || '') }) })
+    fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ messages: msgs, context: (document.title || '') + ' ' + (location.hash || ''), account: C.account ? (typeof C.account === 'function' ? C.account() : C.account) : undefined }) })
       .then(function (r) { return r.json(); })
       .then(function (j) { t.remove(); var reply = j.ok ? j.reply : (j.error || 'Sorry, something went wrong.'); add('assistant', reply); if (j.ok) msgs.push({ role: 'assistant', content: reply }); })
       .catch(function () { t.remove(); add('assistant', 'I could not connect just now. Please call or email the team.'); });
@@ -51,5 +51,6 @@
   w.querySelector('.cai-fab').onclick = function () { w.classList.toggle('open'); if (w.classList.contains('open')) { greet(); setTimeout(function () { inp.focus(); }, 50); } };
   w.querySelector('.cai-x').onclick = function () { w.classList.remove('open'); };
   form.onsubmit = function (e) { e.preventDefault(); send(inp.value); };
+  window.conceptAiSend = function (history, cb) { fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ messages: history, context: document.title, account: C.account ? (typeof C.account === 'function' ? C.account() : C.account) : undefined }) }).then(function (r) { return r.json(); }).then(cb).catch(function () { cb({ ok: false, error: 'I could not connect just now.' }); }); };
   window.conceptAiAsk = function (q) { w.classList.add('open'); greet(); send(q); };
 })();
