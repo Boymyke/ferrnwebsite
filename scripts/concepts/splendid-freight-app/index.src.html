@@ -191,13 +191,68 @@ td b{font-weight:700}
 .toast.on{transform:translate(-50%,0)}
 .toast i{width:8px;height:8px;border-radius:50%;background:var(--mint)}
 .mob-nav{display:none}
+.mode-sw{display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.06);border-radius:10px;padding:3px;margin:0 4px 16px}
+.mode-sw button{border:0;background:none;color:#9FB2AA;font-weight:700;font-size:12.5px;padding:8px 6px;border-radius:8px}
+.mode-sw button.on{background:var(--mint);color:var(--ink)}
+.nav-team{display:none}body.team .top .btn.mint{display:none}body.drawer-open #cai{display:none!important}
+body.team .nav-client{display:none}body.team .nav-team{display:flex}
+body.team .side-ai{display:none}
+.me-team{display:none}body.team .me-client{display:none}body.team .me-team{display:flex}
+.mob-nav .mob-team{display:none}body.team .mob-nav .mob-client{display:none}body.team .mob-nav .mob-team{display:flex}
+.top-sw{display:none}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--teal);background:var(--mint-soft);padding:6px 12px;border-radius:99px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(0,122,94,.5);animation:lv 1.6s infinite}
+@keyframes lv{70%{box-shadow:0 0 0 8px rgba(0,122,94,0)}100%{box-shadow:0 0 0 0 rgba(0,122,94,0)}}
+.chart{width:100%;height:220px;display:block;margin-top:12px}
+.hbar{display:grid;grid-template-columns:130px 1fr 54px;gap:12px;align-items:center;padding:7px 0;font-size:13px}
+.hbar .t{height:8px;border-radius:99px;background:var(--bg);overflow:hidden}.hbar .t i{display:block;height:100%;border-radius:99px;background:var(--teal)}
+.hbar b{text-align:right;font-weight:700}
+.feed-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.feed-row:first-child{border-top:0}
+.feed-row .fl{width:30px;height:30px;border-radius:8px;background:var(--bg);display:grid;place-items:center;font-size:14px;flex:none}
+.feed-row small{display:block;color:var(--muted);font-size:12px}
+.lead-row{cursor:pointer}.lead-row:hover td{background:#FAFCFB}
+.src{font-size:11.5px;font-weight:700;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.src i{width:7px;height:7px;border-radius:50%}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:#fff;z-index:70;box-shadow:-30px 0 80px -20px rgba(0,0,0,.35);transform:translateX(105%);transition:.35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.drawer .dh{padding:22px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.drawer .db{padding:22px;overflow:auto;flex:1}
+.drawer .df{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap}
+.drawer .x{margin-left:auto;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px 14px;font-size:13.5px;margin:14px 0 18px}.kv span{color:var(--muted)}
+.ai-sum{background:var(--mint-soft);border-radius:12px;padding:14px;font-size:13.5px;line-height:1.5;margin-bottom:16px}
+.ai-sum b{display:flex;align-items:center;gap:6px;color:var(--teal);font-size:12px;margin-bottom:6px}
+.chatlog{background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.chatlog div{font-size:13px;padding:8px 11px;border-radius:10px;max-width:88%}
+.chatlog .v{background:#fff;border:1px solid var(--line);align-self:flex-end}.chatlog .a{background:var(--ink);color:#fff;align-self:flex-start}
+.scrim{position:fixed;inset:0;background:rgba(10,15,13,.35);z-index:65;opacity:0;pointer-events:none;transition:.3s}.scrim.on{opacity:1;pointer-events:auto}
+.posts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.post{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.post .cv{height:140px;background-size:cover;background-position:center;position:relative}
+.post .cv .chip{position:absolute;left:12px;top:12px}
+.post .pb{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.post .pb b{font-size:15px;line-height:1.35;letter-spacing:-.01em}
+.post .pb small{color:var(--muted);font-size:12px;margin-top:auto;display:flex;gap:10px}
+.editor{display:none}.editor.on{display:block}
+.ed-title{width:100%;border:0;outline:0;font-size:28px;font-weight:800;letter-spacing:-.02em;padding:6px 0 12px;background:none}
+.ed-tools{display:flex;gap:6px;padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.ed-tools button{border:0;background:var(--bg);border-radius:7px;padding:6px 10px;font-weight:700;font-size:12.5px}
+.ed-tools .aiw{margin-left:auto;background:var(--teal);color:#fff;display:inline-flex;gap:6px;align-items:center}
+.ed-tools .aiw svg{width:14px;height:14px}
+.ed-body{width:100%;min-height:260px;border:1px solid var(--line);border-radius:10px;padding:14px;outline:0;font-size:14.5px;line-height:1.6;resize:vertical}
+.seo{background:var(--bg);border-radius:12px;padding:14px;margin-top:14px}
+.seo .g{font-size:16px;color:#1a0dab;margin:4px 0 2px}.seo .u{font-size:12px;color:#006621}.seo p{font-size:13px;color:#545454}
+@media(max-width:1100px){.posts{grid-template-columns:1fr 1fr}}
+@media(max-width:820px){.top-sw{display:inline-flex}.posts{grid-template-columns:1fr}.hbar{grid-template-columns:100px 1fr 44px}}
+
 #cai .cai-fab i,#cai .cai-head i{background:#16241F!important;box-shadow:inset 0 0 0 1px rgba(30,247,196,.25)}#cai .cai-fab i svg{width:26px;height:26px}
 @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.chat{grid-template-columns:1fr}.chat aside{display:none}}
 @media(max-width:820px){
 .app{grid-template-columns:1fr}.side{display:none}
 main{padding:0 16px 120px}
 .top{flex-wrap:wrap;padding:14px 0}.search{order:3;width:100%;margin-left:0}
-.top .btn{display:none}
+.top .btn{display:none}.top .top-sw{display:inline-flex!important;height:38px;padding:0 12px;font-size:12.5px}
 .ship{grid-template-columns:40px 1fr 24px}.ship .route-col,.ship .st-col{display:none}
 .meta{grid-template-columns:1fr 1fr}.modes{grid-template-columns:1fr 1fr}.fields{grid-template-columns:1fr}
 .track-form{flex-direction:column}.track-form input{flex:none}.track-form .btn{justify-content:center}
@@ -217,6 +272,9 @@ table .hide-m{display:none}
 <defs>
 <mask id="lm"><rect width="40" height="40" fill="#fff"/><path d="M14 1.5C8 7.5 8.6 14.2 16.4 18.6C24.2 23 28.4 28.6 24.6 38.6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask>
 <symbol id="logo" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#1EF7C4" mask="url(#lm)"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
 <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
 <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
@@ -240,7 +298,8 @@ table .hide-m{display:none}
 <div class="app">
   <aside class="side">
     <div class="brand"><svg><use href="#logo"/></svg><div><b>Splendid Freight</b><small>Client portal</small></div></div>
-    <nav class="nav" id="nav">
+    <div class="mode-sw" id="mode-sw"><button class="on" data-mode="client">Client view</button><button data-mode="team">Team view</button></div>
+    <nav class="nav nav-client" id="nav">
       <button data-v="home" class="on"><svg><use href="#i-home"/></svg>Dashboard</button>
       <button data-v="ships"><svg><use href="#i-box"/></svg>Shipments<span class="badge">4</span></button>
       <button data-v="track"><svg><use href="#i-pin"/></svg>Track</button>
@@ -249,13 +308,21 @@ table .hide-m{display:none}
       <button data-v="bills"><svg><use href="#i-card"/></svg>Invoices</button>
       <button data-v="ai"><svg><use href="#i-spark"/></svg>Assistant</button>
     </nav>
+    <nav class="nav nav-team" id="nav-team">
+      <button data-v="web"><svg><use href="#i-chart"/></svg>Website analytics</button>
+      <button data-v="leads"><svg><use href="#i-users"/></svg>Leads<span class="badge" id="lead-badge">3</span></button>
+      <button data-v="blog"><svg><use href="#i-pen"/></svg>Blog posts</button>
+      <button data-v="ai"><svg><use href="#i-spark"/></svg>Ask Splendid AI</button>
+    </nav>
     <div class="side-ai"><b>Ask Splendid AI</b><p>Status, documents, quotes and customs questions, answered in seconds, day or night.</p><button data-go="ai">Open assistant</button></div>
-    <div class="me"><div class="av">AO</div><div><b>Adaeze Okafor</b><small>Medipharm Distribution Ltd</small></div></div>
+    <div class="me me-team"><div class="av">SF</div><div><b>Splendid Freight</b><small>Team workspace</small></div></div>
+    <div class="me me-client"><div class="av">AO</div><div><b>Adaeze Okafor</b><small>Medipharm Distribution Ltd</small></div></div>
   </aside>
 
   <main>
     <div class="top">
       <div><h1 id="title">Good afternoon, Adaeze</h1><p id="subtitle">Here is where your cargo is right now.</p></div>
+      <button class="btn ghost top-sw" id="top-sw" style="height:42px">Team view</button>
       <label class="search"><svg><use href="#i-search"/></svg><input id="q" placeholder="Search shipments, B/L or invoice no."></label>
       <button class="icon-btn" aria-label="Notifications" data-toast="2 updates: SF-24817 cleared customs, INV-1093 is due Friday"><svg><use href="#i-bell"/></svg><i></i></button>
       <button class="btn mint" data-go="quote"><svg><use href="#i-plus"/></svg>New shipment</button>
@@ -358,6 +425,57 @@ table .hide-m{display:none}
       <div class="card"><table><thead><tr><th>Invoice</th><th class="hide-m">Shipment</th><th class="hide-m">Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody id="bill-rows"></tbody></table></div>
     </section>
 
+
+    <!-- TEAM: WEBSITE ANALYTICS -->
+    <section class="view" id="v-web">
+      <div class="grid kpis">
+        <div class="card kpi dark"><small><span class="dot" style="background:var(--mint)"></span>Visitors, last 30 days</small><b>4,812</b><span>+38% on October</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--teal)"></span>Leads from the website</small><b>63</b><span>41 quotes, 22 AI chats</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--amber)"></span>Visitor to lead rate</small><b>1.3%</b><span>Industry average about 1%</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--blue)"></span>Avg first reply</small><b>14 min</b><span>AI answers instantly</span></div>
+      </div>
+      <div class="grid two">
+        <div class="card"><div class="head-row"><div><h3>Visitors and leads</h3><div class="sub">Last 30 days</div></div><span class="live end"><i></i><span id="live-n">7</span> on the site now</span></div><svg class="chart" id="chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg><div style="display:flex;gap:18px;font-size:12px;color:var(--muted);margin-top:8px"><span><span class="dot" style="background:var(--teal)"></span> Visitors</span><span><span class="dot" style="background:var(--amber)"></span> Leads</span></div></div>
+        <div class="card"><h3>Where visitors come from</h3><div class="sub" style="margin-bottom:10px">Traffic sources</div><div id="sources"></div></div>
+      </div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="card"><h3>Top pages</h3><table style="margin-top:10px"><thead><tr><th>Page</th><th>Views</th><th class="hide-m">Leads</th></tr></thead><tbody id="pages"></tbody></table></div>
+        <div class="card"><div class="head-row"><h3>Live activity</h3><span class="chip g end">Real time</span></div><div id="feed"></div></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h3>Top locations</h3><div class="sub" style="margin-bottom:10px">Cities your visitors browse from</div><div id="cities" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));column-gap:28px"></div></div>
+    </section>
+
+    <!-- TEAM: LEADS -->
+    <section class="view" id="v-leads">
+      <div class="tabs" id="lead-tabs"><button class="on" data-f="all">All leads</button><button data-f="New">New</button><button data-f="Contacted">Contacted</button><button data-f="Quoted">Quoted</button><button data-f="Won">Won</button></div>
+      <div class="card"><table><thead><tr><th>Lead</th><th class="hide-m">Came from</th><th class="hide-m">Shipment</th><th class="hide-m">Received</th><th>Status</th></tr></thead><tbody id="lead-rows"></tbody></table></div>
+    </section>
+
+    <!-- TEAM: BLOG -->
+    <section class="view" id="v-blog">
+      <div id="blog-list">
+        <div class="head-row" style="margin-bottom:16px"><div class="tabs" style="margin:0"><button class="on">All posts</button><button>Published</button><button>Drafts</button></div><button class="btn mint end" id="new-post" style="margin-left:auto"><svg><use href="#i-plus"/></svg>New post</button></div>
+        <div class="posts" id="posts"></div>
+      </div>
+      <div class="editor grid two" id="editor">
+        <div class="card">
+          <input class="ed-title" id="ed-title" placeholder="Post title" value="How to clear pharmaceutical imports faster in Nigeria">
+          <div class="ed-tools"><button type="button">B</button><button type="button"><i>I</i></button><button type="button">H2</button><button type="button">Link</button><button type="button">Image</button><button type="button" class="aiw" id="ai-write"><svg><use href="#i-spark"/></svg>Write intro with AI</button></div>
+          <textarea class="ed-body" id="ed-body" placeholder="Start writing, or let AI draft the intro"></textarea>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" id="publish">Publish</button><button class="btn ghost" id="save-draft">Save draft</button><button class="btn ghost" id="cancel-post">Back to posts</button></div>
+        </div>
+        <div class="grid">
+          <div class="card"><h3>Post settings</h3>
+            <div class="fields" style="grid-template-columns:1fr;margin-top:12px">
+              <label class="f"><span>Category</span><select id="ed-cat"><option>Customs and compliance</option><option>Air freight</option><option>Ocean freight</option><option>Industry news</option><option>Company news</option></select></label>
+              <label class="f"><span>Cover image</span><select id="ed-cover"><option value="air">Air cargo</option><option value="ocean">Container ship</option><option value="road">Trucks</option><option value="rail">Rail</option></select></label>
+            </div>
+          </div>
+          <div class="card"><h3>How it looks on Google</h3><div class="seo"><div class="u">splendidfreight.com › insights</div><div class="g" id="seo-t">How to clear pharmaceutical imports faster in Nigeria</div><p id="seo-d">Write the post and a search preview appears here.</p></div></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ASSISTANT -->
     <section class="view" id="v-ai">
       <div class="chat">
@@ -375,12 +493,17 @@ table .hide-m{display:none}
 </div>
 
 <nav class="mob-nav" id="mob-nav">
-  <button data-v="home" class="on"><svg><use href="#i-home"/></svg>Home</button>
-  <button data-v="ships"><svg><use href="#i-box"/></svg>Shipments</button>
-  <button data-v="track"><svg><use href="#i-pin"/></svg>Track</button>
-  <button data-v="quote"><svg><use href="#i-calc"/></svg>Quote</button>
+  <button data-v="home" class="on mob-client"><svg><use href="#i-home"/></svg>Home</button>
+  <button data-v="ships" class="mob-client"><svg><use href="#i-box"/></svg>Shipments</button>
+  <button data-v="track" class="mob-client"><svg><use href="#i-pin"/></svg>Track</button>
+  <button data-v="quote" class="mob-client"><svg><use href="#i-calc"/></svg>Quote</button>
+  <button data-v="web" class="mob-team"><svg><use href="#i-chart"/></svg>Analytics</button>
+  <button data-v="leads" class="mob-team"><svg><use href="#i-users"/></svg>Leads</button>
+  <button data-v="blog" class="mob-team"><svg><use href="#i-pen"/></svg>Blog</button>
   <button data-v="ai"><svg><use href="#i-spark"/></svg>Assistant</button>
 </nav>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"><div class="dh"><div class="av" id="d-av" style="background:var(--mint-soft);color:var(--teal)">AB</div><div><h3 id="d-name" style="margin:0">Lead</h3><div class="sub" id="d-co"></div></div><button class="x" id="d-x" aria-label="Close">×</button></div><div class="db" id="d-body"></div><div class="df"><button class="btn mint" data-toast="WhatsApp opens with the lead's number in the live portal">Reply on WhatsApp</button><button class="btn ghost" id="d-quote">Send quote</button><button class="btn ghost" id="d-won">Mark as won</button></div></aside>
 <div class="concept">Concept by <b>Ferrn</b> for Splendid Freight · sample data</div>
 <div class="toast" id="toast"><i></i><span></span></div>
 
@@ -440,14 +563,79 @@ $('#ask-quote').onclick=function(){var o=summary();go('ai');ask('I want a quote:
 var hist=[],started=false;
 var SUGS=['When will SF-24817 reach my warehouse?','What documents do I still need for SF-24903?','How much is outstanding on my account?','What is the difference between FCL and LCL?','Can you move pharmaceuticals that need cold chain?','Which of your offices is closest to Port Harcourt?'];
 function bubble(role,text){var log=$('#chat-log');if(role==='assistant'){var w=document.createElement('div');w.className='who';w.innerHTML='<i><svg><use href="#logo"/></svg></i>Splendid AI';log.appendChild(w)}var d=document.createElement('div');d.className='msg '+(role==='user'?'u':'b');d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
-function chatStart(){if(started)return;started=true;bubble('assistant','Hi Adaeze, I am Splendid AI. I can see your 4 active shipments, documents and invoices. Ask me anything about your cargo, customs or a new quote.');$('#sugs').innerHTML=SUGS.map(function(s){return '<button data-ask="'+s+'">'+s+'</button>'}).join('')}
-function ask(q){chatStart();q=String(q||'').trim();if(!q)return;bubble('user',q);hist.push({role:'user',content:q});$('#chat-in').value='';var t=document.createElement('div');t.className='msg b typing';t.innerHTML='<span></span><span></span><span></span>';$('#chat-log').appendChild(t);
+var TSUGS=['Which new leads should we call first?','Summarise website traffic this month','Which pages bring in the most leads?','Suggest three blog post ideas for pharma importers'];
+var startedMode='';function chatStart(){if(startedMode===MODE)return;startedMode=MODE;started=true;hist=[];$('#chat-log').innerHTML='';bubble('assistant',MODE==='team'?'Hi team, I am Splendid AI. I can see your website analytics, all 6 leads and your blog posts. Ask me who to call first, how the site is doing, or for content ideas.':'Hi Adaeze, I am Splendid AI. I can see your 4 active shipments, documents and invoices. Ask me anything about your cargo, customs or a new quote.');$('#sugs').innerHTML=(MODE==='team'?TSUGS:SUGS).map(function(s){return '<button data-ask="'+s+'">'+s+'</button>'}).join('')}
+function ask(q){if(!startedMode)chatStart();q=String(q||'').trim();if(!q)return;bubble('user',q);hist.push({role:'user',content:q});$('#chat-in').value='';var t=document.createElement('div');t.className='msg b typing';t.innerHTML='<span></span><span></span><span></span>';$('#chat-log').appendChild(t);
  var done=function(j){t.remove();var r=j&&j.ok?j.reply:((j&&j.error)||'Sorry, I could not answer that just now.');bubble('assistant',r);if(j&&j.ok)hist.push({role:'assistant',content:r})};
  if(window.conceptAiSend)window.conceptAiSend(hist.slice(-8),done);else done({ok:false})}
 $('#chat-form').onsubmit=function(e){e.preventDefault();ask($('#chat-in').value)};
-function accountText(){return 'Customer: Adaeze Okafor, Medipharm Distribution Ltd (Lagos). Today is Mon 9 Nov 2026.\nShipments:\n'+SHIPS.map(function(s){return s.id+' | '+s.type+' | '+s.from+' to '+s.to+' | '+s.label+' | ETA '+s.eta+' | '+s.cargo+' | '+s.ref+' | timeline: '+s.events.map(function(e,i){return e[0]+' ('+e[1]+')'+(i<s.done?' done':i===s.done?' NEXT':'')}).join('; ')}).join('\n')+'\nDocuments: '+DOCS.map(function(d){return d[0]+' for '+d[1]+': '+d[4]}).join('; ')+'\nInvoices: '+BILLS.map(function(b){return b[0]+' ('+b[1]+') '+b[3]+' '+b[5]}).join('; ')}
+function accountText(){if(typeof MODE!=='undefined'&&MODE==='team')return 'You are helping the Splendid Freight staff team inside their team workspace (not a customer). Website last 30 days: 4,812 visitors (+38% on October), 63 leads (41 quote forms, 22 AI chats), 1.3% visitor to lead rate, top source Google search 48%, top city Lagos. Leads: '+LEADS.map(function(l){return l.n+' ('+l.co+'), '+l.src+', '+l.mode+' '+l.route+', '+l.cargo+', '+l.when+', status '+l.st+': '+l.sum}).join(' | ')+'. Blog posts: '+POSTS.map(function(p){return p.t+' ('+p.st+', '+p.v+')'}).join('; ');return 'Customer: Adaeze Okafor, Medipharm Distribution Ltd (Lagos). Today is Mon 9 Nov 2026.\nInvoices: '+BILLS.map(function(b){return b[0]+' ('+b[1]+') '+b[3]+' '+b[5]}).join('; ')+'. Outstanding total: N1,240,000 (INV-1093, due Fri 13 Nov).\nDocuments: '+DOCS.map(function(d){return d[0]+' for '+d[1]+': '+d[4]}).join('; ')+'\nShipments:\n'+SHIPS.map(function(s){return s.id+' | '+s.type+' | '+s.from+' to '+s.to+' | '+s.label+' | ETA '+s.eta+' | '+s.cargo+' | '+s.ref+' | '+s.events.map(function(e,i){return e[0]+' ('+e[1]+')'+(i<s.done?' done':i===s.done?' NEXT':'')}).join('; ')}).join('\n')}
 window.CONCEPT_AI={slug:'splendid-freight-app',name:'Splendid Freight',title:'Splendid AI',cta:'Ask Splendid AI',color:'#1EF7C4',deep:'#007A5E',ink:'#0A0F0D',logo:'<svg viewBox="0 0 40 40"><use href="#logo"/></svg>',greeting:'Hi Adaeze! Ask me about your shipments, documents, invoices or a new quote.',chips:['Where is SF-24903?','What do I owe?','Get a quote'],account:accountText};
-var h=(location.hash||'').slice(1);if(TITLES[h]&&h!=='home')go(h);
+
+/* ===== TEAM VIEW ===== */
+var LEADS=[
+ {n:'Chinedu Eze',co:'Medilink Pharma Ltd',src:'Quote form',sc:'var(--teal)',route:'Mumbai to Lagos',mode:'Air',cargo:'Pharmaceuticals, 950 kg',when:'Today, 11:42',st:'New',phone:'+234 803 ••• 2214',page:'/services/pharma-logistics',sum:'Wants a door to door air quote for temperature controlled medicine, ready next week. Asked about NAFDAC clearance. High intent: second visit this week.',chat:null},
+ {n:'Fatima Bello',co:'Northgate Foods',src:'AI chat',sc:'var(--amber)',route:'Lagos to Kano',mode:'Road',cargo:'FMCG cartons, 2 trucks',when:'Today, 09:15',st:'New',phone:'+234 809 ••• 7781',page:'/services/road-freight',sum:'Moves FMCG monthly from Lagos to Kano. Wants a regular contract rate. Asked if trucks are tracked.',chat:[['v','Do you do regular trucking from Lagos to Kano?'],['a','Yes, we move cargo nationwide by road, door to door. How many trucks a month, and what are you moving?'],['v','About 2 trucks of FMCG cartons every month'],['a','Thanks. I have passed this to our road freight team for a contract rate. What is the best number to reach you on?']]},
+ {n:'James Whitfield',co:'Oakridge Medical UK',src:'Quote form',sc:'var(--teal)',route:'London to Abuja',mode:'Air',cargo:'Medical devices, 420 kg',when:'Yesterday, 16:20',st:'New',phone:'+44 7700 ••• 118',page:'/quote',sum:'UK supplier shipping devices to an Abuja hospital project. Needs customs clearing and delivery to site.',chat:null},
+ {n:'Ngozi Okonkwo',co:'Prime Build Ltd',src:'AI chat',sc:'var(--amber)',route:'Shanghai to Onne',mode:'Ocean',cargo:'Machinery, 1x40ft FCL',when:'Sat 7 Nov',st:'Contacted',phone:'+234 806 ••• 4402',page:'/services/ocean-freight',sum:'Construction company importing machinery. Called back on Saturday, waiting for the packing list.',chat:null},
+ {n:'Tunde Adeyemi',co:'Brightpath Retail',src:'Contact page',sc:'var(--blue)',route:'Dubai to Lagos',mode:'Ocean',cargo:'Mixed goods, LCL 8 CBM',when:'Fri 6 Nov',st:'Quoted',phone:'+234 802 ••• 9030',page:'/contact',sum:'Quote sent on 6 Nov for LCL from Jebel Ali. Follow up due today.',chat:null},
+ {n:'Amaka Nwosu',co:'Lifeway Diagnostics',src:'Quote form',sc:'var(--teal)',route:'Frankfurt to Lagos',mode:'Air',cargo:'Lab reagents, 180 kg',when:'Thu 5 Nov',st:'Won',phone:'+234 814 ••• 5567',page:'/services/pharma-logistics',sum:'Booked as SF-25040. Cold chain air shipment, arriving 14 Nov.',chat:null}
+];
+var POSTS=[
+ {t:'What documents do you need to import into Nigeria in 2026?',c:'Customs and compliance',img:'ocean',st:'Published',d:'2 Nov',v:'1,284 views'},
+ {t:'Air or ocean freight: how to choose for your next shipment',c:'Air freight',img:'air',st:'Published',d:'24 Oct',v:'862 views'},
+ {t:'Moving FMCG across Nigeria by road: a practical guide',c:'Industry news',img:'road',st:'Draft',d:'Edited yesterday',v:'Not published'}
+];
+var IMG={air:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/air.jpg',ocean:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/ocean.jpg',road:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/road.jpg',rail:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/rail.jpg'};
+var stChip={New:'b',Contacted:'a',Quoted:'k',Won:'g'};
+TITLES.web=['Website analytics','Who is visiting splendidfreight.com, and what they do.'];
+TITLES.leads=['Leads','Every enquiry from your website, quote form and AI chat.'];
+TITLES.blog=['Blog posts','Publish insights that bring in search traffic.'];
+var MODE='client';
+function setMode(m){MODE=m;document.body.classList.toggle('team',m==='team');$$('#mode-sw button').forEach(function(b){b.classList.toggle('on',b.dataset.mode===m)});$('.brand small').textContent=m==='team'?'Team workspace':'Client portal';$('#top-sw').textContent=m==='team'?'Client view':'Team view';go(m==='team'?'web':'home')}
+$$('#mode-sw button').forEach(function(b){b.onclick=function(){setMode(b.dataset.mode)}});
+$('#top-sw').onclick=function(){setMode(MODE==='team'?'client':'team')};
+/* chart */
+(function(){var V=[98,112,105,131,126,118,94,140,152,149,161,138,120,171,166,180,174,189,150,132,196,204,188,210,221,199,170,226,238,245],L=[1,2,1,2,3,2,1,2,3,2,3,2,1,3,2,3,3,4,2,1,3,4,3,3,4,3,2,4,4,3];
+ var W=640,H=220,mx=260,pts=V.map(function(v,i){return [i*(W/(V.length-1)),H-20-(v/mx)*(H-40)]});
+ var line=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' ');
+ var bars=L.map(function(l,i){var x=i*(W/(V.length-1));return '<rect x="'+(x-4)+'" y="'+(H-20-l*9)+'" width="8" height="'+(l*9)+'" rx="2" fill="#F5A524" opacity=".85"/>'}).join('');
+ var grid=[0,1,2,3].map(function(i){var y=20+i*((H-40)/3);return '<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#E6ECE9"/>'}).join('');
+ $('#chart').innerHTML='<defs><linearGradient id="ag" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#007A5E" stop-opacity=".22"/><stop offset="1" stop-color="#007A5E" stop-opacity="0"/></linearGradient></defs>'+grid+'<path d="'+line+' L'+W+' '+(H-20)+' L0 '+(H-20)+'Z" fill="url(#ag)"/>'+bars+'<path d="'+line+'" fill="none" stroke="#007A5E" stroke-width="2.5" vector-effect="non-scaling-stroke"/>';})();
+function hbars(el,rows,max){$(el).innerHTML=rows.map(function(r){return '<div class="hbar"><span>'+r[0]+'</span><div class="t"><i style="width:'+Math.round(r[1]/max*100)+'%"></i></div><b>'+r[2]+'</b></div>'}).join('')}
+hbars('#sources',[['Google search',2310,'48%'],['Direct',1060,'22%'],['WhatsApp shares',625,'13%'],['LinkedIn',433,'9%'],['Referrals',384,'8%']],2310);
+hbars('#cities',[['Lagos',1780,'1,780'],['Abuja',1010,'1,010'],['Port Harcourt',540,'540'],['Kano',260,'260'],['London',220,'220'],['Shanghai',160,'160'],['Dubai',140,'140'],['Houston',90,'90']],1780);
+$('#pages').innerHTML=[['/','Home',1920,9],['/services/pharma-logistics','Pharma logistics',684,14],['/quote','Request a quote',602,41],['/tracking','Track a shipment',588,0],['/services/ocean-freight','Ocean freight',455,6],['/insights/import-documents-nigeria','Blog: import documents',398,3]].map(function(p){return '<tr><td><b>'+p[1]+'</b><small style="display:block;color:var(--muted)">'+p[0]+'</small></td><td>'+p[2].toLocaleString()+'</td><td class="hide-m">'+p[3]+'</td></tr>'}).join('');
+var FEED=[['🇳🇬','Visitor from Lagos is on <b>Pharma logistics</b>','via Google: "pharma logistics Lagos"'],['💬','AI chat started on <b>Road freight</b>','Asked about Lagos to Kano trucking'],['🇬🇧','Visitor from London opened <b>Request a quote</b>','Second visit today'],['🇳🇬','Visitor from Abuja is reading the <b>blog</b>','"What documents do you need to import"'],['📦','Someone tracked <b>SF-24955</b>','From the tracking page'],['🇨🇳','Visitor from Shanghai is on <b>Ocean freight</b>','via LinkedIn']];
+var fi=0;function feed(){var rows=[];for(var k=0;k<4;k++){var f=FEED[(fi+k)%FEED.length];rows.push('<div class="feed-row"><div class="fl">'+f[0]+'</div><div>'+f[1]+'<small>'+(k===0?'Just now':k+' min ago')+' · '+f[2]+'</small></div></div>')}$('#feed').innerHTML=rows.join('');$('#live-n').textContent=5+((fi*3)%5);fi++}
+feed();setInterval(feed,4000);
+/* leads */
+function renderLeads(f){$('#lead-rows').innerHTML=LEADS.map(function(l,i){return [l,i]}).filter(function(x){return f==='all'||x[0].st===f}).map(function(x){var l=x[0];return '<tr class="lead-row" data-lead="'+x[1]+'"><td><b>'+l.n+'</b><small style="display:block;color:var(--muted)">'+l.co+'</small></td><td class="hide-m"><span class="src"><i style="background:'+l.sc+'"></i>'+l.src+'</span></td><td class="hide-m">'+l.mode+' · '+l.route+'</td><td class="hide-m">'+l.when+'</td><td><span class="chip '+stChip[l.st]+'">'+l.st+'</span></td></tr>'}).join('');$('#lead-badge').textContent=LEADS.filter(function(l){return l.st==='New'}).length}
+renderLeads('all');
+$$('#lead-tabs button').forEach(function(b){b.onclick=function(){$$('#lead-tabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');renderLeads(b.dataset.f)}});
+var curLead=null;
+function openLead(i){var l=LEADS[i];curLead=i;$('#d-av').textContent=l.n.split(' ').map(function(w){return w[0]}).join('');$('#d-name').textContent=l.n;$('#d-co').textContent=l.co;
+ $('#d-body').innerHTML='<span class="chip '+stChip[l.st]+'">'+l.st+'</span> <span class="src" style="margin-left:8px"><i style="background:'+l.sc+'"></i>'+l.src+'</span><div class="kv"><span>Shipment</span><b>'+l.mode+' · '+l.route+'</b><span>Cargo</span><b>'+l.cargo+'</b><span>Phone</span><b>'+l.phone+'</b><span>First page</span><b>'+l.page+'</b><span>Received</span><b>'+l.when+'</b></div><div class="ai-sum"><b><svg width="14" height="14"><use href="#i-spark"/></svg>AI summary</b>'+l.sum+'</div>'+(l.chat?'<h3 style="font-size:13px;margin-bottom:8px">AI chat transcript</h3><div class="chatlog">'+l.chat.map(function(c){return '<div class="'+c[0]+'">'+c[1]+'</div>'}).join('')+'</div>':'');
+ $('#drawer').classList.add('on');$('#scrim').classList.add('on');document.body.classList.add('drawer-open')}
+function closeLead(){$('#drawer').classList.remove('on');$('#scrim').classList.remove('on');document.body.classList.remove('drawer-open')}
+$('#d-x').onclick=closeLead;$('#scrim').onclick=closeLead;
+$('#d-won').onclick=function(){if(curLead==null)return;LEADS[curLead].st='Won';renderLeads($('#lead-tabs .on').dataset.f);openLead(curLead);toast('Marked as won. Added to your monthly report.')};
+$('#d-quote').onclick=function(){if(curLead==null)return;LEADS[curLead].st='Quoted';renderLeads($('#lead-tabs .on').dataset.f);openLead(curLead);toast('Quote sent to '+LEADS[curLead].n+' by email and WhatsApp')};
+document.addEventListener('click',function(e){var r=e.target.closest('[data-lead]');if(r)openLead(+r.dataset.lead)});
+/* blog */
+function renderPosts(){$('#posts').innerHTML=POSTS.map(function(p){return '<div class="card post"><div class="cv" style="background-image:url('+IMG[p.img]+')"><span class="chip '+(p.st==='Published'?'g':'a')+'">'+p.st+'</span></div><div class="pb"><span class="sub">'+p.c+'</span><b>'+p.t+'</b><small><span>'+p.d+'</span><span>'+p.v+'</span></small></div></div>'}).join('')}
+renderPosts();
+function editor(on){$('#blog-list').style.display=on?'none':'';$('#editor').classList.toggle('on',on);if(on){$('#ed-body').value='';seo()}}
+$('#new-post').onclick=function(){editor(true)};$('#cancel-post').onclick=function(){editor(false)};
+function seo(){$('#seo-t').textContent=$('#ed-title').value||'Post title';var b=$('#ed-body').value.trim();$('#seo-d').textContent=b?b.slice(0,155)+(b.length>155?'…':''):'Write the post and a search preview appears here.'}
+$('#ed-title').addEventListener('input',seo);$('#ed-body').addEventListener('input',seo);
+$('#ai-write').onclick=function(){var b=this,t=$('#ed-title').value.trim();if(!t){$('#ed-title').focus();return}b.lastChild.textContent='Writing…';
+ var done=function(j){b.lastChild.textContent='Write intro with AI';var txt=j&&j.ok?j.reply:'Importing pharmaceuticals into Nigeria involves permits, inspections and careful timing. In this guide we explain the documents you need, the common causes of delay and how Splendid Freight keeps your cargo moving from the airport to your warehouse.';$('#ed-body').value=txt+'\n\n';seo();toast('Intro drafted. Edit it, then publish.')};
+ if(window.conceptAiSend)window.conceptAiSend([{role:'user',content:'Write a 3 sentence introduction for a Splendid Freight blog post titled "'+t+'". Write it as the company, in plain professional English, with no headings, no lists and no prices.'}],done);else done(null)};
+function savePost(st){var t=$('#ed-title').value.trim()||'Untitled post';POSTS.unshift({t:t,c:$('#ed-cat').value,img:$('#ed-cover').value,st:st,d:'Just now',v:st==='Published'?'0 views':'Not published'});renderPosts();editor(false);toast(st==='Published'?'Published to splendidfreight.com/insights and shared to Google':'Draft saved')}
+$('#publish').onclick=function(){savePost('Published')};$('#save-draft').onclick=function(){savePost('Draft')};
+
+var h=(location.hash||'').slice(1);if(['web','leads','blog'].indexOf(h)>-1)setMode('team');if(TITLES[h]&&h!=='home')go(h);
 </script>
 <script>/*CAI*/</script>
 </body>

@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Splendid Freight · Client Portal</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='19' fill='%231EF7C4'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:Manrope;src:url(https://www.ferrnagency.com/concept/splendid-freight/assets/fonts/manrope.woff2) format("woff2");font-weight:200 800;font-display:swap}
+:root{--ink:#0A0F0D;--ink2:#121a17;--muted:#5E6B66;--line:#E6ECE9;--bg:#F4F7F6;--card:#fff;--mint:#1EF7C4;--mint-soft:#DDFDF4;--teal:#007A5E;--amber:#F5A524;--amber-soft:#FFF4DE;--red:#E5484D;--blue:#3E63DD;--blue-soft:#E8EEFF;--r:12px}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:Manrope,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+/* sidebar */
+.side{background:var(--ink);color:#fff;padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 22px}
+.brand svg{width:34px;height:34px;flex:none}
+.brand b{font-size:15px;letter-spacing:-.01em;display:block;line-height:1.1}
+.brand small{font-size:11px;color:#8FA39B;letter-spacing:.08em;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;color:#B9C7C1;padding:10px 12px;border-radius:10px;font-weight:600;text-align:left}
+.nav button svg{width:18px;height:18px;flex:none}
+.nav button:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav button.on{background:rgba(30,247,196,.12);color:var(--mint)}
+.nav .badge{margin-left:auto;background:var(--mint);color:var(--ink);font-size:11px;padding:1px 7px;border-radius:99px}
+.side-ai{margin-top:auto;background:linear-gradient(160deg,#10302A,#0B1A16);border:1px solid rgba(30,247,196,.18);border-radius:14px;padding:16px}
+.side-ai b{display:block;font-size:14px;margin-bottom:4px}
+.side-ai p{color:#9FB2AA;font-size:12.5px;margin-bottom:12px}
+.side-ai button{width:100%;background:var(--mint);color:var(--ink);border:0;border-radius:10px;padding:9px;font-weight:700}
+.me{display:flex;align-items:center;gap:10px;padding:14px 8px 0;border-top:1px solid rgba(255,255,255,.08);margin-top:14px}
+.av{width:34px;height:34px;border-radius:50%;background:#1E3A33;color:var(--mint);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.me b{display:block;font-size:13px}.me small{color:#8FA39B;font-size:12px}
+/* main */
+main{min-width:0;padding:0 32px 60px}
+.top{display:flex;align-items:center;gap:16px;padding:20px 0;position:sticky;top:0;background:var(--bg);z-index:5}
+.top h1{font-size:22px;letter-spacing:-.02em}
+.top p{color:var(--muted);font-size:13px}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:0 12px;height:42px;width:min(340px,40vw)}
+.search input{border:0;outline:0;flex:1;background:none}
+.search svg{width:16px;height:16px;color:var(--muted)}
+.icon-btn{width:42px;height:42px;border-radius:10px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;position:relative}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn i{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid #fff}
+.btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:10px;border:0;background:var(--ink);color:#fff;font-weight:700;white-space:nowrap}
+.btn.mint{background:var(--mint);color:var(--ink)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn svg{width:16px;height:16px}
+.view{display:none;animation:in .35s cubic-bezier(.2,.8,.2,1)}
+.view.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.card h3{font-size:15px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.card .sub{color:var(--muted);font-size:12.5px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(4,1fr);margin-bottom:16px}
+.kpi{padding:18px}
+.kpi small{color:var(--muted);font-weight:600;font-size:12px;display:flex;align-items:center;gap:6px}
+.kpi b{display:block;font-size:30px;letter-spacing:-.03em;margin:6px 0 2px}
+.kpi span{font-size:12px;color:var(--teal);font-weight:600}
+.kpi.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.kpi.dark small{color:#8FA39B}.kpi.dark span{color:var(--mint)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.two{grid-template-columns:1.55fr 1fr;align-items:start}
+/* ai insight */
+.insight{background:linear-gradient(120deg,var(--ink) 0%,#0F2A24 100%);color:#fff;border:0;display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;position:relative;overflow:hidden}
+.insight::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(30,247,196,.28),transparent 70%)}
+.insight .spark{width:40px;height:40px;border-radius:12px;background:rgba(30,247,196,.14);display:grid;place-items:center;color:var(--mint);flex:none}
+.insight .spark svg{width:20px;height:20px}
+.insight b{font-size:15px;display:block;margin-bottom:4px}
+.insight p{color:#B9C7C1;font-size:13.5px;max-width:70ch}
+.insight .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;position:relative;z-index:1}
+.insight .acts button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:600}
+.insight .acts button:first-child{background:var(--mint);color:var(--ink);border-color:var(--mint)}
+/* shipments */
+.ship{display:grid;grid-template-columns:40px 1.3fr 1fr 120px 24px;gap:14px;align-items:center;padding:14px 0;border-top:1px solid var(--line);cursor:pointer}
+.ship:first-of-type{border-top:0}
+.ship:hover .ship-id{color:var(--teal)}
+.mode{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--bg)}
+.mode svg{width:20px;height:20px}
+.ship-id{font-weight:700;font-size:13.5px}
+.ship small{color:var(--muted);font-size:12px;display:block}
+.route{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px}
+.route svg{width:14px;height:14px;color:var(--muted)}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--mint));border-radius:99px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.chip.g{background:var(--mint-soft);color:var(--teal)}
+.chip.a{background:var(--amber-soft);color:#9A5B00}
+.chip.b{background:var(--blue-soft);color:var(--blue)}
+.chip.k{background:var(--bg);color:var(--muted)}
+.chip.r{background:#FFE9EA;color:#B4232A}
+.chev{color:var(--muted)}
+/* map */
+.map{position:relative;height:250px;border-radius:10px;overflow:hidden;background:#0C1714;margin:14px 0 4px}
+.map svg{width:100%;height:100%;display:block}
+.map .lbl{position:absolute;font-size:11px;font-weight:700;color:#fff;background:rgba(10,15,13,.75);padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.1)}
+.flow{stroke-dasharray:6 8;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-14}}
+.pulse{animation:pulse 2s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3.2)}}
+.list-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.list-row:first-of-type{border-top:0}
+.doc-ic{width:36px;height:36px;border-radius:9px;background:var(--bg);display:grid;place-items:center;flex:none}
+.doc-ic svg{width:18px;height:18px;color:var(--teal)}
+.list-row b{display:block;font-size:13px}.list-row small{color:var(--muted);font-size:12px}
+.list-row .chip,.list-row .end{margin-left:auto}
+.head-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.head-row .link{margin-left:auto;color:var(--teal);font-weight:700;font-size:12.5px;background:none;border:0}
+/* track */
+.track-hero{background:var(--ink);color:#fff;border:0;padding:28px;margin-bottom:16px;position:relative;overflow:hidden}
+.track-hero h2{font-size:24px;letter-spacing:-.02em;margin-bottom:6px}
+.track-hero p{color:#9FB2AA;margin-bottom:18px}
+.track-form{display:flex;gap:10px;max-width:640px}
+.track-form input{flex:1;height:50px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;padding:0 16px;outline:0;font-weight:600;letter-spacing:.02em}
+.track-form input::placeholder{color:#7F948C}
+.track-form .btn{height:50px}
+.recent{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.recent button{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#CFE0D9;border-radius:99px;padding:5px 11px;font-size:12px;font-weight:600}
+.tl{position:relative;padding-left:28px;margin-top:8px}
+.tl::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl li{list-style:none;position:relative;padding:0 0 20px}
+.tl li::before{content:"";position:absolute;left:-24px;top:3px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--line)}
+.tl li.done::before{background:var(--teal);border-color:var(--teal)}
+.tl li.now::before{background:var(--mint);border-color:var(--teal);box-shadow:0 0 0 5px var(--mint-soft)}
+.tl b{display:block;font-size:13.5px}.tl small{color:var(--muted);font-size:12px}
+.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.meta div{background:var(--bg);border-radius:10px;padding:12px}
+.meta small{display:block;color:var(--muted);font-size:11.5px;font-weight:600}
+.meta b{font-size:13.5px}
+/* quote */
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 18px}
+.modes label{border:1.5px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:8px;background:#fff;transition:.15s}
+.modes label svg{width:24px;height:24px;color:var(--teal)}
+.modes label b{font-size:13.5px}
+.modes label small{color:var(--muted);font-size:11.5px}
+.modes input{display:none}
+.modes label:has(input:checked){border-color:var(--teal);background:var(--mint-soft);box-shadow:0 0 0 3px rgba(0,122,94,.08)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f{display:flex;flex-direction:column;gap:6px}
+.f.full{grid-column:1/-1}
+.f span{font-size:12px;font-weight:700;color:var(--muted)}
+.f input,.f select,.f textarea{height:46px;border:1px solid var(--line);border-radius:10px;padding:0 13px;background:#fff;outline:0}
+.f textarea{height:84px;padding:12px 13px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,122,94,.1)}
+.ai-fill{display:flex;gap:10px;align-items:center;background:var(--mint-soft);border:1px dashed var(--teal);border-radius:12px;padding:12px 14px;margin-bottom:18px}
+.ai-fill svg{width:18px;height:18px;color:var(--teal);flex:none}
+.ai-fill input{flex:1;border:0;background:none;outline:0;font-weight:600}
+.ai-fill button{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:12.5px;white-space:nowrap}
+.est{background:var(--ink);color:#fff;border:0}
+.est h3{color:#fff}
+.est .big{font-size:30px;font-weight:800;letter-spacing:-.03em;margin:10px 0 2px}
+.est .row{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(255,255,255,.08);font-size:13px;color:#B9C7C1}
+.est .row b{color:#fff}
+.est .note{font-size:11.5px;color:#7F948C;margin-top:12px}
+.empty{color:#7F948C;font-size:13px;padding:18px 0}
+/* table */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:0 10px 10px}
+td{padding:14px 10px;border-top:1px solid var(--line);font-size:13px}
+td b{font-weight:700}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 14px;font-weight:700;font-size:12.5px;color:var(--muted)}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.drop{border:1.5px dashed #C8D6D0;border-radius:12px;padding:22px;text-align:center;color:var(--muted);margin-bottom:16px;background:#FBFCFC}
+.drop b{color:var(--ink)}
+/* assistant page */
+.chat{display:grid;grid-template-columns:1fr 300px;gap:16px;height:calc(100vh - 110px)}
+.chat-main{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.chat-log{flex:1;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#fff,#FAFCFB)}
+.msg{max-width:78%;padding:12px 15px;border-radius:14px;font-size:14px;white-space:pre-wrap;line-height:1.5}
+.msg.b{background:var(--bg);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.u{background:var(--teal);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.who{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:-6px}
+.who i{width:22px;height:22px;border-radius:50%;background:var(--ink);display:grid;place-items:center}
+.who i svg{width:14px;height:14px}
+.chat-in{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line);background:#fff}
+.chat-in input{flex:1;height:48px;border:1px solid var(--line);border-radius:12px;padding:0 15px;outline:0}
+.chat-in input:focus{border-color:var(--teal)}
+.sugs{display:flex;flex-direction:column;gap:8px}
+.sugs button{text-align:left;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-weight:600;font-size:13px}
+.sugs button:hover{border-color:var(--teal);color:var(--teal)}
+.typing{display:flex;gap:4px;padding:14px 16px}.typing span{width:6px;height:6px;border-radius:50%;background:#9AA8A2;animation:t 1s infinite}.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}@keyframes t{50%{transform:translateY(-3px);opacity:.5}}
+.concept{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:50;background:rgba(10,15,13,.92);color:#CFE0D9;font-size:12px;padding:7px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);white-space:nowrap}
+.concept b{color:var(--mint)}
+.toast{position:fixed;top:20px;left:50%;transform:translate(-50%,-80px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-weight:600;z-index:60;transition:.35s cubic-bezier(.2,.8,.2,1);display:flex;gap:10px;align-items:center}
+.toast.on{transform:translate(-50%,0)}
+.toast i{width:8px;height:8px;border-radius:50%;background:var(--mint)}
+.mob-nav{display:none}
+.mode-sw{display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.06);border-radius:10px;padding:3px;margin:0 4px 16px}
+.mode-sw button{border:0;background:none;color:#9FB2AA;font-weight:700;font-size:12.5px;padding:8px 6px;border-radius:8px}
+.mode-sw button.on{background:var(--mint);color:var(--ink)}
+.nav-team{display:none}body.team .top .btn.mint{display:none}body.drawer-open #cai{display:none!important}
+body.team .nav-client{display:none}body.team .nav-team{display:flex}
+body.team .side-ai{display:none}
+.me-team{display:none}body.team .me-client{display:none}body.team .me-team{display:flex}
+.mob-nav .mob-team{display:none}body.team .mob-nav .mob-client{display:none}body.team .mob-nav .mob-team{display:flex}
+.top-sw{display:none}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--teal);background:var(--mint-soft);padding:6px 12px;border-radius:99px}
+.live i{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(0,122,94,.5);animation:lv 1.6s infinite}
+@keyframes lv{70%{box-shadow:0 0 0 8px rgba(0,122,94,0)}100%{box-shadow:0 0 0 0 rgba(0,122,94,0)}}
+.chart{width:100%;height:220px;display:block;margin-top:12px}
+.hbar{display:grid;grid-template-columns:130px 1fr 54px;gap:12px;align-items:center;padding:7px 0;font-size:13px}
+.hbar .t{height:8px;border-radius:99px;background:var(--bg);overflow:hidden}.hbar .t i{display:block;height:100%;border-radius:99px;background:var(--teal)}
+.hbar b{text-align:right;font-weight:700}
+.feed-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.feed-row:first-child{border-top:0}
+.feed-row .fl{width:30px;height:30px;border-radius:8px;background:var(--bg);display:grid;place-items:center;font-size:14px;flex:none}
+.feed-row small{display:block;color:var(--muted);font-size:12px}
+.lead-row{cursor:pointer}.lead-row:hover td{background:#FAFCFB}
+.src{font-size:11.5px;font-weight:700;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.src i{width:7px;height:7px;border-radius:50%}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:#fff;z-index:70;box-shadow:-30px 0 80px -20px rgba(0,0,0,.35);transform:translateX(105%);transition:.35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.drawer .dh{padding:22px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.drawer .db{padding:22px;overflow:auto;flex:1}
+.drawer .df{padding:16px 22px;border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap}
+.drawer .x{margin-left:auto;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:18px}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px 14px;font-size:13.5px;margin:14px 0 18px}.kv span{color:var(--muted)}
+.ai-sum{background:var(--mint-soft);border-radius:12px;padding:14px;font-size:13.5px;line-height:1.5;margin-bottom:16px}
+.ai-sum b{display:flex;align-items:center;gap:6px;color:var(--teal);font-size:12px;margin-bottom:6px}
+.chatlog{background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.chatlog div{font-size:13px;padding:8px 11px;border-radius:10px;max-width:88%}
+.chatlog .v{background:#fff;border:1px solid var(--line);align-self:flex-end}.chatlog .a{background:var(--ink);color:#fff;align-self:flex-start}
+.scrim{position:fixed;inset:0;background:rgba(10,15,13,.35);z-index:65;opacity:0;pointer-events:none;transition:.3s}.scrim.on{opacity:1;pointer-events:auto}
+.posts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.post{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.post .cv{height:140px;background-size:cover;background-position:center;position:relative}
+.post .cv .chip{position:absolute;left:12px;top:12px}
+.post .pb{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.post .pb b{font-size:15px;line-height:1.35;letter-spacing:-.01em}
+.post .pb small{color:var(--muted);font-size:12px;margin-top:auto;display:flex;gap:10px}
+.editor{display:none}.editor.on{display:block}
+.ed-title{width:100%;border:0;outline:0;font-size:28px;font-weight:800;letter-spacing:-.02em;padding:6px 0 12px;background:none}
+.ed-tools{display:flex;gap:6px;padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.ed-tools button{border:0;background:var(--bg);border-radius:7px;padding:6px 10px;font-weight:700;font-size:12.5px}
+.ed-tools .aiw{margin-left:auto;background:var(--teal);color:#fff;display:inline-flex;gap:6px;align-items:center}
+.ed-tools .aiw svg{width:14px;height:14px}
+.ed-body{width:100%;min-height:260px;border:1px solid var(--line);border-radius:10px;padding:14px;outline:0;font-size:14.5px;line-height:1.6;resize:vertical}
+.seo{background:var(--bg);border-radius:12px;padding:14px;margin-top:14px}
+.seo .g{font-size:16px;color:#1a0dab;margin:4px 0 2px}.seo .u{font-size:12px;color:#006621}.seo p{font-size:13px;color:#545454}
+@media(max-width:1100px){.posts{grid-template-columns:1fr 1fr}}
+@media(max-width:820px){.top-sw{display:inline-flex}.posts{grid-template-columns:1fr}.hbar{grid-template-columns:100px 1fr 44px}}
+
+#cai .cai-fab i,#cai .cai-head i{background:#16241F!important;box-shadow:inset 0 0 0 1px rgba(30,247,196,.25)}#cai .cai-fab i svg{width:26px;height:26px}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.chat{grid-template-columns:1fr}.chat aside{display:none}}
+@media(max-width:820px){
+.app{grid-template-columns:1fr}.side{display:none}
+main{padding:0 16px 120px}
+.top{flex-wrap:wrap;padding:14px 0}.search{order:3;width:100%;margin-left:0}
+.top .btn{display:none}.top .top-sw{display:inline-flex!important;height:38px;padding:0 12px;font-size:12.5px}
+.ship{grid-template-columns:40px 1fr 24px}.ship .route-col,.ship .st-col{display:none}
+.meta{grid-template-columns:1fr 1fr}.modes{grid-template-columns:1fr 1fr}.fields{grid-template-columns:1fr}
+.track-form{flex-direction:column}.track-form input{flex:none}.track-form .btn{justify-content:center}
+.mob-nav{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--ink);padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:40;justify-content:space-around}
+.mob-nav button{background:none;border:0;color:#8FA39B;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:4px 8px}
+.mob-nav button svg{width:20px;height:20px}
+.mob-nav button.on{color:var(--mint)}
+.concept{bottom:84px;left:12px;transform:none;font-size:11px;padding:6px 11px}.insight{flex-direction:column}
+.chat{height:calc(100vh - 220px)}
+table .hide-m{display:none}
+#cai{bottom:84px!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<mask id="lm"><rect width="40" height="40" fill="#fff"/><path d="M14 1.5C8 7.5 8.6 14.2 16.4 18.6C24.2 23 28.4 28.6 24.6 38.6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask>
+<symbol id="logo" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#1EF7C4" mask="url(#lm)"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-6"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+<symbol id="i-calc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></symbol>
+<symbol id="i-card" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+<symbol id="m-air" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+<symbol id="m-sea" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.4 17 21 12H3l1.6 5M12 12V3l-6 9M12 7h4"/></symbol>
+<symbol id="m-road" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M15 18H9M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62L18.3 8.4a1 1 0 0 0-.78-.4H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+<symbol id="m-rail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="13" rx="3"/><path d="M4 11h16M12 3v8M8 19l-2 3M16 19l2 3"/><circle cx="8.5" cy="13.5" r=".5"/><circle cx="15.5" cy="13.5" r=".5"/></symbol>
+</defs>
+</svg>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><svg><use href="#logo"/></svg><div><b>Splendid Freight</b><small>Client portal</small></div></div>
+    <div class="mode-sw" id="mode-sw"><button class="on" data-mode="client">Client view</button><button data-mode="team">Team view</button></div>
+    <nav class="nav nav-client" id="nav">
+      <button data-v="home" class="on"><svg><use href="#i-home"/></svg>Dashboard</button>
+      <button data-v="ships"><svg><use href="#i-box"/></svg>Shipments<span class="badge">4</span></button>
+      <button data-v="track"><svg><use href="#i-pin"/></svg>Track</button>
+      <button data-v="quote"><svg><use href="#i-calc"/></svg>Get a quote</button>
+      <button data-v="docs"><svg><use href="#i-doc"/></svg>Documents</button>
+      <button data-v="bills"><svg><use href="#i-card"/></svg>Invoices</button>
+      <button data-v="ai"><svg><use href="#i-spark"/></svg>Assistant</button>
+    </nav>
+    <nav class="nav nav-team" id="nav-team">
+      <button data-v="web"><svg><use href="#i-chart"/></svg>Website analytics</button>
+      <button data-v="leads"><svg><use href="#i-users"/></svg>Leads<span class="badge" id="lead-badge">3</span></button>
+      <button data-v="blog"><svg><use href="#i-pen"/></svg>Blog posts</button>
+      <button data-v="ai"><svg><use href="#i-spark"/></svg>Ask Splendid AI</button>
+    </nav>
+    <div class="side-ai"><b>Ask Splendid AI</b><p>Status, documents, quotes and customs questions, answered in seconds, day or night.</p><button data-go="ai">Open assistant</button></div>
+    <div class="me me-team"><div class="av">SF</div><div><b>Splendid Freight</b><small>Team workspace</small></div></div>
+    <div class="me me-client"><div class="av">AO</div><div><b>Adaeze Okafor</b><small>Medipharm Distribution Ltd</small></div></div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div><h1 id="title">Good afternoon, Adaeze</h1><p id="subtitle">Here is where your cargo is right now.</p></div>
+      <button class="btn ghost top-sw" id="top-sw" style="height:42px">Team view</button>
+      <label class="search"><svg><use href="#i-search"/></svg><input id="q" placeholder="Search shipments, B/L or invoice no."></label>
+      <button class="icon-btn" aria-label="Notifications" data-toast="2 updates: SF-24817 cleared customs, INV-1093 is due Friday"><svg><use href="#i-bell"/></svg><i></i></button>
+      <button class="btn mint" data-go="quote"><svg><use href="#i-plus"/></svg>New shipment</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="view on" id="v-home">
+      <div class="card insight">
+        <div class="spark"><svg><use href="#i-spark"/></svg></div>
+        <div>
+          <b>Splendid AI daily brief</b>
+          <p id="brief">Your 40ft container SF-24817 cleared customs at Apapa this morning and is booked on a truck to your Ikeja warehouse tomorrow. Air shipment SF-24903 from Mumbai lands in Lagos tonight. One invoice (INV-1093, ₦1,240,000) is due on Friday.</p>
+          <div class="acts"><button data-ask="When will SF-24817 reach my warehouse?">When will SF-24817 arrive?</button><button data-ask="What documents do I still need for SF-24903?">Documents I still need</button><button data-go="bills">Pay INV-1093</button></div>
+        </div>
+      </div>
+      <div class="grid kpis">
+        <div class="card kpi dark"><small><span class="dot" style="background:var(--mint)"></span>Active shipments</small><b>4</b><span>2 arriving this week</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--amber)"></span>In customs</small><b>1</b><span>Avg clearance 3.2 days</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--teal)"></span>Delivered in 2026</small><b>38</b><span>97% on time</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--blue)"></span>Outstanding</small><b>₦1.24M</b><span style="color:var(--muted)">1 invoice due Fri</span></div>
+      </div>
+      <div class="grid two">
+        <div class="card">
+          <div class="head-row"><h3>Active shipments</h3><button class="link" data-go="ships">View all</button></div>
+          <div id="ship-list"></div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="head-row"><div><h3>Live: SF-24817</h3><div class="sub">Apapa Port to Ikeja, Lagos</div></div><span class="chip g end">Cleared</span></div>
+            <div class="map" id="map"></div>
+            <div class="sub">Next: truck pickup Tue 10 Nov, 08:00. Driver details 2 hours before.</div>
+          </div>
+          <div class="card">
+            <div class="head-row"><h3>Documents needing you</h3><button class="link" data-go="docs">All documents</button></div>
+            <div class="list-row"><div class="doc-ic"><svg><use href="#i-doc"/></svg></div><div><b>Commercial invoice</b><small>SF-24903 · Air · Mumbai</small></div><span class="chip a">Upload</span></div>
+            <div class="list-row"><div class="doc-ic"><svg><use href="#i-doc"/></svg></div><div><b>NAFDAC permit</b><small>SF-24903 · pharma cargo</small></div><span class="chip a">Upload</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHIPMENTS -->
+    <section class="view" id="v-ships">
+      <div class="tabs" id="ship-tabs"><button class="on" data-f="all">All</button><button data-f="transit">In transit</button><button data-f="customs">In customs</button><button data-f="delivered">Delivered</button></div>
+      <div class="card"><div id="ship-all"></div></div>
+    </section>
+
+    <!-- TRACK -->
+    <section class="view" id="v-track">
+      <div class="card track-hero">
+        <h2>Track any shipment</h2>
+        <p>Enter your tracking, bill of lading or air waybill number.</p>
+        <form class="track-form" id="track-form"><input id="track-in" placeholder="e.g. SF-24817" value="SF-24817"><button class="btn mint">Track<svg><use href="#i-arrow"/></svg></button></form>
+        <div class="recent" id="recent"></div>
+      </div>
+      <div class="grid two" id="track-out"></div>
+    </section>
+
+    <!-- QUOTE -->
+    <section class="view" id="v-quote">
+      <div class="grid two">
+        <form class="card" id="quote-form">
+          <h3>Request a freight quote</h3>
+          <div class="sub">Tell us what you are moving. You get a confirmed quote from our team within 2 working hours.</div>
+          <div class="ai-fill" style="margin-top:16px"><svg><use href="#i-spark"/></svg><input id="ai-describe" placeholder="Or just describe it: 2 pallets of medicine from Mumbai to Lagos by air"><button type="button" id="ai-fill-btn">Fill with AI</button></div>
+          <div class="modes">
+            <label><input type="radio" name="mode" value="Air" checked><svg><use href="#m-air"/></svg><b>Air</b><small>Fastest, 2 to 5 days</small></label>
+            <label><input type="radio" name="mode" value="Ocean"><svg><use href="#m-sea"/></svg><b>Ocean</b><small>FCL or LCL</small></label>
+            <label><input type="radio" name="mode" value="Road"><svg><use href="#m-road"/></svg><b>Road</b><small>Nationwide, door to door</small></label>
+            <label><input type="radio" name="mode" value="Rail"><svg><use href="#m-rail"/></svg><b>Rail</b><small>Bulk inland cargo</small></label>
+          </div>
+          <div class="fields">
+            <label class="f"><span>Origin</span><input name="origin" placeholder="City, country" required></label>
+            <label class="f"><span>Destination</span><input name="dest" placeholder="City, country" required></label>
+            <label class="f"><span>Cargo type</span><select name="cargo"><option>General cargo</option><option>Pharmaceuticals</option><option>FMCG</option><option>Machinery and equipment</option><option>Perishables</option><option>Dangerous goods</option></select></label>
+            <label class="f"><span>Weight (kg)</span><input name="weight" type="number" placeholder="e.g. 850" required></label>
+            <label class="f"><span>Ready date</span><input name="date" type="date"></label>
+            <label class="f"><span>Services</span><select name="svc"><option>Door to door</option><option>Port to door</option><option>Customs clearing only</option><option>Port to port</option></select></label>
+            <label class="f full"><span>Notes</span><textarea name="notes" placeholder="Temperature control, insurance, special handling"></textarea></label>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn">Request quote<svg><use href="#i-arrow"/></svg></button><button type="button" class="btn ghost" id="ask-quote">Ask the assistant</button></div>
+        </form>
+        <div class="card est" id="est"><h3>Your request</h3><div class="empty" id="est-body">Fill in the form or describe your cargo, and a summary appears here as you type.</div></div>
+      </div>
+    </section>
+
+    <!-- DOCS -->
+    <section class="view" id="v-docs">
+      <div class="drop"><b>Drop files here</b> or click to upload. Commercial invoices, packing lists, Form M, permits. We file them to the right shipment for you.</div>
+      <div class="card"><table><thead><tr><th>Document</th><th class="hide-m">Shipment</th><th class="hide-m">Added</th><th>Status</th><th></th></tr></thead><tbody id="doc-rows"></tbody></table></div>
+    </section>
+
+    <!-- INVOICES -->
+    <section class="view" id="v-bills">
+      <div class="grid kpis" style="grid-template-columns:repeat(3,1fr)">
+        <div class="card kpi dark"><small>Outstanding</small><b>₦1,240,000</b><span>Due Fri 13 Nov</span></div>
+        <div class="card kpi"><small>Paid this year</small><b>₦18.6M</b><span>27 invoices</span></div>
+        <div class="card kpi"><small>Payment methods</small><b style="font-size:20px;margin:12px 0 6px">Card, transfer, USSD</b><span>Secured by Paystack</span></div>
+      </div>
+      <div class="card"><table><thead><tr><th>Invoice</th><th class="hide-m">Shipment</th><th class="hide-m">Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody id="bill-rows"></tbody></table></div>
+    </section>
+
+
+    <!-- TEAM: WEBSITE ANALYTICS -->
+    <section class="view" id="v-web">
+      <div class="grid kpis">
+        <div class="card kpi dark"><small><span class="dot" style="background:var(--mint)"></span>Visitors, last 30 days</small><b>4,812</b><span>+38% on October</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--teal)"></span>Leads from the website</small><b>63</b><span>41 quotes, 22 AI chats</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--amber)"></span>Visitor to lead rate</small><b>1.3%</b><span>Industry average about 1%</span></div>
+        <div class="card kpi"><small><span class="dot" style="background:var(--blue)"></span>Avg first reply</small><b>14 min</b><span>AI answers instantly</span></div>
+      </div>
+      <div class="grid two">
+        <div class="card"><div class="head-row"><div><h3>Visitors and leads</h3><div class="sub">Last 30 days</div></div><span class="live end"><i></i><span id="live-n">7</span> on the site now</span></div><svg class="chart" id="chart" viewBox="0 0 640 220" preserveAspectRatio="none"></svg><div style="display:flex;gap:18px;font-size:12px;color:var(--muted);margin-top:8px"><span><span class="dot" style="background:var(--teal)"></span> Visitors</span><span><span class="dot" style="background:var(--amber)"></span> Leads</span></div></div>
+        <div class="card"><h3>Where visitors come from</h3><div class="sub" style="margin-bottom:10px">Traffic sources</div><div id="sources"></div></div>
+      </div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="card"><h3>Top pages</h3><table style="margin-top:10px"><thead><tr><th>Page</th><th>Views</th><th class="hide-m">Leads</th></tr></thead><tbody id="pages"></tbody></table></div>
+        <div class="card"><div class="head-row"><h3>Live activity</h3><span class="chip g end">Real time</span></div><div id="feed"></div></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h3>Top locations</h3><div class="sub" style="margin-bottom:10px">Cities your visitors browse from</div><div id="cities" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));column-gap:28px"></div></div>
+    </section>
+
+    <!-- TEAM: LEADS -->
+    <section class="view" id="v-leads">
+      <div class="tabs" id="lead-tabs"><button class="on" data-f="all">All leads</button><button data-f="New">New</button><button data-f="Contacted">Contacted</button><button data-f="Quoted">Quoted</button><button data-f="Won">Won</button></div>
+      <div class="card"><table><thead><tr><th>Lead</th><th class="hide-m">Came from</th><th class="hide-m">Shipment</th><th class="hide-m">Received</th><th>Status</th></tr></thead><tbody id="lead-rows"></tbody></table></div>
+    </section>
+
+    <!-- TEAM: BLOG -->
+    <section class="view" id="v-blog">
+      <div id="blog-list">
+        <div class="head-row" style="margin-bottom:16px"><div class="tabs" style="margin:0"><button class="on">All posts</button><button>Published</button><button>Drafts</button></div><button class="btn mint end" id="new-post" style="margin-left:auto"><svg><use href="#i-plus"/></svg>New post</button></div>
+        <div class="posts" id="posts"></div>
+      </div>
+      <div class="editor grid two" id="editor">
+        <div class="card">
+          <input class="ed-title" id="ed-title" placeholder="Post title" value="How to clear pharmaceutical imports faster in Nigeria">
+          <div class="ed-tools"><button type="button">B</button><button type="button"><i>I</i></button><button type="button">H2</button><button type="button">Link</button><button type="button">Image</button><button type="button" class="aiw" id="ai-write"><svg><use href="#i-spark"/></svg>Write intro with AI</button></div>
+          <textarea class="ed-body" id="ed-body" placeholder="Start writing, or let AI draft the intro"></textarea>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" id="publish">Publish</button><button class="btn ghost" id="save-draft">Save draft</button><button class="btn ghost" id="cancel-post">Back to posts</button></div>
+        </div>
+        <div class="grid">
+          <div class="card"><h3>Post settings</h3>
+            <div class="fields" style="grid-template-columns:1fr;margin-top:12px">
+              <label class="f"><span>Category</span><select id="ed-cat"><option>Customs and compliance</option><option>Air freight</option><option>Ocean freight</option><option>Industry news</option><option>Company news</option></select></label>
+              <label class="f"><span>Cover image</span><select id="ed-cover"><option value="air">Air cargo</option><option value="ocean">Container ship</option><option value="road">Trucks</option><option value="rail">Rail</option></select></label>
+            </div>
+          </div>
+          <div class="card"><h3>How it looks on Google</h3><div class="seo"><div class="u">splendidfreight.com › insights</div><div class="g" id="seo-t">How to clear pharmaceutical imports faster in Nigeria</div><p id="seo-d">Write the post and a search preview appears here.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ASSISTANT -->
+    <section class="view" id="v-ai">
+      <div class="chat">
+        <div class="card chat-main">
+          <div class="chat-log" id="chat-log"></div>
+          <form class="chat-in" id="chat-form"><input id="chat-in" placeholder="Ask about a shipment, a document, customs or a quote"><button class="btn mint">Send<svg><use href="#i-arrow"/></svg></button></form>
+        </div>
+        <aside class="card">
+          <h3>Try asking</h3><div class="sub" style="margin-bottom:12px">The assistant knows your account and Splendid Freight's services.</div>
+          <div class="sugs" id="sugs"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="mob-nav" id="mob-nav">
+  <button data-v="home" class="on mob-client"><svg><use href="#i-home"/></svg>Home</button>
+  <button data-v="ships" class="mob-client"><svg><use href="#i-box"/></svg>Shipments</button>
+  <button data-v="track" class="mob-client"><svg><use href="#i-pin"/></svg>Track</button>
+  <button data-v="quote" class="mob-client"><svg><use href="#i-calc"/></svg>Quote</button>
+  <button data-v="web" class="mob-team"><svg><use href="#i-chart"/></svg>Analytics</button>
+  <button data-v="leads" class="mob-team"><svg><use href="#i-users"/></svg>Leads</button>
+  <button data-v="blog" class="mob-team"><svg><use href="#i-pen"/></svg>Blog</button>
+  <button data-v="ai"><svg><use href="#i-spark"/></svg>Assistant</button>
+</nav>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"><div class="dh"><div class="av" id="d-av" style="background:var(--mint-soft);color:var(--teal)">AB</div><div><h3 id="d-name" style="margin:0">Lead</h3><div class="sub" id="d-co"></div></div><button class="x" id="d-x" aria-label="Close">×</button></div><div class="db" id="d-body"></div><div class="df"><button class="btn mint" data-toast="WhatsApp opens with the lead's number in the live portal">Reply on WhatsApp</button><button class="btn ghost" id="d-quote">Send quote</button><button class="btn ghost" id="d-won">Mark as won</button></div></aside>
+<div class="concept">Concept by <b>Ferrn</b> for Splendid Freight · sample data</div>
+<div class="toast" id="toast"><i></i><span></span></div>
+
+<script>
+var SHIPS=[
+ {id:'SF-24817',mode:'sea',type:'Ocean · 1x40ft FCL',from:'Shanghai, CN',to:'Ikeja, Lagos',status:'customs',label:'Cleared customs',chip:'g',pct:82,eta:'Tue 10 Nov',cargo:'Pharmaceutical packaging, 18,400 kg',ref:'B/L MSKU7712049',events:[['Booked','12 Oct, Shanghai'],['Departed Shanghai port','15 Oct, vessel MSC Aurora'],['Arrived Apapa Port','4 Nov, Lagos'],['Customs cleared','9 Nov, 09:40, PAAR approved'],['Truck pickup','10 Nov, 08:00 (scheduled)'],['Delivered to Ikeja warehouse','10 Nov (expected)']],done:4},
+ {id:'SF-24903',mode:'air',type:'Air · 6 pallets',from:'Mumbai, IN',to:'Lagos, NG',status:'transit',label:'In flight',chip:'b',pct:64,eta:'Mon 9 Nov, 22:15',cargo:'Medicines (temperature controlled), 1,120 kg',ref:'AWB 176-44820195',events:[['Booked','5 Nov, Mumbai'],['Picked up from supplier','6 Nov'],['Departed Mumbai (BOM)','9 Nov, 03:10, EK 501 via Dubai'],['Arrives Lagos (LOS)','9 Nov, 22:15 (expected)'],['Customs clearing','Needs commercial invoice and NAFDAC permit'],['Delivered','12 Nov (expected)']],done:3},
+ {id:'SF-24955',mode:'road',type:'Road · 2 trucks',from:'Lagos, NG',to:'Abuja, FCT',status:'transit',label:'On the road',chip:'b',pct:45,eta:'Wed 11 Nov',cargo:'FMCG cartons, 22,000 kg',ref:'Waybill RD-55120',events:[['Booked','7 Nov'],['Loaded at Ikeja warehouse','8 Nov, 14:00'],['Passed Ore checkpoint','9 Nov, 07:20'],['Arrives Abuja depot','11 Nov (expected)'],['Delivered','11 Nov (expected)']],done:3},
+ {id:'SF-25011',mode:'sea',type:'Ocean · LCL 6 CBM',from:'Rotterdam, NL',to:'Port Harcourt, NG',status:'transit',label:'At sea',chip:'b',pct:30,eta:'Fri 27 Nov',cargo:'Lab equipment, 2,300 kg',ref:'B/L HLCU9930021',events:[['Booked','20 Oct'],['Consolidated in Rotterdam','28 Oct'],['Departed Rotterdam','2 Nov'],['Arrives Onne Port','25 Nov (expected)'],['Customs clearing','pending'],['Delivered','27 Nov (expected)']],done:3},
+ {id:'SF-24710',mode:'air',type:'Air · 3 pallets',from:'Frankfurt, DE',to:'Abuja, FCT',status:'delivered',label:'Delivered',chip:'k',pct:100,eta:'Delivered 2 Nov',cargo:'Medical devices, 640 kg',ref:'AWB 220-18850342',events:[['Booked','25 Oct'],['Departed Frankfurt','29 Oct'],['Arrived Abuja (ABV)','30 Oct'],['Customs cleared','1 Nov'],['Delivered','2 Nov, signed by T. Bello']],done:5}
+];
+var DOCS=[['Commercial invoice','SF-24903','Requested 9 Nov','a','Upload needed'],['NAFDAC permit','SF-24903','Requested 9 Nov','a','Upload needed'],['PAAR approval','SF-24817','9 Nov','g','Approved'],['Bill of lading','SF-24817','15 Oct','g','Verified'],['Packing list','SF-24955','7 Nov','g','Verified'],['Form M','SF-25011','18 Oct','b','With bank'],['Proof of delivery','SF-24710','2 Nov','k','Archived']];
+var BILLS=[['INV-1093','SF-24817','6 Nov','₦1,240,000','a','Due Fri'],['INV-1088','SF-24710','2 Nov','₦865,500','g','Paid'],['INV-1071','SF-24955','28 Oct','₦540,000','g','Paid'],['INV-1064','SF-25011','21 Oct','₦2,180,000','g','Paid']];
+function $(s,r){return (r||document).querySelector(s)}function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
+function shipRow(s){return '<div class="ship" data-track="'+s.id+'"><div class="mode"><svg style="color:var(--teal)"><use href="#m-'+s.mode+'"/></svg></div><div><div class="ship-id">'+s.id+'</div><small>'+s.type+'</small></div><div class="route-col"><div class="route">'+s.from.split(',')[0]+'<svg><use href="#i-arrow"/></svg>'+s.to.split(',')[0]+'</div><div class="bar"><i style="width:'+s.pct+'%"></i></div></div><div class="st-col"><span class="chip '+s.chip+'">'+s.label+'</span><small style="margin-top:4px">ETA '+s.eta+'</small></div><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></div>'}
+$('#ship-list').innerHTML=SHIPS.filter(function(s){return s.status!=='delivered'}).map(shipRow).join('');
+function renderAll(f){$('#ship-all').innerHTML=SHIPS.filter(function(s){return f==='all'||s.status===f}).map(shipRow).join('')||'<div class="empty">No shipments here.</div>'}
+renderAll('all');
+$$('#ship-tabs button').forEach(function(b){b.onclick=function(){$$('#ship-tabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');renderAll(b.dataset.f)}});
+$('#doc-rows').innerHTML=DOCS.map(function(d){return '<tr><td><b>'+d[0]+'</b></td><td class="hide-m">'+d[1]+'</td><td class="hide-m">'+d[2]+'</td><td><span class="chip '+d[3]+'">'+d[4]+'</span></td><td style="text-align:right">'+(d[3]==='a'?'<button class="btn ghost" style="height:34px" data-toast="Upload window opens here in the live portal">Upload</button>':'<button class="icon-btn" style="width:34px;height:34px;display:inline-grid" aria-label="Download" data-toast="Downloading '+d[0]+'"><svg><use href="#i-dl"/></svg></button>')+'</td></tr>'}).join('');
+$('#bill-rows').innerHTML=BILLS.map(function(b){return '<tr><td><b>'+b[0]+'</b></td><td class="hide-m">'+b[1]+'</td><td class="hide-m">'+b[2]+'</td><td><b>'+b[3]+'</b></td><td><span class="chip '+b[4]+'">'+b[5]+'</span></td><td style="text-align:right">'+(b[4]==='a'?'<button class="btn mint" style="height:34px" data-toast="Paystack checkout opens here in the live portal">Pay now</button>':'<button class="btn ghost" style="height:34px" data-toast="Receipt downloaded">Receipt</button>')+'</td></tr>'}).join('');
+/* map */
+function map(el){el.innerHTML='<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice"><defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(255,255,255,.04)"/></pattern><linearGradient id="rt" x1="0" x2="1"><stop offset="0" stop-color="#007A5E"/><stop offset="1" stop-color="#1EF7C4"/></linearGradient></defs><rect width="400" height="250" fill="url(#g)"/><path d="M0 200 C60 190 90 210 150 196 S260 170 400 188 V250 H0Z" fill="#0F2A33"/><path d="M0 206 C60 196 90 216 150 202 S260 176 400 194" fill="none" stroke="rgba(62,99,221,.35)"/><path d="M40 60 L120 40 L210 70 L300 50 L370 80 M80 120 L180 110 L260 140 L350 120 M60 160 L150 150" stroke="rgba(255,255,255,.07)" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M70 182 C120 150 170 140 220 120 S300 80 330 66" fill="none" stroke="rgba(30,247,196,.18)" stroke-width="6" stroke-linecap="round"/><path d="M70 182 C120 150 170 140 220 120 S300 80 330 66" fill="none" stroke="url(#rt)" stroke-width="3" class="flow" stroke-linecap="round"/><circle cx="70" cy="182" r="6" fill="#1EF7C4" class="pulse"/><circle cx="70" cy="182" r="6" fill="#1EF7C4"/><circle cx="330" cy="66" r="6" fill="none" stroke="#1EF7C4" stroke-width="2.5"/><circle cx="330" cy="66" r="2.5" fill="#1EF7C4"/></svg><span class="lbl" style="left:14px;top:200px">Apapa Port</span><span class="lbl" style="right:14px;top:30px">Ikeja warehouse</span><span class="lbl" style="left:46%;top:46%;background:#1EF7C4;color:#0A0F0D;border:0">22 km · 1h 10m</span>'}
+map($('#map'));
+/* track */
+function track(id){id=String(id||'').trim().toUpperCase();var s=SHIPS.filter(function(x){return x.id===id||x.ref.toUpperCase().indexOf(id)>-1})[0];var out=$('#track-out');
+ if(!s){out.innerHTML='<div class="card"><h3>No shipment found for '+id.replace(/</g,'')+'</h3><div class="sub" style="margin-top:6px">Check the number, or ask the assistant to help find it.</div></div>';return}
+ out.innerHTML='<div class="card"><div class="head-row"><div class="mode"><svg style="color:var(--teal)"><use href="#m-'+s.mode+'"/></svg></div><div><h3>'+s.id+'</h3><div class="sub">'+s.type+' · '+s.ref+'</div></div><span class="chip '+s.chip+' end">'+s.label+'</span></div><div class="bar" style="height:8px"><i style="width:'+s.pct+'%"></i></div><div class="meta"><div><small>From</small><b>'+s.from+'</b></div><div><small>To</small><b>'+s.to+'</b></div><div><small>ETA</small><b>'+s.eta+'</b></div><div><small>Cargo</small><b>'+s.cargo.split(',')[0]+'</b></div></div><ul class="tl">'+s.events.map(function(e,i){return '<li class="'+(i<s.done?'done':i===s.done?'now':'')+'"><b>'+e[0]+'</b><small>'+e[1]+'</small></li>'}).join('')+'</ul></div><div class="grid"><div class="card"><h3>Route</h3><div class="map" id="map2"></div></div><div class="card insight" style="margin:0"><div class="spark"><svg><use href="#i-spark"/></svg></div><div><b>Ask about '+s.id+'</b><p>Get a plain answer on timing, documents or delays.</p><div class="acts"><button data-ask="Give me a short update on '+s.id+'">Explain this status</button><button data-ask="Is anything needed from me for '+s.id+'?">Anything needed from me?</button></div></div></div></div>';
+ map($('#map2'));}
+$('#recent').innerHTML='<span style="font-size:12px;color:#7F948C;align-self:center">Recent:</span>'+SHIPS.slice(0,4).map(function(s){return '<button type="button" data-track="'+s.id+'">'+s.id+'</button>'}).join('');
+$('#track-form').onsubmit=function(e){e.preventDefault();track($('#track-in').value)};
+track('SF-24817');
+/* views */
+var TITLES={home:['Good afternoon, Adaeze','Here is where your cargo is right now.'],ships:['Shipments','Every shipment on your account, live.'],track:['Track','Real time status for air, ocean, road and rail.'],quote:['Get a quote','Air, ocean, road and rail, door to door.'],docs:['Documents','Everything for customs and delivery, in one place.'],bills:['Invoices','Pay securely and download receipts.'],ai:['Splendid AI','Your 24/7 logistics assistant.']};
+function go(v){$$('.view').forEach(function(x){x.classList.toggle('on',x.id==='v-'+v)});$$('#nav button,#mob-nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});$('#title').textContent=TITLES[v][0];$('#subtitle').textContent=TITLES[v][1];window.scrollTo(0,0);if(v==='ai')chatStart();try{history.replaceState(null,'','#'+v)}catch(e){}}
+document.addEventListener('click',function(e){var t=e.target.closest('[data-v],[data-go],[data-track],[data-ask],[data-toast]');if(!t)return;
+ if(t.dataset.v)go(t.dataset.v);else if(t.dataset.go)go(t.dataset.go);else if(t.dataset.track){go('track');$('#track-in').value=t.dataset.track;track(t.dataset.track)}else if(t.dataset.ask){go('ai');ask(t.dataset.ask)}else if(t.dataset.toast)toast(t.dataset.toast)});
+function toast(m){var t=$('#toast');t.querySelector('span').textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove('on')},2600)}
+$('#q').addEventListener('keydown',function(e){if(e.key==='Enter'&&this.value.trim()){go('track');$('#track-in').value=this.value;track(this.value)}});
+/* quote */
+var qf=$('#quote-form');
+function summary(){var d=new FormData(qf),o={};d.forEach(function(v,k){o[k]=v});var has=o.origin||o.dest||o.weight;if(!has){$('#est-body').className='empty';$('#est-body').innerHTML='Fill in the form or describe your cargo, and a summary appears here as you type.';return o}
+ var w=Number(o.weight)||0,cbm=o.mode==='Air'?(w/167).toFixed(1):(w/1000).toFixed(1);
+ $('#est-body').className='';$('#est-body').innerHTML='<div class="big">'+o.mode+' freight</div><div style="color:#9FB2AA;margin-bottom:12px">'+(o.origin||'Origin')+' to '+(o.dest||'destination')+'</div><div class="row"><span>Cargo</span><b>'+o.cargo+'</b></div><div class="row"><span>Weight</span><b>'+(w?w.toLocaleString()+' kg':'Not set')+'</b></div><div class="row"><span>'+(o.mode==='Air'?'Chargeable volume':'Est. volume')+'</span><b>'+(w?cbm+' CBM':'Not set')+'</b></div><div class="row"><span>Service</span><b>'+o.svc+'</b></div><div class="row"><span>Typical transit</span><b>'+({Air:'2 to 5 days',Ocean:'25 to 40 days',Road:'1 to 4 days',Rail:'2 to 6 days'})[o.mode]+'</b></div><div class="note">A Splendid Freight specialist confirms the exact price within 2 working hours. Sample guidance only.</div>';return o}
+qf.addEventListener('input',summary);qf.addEventListener('change',summary);
+qf.onsubmit=function(e){e.preventDefault();var o=summary();toast('Quote request sent for '+o.mode+' '+(o.origin||'')+' to '+(o.dest||'')+'. We reply within 2 hours.')};
+$('#ai-fill-btn').onclick=function(){var t=$('#ai-describe').value.trim();if(!t){$('#ai-describe').focus();return}
+ var b=this;b.textContent='Reading…';
+ var low=t.toLowerCase(),set=function(n,v){var el=qf.querySelector('[name='+n+']');if(el&&v)el.value=v};
+ var mode=/air|fly|flight|urgent/.test(low)?'Air':/ocean|sea|container|fcl|lcl|ship by sea/.test(low)?'Ocean':/rail|train/.test(low)?'Rail':/road|truck|lorry/.test(low)?'Road':'Air';qf.querySelector('[value='+mode+']').checked=true;
+ var m=t.match(/from\s+([A-Za-z .]+?)\s+to\s+([A-Za-z .]+?)(?:\s+by|\s+via|,|\.|$)/i);if(m){set('origin',m[1].trim());set('dest',m[2].trim())}
+ var w=t.match(/([\d,.]+)\s*(kg|kilo|tons?|tonnes?|t\b)/i);if(w){var n=parseFloat(w[1].replace(/,/g,''));if(/^t/i.test(w[2]))n*=1000;set('weight',Math.round(n))}else if(/pallet/.test(low)){var p=t.match(/(\d+)\s*pallet/i);if(p)set('weight',p[1]*300)}
+ var c=/medic|pharma|drug/.test(low)?'Pharmaceuticals':/fmcg|food|drink|beverage|carton/.test(low)?'FMCG':/machin|equipment|generator/.test(low)?'Machinery and equipment':/fresh|perish|fish|fruit/.test(low)?'Perishables':/chemical|battery|dangerous|hazard/.test(low)?'Dangerous goods':'General cargo';set('cargo',c);
+ setTimeout(function(){b.textContent='Fill with AI';summary();toast('Form filled from your description. Check and send.')},650)};
+$('#ask-quote').onclick=function(){var o=summary();go('ai');ask('I want a quote: '+o.mode+' freight'+(o.origin?' from '+o.origin:'')+(o.dest?' to '+o.dest:'')+', '+o.cargo+(o.weight?', '+o.weight+' kg':'')+'. What do you need from me?')};
+/* assistant page */
+var hist=[],started=false;
+var SUGS=['When will SF-24817 reach my warehouse?','What documents do I still need for SF-24903?','How much is outstanding on my account?','What is the difference between FCL and LCL?','Can you move pharmaceuticals that need cold chain?','Which of your offices is closest to Port Harcourt?'];
+function bubble(role,text){var log=$('#chat-log');if(role==='assistant'){var w=document.createElement('div');w.className='who';w.innerHTML='<i><svg><use href="#logo"/></svg></i>Splendid AI';log.appendChild(w)}var d=document.createElement('div');d.className='msg '+(role==='user'?'u':'b');d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
+var TSUGS=['Which new leads should we call first?','Summarise website traffic this month','Which pages bring in the most leads?','Suggest three blog post ideas for pharma importers'];
+var startedMode='';function chatStart(){if(startedMode===MODE)return;startedMode=MODE;started=true;hist=[];$('#chat-log').innerHTML='';bubble('assistant',MODE==='team'?'Hi team, I am Splendid AI. I can see your website analytics, all 6 leads and your blog posts. Ask me who to call first, how the site is doing, or for content ideas.':'Hi Adaeze, I am Splendid AI. I can see your 4 active shipments, documents and invoices. Ask me anything about your cargo, customs or a new quote.');$('#sugs').innerHTML=(MODE==='team'?TSUGS:SUGS).map(function(s){return '<button data-ask="'+s+'">'+s+'</button>'}).join('')}
+function ask(q){if(!startedMode)chatStart();q=String(q||'').trim();if(!q)return;bubble('user',q);hist.push({role:'user',content:q});$('#chat-in').value='';var t=document.createElement('div');t.className='msg b typing';t.innerHTML='<span></span><span></span><span></span>';$('#chat-log').appendChild(t);
+ var done=function(j){t.remove();var r=j&&j.ok?j.reply:((j&&j.error)||'Sorry, I could not answer that just now.');bubble('assistant',r);if(j&&j.ok)hist.push({role:'assistant',content:r})};
+ if(window.conceptAiSend)window.conceptAiSend(hist.slice(-8),done);else done({ok:false})}
+$('#chat-form').onsubmit=function(e){e.preventDefault();ask($('#chat-in').value)};
+function accountText(){if(typeof MODE!=='undefined'&&MODE==='team')return 'You are helping the Splendid Freight staff team inside their team workspace (not a customer). Website last 30 days: 4,812 visitors (+38% on October), 63 leads (41 quote forms, 22 AI chats), 1.3% visitor to lead rate, top source Google search 48%, top city Lagos. Leads: '+LEADS.map(function(l){return l.n+' ('+l.co+'), '+l.src+', '+l.mode+' '+l.route+', '+l.cargo+', '+l.when+', status '+l.st+': '+l.sum}).join(' | ')+'. Blog posts: '+POSTS.map(function(p){return p.t+' ('+p.st+', '+p.v+')'}).join('; ');return 'Customer: Adaeze Okafor, Medipharm Distribution Ltd (Lagos). Today is Mon 9 Nov 2026.\nInvoices: '+BILLS.map(function(b){return b[0]+' ('+b[1]+') '+b[3]+' '+b[5]}).join('; ')+'. Outstanding total: N1,240,000 (INV-1093, due Fri 13 Nov).\nDocuments: '+DOCS.map(function(d){return d[0]+' for '+d[1]+': '+d[4]}).join('; ')+'\nShipments:\n'+SHIPS.map(function(s){return s.id+' | '+s.type+' | '+s.from+' to '+s.to+' | '+s.label+' | ETA '+s.eta+' | '+s.cargo+' | '+s.ref+' | '+s.events.map(function(e,i){return e[0]+' ('+e[1]+')'+(i<s.done?' done':i===s.done?' NEXT':'')}).join('; ')}).join('\n')}
+window.CONCEPT_AI={slug:'splendid-freight-app',name:'Splendid Freight',title:'Splendid AI',cta:'Ask Splendid AI',color:'#1EF7C4',deep:'#007A5E',ink:'#0A0F0D',logo:'<svg viewBox="0 0 40 40"><use href="#logo"/></svg>',greeting:'Hi Adaeze! Ask me about your shipments, documents, invoices or a new quote.',chips:['Where is SF-24903?','What do I owe?','Get a quote'],account:accountText};
+
+/* ===== TEAM VIEW ===== */
+var LEADS=[
+ {n:'Chinedu Eze',co:'Medilink Pharma Ltd',src:'Quote form',sc:'var(--teal)',route:'Mumbai to Lagos',mode:'Air',cargo:'Pharmaceuticals, 950 kg',when:'Today, 11:42',st:'New',phone:'+234 803 ••• 2214',page:'/services/pharma-logistics',sum:'Wants a door to door air quote for temperature controlled medicine, ready next week. Asked about NAFDAC clearance. High intent: second visit this week.',chat:null},
+ {n:'Fatima Bello',co:'Northgate Foods',src:'AI chat',sc:'var(--amber)',route:'Lagos to Kano',mode:'Road',cargo:'FMCG cartons, 2 trucks',when:'Today, 09:15',st:'New',phone:'+234 809 ••• 7781',page:'/services/road-freight',sum:'Moves FMCG monthly from Lagos to Kano. Wants a regular contract rate. Asked if trucks are tracked.',chat:[['v','Do you do regular trucking from Lagos to Kano?'],['a','Yes, we move cargo nationwide by road, door to door. How many trucks a month, and what are you moving?'],['v','About 2 trucks of FMCG cartons every month'],['a','Thanks. I have passed this to our road freight team for a contract rate. What is the best number to reach you on?']]},
+ {n:'James Whitfield',co:'Oakridge Medical UK',src:'Quote form',sc:'var(--teal)',route:'London to Abuja',mode:'Air',cargo:'Medical devices, 420 kg',when:'Yesterday, 16:20',st:'New',phone:'+44 7700 ••• 118',page:'/quote',sum:'UK supplier shipping devices to an Abuja hospital project. Needs customs clearing and delivery to site.',chat:null},
+ {n:'Ngozi Okonkwo',co:'Prime Build Ltd',src:'AI chat',sc:'var(--amber)',route:'Shanghai to Onne',mode:'Ocean',cargo:'Machinery, 1x40ft FCL',when:'Sat 7 Nov',st:'Contacted',phone:'+234 806 ••• 4402',page:'/services/ocean-freight',sum:'Construction company importing machinery. Called back on Saturday, waiting for the packing list.',chat:null},
+ {n:'Tunde Adeyemi',co:'Brightpath Retail',src:'Contact page',sc:'var(--blue)',route:'Dubai to Lagos',mode:'Ocean',cargo:'Mixed goods, LCL 8 CBM',when:'Fri 6 Nov',st:'Quoted',phone:'+234 802 ••• 9030',page:'/contact',sum:'Quote sent on 6 Nov for LCL from Jebel Ali. Follow up due today.',chat:null},
+ {n:'Amaka Nwosu',co:'Lifeway Diagnostics',src:'Quote form',sc:'var(--teal)',route:'Frankfurt to Lagos',mode:'Air',cargo:'Lab reagents, 180 kg',when:'Thu 5 Nov',st:'Won',phone:'+234 814 ••• 5567',page:'/services/pharma-logistics',sum:'Booked as SF-25040. Cold chain air shipment, arriving 14 Nov.',chat:null}
+];
+var POSTS=[
+ {t:'What documents do you need to import into Nigeria in 2026?',c:'Customs and compliance',img:'ocean',st:'Published',d:'2 Nov',v:'1,284 views'},
+ {t:'Air or ocean freight: how to choose for your next shipment',c:'Air freight',img:'air',st:'Published',d:'24 Oct',v:'862 views'},
+ {t:'Moving FMCG across Nigeria by road: a practical guide',c:'Industry news',img:'road',st:'Draft',d:'Edited yesterday',v:'Not published'}
+];
+var IMG={air:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/air.jpg',ocean:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/ocean.jpg',road:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/road.jpg',rail:'https://www.ferrnagency.com/concept/splendid-freight/assets/img/rail.jpg'};
+var stChip={New:'b',Contacted:'a',Quoted:'k',Won:'g'};
+TITLES.web=['Website analytics','Who is visiting splendidfreight.com, and what they do.'];
+TITLES.leads=['Leads','Every enquiry from your website, quote form and AI chat.'];
+TITLES.blog=['Blog posts','Publish insights that bring in search traffic.'];
+var MODE='client';
+function setMode(m){MODE=m;document.body.classList.toggle('team',m==='team');$$('#mode-sw button').forEach(function(b){b.classList.toggle('on',b.dataset.mode===m)});$('.brand small').textContent=m==='team'?'Team workspace':'Client portal';$('#top-sw').textContent=m==='team'?'Client view':'Team view';go(m==='team'?'web':'home')}
+$$('#mode-sw button').forEach(function(b){b.onclick=function(){setMode(b.dataset.mode)}});
+$('#top-sw').onclick=function(){setMode(MODE==='team'?'client':'team')};
+/* chart */
+(function(){var V=[98,112,105,131,126,118,94,140,152,149,161,138,120,171,166,180,174,189,150,132,196,204,188,210,221,199,170,226,238,245],L=[1,2,1,2,3,2,1,2,3,2,3,2,1,3,2,3,3,4,2,1,3,4,3,3,4,3,2,4,4,3];
+ var W=640,H=220,mx=260,pts=V.map(function(v,i){return [i*(W/(V.length-1)),H-20-(v/mx)*(H-40)]});
+ var line=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' ');
+ var bars=L.map(function(l,i){var x=i*(W/(V.length-1));return '<rect x="'+(x-4)+'" y="'+(H-20-l*9)+'" width="8" height="'+(l*9)+'" rx="2" fill="#F5A524" opacity=".85"/>'}).join('');
+ var grid=[0,1,2,3].map(function(i){var y=20+i*((H-40)/3);return '<line x1="0" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#E6ECE9"/>'}).join('');
+ $('#chart').innerHTML='<defs><linearGradient id="ag" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#007A5E" stop-opacity=".22"/><stop offset="1" stop-color="#007A5E" stop-opacity="0"/></linearGradient></defs>'+grid+'<path d="'+line+' L'+W+' '+(H-20)+' L0 '+(H-20)+'Z" fill="url(#ag)"/>'+bars+'<path d="'+line+'" fill="none" stroke="#007A5E" stroke-width="2.5" vector-effect="non-scaling-stroke"/>';})();
+function hbars(el,rows,max){$(el).innerHTML=rows.map(function(r){return '<div class="hbar"><span>'+r[0]+'</span><div class="t"><i style="width:'+Math.round(r[1]/max*100)+'%"></i></div><b>'+r[2]+'</b></div>'}).join('')}
+hbars('#sources',[['Google search',2310,'48%'],['Direct',1060,'22%'],['WhatsApp shares',625,'13%'],['LinkedIn',433,'9%'],['Referrals',384,'8%']],2310);
+hbars('#cities',[['Lagos',1780,'1,780'],['Abuja',1010,'1,010'],['Port Harcourt',540,'540'],['Kano',260,'260'],['London',220,'220'],['Shanghai',160,'160'],['Dubai',140,'140'],['Houston',90,'90']],1780);
+$('#pages').innerHTML=[['/','Home',1920,9],['/services/pharma-logistics','Pharma logistics',684,14],['/quote','Request a quote',602,41],['/tracking','Track a shipment',588,0],['/services/ocean-freight','Ocean freight',455,6],['/insights/import-documents-nigeria','Blog: import documents',398,3]].map(function(p){return '<tr><td><b>'+p[1]+'</b><small style="display:block;color:var(--muted)">'+p[0]+'</small></td><td>'+p[2].toLocaleString()+'</td><td class="hide-m">'+p[3]+'</td></tr>'}).join('');
+var FEED=[['🇳🇬','Visitor from Lagos is on <b>Pharma logistics</b>','via Google: "pharma logistics Lagos"'],['💬','AI chat started on <b>Road freight</b>','Asked about Lagos to Kano trucking'],['🇬🇧','Visitor from London opened <b>Request a quote</b>','Second visit today'],['🇳🇬','Visitor from Abuja is reading the <b>blog</b>','"What documents do you need to import"'],['📦','Someone tracked <b>SF-24955</b>','From the tracking page'],['🇨🇳','Visitor from Shanghai is on <b>Ocean freight</b>','via LinkedIn']];
+var fi=0;function feed(){var rows=[];for(var k=0;k<4;k++){var f=FEED[(fi+k)%FEED.length];rows.push('<div class="feed-row"><div class="fl">'+f[0]+'</div><div>'+f[1]+'<small>'+(k===0?'Just now':k+' min ago')+' · '+f[2]+'</small></div></div>')}$('#feed').innerHTML=rows.join('');$('#live-n').textContent=5+((fi*3)%5);fi++}
+feed();setInterval(feed,4000);
+/* leads */
+function renderLeads(f){$('#lead-rows').innerHTML=LEADS.map(function(l,i){return [l,i]}).filter(function(x){return f==='all'||x[0].st===f}).map(function(x){var l=x[0];return '<tr class="lead-row" data-lead="'+x[1]+'"><td><b>'+l.n+'</b><small style="display:block;color:var(--muted)">'+l.co+'</small></td><td class="hide-m"><span class="src"><i style="background:'+l.sc+'"></i>'+l.src+'</span></td><td class="hide-m">'+l.mode+' · '+l.route+'</td><td class="hide-m">'+l.when+'</td><td><span class="chip '+stChip[l.st]+'">'+l.st+'</span></td></tr>'}).join('');$('#lead-badge').textContent=LEADS.filter(function(l){return l.st==='New'}).length}
+renderLeads('all');
+$$('#lead-tabs button').forEach(function(b){b.onclick=function(){$$('#lead-tabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');renderLeads(b.dataset.f)}});
+var curLead=null;
+function openLead(i){var l=LEADS[i];curLead=i;$('#d-av').textContent=l.n.split(' ').map(function(w){return w[0]}).join('');$('#d-name').textContent=l.n;$('#d-co').textContent=l.co;
+ $('#d-body').innerHTML='<span class="chip '+stChip[l.st]+'">'+l.st+'</span> <span class="src" style="margin-left:8px"><i style="background:'+l.sc+'"></i>'+l.src+'</span><div class="kv"><span>Shipment</span><b>'+l.mode+' · '+l.route+'</b><span>Cargo</span><b>'+l.cargo+'</b><span>Phone</span><b>'+l.phone+'</b><span>First page</span><b>'+l.page+'</b><span>Received</span><b>'+l.when+'</b></div><div class="ai-sum"><b><svg width="14" height="14"><use href="#i-spark"/></svg>AI summary</b>'+l.sum+'</div>'+(l.chat?'<h3 style="font-size:13px;margin-bottom:8px">AI chat transcript</h3><div class="chatlog">'+l.chat.map(function(c){return '<div class="'+c[0]+'">'+c[1]+'</div>'}).join('')+'</div>':'');
+ $('#drawer').classList.add('on');$('#scrim').classList.add('on');document.body.classList.add('drawer-open')}
+function closeLead(){$('#drawer').classList.remove('on');$('#scrim').classList.remove('on');document.body.classList.remove('drawer-open')}
+$('#d-x').onclick=closeLead;$('#scrim').onclick=closeLead;
+$('#d-won').onclick=function(){if(curLead==null)return;LEADS[curLead].st='Won';renderLeads($('#lead-tabs .on').dataset.f);openLead(curLead);toast('Marked as won. Added to your monthly report.')};
+$('#d-quote').onclick=function(){if(curLead==null)return;LEADS[curLead].st='Quoted';renderLeads($('#lead-tabs .on').dataset.f);openLead(curLead);toast('Quote sent to '+LEADS[curLead].n+' by email and WhatsApp')};
+document.addEventListener('click',function(e){var r=e.target.closest('[data-lead]');if(r)openLead(+r.dataset.lead)});
+/* blog */
+function renderPosts(){$('#posts').innerHTML=POSTS.map(function(p){return '<div class="card post"><div class="cv" style="background-image:url('+IMG[p.img]+')"><span class="chip '+(p.st==='Published'?'g':'a')+'">'+p.st+'</span></div><div class="pb"><span class="sub">'+p.c+'</span><b>'+p.t+'</b><small><span>'+p.d+'</span><span>'+p.v+'</span></small></div></div>'}).join('')}
+renderPosts();
+function editor(on){$('#blog-list').style.display=on?'none':'';$('#editor').classList.toggle('on',on);if(on){$('#ed-body').value='';seo()}}
+$('#new-post').onclick=function(){editor(true)};$('#cancel-post').onclick=function(){editor(false)};
+function seo(){$('#seo-t').textContent=$('#ed-title').value||'Post title';var b=$('#ed-body').value.trim();$('#seo-d').textContent=b?b.slice(0,155)+(b.length>155?'…':''):'Write the post and a search preview appears here.'}
+$('#ed-title').addEventListener('input',seo);$('#ed-body').addEventListener('input',seo);
+$('#ai-write').onclick=function(){var b=this,t=$('#ed-title').value.trim();if(!t){$('#ed-title').focus();return}b.lastChild.textContent='Writing…';
+ var done=function(j){b.lastChild.textContent='Write intro with AI';var txt=j&&j.ok?j.reply:'Importing pharmaceuticals into Nigeria involves permits, inspections and careful timing. In this guide we explain the documents you need, the common causes of delay and how Splendid Freight keeps your cargo moving from the airport to your warehouse.';$('#ed-body').value=txt+'\n\n';seo();toast('Intro drafted. Edit it, then publish.')};
+ if(window.conceptAiSend)window.conceptAiSend([{role:'user',content:'Write a 3 sentence introduction for a Splendid Freight blog post titled "'+t+'". Write it as the company, in plain professional English, with no headings, no lists and no prices.'}],done);else done(null)};
+function savePost(st){var t=$('#ed-title').value.trim()||'Untitled post';POSTS.unshift({t:t,c:$('#ed-cat').value,img:$('#ed-cover').value,st:st,d:'Just now',v:st==='Published'?'0 views':'Not published'});renderPosts();editor(false);toast(st==='Published'?'Published to splendidfreight.com/insights and shared to Google':'Draft saved')}
+$('#publish').onclick=function(){savePost('Published')};$('#save-draft').onclick=function(){savePost('Draft')};
+
+var h=(location.hash||'').slice(1);if(['web','leads','blog'].indexOf(h)>-1)setMode('team');if(TITLES[h]&&h!=='home')go(h);
+</script>
+<script>/* Concept AI assistant widget. Inlined into concept sites (they run sandboxed), configured by
+   window.CONCEPT_AI = { slug, name, color, ink, logo (svg markup), greeting, chips: [] }. Talks to
+   https://www.ferrnagency.com/api/concept-ai/<slug>. */
+(function () {
+  var C = window.CONCEPT_AI || {}; if (!C.slug || document.getElementById('cai')) return;
+  var API = 'https://www.ferrnagency.com/api/concept-ai/' + C.slug;
+  var col = C.color || '#1EF7C4', ink = C.ink || '#0A0F0D', deep = C.deep || '#007A5E';
+  var css = '#cai{position:fixed;right:20px;bottom:20px;z-index:2147483000;font-family:inherit}' +
+    '#cai *{box-sizing:border-box}' +
+    '#cai .cai-fab{display:flex;align-items:center;gap:10px;height:56px;padding:0 20px 0 8px;border:0;border-radius:999px;background:' + ink + ';color:#fff;font:600 15px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 18px 40px -12px rgba(0,0,0,.45)}' +
+    '#cai .cai-fab i{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:' + col + '}' +
+    '#cai .cai-fab i svg{width:24px;height:24px}' +
+    '#cai .cai-dot{width:8px;height:8px;border-radius:50%;background:' + col + ';box-shadow:0 0 0 4px rgba(30,247,196,.25)}' +
+    '#cai .cai-box{position:absolute;right:0;bottom:70px;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 120px));display:none;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.45);border:1px solid rgba(0,0,0,.06)}' +
+    '#cai.open .cai-box{display:flex;animation:caiIn .3s cubic-bezier(.2,.8,.2,1)}@keyframes caiIn{from{opacity:0;transform:translateY(12px) scale(.98)}}' +
+    '#cai .cai-head{display:flex;align-items:center;gap:12px;padding:16px 18px;background:' + ink + ';color:#fff}' +
+    '#cai .cai-head i{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:' + col + ';flex:none}#cai .cai-head i svg{width:22px;height:22px}' +
+    '#cai .cai-head b{display:block;font-size:15px}#cai .cai-head small{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.75}' +
+    '#cai .cai-x{margin-left:auto;background:rgba(255,255,255,.1);border:0;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1}' +
+    '#cai .cai-log{flex:1;overflow:auto;padding:16px;background:#F4F7F6;display:flex;flex-direction:column;gap:10px}' +
+    '#cai .cai-m{max-width:85%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap}' +
+    '#cai .cai-m.b{background:#fff;color:' + ink + ';border:1px solid #E6ECE9;border-bottom-left-radius:4px;align-self:flex-start}' +
+    '#cai .cai-m.u{background:' + deep + ';color:#fff;border-bottom-right-radius:4px;align-self:flex-end}' +
+    '#cai .cai-typing{display:flex;gap:4px;padding:12px 14px}#cai .cai-typing span{width:6px;height:6px;border-radius:50%;background:#9AA8A2;animation:caiT 1s infinite}#cai .cai-typing span:nth-child(2){animation-delay:.15s}#cai .cai-typing span:nth-child(3){animation-delay:.3s}@keyframes caiT{50%{transform:translateY(-3px);opacity:.5}}' +
+    '#cai .cai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px;background:#F4F7F6}' +
+    '#cai .cai-chips button{border:1px solid #D6E2DD;background:#fff;color:' + ink + ';border-radius:999px;padding:7px 11px;font:500 12.5px inherit;font-family:inherit;cursor:pointer}#cai .cai-chips button:hover{border-color:' + deep + '}' +
+    '#cai form{display:flex;gap:8px;padding:12px;border-top:1px solid #E6ECE9;background:#fff}' +
+    '#cai input{flex:1;height:44px;border:1px solid #D6E2DD;border-radius:12px;padding:0 14px;font:14px inherit;font-family:inherit;outline:none}#cai input:focus{border-color:' + deep + '}' +
+    '#cai form button{width:44px;height:44px;border:0;border-radius:12px;background:' + col + ';color:' + ink + ';cursor:pointer;font-size:18px}' +
+    '#cai .cai-by{font-size:11px;color:#9AA8A2;text-align:center;padding:0 0 8px;background:#fff}' +
+    '@media(max-width:520px){#cai{right:12px;bottom:12px}#cai .cai-fab span{display:none}#cai .cai-fab{padding:0 8px}}';
+  var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  var logo = C.logo || '';
+  function L(k) { return logo.replace(/id="([^"]+)"/g, 'id="$1' + k + '"').replace(/url\(#([^)]+)\)/g, 'url(#$1' + k + ')'); }
+  var w = document.createElement('div'); w.id = 'cai';
+  w.innerHTML = '<div class="cai-box" role="dialog" aria-label="Chat with ' + C.name + '"><div class="cai-head"><i>' + logo + '</i><div><b>' + (C.title || C.name + ' Assistant') + '</b><small><span class="cai-dot"></span>Online, replies instantly</small></div><button class="cai-x" aria-label="Close">×</button></div>' +
+    '<div class="cai-log" aria-live="polite"></div><div class="cai-chips"></div><form><input placeholder="Ask about shipping, quotes, tracking…" aria-label="Your message"><button aria-label="Send">➤</button></form><div class="cai-by">AI assistant · answers from ' + C.name + ' information</div></div>' +
+    '<button class="cai-fab" aria-label="Open chat"><i>' + L('f') + '</i><span>' + (C.cta || 'Ask us anything') + '</span></button>';
+  document.body.appendChild(w);
+  var log = w.querySelector('.cai-log'), chips = w.querySelector('.cai-chips'), form = w.querySelector('form'), inp = w.querySelector('input');
+  var msgs = [];
+  function add(role, text) { var d = document.createElement('div'); d.className = 'cai-m ' + (role === 'user' ? 'u' : 'b'); d.textContent = text; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
+  function greet() { if (msgs.length) return; add('assistant', C.greeting || ('Hi! I am the ' + C.name + ' assistant. How can I help?')); (C.chips || []).forEach(function (t) { var b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.onclick = function () { send(t); }; chips.appendChild(b); }); }
+  function send(text) {
+    text = String(text || '').trim(); if (!text) return; chips.innerHTML = ''; add('user', text); msgs.push({ role: 'user', content: text }); inp.value = '';
+    var t = document.createElement('div'); t.className = 'cai-m b cai-typing'; t.innerHTML = '<span></span><span></span><span></span>'; log.appendChild(t); log.scrollTop = log.scrollHeight;
+    fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ messages: msgs, context: (document.title || '') + ' ' + (location.hash || ''), account: C.account ? (typeof C.account === 'function' ? C.account() : C.account) : undefined }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { t.remove(); var reply = j.ok ? j.reply : (j.error || 'Sorry, something went wrong.'); add('assistant', reply); if (j.ok) msgs.push({ role: 'assistant', content: reply }); })
+      .catch(function () { t.remove(); add('assistant', 'I could not connect just now. Please call or email the team.'); });
+  }
+  w.querySelector('.cai-fab').onclick = function () { w.classList.toggle('open'); if (w.classList.contains('open')) { greet(); setTimeout(function () { inp.focus(); }, 50); } };
+  w.querySelector('.cai-x').onclick = function () { w.classList.remove('open'); };
+  form.onsubmit = function (e) { e.preventDefault(); send(inp.value); };
+  window.conceptAiSend = function (history, cb) { fetch(API, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ messages: history, context: document.title, account: C.account ? (typeof C.account === 'function' ? C.account() : C.account) : undefined }) }).then(function (r) { return r.json(); }).then(cb).catch(function () { cb({ ok: false, error: 'I could not connect just now.' }); }); };
+  window.conceptAiAsk = function (q) { w.classList.add('open'); greet(); send(q); };
+})();
+</script>
+</body>
+</html>
