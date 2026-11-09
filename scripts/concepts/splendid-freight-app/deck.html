@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Ferrn x Splendid Freight</title>
+<style>
+@font-face{font-family:P;src:url(fonts/poppins-latin-300-normal.woff2);font-weight:300}
+@font-face{font-family:P;src:url(fonts/poppins-latin-400-normal.woff2);font-weight:400}
+@font-face{font-family:P;src:url(fonts/poppins-latin-500-normal.woff2);font-weight:500}
+@font-face{font-family:P;src:url(fonts/poppins-latin-600-normal.woff2);font-weight:600}
+@font-face{font-family:P;src:url(fonts/poppins-latin-700-normal.woff2);font-weight:700}
+@page{size:1600px 900px;margin:0}
+:root{--o:#F94406;--bg:#090a0c;--panel:#121316;--line:rgba(255,255,255,.09);--ink:#f4f3f0;--muted:#a7a5a0;--lt:#f6f5f8;--lt-ink:#0b0d10;--lt-muted:#4b4d52;--mint:#1EF7C4;--teal:#007A5E}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:P,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#333}
+.pg{width:1600px;height:900px;position:relative;overflow:hidden;page-break-after:always;background:var(--bg);color:var(--ink);padding:80px 96px}
+.pg.light{background:var(--lt);color:var(--lt-ink)}
+.top{position:absolute;left:96px;right:96px;top:44px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted);letter-spacing:.02em}
+.light .top{color:var(--lt-muted)}
+.top svg{width:22px;height:22px}
+.top .n{margin-left:auto;font-variant-numeric:tabular-nums}
+.top .x{opacity:.5}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--o);margin-bottom:22px}
+.eyebrow::before{content:"";width:28px;height:2px;background:var(--o)}
+h1{font-size:84px;line-height:1.02;font-weight:600;letter-spacing:-.035em}
+h2{font-size:54px;line-height:1.08;font-weight:600;letter-spacing:-.03em;max-width:20ch}
+h3{font-size:22px;font-weight:600;letter-spacing:-.01em;margin-bottom:8px}
+p.lead{font-size:21px;line-height:1.55;color:var(--muted);font-weight:300;max-width:56ch;margin-top:22px}
+.light p.lead{color:var(--lt-muted)}
+.o{color:var(--o)}.m{color:var(--mint)}
+.shot{border-radius:8px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06)}
+.light .shot{box-shadow:0 40px 80px -36px rgba(11,13,16,.35),0 0 0 1px rgba(11,13,16,.06)}
+.shot img{display:block;width:100%}
+.browser{border-radius:8px;overflow:hidden;background:#1b1c20;box-shadow:0 40px 90px -30px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.07)}
+.light .browser{background:#e9e8ec;box-shadow:0 40px 80px -36px rgba(11,13,16,.35),0 0 0 1px rgba(11,13,16,.07)}
+.bar{height:34px;display:flex;align-items:center;gap:7px;padding:0 14px}
+.bar i{width:10px;height:10px;border-radius:50%;background:#3a3b40}
+.light .bar i{background:#cfcdd3}
+.bar span{margin-left:14px;font-size:12px;color:#8a8890;background:rgba(255,255,255,.05);padding:4px 12px;border-radius:6px;flex:1;max-width:420px}
+.light .bar span{background:#fff;color:#6b6d72}
+.browser img{display:block;width:100%}
+.phone{border-radius:34px;padding:10px;background:#000;box-shadow:0 40px 80px -30px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12)}
+.phone img{display:block;width:100%;border-radius:26px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.chip{font-size:15px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
+.light .chip{border-color:rgba(11,13,16,.12);color:var(--lt-ink);background:#fff}
+.list{list-style:none;margin-top:30px;display:grid;gap:18px}
+.list li{display:flex;gap:16px;font-size:18px;line-height:1.5;color:var(--muted)}
+.light .list li{color:var(--lt-muted)}
+.list li b{color:var(--ink);font-weight:600;display:block;font-size:19px;margin-bottom:2px}
+.light .list li b{color:var(--lt-ink)}
+.list li::before{content:"";flex:none;width:9px;height:9px;margin-top:10px;background:var(--o);border-radius:2px}
+.cards{display:grid;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:28px}
+.light .card{background:#fff;border-color:rgba(11,13,16,.07)}
+.card p{font-size:16px;line-height:1.55;color:var(--muted)}
+.light .card p{color:var(--lt-muted)}
+.card .k{font-size:13px;font-weight:600;color:var(--o);letter-spacing:.1em;margin-bottom:18px;display:block}
+.ic{width:44px;height:44px;border-radius:8px;background:rgba(249,68,6,.12);display:grid;place-items:center;margin-bottom:20px;color:var(--o)}
+.ic svg{width:22px;height:22px}
+.url{display:inline-flex;align-items:center;gap:10px;margin-top:30px;font-size:16px;font-weight:500;padding:12px 18px;border-radius:8px;background:rgba(30,247,196,.08);border:1px solid rgba(30,247,196,.25);color:var(--mint)}
+.light .url{background:#E8FBF5;border-color:#9FE9D3;color:var(--teal)}
+.url::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.foot{position:absolute;left:96px;right:96px;bottom:40px;font-size:12px;color:#5d5b57;display:flex}
+.light .foot{color:#9a9ca1}
+.foot span:last-child{margin-left:auto}
+.q{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px}
+.q .card{padding:26px}
+.q h3{font-size:19px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.q h3 em{font-style:normal;font-size:13px;color:var(--o);font-weight:600}
+.q ul{list-style:none;display:grid;gap:10px}
+.q li{font-size:15px;line-height:1.45;color:var(--lt-muted);padding-left:18px;position:relative}
+.q li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border:1.5px solid var(--o);border-radius:50%}
+.glow{position:absolute;border-radius:50%;filter:blur(10px);pointer-events:none}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:56px}
+.step{border-top:2px solid var(--line);padding-top:24px}
+.step.on{border-color:var(--o)}
+.step b{font-size:14px;color:var(--o);letter-spacing:.1em;display:block;margin-bottom:14px}
+.step h3{font-size:24px}
+.step p{font-size:16px;line-height:1.55;color:var(--muted);margin-top:6px}
+.sf{display:inline-flex;align-items:center;gap:10px}
+.sf svg{width:30px;height:30px}
+.s2 .card{padding:22px 24px}.s2 .ic{margin-bottom:14px;width:40px;height:40px}.s2 h3{font-size:19px;margin-bottom:4px}.s2 p{font-size:14.5px}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="ferrn" viewBox="0 0 164 164"><path d="M163.419 0V163.419H0V109.064H107.208V52.9022H17.0028V0H163.419Z" fill="currentColor"/></symbol>
+<mask id="sfm"><rect width="40" height="40" fill="#fff"/><path d="M14 1.5C8 7.5 8.6 14.2 16.4 18.6C24.2 23 28.4 28.6 24.6 38.6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask>
+<symbol id="sf" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#1EF7C4" mask="url(#sfm)"/></symbol>
+</defs></svg>
+
+<!-- 1 COVER -->
+<section class="pg" style="padding:0">
+  <img src="img/port.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.32">
+  <div style="position:absolute;inset:0;background:linear-gradient(90deg,#090a0c 0%,rgba(9,10,12,.92) 45%,rgba(9,10,12,.35) 100%)"></div>
+  <div style="position:absolute;right:-180px;top:-160px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(249,68,6,.28),transparent 65%)"></div>
+  <div style="position:relative;padding:80px 96px;height:100%;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:20px">
+      <svg style="width:40px;height:40px;color:var(--o)"><use href="#ferrn"/></svg>
+      <span style="font-size:28px;font-weight:300;color:#5d5b57">×</span>
+      <span class="sf"><svg style="width:40px;height:40px"><use href="#sf"/></svg><span style="font-size:20px;font-weight:600">Splendid Freight</span></span>
+    </div>
+    <div style="margin-top:auto">
+      <div class="eyebrow">Discovery meeting · 9 November 2026</div>
+      <h1>A digital platform<br>for <span class="o">Splendid Freight</span></h1>
+      <p class="lead">A faster website, a client portal and an AI assistant, built around how your team quotes, moves and delivers cargo. Today is about understanding your business, so we build exactly what you need.</p>
+    </div>
+    <div style="display:flex;gap:40px;margin-top:56px;font-size:15px;color:var(--muted)">
+      <div><span style="color:#5d5b57;display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Prepared by</span>Ferrn Digital Agency</div>
+      <div><span style="color:#5d5b57;display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">For</span>Splendid Freight International Ltd</div>
+      <div><span style="color:#5d5b57;display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Web</span>ferrnagency.com</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 ABOUT FERRN -->
+<section class="pg light">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">02</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:60px">
+    <div>
+      <div class="eyebrow">Who we are</div>
+      <h2>One team for your website, apps and AI.</h2>
+      <p class="lead">Ferrn designs and builds the website, the web app and the assistant behind it. The people who scope your project are the people who design and build it, from the first idea to launch, and after.</p>
+      <div class="chips"><span class="chip">50+ projects shipped</span><span class="chip">Clients in 4 countries</span><span class="chip">Fixed price, agreed upfront</span><span class="chip">Live preview from week one</span></div>
+    </div>
+    <div class="cards s2" style="grid-template-columns:1fr 1fr;align-content:start">
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 21h8"/></svg></div><h3>Business websites</h3><p>Fast, clear sites that rank on Google and turn visitors into enquiries.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div><h3>Web applications</h3><p>Portals, dashboards and booking systems your staff and customers use.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></div><h3>AI assistants</h3><p>Trained on your business to answer, qualify and book, day and night.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.7A8.4 8.4 0 1 1 21 11.5z"/></svg></div><h3>WhatsApp automation</h3><p>Status updates, reminders and reports that go out on their own.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a14 14 0 0 1 0 18M3 12h18"/></svg></div><h3>Branding</h3><p>Logos, colours and brand guides that look the part everywhere.</p></div>
+      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div><h3>SEO and growth</h3><p>Search, analytics and monthly care, so results keep improving.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Ferrn Digital Agency</span><span>ferrnagency.com</span></div>
+</section>
+
+<!-- 3 WHAT WE NOTICED -->
+<section class="pg">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">03</span></div>
+  <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:80px;margin-top:70px;align-items:start">
+    <div>
+      <div class="eyebrow">What we noticed</div>
+      <h2>Ten years of strong service. A website that hides it.</h2>
+      <p class="lead">Splendid Freight has the hard part: offices in Abuja, Lagos and Port Harcourt, every mode of transport and a decade of clients. Online, very little of that reaches the people searching for a freight partner.</p>
+      <p style="margin-top:28px;font-size:15px;color:#5d5b57;max-width:52ch">From a quick outside review of splendidfreight.com. We want to confirm each point with you today.</p>
+    </div>
+    <ul class="list" style="margin-top:8px">
+      <li><div><b>Google sees an almost empty page</b>The site is built so content loads only after scripts run, with default page titles. Search engines and link previews get very little to work with.</div></li>
+      <li><div><b>No pages for the industries you serve</b>Buyers search for pharma logistics, FMCG distribution or project cargo. Dedicated pages win those searches.</div></li>
+      <li><div><b>Quotes start with a phone call</b>A structured quote request captures origin, destination, cargo and weight on the first contact, any time of day.</div></li>
+      <li><div><b>Clients ask "where is my cargo?" by phone</b>A portal with live status, documents and invoices answers that before they call.</div></li>
+    </ul>
+  </div>
+  <div class="foot"><span>Ferrn Digital Agency</span><span>ferrnagency.com</span></div>
+</section>
+
+<!-- 4 CONCEPT WEBSITE -->
+<section class="pg light" style="padding-right:0">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">04</span></div>
+  <div style="display:grid;grid-template-columns:520px 1fr;gap:64px;margin-top:70px;align-items:start">
+    <div>
+      <div class="eyebrow">Concept 1 · The website</div>
+      <h2 style="font-size:48px">A website that wins freight enquiries.</h2>
+      <ul class="list">
+        <li><div><b>Built to rank</b>Every page renders for Google, with real titles, descriptions and fast load on mobile data.</div></li>
+        <li><div><b>Quote and tracking up front</b>The two things clients come for are one tap from every page.</div></li>
+        <li><div><b>Your brand, sharpened</b>Your logo and mint colour, a confident layout and real photography.</div></li>
+      </ul>
+      <div class="url">ferrnagency.com/concept/splendid-freight</div>
+    </div>
+    <div style="position:relative">
+      <div class="browser" style="width:1000px"><div class="bar"><i></i><i></i><i></i><span>splendidfreight.com</span></div><img src="img/web-hero.jpg"></div>
+    </div>
+  </div>
+  <div class="foot"><span>Concept built by Ferrn for discussion</span><span></span></div>
+</section>
+
+<!-- 5 AI ON WEBSITE -->
+<section class="pg">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">05</span></div>
+  <div style="position:absolute;left:-200px;bottom:-260px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(30,247,196,.14),transparent 65%)"></div>
+  <div style="display:grid;grid-template-columns:1fr 1.25fr;gap:64px;margin-top:70px;align-items:start;position:relative">
+    <div>
+      <div class="eyebrow">AI on the website</div>
+      <h2 style="font-size:50px">A freight assistant that never goes home.</h2>
+      <p class="lead" style="font-size:19px">Trained on Splendid Freight's own information. It answers in seconds at 2am, collects quote details and passes warm leads to your team.</p>
+      <ul class="list" style="gap:14px">
+        <li><div><b>Answers from your facts only</b>Services, offices, documents and process. It never invents prices or transit times.</div></li>
+        <li><div><b>Qualifies every enquiry</b>Origin, destination, cargo, weight and mode, gathered in conversation.</div></li>
+        <li><div><b>Hands over to people</b>Sends the lead to sales by email or WhatsApp with the full chat.</div></li>
+      </ul>
+      <div class="url">Live now: open the concept and tap "Chat with us"</div>
+    </div>
+    <div class="browser"><div class="bar"><i></i><i></i><i></i><span>splendidfreight.com</span></div><img src="img/web-ai.jpg"></div>
+  </div>
+  <div class="foot"><span>Ferrn Digital Agency</span><span>ferrnagency.com</span></div>
+</section>
+
+<!-- 6 PORTAL -->
+<section class="pg light">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">06</span></div>
+  <div style="display:flex;align-items:flex-end;gap:60px;margin-top:56px">
+    <div style="flex:1"><div class="eyebrow">Concept 2 · The client portal</div><h2 style="max-width:none">Every client's cargo, documents and invoices in one place.</h2></div>
+    <div class="url" style="margin:0 0 6px">ferrnagency.com/concept/splendid-freight-app</div>
+  </div>
+  <div class="browser" style="margin-top:40px"><div class="bar"><i></i><i></i><i></i><span>portal.splendidfreight.com</span></div><img src="img/app-home.jpg" style="height:520px;object-fit:cover;object-position:top"></div>
+</section>
+
+<!-- 7 PORTAL FEATURES -->
+<section class="pg">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">07</span></div>
+  <div class="eyebrow" style="margin-top:30px">Inside the portal</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:4px"><div class="card" style="display:flex;gap:26px;padding:18px;align-items:center"><div class="shot" style="width:380px;flex:none"><img src="img/app-track-c.jpg"></div><div><h3>Live tracking</h3><p>Air, ocean, road and rail on one timeline, by tracking, B/L or AWB number.</p></div></div><div class="card" style="display:flex;gap:26px;padding:18px;align-items:center"><div class="shot" style="width:380px;flex:none"><img src="img/app-quote-c.jpg"></div><div><h3>Instant quote requests</h3><p>Describe the cargo in one sentence and AI fills the form. Your team confirms the price.</p></div></div><div class="card" style="display:flex;gap:26px;padding:18px;align-items:center"><div class="shot" style="width:380px;flex:none"><img src="img/app-ai-c.jpg"></div><div><h3>Splendid AI</h3><p>Knows each client's shipments, documents and balance, and answers in plain words.</p></div></div><div class="card" style="display:flex;gap:26px;padding:18px;align-items:center"><div class="shot" style="width:380px;flex:none"><img src="img/app-bills-c.jpg"></div><div><h3>Documents and payments</h3><p>Upload customs papers, download receipts and pay invoices online by card or transfer.</p></div></div></div>
+  <div class="card" style="margin-top:18px;display:flex;align-items:center;gap:28px;padding:20px 28px">
+    <div class="ic" style="margin:0;background:rgba(30,247,196,.1);color:var(--mint)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+    <div style="flex:1"><h3 style="margin:0">Plus a staff side</h3><p style="margin-top:4px">Your team updates a status once and the client sees it in the portal and gets it on WhatsApp. Fewer calls, fewer emails, a clear record of every shipment.</p></div>
+  </div>
+  <div class="foot"><span>Sample data shown</span><span>ferrnagency.com</span></div>
+</section>
+
+<!-- 8 MOBILE -->
+<section class="pg light">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">08</span></div>
+  <div style="display:grid;grid-template-columns:1fr 820px;gap:40px;margin-top:70px;align-items:start">
+    <div>
+      <div class="eyebrow">Built for phones first</div>
+      <h2 style="font-size:50px">Most of your clients will open it on a phone.</h2>
+      <p class="lead">The website and portal are designed for mobile data and small screens, and install to the home screen like an app. No app store needed.</p>
+      <div class="chips"><span class="chip">Loads fast on 3G and 4G</span><span class="chip">Installs like an app</span><span class="chip">WhatsApp alerts</span></div>
+    </div>
+    <div style="display:flex;gap:28px;justify-content:flex-end;margin-top:-20px">
+      <div class="phone" style="width:250px"><img src="img/web-mob.jpg"></div>
+      <div class="phone" style="width:250px;margin-top:40px"><img src="img/app-mob.jpg"></div>
+      <div class="phone" style="width:250px"><img src="img/app-mob-track.jpg"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 HOW WE WORK -->
+<section class="pg">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">09</span></div>
+  <div style="margin-top:70px">
+    <div class="eyebrow">How we work</div>
+    <h2>Clear steps, one fixed price, no surprises.</h2>
+  </div>
+  <div class="steps">
+    <div class="step on"><b>01 · TODAY</b><h3>Discovery</h3><p>We learn how Splendid Freight quotes, moves and reports on cargo, and what success looks like for you.</p></div>
+    <div class="step"><b>02</b><h3>Plan and price</h3><p>A written scope, timeline and fixed price, agreed before any work starts.</p></div>
+    <div class="step"><b>03</b><h3>Build in the open</h3><p>A live preview link from the first week, with weekly check-ins on WhatsApp or a call.</p></div>
+    <div class="step"><b>04</b><h3>Launch and care</h3><p>Hosting, security, updates and a monthly report, so it keeps working for you.</p></div>
+  </div>
+  <div class="cards" style="grid-template-columns:repeat(3,1fr);margin-top:56px">
+    <div class="card"><span class="k">PHASE 1</span><h3>Website and AI assistant</h3><p>New website, industry pages, quote requests and the assistant. The fastest return.</p></div>
+    <div class="card"><span class="k">PHASE 2</span><h3>Client portal</h3><p>Tracking, documents, invoices and payments for your clients, plus the staff dashboard.</p></div>
+    <div class="card"><span class="k">PHASE 3</span><h3>Automation and growth</h3><p>WhatsApp updates, links to carrier systems, SEO and monthly improvements.</p></div>
+  </div>
+  <div class="foot"><span>Phases are a suggestion. We shape them around what we hear today.</span><span>ferrnagency.com</span></div>
+</section>
+
+<!-- 10 QUESTIONS -->
+<section class="pg light" style="padding-top:70px">
+  <div class="top"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">10</span></div>
+  <div style="margin-top:20px;display:flex;align-items:flex-end;gap:40px">
+    <div style="flex:1"><div class="eyebrow">Today's conversation</div><h2 style="max-width:none;font-size:46px">What we would love to learn from you.</h2></div>
+  </div>
+  <div class="q">
+    <div class="card"><h3><em>01</em>Your business</h3><ul><li>Which services and routes bring in most of your revenue?</li><li>Who are your typical clients, and which industries matter most?</li><li>What would you like to be known for in five years?</li></ul></div>
+    <div class="card"><h3><em>02</em>How quotes work today</h3><ul><li>How do new enquiries reach you, and who answers them?</li><li>How long does it take to send a quote?</li><li>Roughly how many enquiries a month, and how many become jobs?</li></ul></div>
+    <div class="card"><h3><em>03</em>Tracking and updates</h3><ul><li>How do clients get shipment updates now?</li><li>Which systems hold your shipment data: software, spreadsheets, carrier portals?</li><li>Which questions do clients call about most?</li></ul></div>
+    <div class="card"><h3><em>04</em>Documents and payments</h3><ul><li>Which documents do you collect most often, and where do delays happen?</li><li>How do clients receive invoices and pay today?</li><li>Do you work in naira, dollars or both?</li></ul></div>
+    <div class="card"><h3><em>05</em>Your team</h3><ul><li>Who would use a staff dashboard, and across which offices?</li><li>Who will own the website and portal on your side?</li><li>What tools does the team already use every day?</li></ul></div>
+    <div class="card"><h3><em>06</em>Goals and timing</h3><ul><li>What would make this project a clear success for you?</li><li>Is there a date that matters, like a launch, tender or season?</li><li>Which phase would you like to start with?</li></ul></div>
+  </div>
+</section>
+
+<!-- 11 NEXT STEPS -->
+<section class="pg" style="padding:0">
+  <div style="position:absolute;right:-220px;top:-220px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,rgba(249,68,6,.25),transparent 65%)"></div>
+  <div style="position:relative;padding:80px 96px;height:100%;display:flex;flex-direction:column">
+    <div class="top" style="position:static;padding:0"><svg style="color:var(--o)"><use href="#ferrn"/></svg>Ferrn <span class="x">×</span> Splendid Freight<span class="n">11</span></div>
+    <div style="margin-top:auto;display:grid;grid-template-columns:1.2fr 1fr;gap:80px;align-items:end">
+      <div>
+        <div class="eyebrow">Next steps</div>
+        <h1 style="font-size:76px">Let's build it<br>around <span class="o">your</span> business.</h1>
+        <ul class="list" style="margin-top:40px">
+          <li><div><b>Within 2 working days</b>A written proposal with scope, timeline and a fixed price, based on today.</div></li>
+          <li><div><b>Try the concepts now</b>Both are live, and the AI assistants answer real questions.</div></li>
+        </ul>
+      </div>
+      <div class="card" style="padding:34px">
+        <div style="font-size:13px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px">Concept links</div>
+        <div style="font-size:18px;font-weight:500;line-height:1.5">ferrnagency.com/concept/<span class="m">splendid-freight</span></div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:18px">Website with AI assistant</div>
+        <div style="font-size:18px;font-weight:500;line-height:1.5">ferrnagency.com/concept/<span class="m">splendid-freight-app</span></div>
+        <div style="font-size:14px;color:var(--muted)">Client portal with Splendid AI</div>
+        <div style="height:1px;background:var(--line);margin:28px 0"></div>
+        <div style="display:flex;align-items:center;gap:16px"><svg style="width:40px;height:40px;color:var(--o)"><use href="#ferrn"/></svg><div><div style="font-size:18px;font-weight:600">Ferrn Digital Agency</div><div style="font-size:15px;color:var(--muted)">ferrnagency.com</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</body></html>
