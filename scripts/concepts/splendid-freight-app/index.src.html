@@ -194,6 +194,8 @@ td b{font-weight:700}
 .mode-sw{display:grid;grid-template-columns:1fr 1fr;background:rgba(255,255,255,.06);border-radius:10px;padding:3px;margin:0 4px 16px}
 .mode-sw button{border:0;background:none;color:#9FB2AA;font-weight:700;font-size:12.5px;padding:8px 6px;border-radius:8px}
 .mode-sw button.on{background:var(--mint);color:var(--ink)}
+.nav-sec{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5F7570;padding:14px 12px 6px}
+#cai{display:none!important}.side-ai{display:none}
 .nav-team{display:none}body.team .top .btn.mint{display:none}body.drawer-open #cai{display:none!important}
 body.team .nav-client{display:none}body.team .nav-team{display:flex}
 body.team .side-ai{display:none}
@@ -297,33 +299,29 @@ table .hide-m{display:none}
 
 <div class="app">
   <aside class="side">
-    <div class="brand"><svg><use href="#logo"/></svg><div><b>Splendid Freight</b><small>Client portal</small></div></div>
-    <div class="mode-sw" id="mode-sw"><button class="on" data-mode="client">Client view</button><button data-mode="team">Team view</button></div>
-    <nav class="nav nav-client" id="nav">
+    <div class="brand"><svg><use href="#logo"/></svg><div><b>Splendid Freight</b><small>Portal</small></div></div>
+    <div class="nav-sec">Operations</div>
+    <nav class="nav" id="nav">
       <button data-v="home" class="on"><svg><use href="#i-home"/></svg>Dashboard</button>
       <button data-v="ships"><svg><use href="#i-box"/></svg>Shipments<span class="badge">4</span></button>
       <button data-v="track"><svg><use href="#i-pin"/></svg>Track</button>
-      <button data-v="quote"><svg><use href="#i-calc"/></svg>Get a quote</button>
+      <button data-v="quote"><svg><use href="#i-calc"/></svg>Quotes</button>
       <button data-v="docs"><svg><use href="#i-doc"/></svg>Documents</button>
       <button data-v="bills"><svg><use href="#i-card"/></svg>Invoices</button>
-      <button data-v="ai"><svg><use href="#i-spark"/></svg>Assistant</button>
     </nav>
-    <nav class="nav nav-team" id="nav-team">
-      <button data-v="web"><svg><use href="#i-chart"/></svg>Website analytics</button>
+    <div class="nav-sec">Website</div>
+    <nav class="nav" id="nav-web">
+      <button data-v="web"><svg><use href="#i-chart"/></svg>Analytics</button>
       <button data-v="leads"><svg><use href="#i-users"/></svg>Leads<span class="badge" id="lead-badge">3</span></button>
       <button data-v="blog"><svg><use href="#i-pen"/></svg>Blog posts</button>
-      <button data-v="ai"><svg><use href="#i-spark"/></svg>Ask Splendid AI</button>
     </nav>
-    <div class="side-ai"><b>Ask Splendid AI</b><p>Status, documents, quotes and customs questions, answered in seconds, day or night.</p><button data-go="ai">Open assistant</button></div>
-    <div class="me me-team"><div class="av">SF</div><div><b>Splendid Freight</b><small>Team workspace</small></div></div>
-    <div class="me me-client"><div class="av">AO</div><div><b>Adaeze Okafor</b><small>Medipharm Distribution Ltd</small></div></div>
+    <div class="me" style="margin-top:auto"><div class="av">SF</div><div><b>Splendid Freight</b><small>Operations team</small></div></div>
   </aside>
 
   <main>
     <div class="top">
-      <div><h1 id="title">Good afternoon, Adaeze</h1><p id="subtitle">Here is where your cargo is right now.</p></div>
-      <button class="btn ghost top-sw" id="top-sw" style="height:42px">Team view</button>
-      <label class="search"><svg><use href="#i-search"/></svg><input id="q" placeholder="Search shipments, B/L or invoice no."></label>
+      <div><h1 id="title">Good afternoon</h1><p id="subtitle">Here is what is moving today.</p></div>
+      <label class="search"><svg><use href="#i-search"/></svg><input id="q" placeholder="Search shipments, clients, leads or invoices"></label>
       <button class="icon-btn" aria-label="Notifications" data-toast="2 updates: SF-24817 cleared customs, INV-1093 is due Friday"><svg><use href="#i-bell"/></svg><i></i></button>
       <button class="btn mint" data-go="quote"><svg><use href="#i-plus"/></svg>New shipment</button>
     </div>
@@ -333,9 +331,9 @@ table .hide-m{display:none}
       <div class="card insight">
         <div class="spark"><svg><use href="#i-spark"/></svg></div>
         <div>
-          <b>Splendid AI daily brief</b>
-          <p id="brief">Your 40ft container SF-24817 cleared customs at Apapa this morning and is booked on a truck to your Ikeja warehouse tomorrow. Air shipment SF-24903 from Mumbai lands in Lagos tonight. One invoice (INV-1093, ₦1,240,000) is due on Friday.</p>
-          <div class="acts"><button data-ask="When will SF-24817 reach my warehouse?">When will SF-24817 arrive?</button><button data-ask="What documents do I still need for SF-24903?">Documents I still need</button><button data-go="bills">Pay INV-1093</button></div>
+          <b>Today at a glance</b>
+          <p id="brief">SF-24817 for Medipharm cleared customs at Apapa this morning and goes out by truck tomorrow. Air shipment SF-24903 from Mumbai lands in Lagos tonight and still needs two documents. Your website brought in 3 new leads today, including an air quote request for pharma cargo.</p>
+          <div class="acts"><button data-go="leads">See new leads</button><button data-track="SF-24903">Track SF-24903</button><button data-go="docs">Missing documents</button></div>
         </div>
       </div>
       <div class="grid kpis">
@@ -385,9 +383,9 @@ table .hide-m{display:none}
     <section class="view" id="v-quote">
       <div class="grid two">
         <form class="card" id="quote-form">
-          <h3>Request a freight quote</h3>
-          <div class="sub">Tell us what you are moving. You get a confirmed quote from our team within 2 working hours.</div>
-          <div class="ai-fill" style="margin-top:16px"><svg><use href="#i-spark"/></svg><input id="ai-describe" placeholder="Or just describe it: 2 pallets of medicine from Mumbai to Lagos by air"><button type="button" id="ai-fill-btn">Fill with AI</button></div>
+          <h3>New freight quote</h3>
+          <div class="sub">Build a quote in a minute. Paste the client's request and AI fills the details.</div>
+          <div class="ai-fill" style="margin-top:16px"><svg><use href="#i-spark"/></svg><input id="ai-describe" placeholder="Paste the request: 2 pallets of medicine from Mumbai to Lagos by air"><button type="button" id="ai-fill-btn">Fill with AI</button></div>
           <div class="modes">
             <label><input type="radio" name="mode" value="Air" checked><svg><use href="#m-air"/></svg><b>Air</b><small>Fastest, 2 to 5 days</small></label>
             <label><input type="radio" name="mode" value="Ocean"><svg><use href="#m-sea"/></svg><b>Ocean</b><small>FCL or LCL</small></label>
@@ -403,15 +401,15 @@ table .hide-m{display:none}
             <label class="f"><span>Services</span><select name="svc"><option>Door to door</option><option>Port to door</option><option>Customs clearing only</option><option>Port to port</option></select></label>
             <label class="f full"><span>Notes</span><textarea name="notes" placeholder="Temperature control, insurance, special handling"></textarea></label>
           </div>
-          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn">Request quote<svg><use href="#i-arrow"/></svg></button><button type="button" class="btn ghost" id="ask-quote">Ask the assistant</button></div>
+          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap"><button class="btn">Send quote<svg><use href="#i-arrow"/></svg></button><button type="button" class="btn ghost" data-toast="Quote saved as a draft">Save draft</button></div>
         </form>
-        <div class="card est" id="est"><h3>Your request</h3><div class="empty" id="est-body">Fill in the form or describe your cargo, and a summary appears here as you type.</div></div>
+        <div class="card est" id="est"><h3>Quote summary</h3><div class="empty" id="est-body">Fill in the form or describe your cargo, and a summary appears here as you type.</div></div>
       </div>
     </section>
 
     <!-- DOCS -->
     <section class="view" id="v-docs">
-      <div class="drop"><b>Drop files here</b> or click to upload. Commercial invoices, packing lists, Form M, permits. We file them to the right shipment for you.</div>
+      <div class="drop"><b>Drop files here</b> or click to upload. Commercial invoices, packing lists, Form M and permits are filed to the right shipment automatically.</div>
       <div class="card"><table><thead><tr><th>Document</th><th class="hide-m">Shipment</th><th class="hide-m">Added</th><th>Status</th><th></th></tr></thead><tbody id="doc-rows"></tbody></table></div>
     </section>
 
@@ -493,14 +491,11 @@ table .hide-m{display:none}
 </div>
 
 <nav class="mob-nav" id="mob-nav">
-  <button data-v="home" class="on mob-client"><svg><use href="#i-home"/></svg>Home</button>
-  <button data-v="ships" class="mob-client"><svg><use href="#i-box"/></svg>Shipments</button>
-  <button data-v="track" class="mob-client"><svg><use href="#i-pin"/></svg>Track</button>
-  <button data-v="quote" class="mob-client"><svg><use href="#i-calc"/></svg>Quote</button>
-  <button data-v="web" class="mob-team"><svg><use href="#i-chart"/></svg>Analytics</button>
-  <button data-v="leads" class="mob-team"><svg><use href="#i-users"/></svg>Leads</button>
-  <button data-v="blog" class="mob-team"><svg><use href="#i-pen"/></svg>Blog</button>
-  <button data-v="ai"><svg><use href="#i-spark"/></svg>Assistant</button>
+  <button data-v="home" class="on"><svg><use href="#i-home"/></svg>Home</button>
+  <button data-v="ships"><svg><use href="#i-box"/></svg>Shipments</button>
+  <button data-v="quote"><svg><use href="#i-calc"/></svg>Quotes</button>
+  <button data-v="leads"><svg><use href="#i-users"/></svg>Leads</button>
+  <button data-v="web"><svg><use href="#i-chart"/></svg>Analytics</button>
 </nav>
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer"><div class="dh"><div class="av" id="d-av" style="background:var(--mint-soft);color:var(--teal)">AB</div><div><h3 id="d-name" style="margin:0">Lead</h3><div class="sub" id="d-co"></div></div><button class="x" id="d-x" aria-label="Close">×</button></div><div class="db" id="d-body"></div><div class="df"><button class="btn mint" data-toast="WhatsApp opens with the lead's number in the live portal">Reply on WhatsApp</button><button class="btn ghost" id="d-quote">Send quote</button><button class="btn ghost" id="d-won">Mark as won</button></div></aside>
@@ -515,7 +510,7 @@ var SHIPS=[
  {id:'SF-25011',mode:'sea',type:'Ocean · LCL 6 CBM',from:'Rotterdam, NL',to:'Port Harcourt, NG',status:'transit',label:'At sea',chip:'b',pct:30,eta:'Fri 27 Nov',cargo:'Lab equipment, 2,300 kg',ref:'B/L HLCU9930021',events:[['Booked','20 Oct'],['Consolidated in Rotterdam','28 Oct'],['Departed Rotterdam','2 Nov'],['Arrives Onne Port','25 Nov (expected)'],['Customs clearing','pending'],['Delivered','27 Nov (expected)']],done:3},
  {id:'SF-24710',mode:'air',type:'Air · 3 pallets',from:'Frankfurt, DE',to:'Abuja, FCT',status:'delivered',label:'Delivered',chip:'k',pct:100,eta:'Delivered 2 Nov',cargo:'Medical devices, 640 kg',ref:'AWB 220-18850342',events:[['Booked','25 Oct'],['Departed Frankfurt','29 Oct'],['Arrived Abuja (ABV)','30 Oct'],['Customs cleared','1 Nov'],['Delivered','2 Nov, signed by T. Bello']],done:5}
 ];
-var DOCS=[['Commercial invoice','SF-24903','Requested 9 Nov','a','Upload needed'],['NAFDAC permit','SF-24903','Requested 9 Nov','a','Upload needed'],['PAAR approval','SF-24817','9 Nov','g','Approved'],['Bill of lading','SF-24817','15 Oct','g','Verified'],['Packing list','SF-24955','7 Nov','g','Verified'],['Form M','SF-25011','18 Oct','b','With bank'],['Proof of delivery','SF-24710','2 Nov','k','Archived']];
+var DOCS=[['Commercial invoice','SF-24903','Requested 9 Nov','a','Requested from client'],['NAFDAC permit','SF-24903','Requested 9 Nov','a','Requested from client'],['PAAR approval','SF-24817','9 Nov','g','Approved'],['Bill of lading','SF-24817','15 Oct','g','Verified'],['Packing list','SF-24955','7 Nov','g','Verified'],['Form M','SF-25011','18 Oct','b','With bank'],['Proof of delivery','SF-24710','2 Nov','k','Archived']];
 var BILLS=[['INV-1093','SF-24817','6 Nov','₦1,240,000','a','Due Fri'],['INV-1088','SF-24710','2 Nov','₦865,500','g','Paid'],['INV-1071','SF-24955','28 Oct','₦540,000','g','Paid'],['INV-1064','SF-25011','21 Oct','₦2,180,000','g','Paid']];
 function $(s,r){return (r||document).querySelector(s)}function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))}
 function shipRow(s){return '<div class="ship" data-track="'+s.id+'"><div class="mode"><svg style="color:var(--teal)"><use href="#m-'+s.mode+'"/></svg></div><div><div class="ship-id">'+s.id+'</div><small>'+s.type+'</small></div><div class="route-col"><div class="route">'+s.from.split(',')[0]+'<svg><use href="#i-arrow"/></svg>'+s.to.split(',')[0]+'</div><div class="bar"><i style="width:'+s.pct+'%"></i></div></div><div class="st-col"><span class="chip '+s.chip+'">'+s.label+'</span><small style="margin-top:4px">ETA '+s.eta+'</small></div><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></div>'}
@@ -523,21 +518,21 @@ $('#ship-list').innerHTML=SHIPS.filter(function(s){return s.status!=='delivered'
 function renderAll(f){$('#ship-all').innerHTML=SHIPS.filter(function(s){return f==='all'||s.status===f}).map(shipRow).join('')||'<div class="empty">No shipments here.</div>'}
 renderAll('all');
 $$('#ship-tabs button').forEach(function(b){b.onclick=function(){$$('#ship-tabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');renderAll(b.dataset.f)}});
-$('#doc-rows').innerHTML=DOCS.map(function(d){return '<tr><td><b>'+d[0]+'</b></td><td class="hide-m">'+d[1]+'</td><td class="hide-m">'+d[2]+'</td><td><span class="chip '+d[3]+'">'+d[4]+'</span></td><td style="text-align:right">'+(d[3]==='a'?'<button class="btn ghost" style="height:34px" data-toast="Upload window opens here in the live portal">Upload</button>':'<button class="icon-btn" style="width:34px;height:34px;display:inline-grid" aria-label="Download" data-toast="Downloading '+d[0]+'"><svg><use href="#i-dl"/></svg></button>')+'</td></tr>'}).join('');
-$('#bill-rows').innerHTML=BILLS.map(function(b){return '<tr><td><b>'+b[0]+'</b></td><td class="hide-m">'+b[1]+'</td><td class="hide-m">'+b[2]+'</td><td><b>'+b[3]+'</b></td><td><span class="chip '+b[4]+'">'+b[5]+'</span></td><td style="text-align:right">'+(b[4]==='a'?'<button class="btn mint" style="height:34px" data-toast="Paystack checkout opens here in the live portal">Pay now</button>':'<button class="btn ghost" style="height:34px" data-toast="Receipt downloaded">Receipt</button>')+'</td></tr>'}).join('');
+$('#doc-rows').innerHTML=DOCS.map(function(d){return '<tr><td><b>'+d[0]+'</b></td><td class="hide-m">'+d[1]+'</td><td class="hide-m">'+d[2]+'</td><td><span class="chip '+d[3]+'">'+d[4]+'</span></td><td style="text-align:right">'+(d[3]==='a'?'<button class="btn ghost" style="height:34px" data-toast="Reminder sent to the client on WhatsApp and email">Remind client</button>':'<button class="icon-btn" style="width:34px;height:34px;display:inline-grid" aria-label="Download" data-toast="Downloading '+d[0]+'"><svg><use href="#i-dl"/></svg></button>')+'</td></tr>'}).join('');
+$('#bill-rows').innerHTML=BILLS.map(function(b){return '<tr><td><b>'+b[0]+'</b></td><td class="hide-m">'+b[1]+'</td><td class="hide-m">'+b[2]+'</td><td><b>'+b[3]+'</b></td><td><span class="chip '+b[4]+'">'+b[5]+'</span></td><td style="text-align:right">'+(b[4]==='a'?'<button class="btn mint" style="height:34px" data-toast="Payment reminder sent with a Paystack link">Send reminder</button>':'<button class="btn ghost" style="height:34px" data-toast="Receipt downloaded">Receipt</button>')+'</td></tr>'}).join('');
 /* map */
 function map(el){el.innerHTML='<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice"><defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(255,255,255,.04)"/></pattern><linearGradient id="rt" x1="0" x2="1"><stop offset="0" stop-color="#007A5E"/><stop offset="1" stop-color="#1EF7C4"/></linearGradient></defs><rect width="400" height="250" fill="url(#g)"/><path d="M0 200 C60 190 90 210 150 196 S260 170 400 188 V250 H0Z" fill="#0F2A33"/><path d="M0 206 C60 196 90 216 150 202 S260 176 400 194" fill="none" stroke="rgba(62,99,221,.35)"/><path d="M40 60 L120 40 L210 70 L300 50 L370 80 M80 120 L180 110 L260 140 L350 120 M60 160 L150 150" stroke="rgba(255,255,255,.07)" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M70 182 C120 150 170 140 220 120 S300 80 330 66" fill="none" stroke="rgba(30,247,196,.18)" stroke-width="6" stroke-linecap="round"/><path d="M70 182 C120 150 170 140 220 120 S300 80 330 66" fill="none" stroke="url(#rt)" stroke-width="3" class="flow" stroke-linecap="round"/><circle cx="70" cy="182" r="6" fill="#1EF7C4" class="pulse"/><circle cx="70" cy="182" r="6" fill="#1EF7C4"/><circle cx="330" cy="66" r="6" fill="none" stroke="#1EF7C4" stroke-width="2.5"/><circle cx="330" cy="66" r="2.5" fill="#1EF7C4"/></svg><span class="lbl" style="left:14px;top:200px">Apapa Port</span><span class="lbl" style="right:14px;top:30px">Ikeja warehouse</span><span class="lbl" style="left:46%;top:46%;background:#1EF7C4;color:#0A0F0D;border:0">22 km · 1h 10m</span>'}
 map($('#map'));
 /* track */
 function track(id){id=String(id||'').trim().toUpperCase();var s=SHIPS.filter(function(x){return x.id===id||x.ref.toUpperCase().indexOf(id)>-1})[0];var out=$('#track-out');
  if(!s){out.innerHTML='<div class="card"><h3>No shipment found for '+id.replace(/</g,'')+'</h3><div class="sub" style="margin-top:6px">Check the number, or ask the assistant to help find it.</div></div>';return}
- out.innerHTML='<div class="card"><div class="head-row"><div class="mode"><svg style="color:var(--teal)"><use href="#m-'+s.mode+'"/></svg></div><div><h3>'+s.id+'</h3><div class="sub">'+s.type+' · '+s.ref+'</div></div><span class="chip '+s.chip+' end">'+s.label+'</span></div><div class="bar" style="height:8px"><i style="width:'+s.pct+'%"></i></div><div class="meta"><div><small>From</small><b>'+s.from+'</b></div><div><small>To</small><b>'+s.to+'</b></div><div><small>ETA</small><b>'+s.eta+'</b></div><div><small>Cargo</small><b>'+s.cargo.split(',')[0]+'</b></div></div><ul class="tl">'+s.events.map(function(e,i){return '<li class="'+(i<s.done?'done':i===s.done?'now':'')+'"><b>'+e[0]+'</b><small>'+e[1]+'</small></li>'}).join('')+'</ul></div><div class="grid"><div class="card"><h3>Route</h3><div class="map" id="map2"></div></div><div class="card insight" style="margin:0"><div class="spark"><svg><use href="#i-spark"/></svg></div><div><b>Ask about '+s.id+'</b><p>Get a plain answer on timing, documents or delays.</p><div class="acts"><button data-ask="Give me a short update on '+s.id+'">Explain this status</button><button data-ask="Is anything needed from me for '+s.id+'?">Anything needed from me?</button></div></div></div></div>';
+ out.innerHTML='<div class="card"><div class="head-row"><div class="mode"><svg style="color:var(--teal)"><use href="#m-'+s.mode+'"/></svg></div><div><h3>'+s.id+'</h3><div class="sub">'+s.type+' · '+s.ref+'</div></div><span class="chip '+s.chip+' end">'+s.label+'</span></div><div class="bar" style="height:8px"><i style="width:'+s.pct+'%"></i></div><div class="meta"><div><small>From</small><b>'+s.from+'</b></div><div><small>To</small><b>'+s.to+'</b></div><div><small>ETA</small><b>'+s.eta+'</b></div><div><small>Cargo</small><b>'+s.cargo.split(',')[0]+'</b></div></div><ul class="tl">'+s.events.map(function(e,i){return '<li class="'+(i<s.done?'done':i===s.done?'now':'')+'"><b>'+e[0]+'</b><small>'+e[1]+'</small></li>'}).join('')+'</ul></div><div class="grid"><div class="card"><h3>Route</h3><div class="map" id="map2"></div></div><div class="card"><h3>Keep the client updated</h3><div class="sub" style="margin:6px 0 14px">Every status change goes to the client on WhatsApp and email automatically.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn mint" style="height:38px" data-toast="Update sent to the client on WhatsApp">Send update now</button><button class="btn ghost" style="height:38px" data-toast="Status updated">Update status</button></div></div></div>';
  map($('#map2'));}
 $('#recent').innerHTML='<span style="font-size:12px;color:#7F948C;align-self:center">Recent:</span>'+SHIPS.slice(0,4).map(function(s){return '<button type="button" data-track="'+s.id+'">'+s.id+'</button>'}).join('');
 $('#track-form').onsubmit=function(e){e.preventDefault();track($('#track-in').value)};
 track('SF-24817');
 /* views */
-var TITLES={home:['Good afternoon, Adaeze','Here is where your cargo is right now.'],ships:['Shipments','Every shipment on your account, live.'],track:['Track','Real time status for air, ocean, road and rail.'],quote:['Get a quote','Air, ocean, road and rail, door to door.'],docs:['Documents','Everything for customs and delivery, in one place.'],bills:['Invoices','Pay securely and download receipts.'],ai:['Splendid AI','Your 24/7 logistics assistant.']};
+var TITLES={home:['Good afternoon','Here is what is moving today.'],ships:['Shipments','Every shipment across your clients, live.'],track:['Track','Real time status for air, ocean, road and rail.'],quote:['Quotes','Build a quote for air, ocean, road or rail.'],docs:['Documents','Everything for customs and delivery, in one place.'],bills:['Invoices','Track payments and send reminders.'],ai:['Splendid AI','Your 24/7 logistics assistant.']};
 function go(v){$$('.view').forEach(function(x){x.classList.toggle('on',x.id==='v-'+v)});$$('#nav button,#mob-nav button').forEach(function(b){b.classList.toggle('on',b.dataset.v===v)});$('#title').textContent=TITLES[v][0];$('#subtitle').textContent=TITLES[v][1];window.scrollTo(0,0);if(v==='ai')chatStart();try{history.replaceState(null,'','#'+v)}catch(e){}}
 document.addEventListener('click',function(e){var t=e.target.closest('[data-v],[data-go],[data-track],[data-ask],[data-toast]');if(!t)return;
  if(t.dataset.v)go(t.dataset.v);else if(t.dataset.go)go(t.dataset.go);else if(t.dataset.track){go('track');$('#track-in').value=t.dataset.track;track(t.dataset.track)}else if(t.dataset.ask){go('ai');ask(t.dataset.ask)}else if(t.dataset.toast)toast(t.dataset.toast)});
@@ -547,9 +542,9 @@ $('#q').addEventListener('keydown',function(e){if(e.key==='Enter'&&this.value.tr
 var qf=$('#quote-form');
 function summary(){var d=new FormData(qf),o={};d.forEach(function(v,k){o[k]=v});var has=o.origin||o.dest||o.weight;if(!has){$('#est-body').className='empty';$('#est-body').innerHTML='Fill in the form or describe your cargo, and a summary appears here as you type.';return o}
  var w=Number(o.weight)||0,cbm=o.mode==='Air'?(w/167).toFixed(1):(w/1000).toFixed(1);
- $('#est-body').className='';$('#est-body').innerHTML='<div class="big">'+o.mode+' freight</div><div style="color:#9FB2AA;margin-bottom:12px">'+(o.origin||'Origin')+' to '+(o.dest||'destination')+'</div><div class="row"><span>Cargo</span><b>'+o.cargo+'</b></div><div class="row"><span>Weight</span><b>'+(w?w.toLocaleString()+' kg':'Not set')+'</b></div><div class="row"><span>'+(o.mode==='Air'?'Chargeable volume':'Est. volume')+'</span><b>'+(w?cbm+' CBM':'Not set')+'</b></div><div class="row"><span>Service</span><b>'+o.svc+'</b></div><div class="row"><span>Typical transit</span><b>'+({Air:'2 to 5 days',Ocean:'25 to 40 days',Road:'1 to 4 days',Rail:'2 to 6 days'})[o.mode]+'</b></div><div class="note">A Splendid Freight specialist confirms the exact price within 2 working hours. Sample guidance only.</div>';return o}
+ $('#est-body').className='';$('#est-body').innerHTML='<div class="big">'+o.mode+' freight</div><div style="color:#9FB2AA;margin-bottom:12px">'+(o.origin||'Origin')+' to '+(o.dest||'destination')+'</div><div class="row"><span>Cargo</span><b>'+o.cargo+'</b></div><div class="row"><span>Weight</span><b>'+(w?w.toLocaleString()+' kg':'Not set')+'</b></div><div class="row"><span>'+(o.mode==='Air'?'Chargeable volume':'Est. volume')+'</span><b>'+(w?cbm+' CBM':'Not set')+'</b></div><div class="row"><span>Service</span><b>'+o.svc+'</b></div><div class="row"><span>Typical transit</span><b>'+({Air:'2 to 5 days',Ocean:'25 to 40 days',Road:'1 to 4 days',Rail:'2 to 6 days'})[o.mode]+'</b></div><div class="note">Add your rates and the client receives a branded quote they can accept online.</div>';return o}
 qf.addEventListener('input',summary);qf.addEventListener('change',summary);
-qf.onsubmit=function(e){e.preventDefault();var o=summary();toast('Quote request sent for '+o.mode+' '+(o.origin||'')+' to '+(o.dest||'')+'. We reply within 2 hours.')};
+qf.onsubmit=function(e){e.preventDefault();var o=summary();toast('Quote for '+o.mode+' '+(o.origin||'')+' to '+(o.dest||'')+' sent to the client by email and WhatsApp.')};
 $('#ai-fill-btn').onclick=function(){var t=$('#ai-describe').value.trim();if(!t){$('#ai-describe').focus();return}
  var b=this;b.textContent='Reading…';
  var low=t.toLowerCase(),set=function(n,v){var el=qf.querySelector('[name='+n+']');if(el&&v)el.value=v};
@@ -558,7 +553,6 @@ $('#ai-fill-btn').onclick=function(){var t=$('#ai-describe').value.trim();if(!t)
  var w=t.match(/([\d,.]+)\s*(kg|kilo|tons?|tonnes?|t\b)/i);if(w){var n=parseFloat(w[1].replace(/,/g,''));if(/^t/i.test(w[2]))n*=1000;set('weight',Math.round(n))}else if(/pallet/.test(low)){var p=t.match(/(\d+)\s*pallet/i);if(p)set('weight',p[1]*300)}
  var c=/medic|pharma|drug/.test(low)?'Pharmaceuticals':/fmcg|food|drink|beverage|carton/.test(low)?'FMCG':/machin|equipment|generator/.test(low)?'Machinery and equipment':/fresh|perish|fish|fruit/.test(low)?'Perishables':/chemical|battery|dangerous|hazard/.test(low)?'Dangerous goods':'General cargo';set('cargo',c);
  setTimeout(function(){b.textContent='Fill with AI';summary();toast('Form filled from your description. Check and send.')},650)};
-$('#ask-quote').onclick=function(){var o=summary();go('ai');ask('I want a quote: '+o.mode+' freight'+(o.origin?' from '+o.origin:'')+(o.dest?' to '+o.dest:'')+', '+o.cargo+(o.weight?', '+o.weight+' kg':'')+'. What do you need from me?')};
 /* assistant page */
 var hist=[],started=false;
 var SUGS=['When will SF-24817 reach my warehouse?','What documents do I still need for SF-24903?','How much is outstanding on my account?','What is the difference between FCL and LCL?','Can you move pharmaceuticals that need cold chain?','Which of your offices is closest to Port Harcourt?'];
@@ -593,8 +587,6 @@ TITLES.leads=['Leads','Every enquiry from your website, quote form and AI chat.'
 TITLES.blog=['Blog posts','Publish insights that bring in search traffic.'];
 var MODE='client';
 function setMode(m){MODE=m;document.body.classList.toggle('team',m==='team');$$('#mode-sw button').forEach(function(b){b.classList.toggle('on',b.dataset.mode===m)});$('.brand small').textContent=m==='team'?'Team workspace':'Client portal';$('#top-sw').textContent=m==='team'?'Client view':'Team view';go(m==='team'?'web':'home')}
-$$('#mode-sw button').forEach(function(b){b.onclick=function(){setMode(b.dataset.mode)}});
-$('#top-sw').onclick=function(){setMode(MODE==='team'?'client':'team')};
 /* chart */
 (function(){var V=[98,112,105,131,126,118,94,140,152,149,161,138,120,171,166,180,174,189,150,132,196,204,188,210,221,199,170,226,238,245],L=[1,2,1,2,3,2,1,2,3,2,3,2,1,3,2,3,3,4,2,1,3,4,3,3,4,3,2,4,4,3];
  var W=640,H=220,mx=260,pts=V.map(function(v,i){return [i*(W/(V.length-1)),H-20-(v/mx)*(H-40)]});
@@ -635,7 +627,7 @@ $('#ai-write').onclick=function(){var b=this,t=$('#ed-title').value.trim();if(!t
 function savePost(st){var t=$('#ed-title').value.trim()||'Untitled post';POSTS.unshift({t:t,c:$('#ed-cat').value,img:$('#ed-cover').value,st:st,d:'Just now',v:st==='Published'?'0 views':'Not published'});renderPosts();editor(false);toast(st==='Published'?'Published to splendidfreight.com/insights and shared to Google':'Draft saved')}
 $('#publish').onclick=function(){savePost('Published')};$('#save-draft').onclick=function(){savePost('Draft')};
 
-var h=(location.hash||'').slice(1);if(['web','leads','blog'].indexOf(h)>-1)setMode('team');if(TITLES[h]&&h!=='home')go(h);
+var h=(location.hash||'').slice(1);if(TITLES[h]&&h!=='home')go(h);
 </script>
 <script>/*CAI*/</script>
 </body>
