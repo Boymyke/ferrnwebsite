@@ -1293,3 +1293,14 @@ html:has(.season-banner) .nav-shell { top: 37px; }
   .wk-cap { position: relative; }
 }
 @media (max-width: 640px) { .wk-1 .wk-shot { aspect-ratio: 16 / 10; } }
+
+/* 4.18.7: section headlines span the full width (the closing CTA keeps its narrow, centred headline) */
+main h2.h-display { max-width: none; text-wrap: balance; }
+main .room-close h2.h-display { max-width: 16ch; }
+.room-head { max-width: none; }
+.room-head .room-lead { max-width: 62ch; }
+/* Trusted by: centred heading, logos in two rows that drift in opposite directions */
+.trusted-head { text-align: center; } .trusted-head .h-display { margin-inline: auto; }
+.trusted-strip { display: grid; gap: clamp(22px, 3vw, 40px); }
+.trusted-track.rev { animation-direction: reverse; animation-duration: 54s; }
+.trusted-track { animation-duration: 70s; } .trusted-track.rev { animation-duration: 78s; }

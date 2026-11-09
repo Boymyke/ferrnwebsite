@@ -240,3 +240,7 @@ The morning routine no longer needs a git repo. It puts each concept site in the
 
 ## 4.18.4–4.18.5 — Work section redesign
 - Home "Our web design portfolio": framed screenshots in a bento grid (big card left, two stacked right), a caption bar inside each card with number, title, type and industry tags, and an arrow that turns orange on hover. Dark caption in dark mode, light caption in light mode. Tablet: big card on top, two below. Phone: one column.
+
+## 4.18.7 — Full-width headlines, Trusted by
+- Section h2s span the full width (no 22ch cap); the closing CTA keeps its narrow centred headline. Room leads stay at 62ch.
+- Trusted by: headline is just "Trusted by", centred. Client logos run in two rows drifting in opposite directions.

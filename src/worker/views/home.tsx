@@ -217,12 +217,14 @@ export function HomePage(p: {
       <section class="trusted" aria-labelledby="trusted-title">
         <div class="wrap trusted-head"><Lines text={ctx.get('home.trusted.title')} tag="h2" class="h-display" id="trusted-title" /></div>
         <div class="trusted-strip">
-          <div class="trusted-track">
-            {[0, 1].map((k) => CLIENT_LOGOS.map((l) => {
-              const ratio = l.w / 40, h = Math.round(Math.max(26, Math.min(46, 46 / Math.sqrt(ratio))));
-              return <img src={`/assets/clients/${l.file}.webp`} alt={k ? '' : l.name} aria-hidden={k ? 'true' : undefined} title={l.name === 'Client' ? undefined : l.name} height={h} width={Math.round(h * ratio)} loading="lazy" decoding="async" />;
-            }))}
-          </div>
+          {[CLIENT_LOGOS.filter((_, i) => i % 2 === 0), CLIENT_LOGOS.filter((_, i) => i % 2 === 1)].map((row, r) => (
+            <div class={`trusted-track${r ? ' rev' : ''}`}>
+              {[0, 1, 2, 3].map((k) => row.map((l) => {
+                const ratio = l.w / 40, h = Math.round(Math.max(26, Math.min(46, 46 / Math.sqrt(ratio))));
+                return <img src={`/assets/clients/${l.file}.webp`} alt={k ? '' : l.name} aria-hidden={k ? 'true' : undefined} title={l.name === 'Client' ? undefined : l.name} height={h} width={Math.round(h * ratio)} loading="lazy" decoding="async" />;
+              }))}
+            </div>
+          ))}
         </div>
       </section>
 
