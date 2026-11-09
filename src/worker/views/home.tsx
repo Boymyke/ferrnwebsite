@@ -423,11 +423,18 @@ export function HomePage(p: {
             <H text={ctx.get('home.work.title')} />
             {ctx.get('home.work.lead') ? <p class="room-lead reveal">{ctx.get('home.work.lead')}</p> : null}
           </div>
-          <div class="work-grid">
+          <div class="wk-grid">
             {featured.map((x, i) => { const img = shotOf(x); return (
-              <a class={`work-card reveal ${i === 0 ? 'big' : ''}`} style={`--d:${i * 0.08}s`} href={href(lang, `/work/${x.slug}`)}>
-                <div class="work-shot">{img ? <img src={img} alt={`${x.title} screenshot`} loading="lazy" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
-                <div class="work-cap"><strong>{x.title}</strong><span>{[x.type, x.industry].filter(Boolean).join(' · ')}</span></div>
+              <a class={`wk reveal wk-${i + 1}`} style={`--d:${i * 0.08}s`} href={href(lang, `/work/${x.slug}`)}>
+                <div class="wk-shot">{img ? <img src={img} alt={`${x.title} website`} loading="lazy" decoding="async" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
+                <div class="wk-cap">
+                  <span class="wk-n">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="wk-t">
+                    <strong>{x.title}</strong>
+                    <span class="wk-tags">{[x.type, x.industry].filter(Boolean).map((tg) => <i>{tg}</i>)}</span>
+                  </span>
+                  <span class="wk-go" aria-hidden="true">{icon('arrow-up-right', { size: 18 })}</span>
+                </div>
               </a>
             ); })}
           </div>
