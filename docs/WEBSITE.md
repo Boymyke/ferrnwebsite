@@ -238,5 +238,5 @@ Michael asked for huly.io as the reference. The home page now follows that struc
 
 The morning routine no longer needs a git repo. It puts each concept site in the batch file as one self-contained HTML page (`previews: [{slug, company, lead_id|key, html}]`). The LeadsHunter engine keeps the file in Drive › previews and lists it in a `Previews` sheet; the Worker cron (`syncPreviews`, every 10 minutes) copies new ones into R2 as uploaded demos and serves them at **`https://www.ferrnagency.com/preview/<slug>/`** (sandboxed, `noindex`, same store as Studio → Marketplace → Demos). The engine then records the live URL on the lead (`preview_url`, status "Preview ready"). `PREVIEW_BASE_URL` in the engine settings is `https://www.ferrnagency.com/preview`.
 
-## 4.18.4 — Work section redesign
+## 4.18.4–4.18.5 — Work section redesign
 - Home "Our web design portfolio": framed screenshots in a bento grid (big card left, two stacked right), a caption bar inside each card with number, title, type and industry tags, and an arrow that turns orange on hover. Dark caption in dark mode, light caption in light mode. Tablet: big card on top, two below. Phone: one column.
