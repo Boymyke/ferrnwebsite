@@ -1271,3 +1271,16 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 [data-theme="light"] .wk-cap { border-top-color: rgba(11,13,16,.08); box-shadow: none; }
 .wk::after { display: none; }
 @media (max-width: 640px) { .wk-cap { left: 0; right: 0; bottom: 0; padding: 12px 12px 12px 14px; } }
+/* covers are 16:10 screenshots: never crop the sides, only the bottom */
+.wk-grid { grid-template-columns: 1fr 1fr; grid-template-rows: none; height: auto; }
+.wk-1 { grid-column: span 2; grid-row: auto; aspect-ratio: 2.35 / 1; }
+.wk-2, .wk-3 { aspect-ratio: 16 / 10; }
+.wk-1 .wk-t strong { font-size: 22px; }
+@media (max-width: 1000px) { .wk-1 { aspect-ratio: 2 / 1; } .wk-2, .wk-3 { aspect-ratio: 16 / 11; } }
+@media (max-width: 640px) {
+  .wk-grid { grid-template-columns: 1fr; }
+  .wk-1, .wk-2, .wk-3 { grid-column: auto; aspect-ratio: auto; display: flex; flex-direction: column; }
+  .wk-shot { position: relative; inset: auto; aspect-ratio: 16 / 10; }
+  .wk-cap { position: relative; }
+}
+@media (max-width: 640px) { .wk-1 .wk-t strong { font-size: 17px; } }
