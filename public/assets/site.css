@@ -1284,3 +1284,12 @@ html:has(.season-banner) .nav-shell { top: 37px; }
   .wk-cap { position: relative; }
 }
 @media (max-width: 640px) { .wk-1 .wk-t strong { font-size: 17px; } }
+.wk-tags { flex-wrap: nowrap; overflow: hidden; }
+.wk-tags i { white-space: nowrap; }
+@media (max-width: 1000px) {
+  .wk-1, .wk-2, .wk-3 { aspect-ratio: auto; display: flex; flex-direction: column; }
+  .wk-shot { position: relative; inset: auto; aspect-ratio: 16 / 10; }
+  .wk-1 .wk-shot { aspect-ratio: 2 / 1; }
+  .wk-cap { position: relative; }
+}
+@media (max-width: 640px) { .wk-1 .wk-shot { aspect-ratio: 16 / 10; } }
