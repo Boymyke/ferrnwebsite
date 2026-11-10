@@ -310,7 +310,16 @@ function pageText(html: string) {
 export async function runEngageAutopilot(env: Bindings) {
   if (!env.MEDIA) return;
   // First, rewrite waiting DMs from the old writer (three per tick) so nothing goes out with the stock opening.
-  try { const r = await rewriteOldDrafts(env, 3); if (r.done.length) return; } catch (e) { console.warn('rewrite old DMs', e); }
+  try {
+    const r = await rewriteOldDrafts(env, 3);
+    if (r.done.length) {
+      // A small health record (Settings), so a rewrite that isn't producing good drafts is visible.
+      const now = await load(env);
+      await setSetting(env.DB, 'engage.last_rewrite', JSON.stringify({ at: iso(), left: r.left, done: r.done.map((d) => ({ company: d.company, ok: d.ok, skipped: d.skipped,
+        openings: d.ok && !d.skipped ? (now.find((i) => i.id === d.id)?.drafts ?? []).map((t) => t.slice(0, 70)) : [] })) }), 'Autopilot').catch(() => null);
+      return;
+    }
+  } catch (e) { console.warn('rewrite old DMs', e); }
   const cfg = await autopilotSettings(env);
   if (!cfg.dm) return;
   let scan: Scan = { day: today(), drafted: 0, seen: [] };
