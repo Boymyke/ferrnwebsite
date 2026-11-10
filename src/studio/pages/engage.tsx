@@ -26,11 +26,33 @@ export function dmUrl(it: { platform: Platform; url: string; kind: string }) {
 }
 
 /** Copy the text, then open the profile or post in a new tab so it can be pasted and sent. */
+/** Copies synchronously, inside the click, BEFORE any tab opens. Once a new tab takes focus the browser
+ *  refuses clipboard writes, which is why the message used to be missing when you pasted. */
+export function copyNow(text: string): boolean {
+  let ok = false;
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+    ok = document.execCommand('copy');
+    ta.remove();
+  } catch { ok = false; }
+  if (!ok) navigator.clipboard?.writeText(text).then(() => null, () => null);
+  return ok || !!navigator.clipboard;
+}
+/** Opens a new tab and cuts its link back to Studio. ('noopener' in the features makes window.open return
+ *  null, which looked like a blocked pop-up.) */
+function openTab(url: string) {
+  const w = window.open(url, '_blank');
+  if (w) { try { w.opener = null; } catch { /* cross-origin */ } }
+  return w;
+}
+const PASTE = /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent) ? '⌘V' : 'Ctrl+V';
+
 function copyOpen(text: string, url: string, toast: (t: string, k?: any) => void) {
-  const w = window.open(url, '_blank', 'noopener');
-  navigator.clipboard?.writeText(text)
-    .then(() => toast('Copied. Paste it in the tab that just opened'))
-    .catch(() => { toast('Couldn’t copy automatically. Select the text and copy it', 'err'); });
+  const copied = copyNow(text);
+  const w = openTab(url);
+  toast(copied ? `Copied. In the tab that opened, click the message box, press ${PASTE}, then Enter` : 'Couldn’t copy automatically. Select the text and copy it', copied ? undefined : 'err');
   if (!w) toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err');
 }
 
@@ -56,10 +78,11 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
   const isDm = kind === 'dm';
   /** One click: copy the message, open the DM thread (or the post), and move it to Sent. */
   const send = async (it: Item, text: string) => {
-    const w = window.open(dmUrl(it), '_blank', 'noopener');
-    try { await navigator.clipboard?.writeText(text); } catch { toast('Couldn’t copy automatically. Copy the text from the Sent tab', 'err'); }
-    if (!w) toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err');
-    await patch(it.id, { status: 'sent', sent_text: text }, isDm ? 'Opened their DMs with the message copied. Paste, send. Moved to Sent' : 'Opened the post with the comment copied. Paste, post. Moved to Posted');
+    const copied = copyNow(text); // must happen before the new tab steals focus
+    const w = openTab(dmUrl(it));
+    if (!w) { toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err'); return; }
+    if (!copied) toast('Couldn’t copy automatically. Copy the text from the Sent tab', 'err');
+    await patch(it.id, { status: 'sent', sent_text: text }, isDm ? `Message copied. In Instagram, click the message box, press ${PASTE}, then Enter` : `Comment copied. On the post, click Comment, press ${PASTE}, then post`);
   };
   const queue = useMemo(() => items.filter((i) => i.status === 'draft' && (!platform || i.platform === platform) && i.drafts[0]), [items, platform]);
   const next = queue[0];
