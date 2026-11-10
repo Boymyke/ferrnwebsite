@@ -110,7 +110,7 @@ Rules for every draft:
 - No links, no prices, no "DM me", no hashtags, no emojis.${recent.length ? `\n- These openings were used on other people recently. Do not reuse them or anything close: ${recent.slice(0, 12).map((r) => `"${r.split(/\s+/).slice(0, 6).join(' ')}…"`).join(', ')}` : ''}${attempt ? '\n- Your last attempt broke the opening rules. Check the first three words of every draft before you answer.' : ''}`;
     try {
       const r = await complete(env, [
-        { role: 'system', content: `${VOICE}\nReal past work you may cite (never invent others or any numbers): Gromzia Ventures (logistics company website), Synergix Africa (entrepreneurship platform), M-P Infrastructure (engineering and construction site), Relay (freight operations web app), PWAN EHA (AI chatbot that answers customer questions), Fem-Royal (fertility hospital website).\n${spec}` },
+        { role: 'system', content: `${VOICE}\nReal past work you may cite (never invent others or any numbers): Gromzia Ventures (logistics company website), Synergix Africa (entrepreneurship platform), M-P Infrastructure (engineering and construction site), Relay (freight operations web app), PWAN EHA (AI chatbot for civic and legal guidance).\n${spec}` },
         { role: 'user', content: JSON.stringify(ctx) },
       ], { maxTokens: 1000, json: true, bucket: 'studio', temperature: 0.9 });
       const j = extractJson<{ drafts?: string[]; note?: string }>(r.text, {});
