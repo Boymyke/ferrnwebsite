@@ -10,7 +10,7 @@
  */
 import type { Bindings } from './env';
 import { all, first, getSetting, newId, run, setSetting } from './db';
-import { enrichProspects, isNigerian, LAGOS_AND_ABROAD, placeQuery, searchPlaces } from './maps';
+import { countryOf, enrichProspects, isNigerian, LAGOS_AND_ABROAD, placeQuery, searchPlaces } from './maps';
 import { engineCall, engineConfigured } from './engine';
 
 export type AutoConfig = {
@@ -32,9 +32,17 @@ export const NICHE_QUERY: Record<string, string> = {
   homecare: 'home care agencies', cleaning: 'commercial cleaning companies', construction: 'construction companies', church: 'churches',
 };
 
+/* Abroad, Ferrn wins with owner-run businesses that serve the African diaspora or are run by it, not with
+ * polished high-street brands. These queries replace the generic one outside Nigeria. */
+export const ABROAD_QUERY: Record<string, string> = {
+  logistics: 'cargo and shipping to Nigeria and Africa companies', professional: 'immigration law firms and accountants for small businesses',
+  ecommerce: 'African and Caribbean food and beauty stores', church: 'African churches', hospitality: 'Nigerian and African restaurants',
+  realestate: 'independent estate agents and property management companies', homecare: 'independent home care agencies',
+};
+
 export const DEFAULT_AUTO: AutoConfig = {
-  enabled: false, niches: ['dental', 'fertility', 'realestate', 'professional', 'homecare'],
-  cities: ['Lagos', 'London', 'Manchester', 'Houston', 'Atlanta', 'Toronto'], dailyCap: 25, minScore: 65, whatsappShare: 20,
+  enabled: false, niches: ['logistics', 'clinic', 'fertility', 'realestate', 'school', 'construction', 'professional', 'homecare'],
+  cities: ['Lagos', 'London', 'Manchester', 'Houston', 'Atlanta', 'Toronto'], dailyCap: 12, minScore: 70, whatsappShare: 20,
 };
 export { LAGOS_AND_ABROAD };
 
@@ -65,37 +73,50 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
   const doneKey = `autoprospect:${today}:${niche}:${city}`;
   if (!opts.force && (await env.CACHE.get(doneKey))) { await saveAuto(env, cfg, 'autopilot'); return { skipped: 'pair already searched today' }; }
 
-  const query = placeQuery(NICHE_QUERY[niche] ?? niche, city);
   const nigeria = isNigerian(city);
+  const query = placeQuery((!nigeria && ABROAD_QUERY[niche]) || NICHE_QUERY[niche] || niche, city);
   let added = 0, seen = 0, emails = 0, waAdded = 0, error: string | undefined;
   const pushed: Record<string, unknown>[] = [];
   try {
     const { results } = await searchPlaces(env, query);
     seen = results.length;
     const known = new Set((await all<{ maps_place_id: string }>(env.DB, 'SELECT maps_place_id FROM leads WHERE maps_place_id IS NOT NULL')).map((x) => x.maps_place_id));
-    const fresh = results.filter((x) => !known.has(x.place_id) && (!x.status || x.status === 'OPERATIONAL'));
-    await enrichProspects(fresh, 12);
+    // Not a fit: branches of chains and franchises, national brands (they can't or won't buy from an agency).
+    const fresh = results.filter((x) => !known.has(x.place_id) && (!x.status || x.status === 'OPERATIONAL') && !x.skip);
+    await enrichProspects(fresh, 14);
+    const domainOf = (u?: string | null) => { try { return new URL(u!).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } };
+    const knownDomains = new Set((await all<{ website: string }>(env.DB, "SELECT website FROM leads WHERE website IS NOT NULL AND website <> ''")).map((x) => domainOf(x.website)).filter(Boolean));
     const limit = Math.max(room, opts.force ? 10 : 0);
     for (const x of fresh) {
       if (added >= limit) break;
       const email = x.emails?.[0];
       if (email) emails++;
       if (x.score < cfg.minScore) continue;
+      // Quality gate: a real, visible gap we can point to (never just review counts). Abroad needs two,
+      // because a business with a decent site has no reason to hire an agency in another country.
+      const needs = x.needs ?? [];
+      if (needs.length < (nigeria ? 1 : 2)) continue;
+      // Phone-only leads must be established enough to be worth a personal WhatsApp.
+      if (!email && (x.reviews ?? 0) < 15) continue;
+      // One lead per company: a second listing on a domain we already have is a branch.
+      const dom = domainOf(x.website);
+      if (dom && knownDomains.has(dom)) continue;
+      if (dom) knownDomains.add(dom);
       // Email first: phone-only only in Nigeria, within the WhatsApp share; abroad needs an email.
       if (!email && (!nigeria || !x.phone || waAdded >= waRoom)) continue;
       if (await first(env.DB, 'SELECT id FROM leads WHERE company = ? AND city = ?', x.name, city)) continue;
       if (email && (await first(env.DB, 'SELECT id FROM leads WHERE lower(email) = ?', email))) continue;
-      const tier = x.score >= 80 ? 'A' : x.score >= 65 ? 'B' : 'C';
+      const tier = x.score >= 82 && needs.length >= 2 && (x.reviews ?? 0) >= 40 ? 'A' : x.score >= 70 ? 'B' : 'C';
       const id = newId('L-');
       const gaps = x.reasons.filter((r) => r !== 'Email published on their site').join('; ');
       const source = `Autopilot · Google Maps · ${query}`;
       await run(env.DB,
-        `INSERT INTO leads (id, created, niche, company, website, email, phone, city, tier, score, gaps, status, source, origin, found_by, maps_place_id, rating, notes, next_action, updated_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', ?, 'maps', 'auto', ?, ?, ?, ?, 'Autopilot')`,
-        id, today, nicheKey(niche), x.name.slice(0, 160), x.website ?? null, email ?? null, x.phone ?? null, city, tier, x.score,
+        `INSERT INTO leads (id, created, niche, company, website, email, phone, city, country, tier, score, gaps, status, source, origin, found_by, maps_place_id, rating, notes, next_action, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', ?, 'maps', 'auto', ?, ?, ?, ?, 'Autopilot')`,
+        id, today, nicheKey(niche), x.name.slice(0, 160), x.website ?? null, email ?? null, x.phone ?? null, city, countryOf(city) ?? 'Nigeria', tier, x.score,
         gaps, source, x.place_id, x.rating ?? null,
         [x.address, x.maps_url, x.emails && x.emails.length > 1 ? `Other emails on site: ${x.emails.slice(1).join(', ')}` : ''].filter(Boolean).join('\n'),
-        email ? 'Email sequence: written by the morning routine, sent by LeadsHunter' : 'Send a WhatsApp intro with a concept preview');
+        email ? 'Email sequence: written by the morning routine, sent by LeadsHunter' : 'Send a WhatsApp intro');
       if (email) pushed.push({ id, company: x.name.slice(0, 160), website: x.website ?? '', email, phone: x.phone ?? '', city, niche: nicheKey(niche), tier, score: x.score, gaps, source, notes: x.address });
       else waAdded++;
       added++;

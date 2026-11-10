@@ -7,7 +7,7 @@ import { requireUser, sha256 } from '../lib/auth';
 import { audit, diff } from '../lib/audit';
 import { bumpContentVersion } from '../lib/cache';
 import { complete, extractJson } from '../lib/ai';
-import { engineCall, engineConfigured, hasHandledBy, syncEngine } from '../lib/engine';
+import { engineCall, engineConfigured, hasHandledBy, shapeDash, syncEngine } from '../lib/engine';
 import { captureSite } from '../lib/capture';
 import { fromOf } from '../lib/email';
 import { searchPlaces } from '../lib/maps';
@@ -294,7 +294,7 @@ studio.delete('/r/:res/:id', async (c): Promise<Response> => {
     // suppresses the address), otherwise the next sync would bring it straight back.
     if (before.origin === 'engine' && engineConfigured(c.env)) {
       try {
-        const data = await engineCall(c.env, 'dashAction', ['deleteLead', { lead_id: id, by: u.name }]);
+        const data = shapeDash(await engineCall<any>(c.env, 'dashAction', ['deleteLead', { lead_id: id, by: u.name }]));
         await c.env.CACHE.put('engine:snapshot', JSON.stringify(data), { expirationTtl: 60 * 60 * 6 });
       } catch (e: any) { return c.json({ ok: false, error: `Couldn't remove it from LeadsHunter: ${e.message}` }, 502); }
     }
@@ -386,7 +386,7 @@ studio.post('/engine/action', async (c): Promise<Response> => {
   if (!allowed.includes(String(b.action))) return c.json({ ok: false, error: 'Unknown action' }, 400);
   if (b.action === 'setSetting' && !can(u, 'admin')) return c.json({ ok: false, error: 'Only admins change engine settings.' }, 403);
   try {
-    const data = await engineCall(c.env, 'dashAction', [b.action, b.params ?? {}]);
+    const data = shapeDash(await engineCall<any>(c.env, 'dashAction', [b.action, b.params ?? {}]));
     await c.env.CACHE.put('engine:snapshot', JSON.stringify(data), { expirationTtl: 60 * 60 * 6 });
     await audit(c, 'engine', String(b.params?.id ?? b.params?.lead_id ?? ''), String(b.action), `${u.name}: ${b.action} ${b.params?.lead_id ?? b.params?.id ?? ''}`, null, b.params);
     return c.json({ ok: true, data });
@@ -404,7 +404,7 @@ studio.post('/leads/:id/takeover', async (c): Promise<Response> => {
   // LeadsHunter: hold every automated email that hasn't gone out; replies come to you.
   if (lead.origin === 'engine' && engineConfigured(c.env)) {
     try {
-      const data = await engineCall(c.env, 'dashAction', [on ? 'takeOver' : 'release', { lead_id: id, by: u.name }]);
+      const data = shapeDash(await engineCall<any>(c.env, 'dashAction', [on ? 'takeOver' : 'release', { lead_id: id, by: u.name }]));
       await c.env.CACHE.put('engine:snapshot', JSON.stringify(data), { expirationTtl: 60 * 60 * 6 });
     } catch (e: any) { return c.json({ ok: false, error: `LeadsHunter didn't accept it: ${e.message}` }, 502); }
   }

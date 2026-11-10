@@ -829,3 +829,7 @@ ul.plain, ol.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; } u
 .eng-auto.on > svg { color: var(--purple); }
 .eng-auto-text { display: grid; gap: 2px; flex: 1; min-width: 240px; }
 .eng-auto-n select { margin-left: 6px; padding: 4px 8px; border-radius: 8px; width: auto; }
+/* send queue (Social DMs, WhatsApp) */
+.eng-next { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--o) 40%, var(--line)); border-radius: 12px; background: color-mix(in srgb, var(--o) 6%, var(--panel)); margin: 0 0 14px; flex-wrap: wrap; }
+.eng-next > div { display: grid; gap: 2px; flex: 1; min-width: 220px; }
+.eng-next .btn { flex: none; }

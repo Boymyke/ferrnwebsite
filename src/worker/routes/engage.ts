@@ -4,13 +4,15 @@ import { all, clamp, first, getSetting, setSetting } from '../lib/db';
 import { requireUser } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { complete, extractJson } from '../lib/ai';
+import { chainReason } from '../lib/maps';
 
 /* Social engagement, assisted.
  *   DMs:          AI drafts an Instagram DM or a LinkedIn connection note + message for a lead.
  *   Interactions: AI drafts comments for someone else's post; you like it and post the comment.
  * Instagram and LinkedIn don't let apps send cold DMs or like/comment on other people's posts, and
  * automating it from a browser breaks their terms and gets accounts restricted. So Studio does the
- * thinking and the writing; sending is one tap: copy + open the profile or post, paste, send.
+ * thinking and the writing; "Open & send" copies the message, opens the DM thread itself (ig.me/m/<handle>)
+ * and marks it sent, and "Send next" walks the whole queue one click at a time.
  * Everything lives in one private R2 object (strongly consistent, never served under /media). */
 
 type Platform = 'instagram' | 'linkedin';
@@ -23,6 +25,7 @@ export type EngageItem = {
   sent_text?: string | null; liked?: boolean;
   created_at: string; created_by: string; done_at?: string | null; done_by?: string | null; follow_up_at?: string | null;
   auto?: boolean; // drafted by the autopilot
+  v?: number;     // 2 = written with the varied-opening writer
 };
 const KEY = 'private/studio/engage.json';
 const MAX = 3000;
@@ -56,20 +59,71 @@ Voice: warm, direct, Nigerian-professional English, plain words, no hype, no exc
 Write complete sentences with normal punctuation (full stops, question marks) and line breaks between ideas in longer messages.
 Never invent facts about the person or their business. Use only what you are given. Never include links unless asked.`;
 
-async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, unknown>) {
-  const spec = platform === 'linkedin'
-    ? `Return JSON {"note": string, "drafts": [string, string, string]}.
-"note" is a LinkedIn connection request note, max 280 characters, personal, no pitch, mentions one specific thing about them.
-"drafts" are 3 different first messages to send after they accept (60-110 words each): open with one specific observation about their business or website, one sentence on what it costs them, one line of real proof, end with one easy question. Different angles, not rewordings.`
-    : `Return JSON {"drafts": [string, string, string]}.
-3 different Instagram DMs (35-70 words each), casual but professional, that read like a real person not a template: one specific observation about their page or business, one helpful idea, one soft question. Different angles, not rewordings. No "I hope you're well".`;
-  const r = await complete(env, [
-    { role: 'system', content: `${VOICE}\nReal past work you may cite: Gromzia Ventures (logistics website), Synergix Africa (entrepreneurship platform), M-P Infrastructure (EPC site), Relay (freight operations web app), PWAN EHA (AI chatbot).\n${spec}` },
-    { role: 'user', content: JSON.stringify(ctx) },
-  ], { maxTokens: 900, json: true, bucket: 'studio', temperature: 0.8 });
-  const j = extractJson<{ drafts?: string[]; note?: string }>(r.text, {});
-  return { drafts: (j.drafts ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3), note: j.note ? String(j.note).slice(0, 300) : null };
+/* ── DMs that don't all sound the same ──
+ * The first words decide whether a DM gets read. Left alone, the model opens every message with
+ * "I noticed your…", so the shape of each draft is chosen here, in code: three different opening moves per
+ * lead, picked at random, with the stock openers banned and checked after the model answers. */
+const OPENERS: { key: string; how: string; start: string }[] = [
+  { key: 'question', how: 'Open with a short, genuine question about how they handle one specific thing in their business (enquiries, bookings, quotes, admissions, tracking). Then say why you ask.', start: 'a question word such as "How", "Do", "What" or "When"' },
+  { key: 'detail', how: 'Open with the specific detail itself, quoted or named exactly as it appears on their site (a service, a programme, a number, an area they serve). Then the idea it gave you.', start: 'the detail itself, never with "I" or "Your"' },
+  { key: 'customer', how: 'Open from their customer\'s side: describe in one line what someone looking for their service tonight would run into on their site. Then the fix.', start: 'the customer, e.g. "Someone looking for…" or "A parent comparing…"' },
+  { key: 'proof', how: 'Open with one short line about a result or build from Ferrn\'s real past work that is close to their business, then connect it to them in the next line.', start: 'the past project or what it did, e.g. "We rebuilt…" or "Last year a freight company…"' },
+  { key: 'greeting', how: 'Open with "Hi" and their first name (or the company name plus "team" if no name is given), then go straight to one useful idea for their business in plain words. No small talk.', start: '"Hi " and the name' },
+  { key: 'compliment', how: 'Open with one honest, specific thing they do well (from the facts given), in a few words, then the one thing that undersells it online.', start: 'the thing they do well, never with "I love" or "Great"' },
+  { key: 'direct', how: 'Open by saying in one plain line who you are and the one thing you would fix first for them. Short sentences.', start: '"Michael here" or "Michael from Ferrn"' },
+];
+const STOCK = /^\W*(i\s+(noticed|see|saw|came across|was (looking|checking|browsing|going)|just (saw|came|checked)|observed|hope|wanted to reach|stumbled)|your (website|company|business|firm|page|team|site|instagram|school|clinic|practice)\b|hope (you|this)|just (wanted|reaching)|i'?m reaching out|reaching out)/i;
+const firstWords = (t: string, n = 2) => t.trim().toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).slice(0, n).join(' ');
+function shuffle<T>(xs: T[]): T[] { const a = [...xs]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/** Keeps drafts that don't open with a stock line, don't share an opening with each other or with recent DMs. */
+export function cleanDrafts(drafts: string[], recent: string[]): string[] {
+  const seen = new Set(recent.map((r) => firstWords(r, 3)));
+  const out: string[] = [];
+  for (const d of drafts) {
+    const t = String(d ?? '').trim().replace(/^["“]|["”]$/g, '');
+    if (t.length < 40 || STOCK.test(t)) continue;
+    if (/\b(your|on your|at your) (instagram|ig|linkedin)( page| profile| feed| account)?\b/i.test(t)) continue; // we only ever read their website
+    const k = firstWords(t, 3);
+    if (seen.has(k) || out.some((o) => firstWords(o, 1) === firstWords(t, 1))) continue;
+    seen.add(k); out.push(t);
+  }
+  return out;
 }
+
+async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, unknown>, recent: string[] = []) {
+  const li = platform === 'linkedin';
+  let best: string[] = []; let note: string | null = null;
+  for (let attempt = 0; attempt < 3 && best.length < 3; attempt++) {
+    const moves = shuffle(OPENERS).filter((o) => o.key !== 'greeting' || ctx.person || ctx.company).slice(0, 3);
+    const spec = `${li ? 'Return JSON {"note": string, "drafts": [string, string, string]}.\n"note" is a LinkedIn connection request note, max 280 characters, personal, no pitch, about one specific thing they do.\n"drafts" are 3 first messages to send once they accept, 60-100 words each.'
+      : 'Return JSON {"drafts": [string, string, string]}. 3 Instagram DMs, 35-65 words each, the way a person types a DM: short lines, no formal sign-off.'}
+Each draft uses a DIFFERENT opening move. Follow these exactly, in this order:
+${moves.map((m, i) => `Draft ${i + 1}: ${m.how} It must start with ${m.start}.`).join('\n')}
+
+Rules for every draft:
+- Everything you know about them comes from THEIR WEBSITE and the notes given. You have not seen their ${li ? 'LinkedIn' : 'Instagram'} page, so never mention it, their posts, their feed or their followers. Say "your site" when you refer to what you saw.
+- Use one concrete detail from the facts given (a named service, place, number, programme, or one of gaps_we_saw). No generic praise such as "strong online presence", "wide range of services" or "great reviews".
+- Never start a draft with "I noticed", "I see", "I saw", "I came across", "Your website", "Your company", "I hope" or "Just". No two drafts may start with the same word.
+- One idea per message: the single change that would bring them more enquiries, bookings or saved time. Say what it does for them, in plain words.
+- Say who you are once, briefly (Michael, Ferrn, we build websites and web apps), anywhere except the first line unless the move says so.
+- End with one easy question that takes a yes, a no or a few words to answer. Vary the question between drafts. Never ask for a call in the first message.
+- No links, no prices, no "DM me", no hashtags, no emojis.${recent.length ? `\n- These openings were used on other people recently. Do not reuse them or anything close: ${recent.slice(0, 12).map((r) => `"${r.split(/\s+/).slice(0, 6).join(' ')}…"`).join(', ')}` : ''}${attempt ? '\n- Your last attempt broke the opening rules. Check the first three words of every draft before you answer.' : ''}`;
+    try {
+      const r = await complete(env, [
+        { role: 'system', content: `${VOICE}\nReal past work you may cite (never invent others or any numbers): Gromzia Ventures (logistics company website), Synergix Africa (entrepreneurship platform), M-P Infrastructure (engineering and construction site), Relay (freight operations web app), PWAN EHA (AI chatbot that answers customer questions), Fem-Royal (fertility hospital website).\n${spec}` },
+        { role: 'user', content: JSON.stringify(ctx) },
+      ], { maxTokens: 1000, json: true, bucket: 'studio', temperature: 0.9 });
+      const j = extractJson<{ drafts?: string[]; note?: string }>(r.text, {});
+      if (j.note && !note) note = String(j.note).slice(0, 300);
+      const ok = cleanDrafts([...best, ...(j.drafts ?? []).map(String)], recent);
+      if (ok.length > best.length) best = ok.slice(0, 3);
+    } catch (e) { console.warn('draftDm attempt', attempt, e); }
+  }
+  return { drafts: best, note };
+}
+/** Openings already used (waiting or sent), so new drafts for other people start differently. */
+const recentOpenings = (items: EngageItem[], skipId?: string) =>
+  items.filter((i) => i.kind === 'dm' && i.id !== skipId).slice(0, 14).map((i) => i.sent_text || i.drafts[0] || '').filter(Boolean);
 
 async function draftComments(env: Bindings, platform: Platform, ctx: Record<string, unknown>) {
   const r = await complete(env, [
@@ -120,15 +174,15 @@ engageApi.post('/', async (c) => {
   let drafts: string[] = []; let note: string | null = null;
   try {
     if (kind === 'dm') {
-      const r = await draftDm(c.env, platform, { platform, profile_url: url, person, role: lead?.role, company, niche: lead?.niche, city: lead?.city, country: lead?.country,
-        website: lead?.website, gaps_we_saw: lead?.gaps, our_angle: lead?.pitch, about_them: context });
+      const r = await draftDm(c.env, platform, { person, role: lead?.role, company, niche: lead?.niche, city: lead?.city,
+        website: lead?.website, gaps_we_saw: lead?.gaps, our_angle: lead?.pitch, about_them: context }, recentOpenings(await load(c.env)));
       drafts = r.drafts; note = r.note;
     } else {
       drafts = await draftComments(c.env, platform, { platform, post_url: url, author: person || company, post_text: context });
     }
   } catch (e) { console.warn('engage draft', e); }
   const item: EngageItem = { id: newId(), kind, platform, status: 'draft', lead_id: lead?.id ?? null, company, person, url, context, drafts, note,
-    created_at: iso(), created_by: u.name };
+    created_at: iso(), created_by: u.name, v: 2 };
   const items = await load(c.env);
   items.unshift(item);
   await save(c.env, items);
@@ -147,8 +201,9 @@ engageApi.patch('/:id', async (c) => {
     if (typeof b.context === 'string') it.context = clamp(b.context, 4000) || null;
     const lead = it.lead_id ? await first<Record<string, any>>(c.env.DB, 'SELECT company, niche, city, country, website, role, gaps, pitch FROM leads WHERE id = ?', it.lead_id) : null;
     if (it.kind === 'dm') {
-      const r = await draftDm(c.env, it.platform, { platform: it.platform, profile_url: it.url, person: it.person, company: it.company, ...lead, about_them: it.context, avoid: it.drafts });
-      if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; }
+      const r = await draftDm(c.env, it.platform, { person: it.person, company: it.company, niche: lead?.niche, city: lead?.city, website: lead?.website, role: lead?.role,
+        gaps_we_saw: lead?.gaps, our_angle: lead?.pitch, about_them: it.context }, [...it.drafts, ...recentOpenings(items, it.id)]);
+      if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; it.v = 2; }
     } else {
       const d = await draftComments(c.env, it.platform, { platform: it.platform, post_url: it.url, author: it.person || it.company, post_text: it.context, avoid: it.drafts });
       if (d.length) it.drafts = d;
@@ -171,6 +226,40 @@ engageApi.patch('/:id', async (c) => {
   await save(c.env, items);
   if (b.status) await audit(c, 'engage', it.id, String(b.status), `${u.name} marked a ${it.platform} ${it.kind === 'dm' ? 'DM' : 'comment'} as ${b.status}${it.company ? ` (${it.company})` : ''}`);
   return c.json({ ok: true, item: it });
+});
+
+/** Rewrites waiting DMs that were written by the old writer (same opening every time), a few per call.
+ *  Drafts for branches of chains are skipped instead: they are not Ferrn clients. */
+export async function rewriteOldDrafts(env: Bindings, limit: number) {
+  const items = await load(env);
+  const old = items.filter((i) => i.kind === 'dm' && i.status === 'draft' && i.v !== 2);
+  const done: { id: string; company?: string | null; ok: boolean; skipped?: string }[] = [];
+  for (const it of old.slice(0, limit)) {
+    const lead = it.lead_id ? await first<Record<string, any>>(env.DB, 'SELECT company, niche, city, website, role, gaps, pitch FROM leads WHERE id = ?', it.lead_id) : null;
+    const chain = chainReason(it.company ?? lead?.company ?? '', lead?.website);
+    if (chain) { it.status = 'skipped'; it.done_at = iso(); it.done_by = 'Studio'; it.v = 2; it.context = `Not a fit: ${chain}. ${it.context ?? ''}`.slice(0, 600); done.push({ id: it.id, company: it.company, ok: true, skipped: chain }); continue; }
+    try {
+      const r = await draftDm(env, it.platform, { person: it.person, company: it.company, niche: lead?.niche, city: lead?.city, website: lead?.website, role: lead?.role,
+        gaps_we_saw: lead?.gaps, our_angle: lead?.pitch, about_them: it.context }, recentOpenings(items.filter((x) => x.v === 2), it.id));
+      if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; it.v = 2; }
+      else it.v = (it.v ?? 0) - 1; // count failed tries (negative) so one stubborn draft can't block the rest
+      if ((it.v ?? 0) <= -3) it.v = 2;
+      done.push({ id: it.id, company: it.company, ok: r.drafts.length > 0 });
+    } catch (e) { console.warn('rewriteOldDrafts', it.id, e); done.push({ id: it.id, company: it.company, ok: false }); }
+  }
+  if (done.length) {
+    // Merge onto a fresh copy so edits made meanwhile are kept.
+    const now = await load(env);
+    const byId = new Map(items.map((i) => [i.id, i]));
+    await save(env, now.map((n) => (done.some((d) => d.id === n.id) && n.status === 'draft' ? byId.get(n.id)! : n)));
+  }
+  return { done, left: Math.max(0, old.length - done.filter((d) => d.ok).length) };
+}
+engageApi.post('/redraft-waiting', async (c) => {
+  const u = c.get('user')!;
+  const r = await rewriteOldDrafts(c.env, Math.min(6, Math.max(1, Number(c.req.query('limit')) || 4)));
+  if (r.done.length) await audit(c, 'engage', null, 'redraft', `${u.name} rewrote ${r.done.length} waiting DMs`);
+  return c.json({ ok: true, ...r });
 });
 
 engageApi.delete('/:id', async (c) => {
@@ -219,8 +308,11 @@ function pageText(html: string) {
 }
 
 export async function runEngageAutopilot(env: Bindings) {
+  if (!env.MEDIA) return;
+  // First, rewrite waiting DMs from the old writer (three per tick) so nothing goes out with the stock opening.
+  try { const r = await rewriteOldDrafts(env, 3); if (r.done.length) return; } catch (e) { console.warn('rewrite old DMs', e); }
   const cfg = await autopilotSettings(env);
-  if (!cfg.dm || !env.MEDIA) return;
+  if (!cfg.dm) return;
   let scan: Scan = { day: today(), drafted: 0, seen: [] };
   try { const o = await env.MEDIA.get(SCAN); if (o) scan = await o.json(); } catch { /* fresh */ }
   if (scan.day !== today()) scan = { day: today(), drafted: 0, seen: scan.seen ?? [] };
@@ -228,10 +320,12 @@ export async function runEngageAutopilot(env: Bindings) {
   const items = await load(env);
   const have = new Set(items.map((i) => i.lead_id).filter(Boolean) as string[]);
   const seen = new Set(scan.seen);
-  const leads = await all<Record<string, any>>(env.DB,
-    `SELECT id, company, niche, city, country, website, contact_name, role, gaps, pitch FROM leads
-      WHERE website IS NOT NULL AND website <> '' AND status NOT IN ('Lost', 'Won', 'Opted out', 'Bounced')
-      ORDER BY COALESCE(updated_at, created) DESC LIMIT 200`);
+  // Best-fit leads first: Tier A and B only, never a branch of a chain, highest score first.
+  const leads = (await all<Record<string, any>>(env.DB,
+    `SELECT id, company, niche, city, country, website, contact_name, role, gaps, pitch, tier, score FROM leads
+      WHERE website IS NOT NULL AND website <> '' AND status NOT IN ('Lost', 'Won', 'Opted out', 'Bounced') AND COALESCE(tier, 'B') IN ('A', 'B')
+      ORDER BY CASE tier WHEN 'A' THEN 0 ELSE 1 END, COALESCE(score, 0) DESC, COALESCE(updated_at, created) DESC LIMIT 300`))
+    .filter((l) => !chainReason(l.company ?? '', l.website));
   const todo = leads.filter((l) => !have.has(l.id) && !seen.has(l.id)).slice(0, 3); // a few per tick keeps each run light
   const fresh: EngageItem[] = [];
   for (const l of todo) {
@@ -250,12 +344,12 @@ export async function runEngageAutopilot(env: Bindings) {
     const url = platform === 'instagram' ? `https://www.instagram.com/${links.ig[0]}/` : `https://www.linkedin.com/in/${links.li[0]}/`;
     const context = pageText(html);
     try {
-      const d = await draftDm(env, platform, { platform, profile_url: url, person: l.contact_name, role: l.role, company: l.company, niche: l.niche, city: l.city,
-        country: l.country, website: l.website, gaps_we_saw: l.gaps, our_angle: l.pitch, about_them: `From their website: ${context}` });
+      const d = await draftDm(env, platform, { person: l.contact_name, role: l.role, company: l.company, niche: l.niche, city: l.city,
+        website: l.website, gaps_we_saw: l.gaps, our_angle: l.pitch, about_them: `From their website: ${context}` }, [...fresh, ...items].filter((i) => i.kind === 'dm').slice(0, 14).map((i) => i.drafts[0] ?? ''));
       if (!d.drafts.length) continue;
       fresh.push({ id: newId(), kind: 'dm', platform, status: 'draft', lead_id: l.id, company: l.company, person: l.contact_name ?? null, url,
         context: `From their website${links.liCo.length ? ` (LinkedIn page: linkedin.com/company/${links.liCo[0]})` : ''}: ${context.slice(0, 500)}`,
-        drafts: d.drafts, note: d.note, created_at: iso(), created_by: 'Autopilot', auto: true });
+        drafts: d.drafts, note: d.note, created_at: iso(), created_by: 'Autopilot', auto: true, v: 2 });
     } catch (e) { console.warn('engage autopilot draft', l.id, e); }
   }
   if (fresh.length) {

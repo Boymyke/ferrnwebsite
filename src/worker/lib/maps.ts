@@ -14,10 +14,33 @@ export type Prospect = {
   emails?: string[];
   /** 'email' when we found a published address, 'whatsapp' for phone-only, 'none' otherwise. */
   channel?: 'email' | 'whatsapp' | 'none';
-  /** Opportunity score: weak web presence = more room for Ferrn; a published email makes it reachable. */
+  /** Fit score: can they pay (established, busy) + do they need us (real, visible gaps) + can we reach them. */
   score: number;
   reasons: string[];
+  /** Gaps we can point to in a first message (website problems only, never review counts). */
+  needs?: string[];
+  /** Why this business is not a fit (branch of a chain, too big, too small). Never added as a lead. */
+  skip?: string;
 };
+
+/* ── who is NOT a client for Ferrn ──
+ * Branches of chains and franchises can't buy a website (head office owns it), and national brands
+ * have in-house teams. Both waste outreach, so they are filtered before anything is scored. */
+const CHAIN_DOMAINS = /(^|\.)(homewatchcaregivers|synergyhomecare|bluebirdcare|homeinstead|visitingangels|rightathome|comfortkeepers|brightstarcare|seniorhelpers|helpinghands|caremark|radfieldhomecare|mydentist|bupa|bupadental|aspendental|heartland|pacificdentalservices|smiledirectclub|dentalcorp|portmandental|rodericksdental|colosseumdental|kindredhealthcare|remax|kw|kellerwilliams|century21|coldwellbanker|compass|sothebysrealty|savills|knightfrank|foxtons|purplebricks|zillow|rightmove|redfin|royallepage|marriott|hilton|airbnb|booking|sonder|blueground|dhl|fedex|ups|maersk|kuehne-nagel|dbschenker|gig-logistics|deloitte|pwc|kpmg|ey|hrblock|libertytax|jacksonhewitt|nhs|spirehealthcare|nuffieldhealth|hcahealthcare|care\.com|google|facebook|instagram|linktr|yelp|yell)\.[a-z.]{2,8}$/i;
+export function chainReason(name: string, website?: string): string | null {
+  if (website) {
+    let u: URL | null = null;
+    try { u = new URL(website); } catch { /* not a URL */ }
+    if (u) {
+      const h = u.hostname.replace(/^www\./, '').toLowerCase();
+      if (CHAIN_DOMAINS.test(h)) return 'Branch of a chain or franchise';
+      // "brand.com/houston-galleria/" style franchise pages: a location slug on a shared domain, with a "Brand of Place" name.
+      if (u.pathname.replace(/\/+$/, '').split('/').filter(Boolean).length >= 1 && /\b(of|in)\s+[A-Z][\w .&-]{2,}$/.test(name.trim()) && !/index|home/i.test(u.pathname)) return 'Location page of a franchise';
+    }
+  }
+  if (/\b(franchise|franchisee)\b/i.test(name)) return 'Franchise';
+  return null;
+}
 
 /* ── where we prospect: Lagos plus abroad markets ── */
 export const CITY_COUNTRY: Record<string, string> = {
@@ -76,19 +99,25 @@ export async function searchPlaces(env: Bindings, query: string, pageToken?: str
   if (!res.ok) throw new Error(`Google Places error ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = (await res.json()) as any;
   const results: Prospect[] = (data.places ?? []).map((p: any) => {
-    const reasons: string[] = [];
-    let score = 45;
-    const social = p.websiteUri && /facebook|instagram|linktr|wa\.me|business\.site|sites\.google|wixsite|godaddysites/i.test(p.websiteUri);
-    if (!p.websiteUri) { score += 20; reasons.push('No website listed on Google'); }
-    else if (social) { score += 20; reasons.push('Website is a social/free page'); }
-    if ((p.userRatingCount ?? 0) < 15) { score += 6; reasons.push('Few Google reviews'); }
-    if ((p.rating ?? 5) < 4) { score += 4; reasons.push('Rating under 4.0'); }
-    if (p.userRatingCount > 100) { score += 8; reasons.push('Busy business (100+ reviews)'); }
+    const reasons: string[] = []; const needs: string[] = [];
+    const n = p.userRatingCount ?? 0;
+    let score = 30;
+    const social = p.websiteUri && /facebook|instagram|linktr|wa\.me|business\.site|sites\.google|wixsite|godaddysites|weebly|wordpress\.com|blogspot/i.test(p.websiteUri);
+    // Need: what is visibly wrong with how they show up online.
+    if (!p.websiteUri) { score += 18; needs.push('No website listed on Google'); }
+    else if (social) { score += 20; needs.push('Website is a social or free-builder page'); }
+    // Budget: an established, busy business can pay for a proper build. Tiny or brand-new ones rarely can.
+    if (n >= 150) { score += 16; reasons.push(`Established (${n} Google reviews)`); }
+    else if (n >= 40) { score += 10; reasons.push(`Active business (${n} Google reviews)`); }
+    else if (n < 10) { score -= 10; reasons.push('Very few Google reviews (small or new)'); }
+    if ((p.rating ?? 5) < 3.6 && n >= 20) { score -= 6; reasons.push('Low rating'); }
+    let skip = chainReason(p.displayName?.text ?? '', p.websiteUri) ?? undefined;
+    if (!skip && n > 4000) skip = 'Too large (national brand)';
     return {
       place_id: p.id, name: p.displayName?.text ?? '', address: p.formattedAddress ?? '',
       phone: p.internationalPhoneNumber ?? p.nationalPhoneNumber, website: p.websiteUri, rating: p.rating,
       reviews: p.userRatingCount, maps_url: p.googleMapsUri, status: p.businessStatus,
-      score: Math.min(100, score), reasons,
+      score: skip ? Math.min(20, score) : Math.max(0, Math.min(100, score)), reasons: [...(skip ? [`Not a fit: ${skip}`] : []), ...needs, ...reasons], needs, skip,
     };
   });
   results.sort((a, b) => b.score - a.score);
@@ -147,20 +176,27 @@ export async function readWebsite(url: string, ms = 5000): Promise<{ emails: str
   const year = new Date().getUTCFullYear();
   if (years.length && Math.max(...years) <= year - 2) gaps.push(`Footer says © ${Math.max(...years)} (looks unmaintained)`);
   if (emails.length && emails.every((e) => FREE_MAIL.test(e))) gaps.push('Uses a Gmail/Yahoo address on the site');
-  if (!/<form[\s>]/i.test(html)) gaps.push('No enquiry or booking form');
+  const hasBooking = /calendly|acuityscheduling|simplybook|booksy|zocdoc|setmore|squareup\.com\/appointments|book(ing)?[-_ ]?(online|now|an? appointment)|schedule[-_ ]?(online|now|an? (appointment|visit|call|consultation))|request[-_ ]?(an? )?(appointment|quote|callback)/i.test(html);
+  if (!/<form[\s>]/i.test(html) && !hasBooking) gaps.push('No enquiry or booking form');
+  const title = home.html.match(/<title[^>]*>([^<]{0,160})/i)?.[1]?.trim() ?? '';
+  if (!title || /^(home|home page|welcome|untitled|index|my site|just another wordpress site)$/i.test(title)) gaps.push(`Page title is ${title ? `just “${title}”` : 'missing'} (hard to find on Google)`);
+  if (!/<meta[^>]+name=["']description["'][^>]+content=["'][^"']{20,}/i.test(home.html) && !/<meta[^>]+content=["'][^"']{20,}["'][^>]+name=["']description/i.test(home.html)) gaps.push('No search description (Google shows random text)');
+  if (/lorem ipsum|coming soon|under construction|website is being updated/i.test(html)) gaps.push('Placeholder or “coming soon” text on the site');
+  if (/wix\.com|wixstatic|weebly\.com|godaddy\.com\/websites|squarespace-cdn|sites\.google\.com/i.test(home.html) && /(created|built|made|powered)\s+(with|by|on)\s+(wix|weebly|godaddy|squarespace)/i.test(home.html)) gaps.push('Free site-builder badge still showing');
   return { emails, gaps, reached: true };
 }
 
 /** Adds published emails and website gaps to search results (top `limit` with a real website), then re-scores. */
 export async function enrichProspects(results: Prospect[], limit = 12, concurrency = 6): Promise<Prospect[]> {
-  const todo = results.filter((r) => r.website && !/facebook|instagram|linktr|wa\.me/i.test(r.website)).slice(0, limit);
+  const todo = results.filter((r) => !r.skip && r.website && !/facebook|instagram|linktr|wa\.me/i.test(r.website)).slice(0, limit);
   for (let i = 0; i < todo.length; i += concurrency) {
     await Promise.all(todo.slice(i, i + concurrency).map(async (r) => {
       const w = await readWebsite(r.website!);
       r.emails = w.emails;
-      if (!w.reached) { r.reasons.push('Website did not load'); r.score = Math.min(100, r.score + 10); return; }
-      for (const g of w.gaps) r.reasons.push(g);
-      r.score = Math.min(100, r.score + Math.min(24, w.gaps.length * 8) + (w.emails.length ? 15 : 0));
+      r.needs = r.needs ?? [];
+      if (!w.reached) { r.needs.push('Website did not load'); r.reasons.unshift('Website did not load'); r.score = Math.min(100, r.score + 14); return; }
+      for (const g of w.gaps) { r.needs.push(g); r.reasons.unshift(g); }
+      r.score = Math.max(0, Math.min(100, r.score + Math.min(36, w.gaps.length * 12) + (w.emails.length ? 12 : 0)));
     }));
   }
   for (const r of results) {

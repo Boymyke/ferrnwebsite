@@ -24,6 +24,19 @@ export async function engineCall<T = any>(env: Bindings, fn: 'getDashboardData' 
   return data.data as T;
 }
 
+/* "Needs you" is Michael's make-list: a preview (concept site) or a video that a client has asked for.
+ * Everything else the routines used to flag (good candidates, pricing questions, call requests) stays out:
+ * those replies are already drafted and wait under Held. */
+export const isMakeRequest = (reason: unknown) => {
+  const r = String(reason ?? '');
+  return /\b(preview|concept|mock-?up|demo|sample (site|page|design)|video|walk-?through|loom|recording)\b/i.test(r) && !/good candidate|would benefit|could benefit|might benefit/i.test(r);
+};
+export function shapeDash<T extends Record<string, any>>(dash: T): T {
+  if (dash && Array.isArray(dash.needsYou)) (dash as any).needsYou = dash.needsYou.filter((l: any) => isMakeRequest(l.needs_you_reason));
+  if (dash && Array.isArray(dash.leads)) for (const L of dash.leads) if (L.needs_you === 'Y' && !isMakeRequest(L.needs_you_reason)) { L.needs_you = ''; L.needs_you_reason = ''; }
+  return dash;
+}
+
 let handledByCol: boolean | null = null;
 /** True once migration 0011 has added leads.handled_by (checked once per isolate). */
 export async function hasHandledBy(env: Bindings) {
@@ -34,7 +47,7 @@ export async function hasHandledBy(env: Bindings) {
 /** Pulls the engine dashboard, caches it for the Studio and mirrors leads into D1. */
 export async function syncEngine(env: Bindings): Promise<{ leads: number } | null> {
   if (!engineConfigured(env)) return null;
-  const dash = await engineCall<any>(env, 'getDashboardData');
+  const dash = shapeDash(await engineCall<any>(env, 'getDashboardData'));
   await env.CACHE.put('engine:snapshot', JSON.stringify(dash), { expirationTtl: 60 * 60 * 6 });
   const leads: any[] = dash.leads ?? [];
   // Until migration 0011 (leads.handled_by) is applied, mirror leads without it rather than failing the sync.
@@ -54,7 +67,7 @@ export async function syncEngine(env: Bindings): Promise<{ leads: number } | nul
       L.id, (L.created || '').slice(0, 10) || null, L.niche ?? null, L.company ?? '', L.website ?? null, L.email ?? null, L.phone ?? null,
       L.contact_name ?? null, L.city ?? null, L.tier ?? null, L.gaps ?? null, L.pitch ?? null, Number(L.est_value) || null,
       L.status ?? null, L.preview_url ?? null, (L.last_contact || '').slice(0, 10) || null, (L.last_reply || '').slice(0, 10) || null,
-      L.next_action ?? null, L.needs_you ?? null, L.needs_you_reason ?? null, L.notes ?? null, L.handler || null,
+      L.next_action ?? null, L.needs_you || null, L.needs_you_reason || null, L.notes ?? null, L.handler || null,
     )
    :
     env.DB.prepare(
@@ -71,7 +84,7 @@ export async function syncEngine(env: Bindings): Promise<{ leads: number } | nul
       L.id, (L.created || '').slice(0, 10) || null, L.niche ?? null, L.company ?? '', L.website ?? null, L.email ?? null, L.phone ?? null,
       L.contact_name ?? null, L.city ?? null, L.tier ?? null, L.gaps ?? null, L.pitch ?? null, Number(L.est_value) || null,
       L.status ?? null, L.preview_url ?? null, (L.last_contact || '').slice(0, 10) || null, (L.last_reply || '').slice(0, 10) || null,
-      L.next_action ?? null, L.needs_you ?? null, L.needs_you_reason ?? null, L.notes ?? null,
+      L.next_action ?? null, L.needs_you || null, L.needs_you_reason || null, L.notes ?? null,
     ),
   );
   for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));

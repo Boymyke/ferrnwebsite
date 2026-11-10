@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { ago, api, can, fmtDate } from '../api';
 import { Badge, Card, Drawer, Empty, Loading, Page, Status, Tabs, useData, useToast, useUser, Pager, usePaged } from '../ui';
-import { AlertTriangle, MailOpen, RefreshCw } from 'lucide-react';
+import { AlertTriangle, MailOpen, RefreshCw, Send } from 'lucide-react';
+
+/** WhatsApp chat link with the message already typed. Nigerian numbers get their 234 code back
+ *  (the sheet drops the leading 0); on a computer it opens WhatsApp Web straight in the chat. */
+export function waLink(to: unknown, body: string) {
+  let d = String(to ?? '').replace(/\D/g, '');
+  if (d.length === 11 && d.startsWith('0')) d = '234' + d.slice(1);
+  else if (d.length === 10 && /^[789]/.test(d)) d = '234' + d;
+  const text = encodeURIComponent(body || '');
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return mobile ? `https://wa.me/${d}?text=${text}` : `https://web.whatsapp.com/send?phone=${d}&text=${text}`;
+}
 
 export function Outreach() {
   const user = useUser();
@@ -13,6 +24,13 @@ export function Outreach() {
   const act = async (action: string, params: Record<string, unknown>, msg = 'Done') => {
     try { const r = await api('/engine/action', { body: { action, params } }); setData({ ...data, data: r.data }); toast(msg); }
     catch (x: any) { toast(x.message, 'err'); }
+  };
+  /** One click: open the chat with the message typed in, and mark it sent (follow-ups get scheduled). */
+  const waSend = async (m: any) => {
+    const w = window.open(waLink(m.to, m.body), 'ferrn-wa');
+    if (!w) { toast('Your browser blocked WhatsApp. Allow pop-ups for Studio', 'err'); return; }
+    try { w.opener = null; } catch { /* cross-origin */ }
+    await act('waSent', { id: m.id }, `WhatsApp opened for ${m.company}. Press send there. Marked as sent`);
   };
   const refresh = async () => {
     try { const r = await api('/engine?live=1'); setData(r); toast('Synced with LeadsHunter'); } catch (x: any) { toast(x.message, 'err'); }
@@ -56,7 +74,8 @@ export function Outreach() {
         ['held', `Held (${snap?.held?.length ?? 0})`], ['wa', `WhatsApp (${snap?.whatsapp?.length ?? 0})`],
         ['inbox', `Inbox (${snap?.inbox?.filter((i: any) => i.status !== 'handled').length ?? 0})`], ['sent', 'Recently sent'], ['log', 'Engine log'],
       ]} />
-      {tab === 'needs' ? <List rows={snap?.needsYou} empty="Nothing needs you right now." render={(l: any) => (
+      {tab === 'needs' ? <p className="muted small" style={{ margin: '0 0 10px' }}>Only previews and videos a client has asked for land here, for you to make. Pricing questions and call requests wait under Held with the reply already drafted.</p> : null}
+      {tab === 'needs' ? <List rows={snap?.needsYou} empty="Nothing to make right now. A lead shows up here when they ask for a preview or a video." render={(l: any) => (
         <><div><strong>{l.company}</strong> <Status s={l.status} /><p>{l.needs_you_reason}</p><p className="muted small">{l.next_action}</p></div>
           <div className="row-actions"><a className="btn sm ghost" href={`/studio/leads/${l.id}`}>Open</a><button className="btn sm" onClick={() => act('resolve', { lead_id: l.id }, 'Marked as handled')}>Done</button></div></>
       )} /> : null}
@@ -70,9 +89,16 @@ export function Outreach() {
             <button className="btn sm ghost danger" onClick={() => confirm('Cancel this email?') && act('cancel', { id: m.id }, 'Cancelled')}>Cancel</button>
           </div></>
       )} /> : null}
+      {tab === 'wa' && snap?.whatsapp?.length ? (
+        <div className="eng-next">
+          <div><strong>{snap.whatsapp.length} WhatsApp messages ready</strong><span className="muted small">Next: {snap.whatsapp[0].company}. Each click opens the chat with the message already typed and marks it sent. Press send in WhatsApp, come back, click again.</span></div>
+          <button className="btn primary" onClick={() => waSend(snap.whatsapp[0])}><Send size={15} />Open &amp; send next</button>
+        </div>
+      ) : null}
       {tab === 'wa' ? <List rows={snap?.whatsapp} empty="No WhatsApp messages due." render={(m: any) => (
-        <><div><strong>{m.company}</strong> <span className="muted small">{m.to}</span><p className="pre clamp">{m.body}</p></div>
-          <div className="row-actions"><a className="btn sm primary" href={m.wa_link} target="_blank" rel="noreferrer">Open WhatsApp</a><button className="btn sm" onClick={() => act('waSent', { id: m.id }, 'Marked as sent')}>I sent it</button></div></>
+        <><div><strong>{m.company}</strong> <Badge>{String(m.step) === '0' ? 'First message' : `Follow-up ${m.step}`}</Badge> <span className="muted small">{m.to}</span><p className="pre clamp">{m.body}</p></div>
+          <div className="row-actions"><button className="btn sm primary" onClick={() => waSend(m)}><Send size={14} />Open &amp; send</button>
+            <button className="btn sm ghost danger" onClick={() => confirm('Cancel this WhatsApp message?') && act('cancel', { id: m.id }, 'Cancelled')}>Cancel</button></div></>
       )} /> : null}
       {tab === 'inbox' ? <List rows={snap?.inbox} empty="No replies yet." render={(r: any) => (
         <><div><strong>{r.company || r.from}</strong> <Status s={r.classification} /> <span className="muted small">{ago(r.received_at)}</span><p><strong>{r.subject}</strong></p><p className="pre clamp">{r.body}</p></div>

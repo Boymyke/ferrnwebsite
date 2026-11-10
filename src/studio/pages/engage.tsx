@@ -18,6 +18,13 @@ const PLAT: Record<Platform, { label: string; icon: React.ReactNode }> = {
   linkedin: { label: 'LinkedIn', icon: <Linkedin size={15} /> },
 };
 
+/** Where a DM is sent from: Instagram's own DM link opens the message thread itself (not the profile). */
+export function dmUrl(it: { platform: Platform; url: string; kind: string }) {
+  if (it.kind !== 'dm' || it.platform !== 'instagram') return it.url;
+  const h = it.url.match(/instagram\.com\/([A-Za-z0-9._]{1,30})/)?.[1];
+  return h ? `https://ig.me/m/${h}` : it.url;
+}
+
 /** Copy the text, then open the profile or post in a new tab so it can be pasted and sent. */
 function copyOpen(text: string, url: string, toast: (t: string, k?: any) => void) {
   const w = window.open(url, '_blank', 'noopener');
@@ -47,11 +54,20 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
     try { await api(`/engage/${id}`, { method: 'DELETE' }); toast('Removed'); reload(); } catch (x: any) { toast(x.message, 'err'); }
   };
   const isDm = kind === 'dm';
+  /** One click: copy the message, open the DM thread (or the post), and move it to Sent. */
+  const send = async (it: Item, text: string) => {
+    const w = window.open(dmUrl(it), '_blank', 'noopener');
+    try { await navigator.clipboard?.writeText(text); } catch { toast('Couldn’t copy automatically. Copy the text from the Sent tab', 'err'); }
+    if (!w) toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err');
+    await patch(it.id, { status: 'sent', sent_text: text }, isDm ? 'Opened their DMs with the message copied. Paste, send. Moved to Sent' : 'Opened the post with the comment copied. Paste, post. Moved to Posted');
+  };
+  const queue = useMemo(() => items.filter((i) => i.status === 'draft' && (!platform || i.platform === platform) && i.drafts[0]), [items, platform]);
+  const next = queue[0];
 
   return (
     <Page title={isDm ? 'Social DMs' : 'Interactions'}
       sub={isDm ? 'AI writes Instagram DMs and LinkedIn messages for your leads. You send each one with a tap.' : 'AI writes thoughtful comments on other people’s posts. Like the post and drop the comment with a tap.'}>
-      <div className="callout"><Info size={15} /> Instagram and LinkedIn don’t allow apps to send cold DMs, like or comment on other people’s posts, and accounts that use bots for it get restricted. So Studio does the research and the writing, and you do the last tap yourself: <strong>Copy &amp; open</strong> copies the text and opens the {isDm ? 'profile' : 'post'}; paste, send, then mark it done here.</div>
+      <div className="callout"><Info size={15} /> <span><strong>Open &amp; send</strong> copies the message, opens {isDm ? 'their DMs' : 'the post'} and moves it to {isDm ? 'Sent' : 'Posted'} in one click. You paste and press send there, because Instagram and LinkedIn block apps from sending cold {isDm ? 'DMs' : 'comments'} and restrict accounts that use bots for it.</span></div>
 
       <Autopilot kind={kind} />
 
@@ -70,13 +86,20 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
         <select value={platform} onChange={(e) => setPlatform(e.target.value as any)}><option value="">Both platforms</option><option value="instagram">Instagram</option><option value="linkedin">LinkedIn</option></select>
       </div>
 
+      {view === 'draft' && next ? (
+        <div className="eng-next">
+          <div><strong>{queue.length} ready to {isDm ? 'send' : 'post'}</strong><span className="muted small">Next: {next.person || next.company || 'Profile'} · {PLAT[next.platform].label}. Each click copies the message, opens {isDm ? 'their DMs' : 'the post'} and marks it sent, then moves to the next one.</span></div>
+          <button className="btn primary" onClick={() => send(next, next.drafts[0])}><Send size={15} />Open &amp; send next</button>
+        </div>
+      ) : null}
+
       {loading && !data ? <Loading /> : error ? <ErrorNote error={error} onRetry={reload} /> : !shown.length ? (
         <Empty icon={isDm ? AtSign : MessageSquareText} title={view === 'draft' ? 'Nothing waiting' : 'Nothing here yet'}>
           {view === 'draft' ? (isDm ? 'Pick a lead above, paste their Instagram or LinkedIn link and Studio drafts the message.' : 'Paste a post link and what it says, and Studio drafts three comments.') : 'Items move here when you mark them.'}
         </Empty>
       ) : (
         <>
-          <div className="eng-list">{pg.rows.map((it) => <ItemCard key={it.id} it={it} patch={patch} del={del} />)}</div>
+          <div className="eng-list">{pg.rows.map((it) => <ItemCard key={it.id} it={it} patch={patch} del={del} send={send} />)}</div>
           <Pager pg={pg} noun={isDm ? 'messages' : 'comments'} />
         </>
       )}
@@ -135,7 +158,7 @@ function NewItem({ kind, onDone }: { kind: 'dm' | 'comment'; onDone: (it: Item) 
   );
 }
 
-function ItemCard({ it, patch, del }: { it: Item; patch: (id: string, b: Record<string, unknown>, msg?: string) => Promise<void>; del: (id: string) => void }) {
+function ItemCard({ it, patch, del, send }: { it: Item; patch: (id: string, b: Record<string, unknown>, msg?: string) => Promise<void>; del: (id: string) => void; send: (it: Item, text: string) => Promise<void> }) {
   const toast = useToast();
   const [pick, setPick] = useState(0);
   const [edit, setEdit] = useState<string[]>(it.drafts);
@@ -188,16 +211,16 @@ function ItemCard({ it, patch, del }: { it: Item; patch: (id: string, b: Record<
         {it.status === 'draft' ? (
           <>
             {!isDm ? <a className="btn sm ghost" href={it.url} target="_blank" rel="noreferrer" onClick={() => { if (!it.liked) patch(it.id, { liked: true }, 'Marked as liked'); }}><Heart size={14} />Open &amp; like</a> : null}
-            {text ? <button className="btn sm primary" onClick={() => copyOpen(text, it.url, toast)}><Copy size={14} />Copy &amp; open</button> : null}
-            {text ? <button className="btn sm" onClick={() => patch(it.id, { status: 'sent', sent_text: text }, isDm ? 'Marked as sent. Follow-up in 4 days' : 'Marked as posted')}><Check size={14} />{isDm ? 'I sent it' : 'I posted it'}</button> : null}
+            {text ? <button className="btn sm primary" onClick={() => send(it, text)}><Send size={14} />{isDm ? 'Open & send' : 'Open & post'}</button> : null}
+            {text ? <button className="btn sm ghost" onClick={() => copyOpen(text, dmUrl(it), toast)}><Copy size={14} />Copy only</button> : null}
             <button className="btn sm ghost" disabled={busy} onClick={redraft}><RefreshCw size={14} />{busy ? 'Writing…' : 'Rewrite'}</button>
             <button className="btn sm ghost" onClick={() => patch(it.id, { status: 'skipped' }, 'Skipped')}>Skip</button>
           </>
         ) : (
           <>
-            {due ? <button className="btn sm primary" onClick={() => copyOpen(`Hi${it.person ? ' ' + it.person.split(' ')[0] : ''}, just bumping this in case it got buried. Happy to share a quick idea or two for ${it.company || 'your business'} if useful.`, it.url, toast)}><Copy size={14} />Copy a follow-up &amp; open</button> : null}
+            {due ? <button className="btn sm primary" onClick={() => { copyOpen(`Hi${it.person ? ' ' + it.person.split(' ')[0] : ''}, just bumping this in case it got buried. Happy to share a quick idea or two for ${it.company || 'your business'} if useful.`, dmUrl(it), toast); patch(it.id, { follow_up_at: null }); }}><Send size={14} />Open &amp; send follow-up</button> : null}
             {due ? <button className="btn sm ghost" onClick={() => patch(it.id, { follow_up_at: null }, 'Follow-up done')}><Check size={14} />Followed up</button> : null}
-            <button className="btn sm ghost" onClick={() => patch(it.id, { status: 'draft' }, 'Moved back')}><Undo2 size={14} />Move back</button>
+            <button className="btn sm ghost" onClick={() => patch(it.id, { status: 'draft' }, 'Moved back to ready')}><Undo2 size={14} />Not sent, move back</button>
           </>
         )}
         <button className="icon" title="Remove" aria-label="Remove" onClick={() => del(it.id)}><Trash2 size={15} /></button>
@@ -223,7 +246,7 @@ function Autopilot({ kind }: { kind: 'dm' | 'comment' }) {
       <div className="eng-auto-text">
         <strong>Autopilot {on ? 'on' : 'off'}</strong>
         <span className="muted small">{kind === 'dm'
-          ? (on ? `Every day Studio opens your leads’ websites, finds their Instagram or LinkedIn, reads what they do and drafts up to ${data.daily} DMs (${data.today} today). They wait below for your tap.` : 'Turn on to have DMs drafted for your leads every day.')
+          ? (on ? `Every day Studio opens your leads’ websites, finds their Instagram or LinkedIn, reads what they do and drafts up to ${data.daily} DMs (${data.today} today). They wait below for one click each.` : 'Turn on to have DMs drafted for your leads every day.')
           : (on ? 'Each morning the sales routine finds recent public posts from businesses you’re targeting and drafts three comments for each. They wait below: open, like, paste, done.' : 'Turn on to get comment drafts on fresh posts every morning.')}</span>
       </div>
       {kind === 'dm' && on ? <label className="muted small eng-auto-n">Per day <select value={data.daily} onChange={(e) => set({ daily: Number(e.target.value) })}>{[3, 6, 10, 15, 25].map((n) => <option key={n}>{n}</option>)}</select></label> : null}

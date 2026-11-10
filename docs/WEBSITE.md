@@ -244,3 +244,9 @@ The morning routine no longer needs a git repo. It puts each concept site in the
 ## 4.18.7 — Full-width headlines, Trusted by
 - Section h2s span the full width (no 22ch cap); the closing CTA keeps its narrow centred headline. Room leads stay at 62ch.
 - Trusted by: headline is just "Trusted by", centred. Client logos run in two rows drifting in opposite directions.
+
+## 4.19.0 — Lead quality, DMs, one-click send, Needs you (10 Nov)
+- Lead autopilot (lib/maps.ts, lib/autoprospect.ts): scores fit (established = can pay) + need (real website gaps) + reach. Review counts are never a "gap". Branches of chains/franchises and national brands are skipped (`chainReason`). A lead needs at least one real gap in Nigeria, two abroad; one lead per domain; phone-only leads need 15+ reviews. Abroad searches use diaspora-facing queries (`ABROAD_QUERY`). `country` is set from the city.
+- Social DMs (routes/engage.ts): each lead gets three drafts with different opening moves chosen in code (question, detail, customer view, proof, greeting, compliment, direct). Stock openers ("I noticed", "Your website", "I see") and claims about their Instagram page are rejected and retried. Waiting drafts from the old writer are rewritten by the cron, three per tick; drafts for chain branches are skipped. DM autopilot only drafts for Tier A/B, best score first.
+- Open & send: Instagram opens the DM thread itself (ig.me/m/<handle>) with the message copied and moves the item to Sent in one click; "Open & send next" walks the queue. WhatsApp opens the chat with the message typed (WhatsApp Web on desktop, wa.me on phones; Nigerian numbers get 234 back) and marks it sent in the engine.
+- Needs you: only previews and videos a client asked for (`isMakeRequest` in lib/engine.ts). Other flags are dropped on sync; those replies wait under Held.
