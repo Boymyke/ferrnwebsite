@@ -26,6 +26,7 @@ export type EngageItem = {
   created_at: string; created_by: string; done_at?: string | null; done_by?: string | null; follow_up_at?: string | null;
   auto?: boolean; // drafted by the autopilot
   v?: number;     // 2 = written with the varied-opening writer
+  dm_url?: string | null; // Instagram: the instagram.com/direct/t/<id> thread, resolved from ig.me on the server
 };
 const KEY = 'private/studio/engage.json';
 const MAX = 3000;
@@ -138,11 +139,47 @@ If the post text is missing or too thin to comment on, return {"drafts": []}.` }
   return (j.drafts ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3);
 }
 
+/* ig.me/m/<handle> opens the DM thread, but some networks can't reach ig.me (it times out in Chrome).
+ * The Worker follows it once and keeps the instagram.com/direct/t/<id> address, so the browser only ever
+ * opens instagram.com. Falls back to the profile (which has a Message button). */
+async function resolveDm(env: Bindings, handle: string): Promise<string> {
+  const h = handle.toLowerCase();
+  const cached = await env.CACHE.get(`igdm:${h}`).catch(() => null);
+  if (cached) return cached;
+  const profile = `https://www.instagram.com/${h}/`;
+  let out = profile;
+  try {
+    const r = await fetch(`https://ig.me/m/${h}`, { redirect: 'follow', signal: AbortSignal.timeout(6000),
+      headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36' } });
+    const finalUrl = r.url || '';
+    let next = finalUrl;
+    try { const u = new URL(finalUrl); next = u.searchParams.get('next') ? new URL(u.searchParams.get('next')!, 'https://www.instagram.com').toString() : finalUrl; } catch { /* keep */ }
+    const m = next.match(/instagram\.com\/direct\/t\/(\d{6,})/);
+    if (m) out = `https://www.instagram.com/direct/t/${m[1]}/`;
+    else if (r.ok) {
+      const body = (await r.text()).slice(0, 200_000);
+      const t = body.match(/\/direct\/t\/(\d{6,})/);
+      if (t) out = `https://www.instagram.com/direct/t/${t[1]}/`;
+    }
+  } catch (e) { console.warn('resolveDm', h, e); }
+  await env.CACHE.put(`igdm:${h}`, out, { expirationTtl: out === profile ? 60 * 60 * 6 : 60 * 60 * 24 * 90 }).catch(() => null);
+  return out;
+}
+const igHandle = (url: string) => url.match(/instagram\.com\/([A-Za-z0-9._]{1,30})/)?.[1] ?? null;
+
 export const engageApi = new Hono<AppEnv>();
 engageApi.use('*', requireUser('sales'));
 
 engageApi.get('/', async (c) => {
   const items = await load(c.env);
+  // Resolve DM thread addresses for Instagram drafts that don't have one yet (a few per load).
+  const todo = items.filter((i) => i.kind === 'dm' && i.platform === 'instagram' && i.status !== 'skipped' && !i.dm_url && igHandle(i.url)).slice(0, 12);
+  if (todo.length) {
+    await Promise.all(todo.map(async (i) => { i.dm_url = await resolveDm(c.env, igHandle(i.url)!); }));
+    const now = await load(c.env);
+    const got = new Map(todo.map((i) => [i.id, i.dm_url]));
+    await save(c.env, now.map((n) => (got.has(n.id) ? { ...n, dm_url: got.get(n.id) } : n)));
+  }
   const kind = c.req.query('kind') === 'comment' ? 'comment' : c.req.query('kind') === 'dm' ? 'dm' : null;
   const week = Date.now() - 7 * 86400000;
   const stats = (k: 'dm' | 'comment') => {

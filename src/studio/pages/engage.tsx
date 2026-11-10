@@ -9,6 +9,7 @@ type Item = {
   lead_id?: string | null; company?: string | null; person?: string | null; url: string; context?: string | null;
   drafts: string[]; note?: string | null; sent_text?: string | null; liked?: boolean;
   created_at: string; created_by: string; done_at?: string | null; done_by?: string | null; follow_up_at?: string | null; auto?: boolean;
+  dm_url?: string | null;
 };
 type Stats = { waiting: number; week: number; instagram: number; linkedin: number; followUps: number };
 type Res = { items: Item[]; stats: { dm: Stats; comment: Stats } };
@@ -19,13 +20,13 @@ const PLAT: Record<Platform, { label: string; icon: React.ReactNode }> = {
 };
 
 /** Where a DM is sent from: Instagram's own DM link opens the message thread itself (not the profile). */
-export function dmUrl(it: { platform: Platform; url: string; kind: string }) {
+export function dmUrl(it: { platform: Platform; url: string; kind: string; dm_url?: string | null }) {
   if (it.kind !== 'dm' || it.platform !== 'instagram') return it.url;
-  const h = it.url.match(/instagram\.com\/([A-Za-z0-9._]{1,30})/)?.[1];
-  return h ? `https://ig.me/m/${h}` : it.url;
+  // instagram.com/direct/t/<id> resolved on the server; otherwise the profile (Message button).
+  // Never ig.me: some networks can't reach it.
+  return it.dm_url || it.url;
 }
 
-/** Copy the text, then open the profile or post in a new tab so it can be pasted and sent. */
 /** Copies synchronously, inside the click, BEFORE any tab opens. Once a new tab takes focus the browser
  *  refuses clipboard writes, which is why the message used to be missing when you pasted. */
 export function copyNow(text: string): boolean {
@@ -82,7 +83,8 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
     const w = openTab(dmUrl(it));
     if (!w) { toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err'); return; }
     if (!copied) toast('Couldn’t copy automatically. Copy the text from the Sent tab', 'err');
-    await patch(it.id, { status: 'sent', sent_text: text }, isDm ? `Message copied. In Instagram, click the message box, press ${PASTE}, then Enter` : `Comment copied. On the post, click Comment, press ${PASTE}, then post`);
+    const thread = /\/direct\/t\//.test(dmUrl(it)) || it.platform !== 'instagram';
+    await patch(it.id, { status: 'sent', sent_text: text }, isDm ? `Message copied. In Instagram, ${thread ? '' : 'click Message, then '}click the message box, press ${PASTE}, then Enter` : `Comment copied. On the post, click Comment, press ${PASTE}, then post`);
   };
   const queue = useMemo(() => items.filter((i) => i.status === 'draft' && (!platform || i.platform === platform) && i.drafts[0]), [items, platform]);
   const next = queue[0];
