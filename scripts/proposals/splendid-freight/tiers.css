@@ -312,6 +312,8 @@
       .sf-logo-row { margin-top: 14px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px 34px; }
       .sf-logo img { height: 38px; width: auto; display: block; filter: grayscale(1); opacity: .72; transition: filter .2s, opacity .2s; }
       .sf-logo img:hover { filter: none; opacity: 1; }
-      #team .ferrn-contact-card { margin-top: 30px; }
       @media (max-width: 980px) { .sf-work-grid { grid-template-columns: 1fr 1fr; } }
       @media (max-width: 640px) { .sf-work-grid { grid-template-columns: 1fr; } .sf-work-head h3 { font-size: 24px; } .sf-logo img { height: 28px; } .sf-logo-row { gap: 12px 22px; } }
+
+      #work.proposal-page { min-height: 0 !important; padding-top: 32px !important; padding-bottom: 32px !important; }
+      #work .ferrn-contact-card { margin: 0 !important; }
