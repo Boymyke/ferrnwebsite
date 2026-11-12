@@ -136,8 +136,7 @@ def compare_html():
         ]),
         ('Support', [
             ('Hosting, support and training', 'The first 6 months are included.', has('board')),
-            ('Maintenance after month 6', 'Optional. Updates, backups, monitoring, fixes and small changes.', txt(*[f'{N(m)}/mo' for m in MAINT])),
-            ('Hosting after month 6', 'Estimated running cost.', txt(*[f'${h}/mo' for h in HOSTING])),
+            ('Maintenance and hosting after month 6', 'Optional. Updates, backups, monitoring, fixes and small changes, plus the cost of running the platform.', txt(*[f'{N(m)}/mo<em class="sf-sub">+ hosting about ${h}/mo</em>' for m, h in zip(MAINT, HOSTING)])),
         ]),
     ]
     head = ''.join(
