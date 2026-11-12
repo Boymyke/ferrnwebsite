@@ -152,7 +152,6 @@ def compare_html():
     foot += '<tr><th scope="row">40% to start</th>' + ''.join(f'<td class="c{i}">{N(round(p * .4))}</td>' for i, p in enumerate(PRICES)) + '</tr>'
     foot += '<tr><th scope="row">60% at launch</th>' + ''.join(f'<td class="c{i}">{N(p - round(p * .4))}</td>' for i, p in enumerate(PRICES)) + '</tr>'
     foot += '<tr><th scope="row">Live by</th>' + ''.join(f'<td class="c{i}">{o["live"]}</td>' for i, o in enumerate(OPTIONS)) + '</tr>'
-    foot += '<tr class="sf-cmp-links"><th scope="row"></th>' + ''.join(f'<td class="c{i}"><a href="#breakdown" data-open-opt="{o["n"]}">See all {len(o["keys"])} features</a></td>' for i, o in enumerate(OPTIONS)) + '</tr>'
     return f'''<div class="sf-cmp-wrap"><table class="sf-cmp">
           <thead><tr><th class="sf-cmp-corner" scope="col"><small>Compare</small><b>What each option includes</b></th>{head}</tr></thead>
           <tbody>{''.join(rows)}</tbody>
@@ -181,7 +180,7 @@ def breakdown_html():
 def website_html():
     trs = '\n'.join(f'<tr><td><b>{f}</b><span>{what}</span></td><td><s>{N(v)}</s></td></tr>' for f, what, v in WEBSITE)
     return f'''<div class="sf-block sf-web">
-          <div class="sf-block-head"><div><small>Free in every option</small><h3>Your new website</h3><p>Live by 18 December 2026, whichever option you choose.</p></div>
+          <div class="sf-block-head"><div><small>Free</small><h3>Your new website</h3><p>Live by 18 December 2026.</p></div>
             <div class="sf-block-total"><span>Website value</span><strong><s>{N(WEB_TOTAL)}</s> <em class="sf-free-pill">FREE</em></strong></div></div>
           <div class="sf-table-wrap"><table class="sf-table sf-web-table">
             <thead><tr><th>What you get</th><th>Value</th></tr></thead>
