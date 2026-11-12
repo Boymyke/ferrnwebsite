@@ -448,3 +448,5 @@
       .sf-see .sf-pairs { grid-template-columns: 1fr !important; gap: 10px; }
       .sf-see .sf-pair { grid-template-columns: 1fr 44px 1fr; }
       @media (max-width: 640px) { .sf-see .sf-pair { grid-template-columns: 1fr; } }
+      .sf-ba-table thead th:not(.next) { background: #eef3f1; }
+
