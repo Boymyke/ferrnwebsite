@@ -136,7 +136,7 @@ def compare_html():
         ]),
         ('Support', [
             ('Hosting, support and training', 'The first 6 months are included.', has('board')),
-            ('Maintenance and hosting after month 6', 'Optional. Updates, backups, monitoring, fixes and small changes, plus the cost of running the platform.', txt(*[f'{N(m)}/mo<em class="sf-sub">+ hosting about ${h}/mo</em>' for m, h in zip(MAINT, HOSTING)])),
+            ('Maintenance and hosting after month 6', 'Optional. Hosting, updates, backups, monitoring, fixes and small changes, all in one monthly price.', txt(*[f'{N(m)}/mo<em class="sf-sub">hosting included</em>' for m in MAINT])),
         ]),
     ]
     head = ''.join(
@@ -196,10 +196,10 @@ def free_html():
     return f'<div class="sf-free"><small>ALSO IN EVERY OPTION, AT NO FEE</small><div class="sf-free-grid">{lis}</div></div>'
 
 def maint_html():
-    cards = ''.join(f'<div class="{"featured" if o.get("badge") else ""}"><small>Option {o["n"]} · {o["name"]}</small><strong>{N(m)}</strong><span>per month, optional</span><em>Hosting about ${h}/month</em></div>' for o, m, h in zip(OPTIONS, MAINT, HOSTING))
+    cards = ''.join(f'<div class="{"featured" if o.get("badge") else ""}"><small>Option {o["n"]} · {o["name"]}</small><strong>{N(m)}</strong><span>per month, optional</span><em>Hosting included</em></div>' for o, m, h in zip(OPTIONS, MAINT, HOSTING))
     return f'''<div class="sf-maint">
-          <div class="sf-maint-head"><small>AFTER THE FIRST 6 MONTHS</small><h3>Maintenance matches the option you pick</h3>
-            <p>Updates, backups, monitoring, fixes and small changes. New features are quoted separately. WhatsApp and payment fees are billed by Meta and Paystack.</p></div>
+          <div class="sf-maint-head"><small>AFTER THE FIRST 6 MONTHS</small><h3>One monthly price for hosting and maintenance</h3>
+            <p>Covers hosting, updates, backups, monitoring, fixes and small changes, and matches the option you pick. New features are quoted separately. WhatsApp and payment fees are billed by Meta and Paystack.</p></div>
           <div class="sf-maint-grid">{cards}</div>
         </div>'''
 
