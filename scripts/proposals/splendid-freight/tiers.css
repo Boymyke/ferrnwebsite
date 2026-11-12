@@ -225,3 +225,6 @@
       .sf-cmp tbody th span { display: block; margin-top: 3px; font-size: 13px; line-height: 1.45; color: #5e6b66; font-weight: 400; }
       .sf-cmp tbody td { vertical-align: middle; }
       @media (max-width: 640px) { .sf-cmp tbody th b { font-size: 12px; } .sf-cmp tbody th span { font-size: 11px; } }
+
+      .problem-main .truth small { display: block !important; color: #1ef7c4 !important; opacity: 1 !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; visibility: visible !important; }
+      .problem-main .truth strong { color: #fff !important; }
