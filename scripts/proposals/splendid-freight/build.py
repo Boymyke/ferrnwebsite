@@ -103,7 +103,10 @@ CONTACT = lines(960, 1086)
 SCRIPT = lines(1094, 1110)
 
 body = tpl
-for k, v in {'FERRN': FERRN, 'ARROW': ARROW, 'DL': DL, 'SFMARK': SFMARK, 'TIERS': TI.tiers_html(), 'BREAKDOWN': TI.breakdown_html(), 'WEBSITE': TI.website_html(), 'FREE': TI.free_html(), 'PAY': TI.pay_html(), 'TEAM': TEAM, 'CONTACT': CONTACT, 'SCRIPT': SCRIPT}.items():
+mk = lambda i: SFMARK.replace('id="sfm"', f'id="sfm{i}"').replace('url(#sfm)', f'url(#sfm{i})')
+mocks = open(HERE + 'mocks.html').read()
+mocks = mocks.replace('{{SFMARK_SM}}', mk('a'), 1).replace('{{SFMARK_SM}}', mk('b'), 1)
+for k, v in {'FERRN': FERRN, 'ARROW': ARROW, 'DL': DL, 'SFMARK': SFMARK, 'MOCKS': mocks, 'COMPARE': TI.compare_html(), 'BREAKDOWN': TI.breakdown_html(), 'WEBSITE': TI.website_html(), 'FREE': TI.free_html(), 'MAINT': TI.maint_html(), 'TEAM': TEAM, 'CONTACT': CONTACT, 'SCRIPT': SCRIPT + '\n    ' + TI.SCRIPT}.items():
     body = body.replace('{{' + k + '}}', v)
 body = body.replace('?cc=anjola%40ferrnagency.com&amp;subject', '?subject')
 assert '{{' not in body

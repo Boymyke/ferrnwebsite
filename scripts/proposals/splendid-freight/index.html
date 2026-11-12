@@ -4275,92 +4275,227 @@
       .commercial-table tr.group-row td { text-align: left !important; }
       .cred .project-link-btn { color: #1ef7c4 !important; border-color: rgba(30,247,196,.4) !important; }
 
-      /* ── Splendid Freight options + breakdown ── */
-      .sf-tiers { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:34px; align-items:stretch; }
-      .sf-tier { position:relative; display:flex; flex-direction:column; gap:10px; padding:28px 24px 22px; border:1px solid #dfe9e5; border-radius:24px; background:#fff; box-shadow:0 18px 50px rgba(10,42,34,.07); }
-      .sf-tier small { font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#0f8a6a; }
-      .sf-tier h3 { font-size:28px; letter-spacing:-.02em; color:#0a0f0d; margin:0; }
-      .sf-price { font-size:40px; font-weight:800; letter-spacing:-.03em; color:#0a2a22; line-height:1.05; }
-      .sf-split { font-size:13px; color:#5e6b66; margin:0; }
-      .sf-tier > p { font-size:15px; line-height:1.55; color:#3d4a45; margin:4px 0 0; }
-      .sf-tier ul { list-style:none; padding:0; margin:8px 0 0; display:grid; gap:9px; }
-      .sf-tier li { display:flex; gap:9px; align-items:flex-start; font-size:14.5px; color:#0a0f0d; line-height:1.4; }
-      .sf-tier li svg { flex:none; margin-top:2px; color:#00936d; }
-      .sf-tier-foot { margin-top:auto; padding-top:16px; border-top:1px solid #e6ece9; display:flex; justify-content:space-between; font-size:13px; color:#5e6b66; }
-      .sf-tier-foot b { color:#0a0f0d; }
-      .sf-tier-link { font-size:14px; font-weight:700; color:#007a5e; text-decoration:none; }
-      .sf-tier-link:hover { text-decoration:underline; }
-      .sf-tier.featured { background:linear-gradient(160deg,#071f19,#0a3a2e); border-color:#0a3a2e; color:#fff; box-shadow:0 26px 60px rgba(10,42,34,.22); }
-      .sf-tier.featured small, .sf-tier.featured .sf-tier-link { color:#1ef7c4; }
-      .sf-tier.featured h3, .sf-tier.featured .sf-price, .sf-tier.featured li, .sf-tier.featured .sf-tier-foot b { color:#fff; }
-      .sf-tier.featured > p, .sf-tier.featured .sf-split, .sf-tier.featured .sf-tier-foot { color:rgba(255,255,255,.72); }
-      .sf-tier.featured li svg { color:#1ef7c4; }
-      .sf-tier.featured .sf-tier-foot { border-color:rgba(255,255,255,.14); }
-      .sf-badge { position:absolute; top:-12px; right:20px; background:#1ef7c4; color:#06261e; font-size:12px; font-weight:800; padding:6px 12px; border-radius:999px; }
-      .sf-every { margin-top:22px; display:flex; gap:24px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:22px 24px; border-radius:20px; background:#e8faf4; border:1px solid #c9efe2; }
-      .sf-every small { font-size:12px; font-weight:800; letter-spacing:.08em; color:#0f8a6a; }
-      .sf-every h3 { margin:6px 0 0; font-size:20px; color:#0a0f0d; max-width:520px; }
-      .sf-every ul { list-style:none; display:flex; flex-wrap:wrap; gap:8px; padding:0; margin:0; }
-      .sf-every li { background:#fff; border:1px solid #c9efe2; border-radius:999px; padding:7px 12px; font-size:13px; font-weight:700; color:#0a2a22; }
-      .sf-block { margin-top:26px; background:#fff; border:1px solid #dfe9e5; border-radius:24px; overflow:hidden; box-shadow:0 18px 50px rgba(10,42,34,.06); scroll-margin-top:90px; }
-      .sf-block-head { display:flex; justify-content:space-between; gap:20px; align-items:flex-end; padding:24px 24px 18px; }
-      .sf-block-head small { font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#0f8a6a; }
-      .sf-block-head h3 { margin:6px 0 4px; font-size:26px; letter-spacing:-.02em; color:#0a0f0d; }
-      .sf-block-head p { margin:0; font-size:14px; color:#5e6b66; max-width:640px; }
-      .sf-block-total { text-align:right; flex:none; }
-      .sf-block-total span { display:block; font-size:12px; color:#5e6b66; text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
-      .sf-block-total strong { font-size:26px; color:#0a2a22; letter-spacing:-.02em; }
-      .sf-table-wrap { overflow-x:auto; }
-      .sf-table { width:100%; border-collapse:collapse; font-size:14px; }
-      .sf-table th { text-align:left; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:#5e6b66; padding:12px 16px; background:#f4f7f6; border-top:1px solid #e6ece9; border-bottom:1px solid #e6ece9; }
-      .sf-table td { padding:14px 16px; border-bottom:1px solid #eef2f0; vertical-align:top; color:#3d4a45; line-height:1.5; }
-      .sf-table td:first-child { color:#0f8a6a; font-weight:800; width:42px; }
-      .sf-table td b { display:block; color:#0a0f0d; font-size:14.5px; margin-bottom:3px; }
-      .sf-table td span { display:block; color:#5e6b66; font-size:13.5px; }
-      .sf-table td:nth-child(3) { color:#0a2a22; }
-      .sf-table th:last-child, .sf-table td:last-child { text-align:right; white-space:nowrap; }
-      .sf-table td strong { color:#0a2a22; }
-      .sf-table tfoot td { background:#0a2a22; color:#fff; border:0; padding:16px; }
-      .sf-table tfoot td b { color:#fff; margin:0; }
-      .sf-table tfoot td strong { color:#1ef7c4; font-size:18px; }
-      .sf-web-table td:first-child { width:auto; color:#3d4a45; font-weight:400; }
-      .sf-web s, .sf-web-table s { color:#8a9893; font-weight:600; }
-      .sf-web em, .sf-web-table em { font-style:normal; color:#00936d; font-weight:800; margin-left:6px; }
-      .sf-web-table tfoot em { color:#1ef7c4; }
-      .sf-web-table tfoot s { color:rgba(255,255,255,.55); }
-      .sf-web .sf-block-total strong em { background:#1ef7c4; color:#06261e; padding:3px 10px; border-radius:999px; font-size:16px; vertical-align:middle; }
-      .sf-pay-table td:first-child { width:auto; color:#0a0f0d; font-weight:400; }
-      .sf-pay-table td, .sf-pay-table th { text-align:right; } .sf-pay-table td:first-child, .sf-pay-table th:first-child { text-align:left; }
-      .sf-free { margin-top:26px; padding:24px; border-radius:24px; background:#0a2a22; color:#fff; }
-      .sf-free > small { font-size:12px; font-weight:800; letter-spacing:.08em; color:#1ef7c4; }
-      .sf-free-grid { margin-top:14px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-      .sf-free-grid div { padding:14px 16px; border-radius:16px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); }
-      .sf-free-grid b { display:block; font-size:15px; }
-      .sf-free-grid span { display:block; margin-top:4px; font-size:13px; color:rgba(255,255,255,.7); line-height:1.45; }
-      #budget .maintenance-card { margin-top:26px; }
-      #scope .delivery-timeline { margin-top:30px; }
-      @media (max-width: 980px) { .sf-tiers { grid-template-columns:1fr; } .sf-free-grid { grid-template-columns:1fr 1fr; } }
-      @media (max-width: 640px) {
-        .sf-block-head { flex-direction:column; align-items:flex-start; padding:20px 16px 14px; }
-        .sf-block-total { text-align:left; }
-        .sf-free-grid { grid-template-columns:1fr; }
-        .sf-table thead { display:none; }
-        .sf-table:not(.sf-pay-table) tr { display:grid; grid-template-columns:auto 1fr; gap:4px 10px; padding:14px 16px; border-bottom:1px solid #eef2f0; }
-        .sf-table:not(.sf-pay-table) td { padding:0; border:0; text-align:left !important; }
-        .sf-table:not(.sf-pay-table) tbody td:nth-child(3) { grid-column:2; font-size:13.5px; }
-        .sf-table:not(.sf-pay-table) tbody td:nth-child(4) { grid-column:2; }
-        .sf-web-table tbody td:nth-child(2) { grid-column:1 / -1; }
-        .sf-table:not(.sf-pay-table) tfoot tr { display:flex; justify-content:space-between; align-items:center; gap:12px; background:#0a2a22; }
-        .sf-table:not(.sf-pay-table) tfoot td { padding:0; background:transparent; }
-        .sf-pay-table { font-size:13px; } .sf-pay-table td, .sf-pay-table th { padding:10px 8px; }
-        .sf-price { font-size:34px; }
-        .sf-table tfoot td:first-child { width:auto; }
-        #scope .delivery-table, #scope .delivery-table tbody { display:block; width:100%; min-width:0 !important; }
-        #scope .delivery-table thead { display:none; }
-        #scope .delivery-table tr { display:block; padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); }
-        #scope .delivery-table td { display:block; padding:3px 0 !important; border:0 !important; width:auto !important; }
-        #scope .delivery-table td:nth-child(2) { color:#1ef7c4; font-weight:700; font-size:13px; }
+      /* ── Splendid Freight: approach layout + realistic screens ── */
+      #approach .method-grid { grid-template-columns: 1fr !important; gap: 26px !important; }
+      #approach .steps { display: grid !important; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+      #approach .step { min-height: 0 !important; }
+      #approach .demo-experience { width: 100%; }
+      .sfui-fit { position: relative; width: 100%; overflow: hidden; }
+      .sfui-fit > * { transform-origin: 0 0; width: 1240px; }
+      .sfui-win { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.35); font-family: Arial, Helvetica, sans-serif; color: #0f1714; text-align: left; }
+      .sfui-win svg, .sfui-phone svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+      .sfui-bar { height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 14px; background: #eef1f0; border-bottom: 1px solid #dfe5e2; }
+      .sfui-bar > i { width: 11px; height: 11px; border-radius: 50%; background: #d4dad7; }
+      .sfui-bar > i:nth-child(1) { background: #ff5f57; } .sfui-bar > i:nth-child(2) { background: #febc2e; } .sfui-bar > i:nth-child(3) { background: #28c840; }
+      .sfui-url { margin-left: 18px; display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #dfe5e2; border-radius: 8px; padding: 5px 12px; font-size: 12px; color: #5e6b66; width: 420px; }
+      .sfui-url svg { width: 12px; height: 12px; }
+      .sfui-app { display: grid; grid-template-columns: 184px 1fr 296px; min-height: 640px; }
+      .sfui-side { background: #071f19; color: #cfe7df; padding: 18px 12px; display: flex; flex-direction: column; gap: 18px; }
+      .sfui-brand { display: flex; align-items: center; gap: 9px; padding: 0 6px; }
+      .sfui-brand svg { width: 26px !important; height: 26px !important; stroke: none !important; }
+      .sfui-brand b { color: #fff; font-size: 16px; letter-spacing: -.01em; }
+      .sfui-side nav { display: grid; gap: 2px; }
+      .sfui-side nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: #b5cfc6; }
+      .sfui-side nav a.on { background: rgba(30,247,196,.12); color: #fff; box-shadow: inset 2px 0 0 #1ef7c4; }
+      .sfui-side nav a em { margin-left: auto; font-style: normal; font-size: 11px; background: rgba(255,255,255,.1); padding: 2px 7px; border-radius: 99px; color: #e6f5ef; }
+      .sfui-side nav a.on em { background: #1ef7c4; color: #06261e; font-weight: 700; }
+      .sfui-me { margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 10px 6px 0; border-top: 1px solid rgba(255,255,255,.08); }
+      .sfui-me > span { width: 30px; height: 30px; border-radius: 50%; background: #1ef7c4; color: #06261e; display: grid; place-items: center; font-size: 11px; font-weight: 800; }
+      .sfui-me b { display: block; color: #fff; font-size: 12.5px; } .sfui-me small { color: #8fb3a7; font-size: 11px; }
+      .sfui-main { padding: 18px 16px; background: #f6f8f7; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+      .sfui-top { display: flex; align-items: center; gap: 12px; }
+      .sfui-top h4 { margin: 0; font-size: 20px; color: #0f1714; } .sfui-top small { font-size: 11.5px; color: #6b7873; }
+      .sfui-search { margin-left: auto; display: flex; align-items: center; gap: 8px; width: 230px; padding: 8px 12px; white-space: nowrap; border: 1px solid #dfe5e2; border-radius: 8px; background: #fff; font-size: 12px; color: #8a9893; }
+      .sfui-bell { position: relative; width: 34px; height: 34px; border: 1px solid #dfe5e2; border-radius: 8px; background: #fff; display: grid; place-items: center; color: #3d4a45; }
+      .sfui-bell i { position: absolute; top: -5px; right: -5px; background: #e5484d; color: #fff; font-style: normal; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 99px; }
+      .sfui-btn { white-space: nowrap; display: flex; align-items: center; gap: 6px; background: #007a5e; color: #fff; padding: 9px 13px; border-radius: 8px; font-size: 12.5px; font-weight: 700; }
+      .sfui-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+      .sfui-stats div { background: #fff; border: 1px solid #e3e9e6; border-radius: 10px; padding: 11px 13px; }
+      .sfui-stats small { display: block; font-size: 11.5px; color: #6b7873; }
+      .sfui-stats b { display: block; font-size: 22px; margin: 3px 0 1px; color: #0f1714; }
+      .sfui-stats span { font-size: 11px; color: #0f8a6a; }
+      .sfui-stats .warn { border-color: #f5c7c2; background: #fff7f6; } .sfui-stats .warn span { color: #c2410c; }
+      .sfui-filters { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+      .sfui-filters span { padding: 6px 11px; border-radius: 99px; color: #3d4a45; background: #fff; border: 1px solid #e3e9e6; }
+      .sfui-filters span.on { background: #0a2a22; color: #fff; border-color: #0a2a22; }
+      .sfui-filters i { flex: 1; } .sfui-filters .chip { border-style: dashed; }
+      .sfui-table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid #e3e9e6; border-radius: 10px; overflow: hidden; font-size: 12.5px; }
+      .sfui-table th { text-align: left; font-weight: 600; color: #6b7873; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 9px 9px; background: #fafbfb; border-bottom: 1px solid #e3e9e6; }
+      .sfui-table td { padding: 11px 9px; border-bottom: 1px solid #eef2f0; color: #26322e; white-space: nowrap; }
+      .sfui-table tr:last-child td { border-bottom: 0; }
+      .sfui-table tr.sel td { background: #effcf7; } .sfui-table tr.sel td:first-child { box-shadow: inset 3px 0 0 #00936d; }
+      .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+      .pill.amber { background: #fff4db; color: #a15c00; } .pill.red { background: #fde8e7; color: #c0362c; } .pill.teal { background: #defbf1; color: #00785b; }
+      .pill.grey { background: #eef1f0; color: #4b5753; } .pill.blue { background: #e5f0ff; color: #1d5fc2; }
+      .sfui-detail { border-left: 1px solid #e3e9e6; padding: 18px; display: flex; flex-direction: column; gap: 14px; background: #fff; }
+      .sfui-dhead { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+      .sfui-dhead small { font-size: 10.5px; letter-spacing: .06em; color: #0f8a6a; font-weight: 700; }
+      .sfui-dhead h5 { margin: 3px 0 2px; font-size: 16px; } .sfui-dhead p { margin: 0; font-size: 11.5px; color: #6b7873; }
+      .sfui-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; background: #f6f8f7; border-radius: 8px; }
+      .sfui-meta small { display: block; font-size: 10px; color: #6b7873; text-transform: uppercase; letter-spacing: .04em; } .sfui-meta b { font-size: 11px; }
+      .sfui-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+      .sfui-steps li { position: relative; padding: 0 0 12px 24px; font-size: 12px; }
+      .sfui-steps li::before { content: ""; position: absolute; left: 4px; top: 3px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #cfd8d4; background: #fff; }
+      .sfui-steps li::after { content: ""; position: absolute; left: 9px; top: 16px; bottom: -2px; width: 2px; background: #e3e9e6; }
+      .sfui-steps li:last-child::after { display: none; }
+      .sfui-steps li.done::before { background: #00936d; border-color: #00936d; } .sfui-steps li.done::after { background: #00936d; }
+      .sfui-steps li.now::before { border-color: #e59b00; background: #fff4db; box-shadow: 0 0 0 4px rgba(229,155,0,.15); }
+      .sfui-steps b { display: block; color: #26322e; font-weight: 600; } .sfui-steps li:not(.done):not(.now) b { color: #8a9893; font-weight: 400; }
+      .sfui-steps small { font-size: 11px; color: #6b7873; }
+      .sfui-form { margin-top: auto; border: 1px solid #cdeee2; background: #f3fdf9; border-radius: 10px; padding: 12px; display: grid; gap: 8px; font-size: 12px; }
+      .sfui-form > b { font-size: 12.5px; }
+      .sfui-select, .sfui-note { background: #fff; border: 1px solid #d5ded9; border-radius: 7px; padding: 8px 10px; color: #26322e; }
+      .sfui-select { display: flex; justify-content: space-between; align-items: center; font-weight: 600; border-color: #00936d; box-shadow: 0 0 0 3px rgba(0,147,109,.12); }
+      .sfui-note { min-height: 46px; color: #4b5753; line-height: 1.4; }
+      .sfui-form label { display: flex; gap: 7px; align-items: center; color: #26322e; }
+      .sfui-form .box { width: 16px; height: 16px; border-radius: 4px; background: #00936d; color: #fff; display: grid; place-items: center; }
+      .sfui-form .box svg { width: 11px; height: 11px; stroke-width: 3; }
+      .sfui-actions { display: flex; gap: 8px; justify-content: flex-end; }
+      .sfui-actions span { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: 7px; font-weight: 700; }
+      .sfui-actions .ghost { border: 1px solid #d5ded9; background: #fff; color: #3d4a45; } .sfui-actions .primary { background: #007a5e; color: #fff; }
+      .sfui-mobile .phone-screen.sfui-phone { background: #f4f7f6 !important; padding: 34px 12px 14px !important; display: flex; flex-direction: column; gap: 10px; color: #0f1714; text-align: left; overflow: hidden; }
+      .sfp-top { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+      .sfp-top svg { width: 20px !important; height: 20px !important; stroke: none !important; }
+      .sfp-top span { margin-left: auto; font-size: 11px; color: #6b7873; }
+      .sfp-card { background: #0a2a22; color: #fff; border-radius: 14px; padding: 13px; }
+      .sfp-card small { font-size: 9.5px; letter-spacing: .08em; color: #1ef7c4; font-weight: 700; }
+      .sfp-card h4 { margin: 4px 0 2px; font-size: 18px; color: #fff; } .sfp-card p { margin: 0; font-size: 10.5px; color: rgba(255,255,255,.7); }
+      .sfp-bar { height: 5px; border-radius: 99px; background: rgba(255,255,255,.15); margin: 10px 0; } .sfp-bar i { display: block; height: 100%; border-radius: 99px; background: #1ef7c4; }
+      .sfp-route { display: flex; align-items: center; justify-content: space-between; font-size: 11px; } .sfp-route small { display: block; color: rgba(255,255,255,.6); font-size: 9.5px; } .sfp-route span { color: #1ef7c4; }
+      .sfp-eta { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.12); font-size: 11px; } .sfp-eta small { display: block; color: rgba(255,255,255,.6); font-size: 9.5px; }
+      .sfp-list { background: #fff; border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+      .sfp-list div { display: flex; gap: 9px; align-items: flex-start; } .sfp-list i { width: 8px; height: 8px; margin-top: 4px; border-radius: 50%; background: #00936d; flex: none; }
+      .sfp-list .now i { background: #1ef7c4; box-shadow: 0 0 0 3px rgba(30,247,196,.3); }
+      .sfp-list p { margin: 0; } .sfp-list b { display: block; font-size: 11.5px; } .sfp-list small { font-size: 10px; color: #6b7873; }
+      .sfp-docs { display: flex; gap: 6px; flex-wrap: wrap; } .sfp-docs span { font-size: 10px; background: #fff; border: 1px solid #e3e9e6; border-radius: 6px; padding: 5px 7px; color: #26322e; }
+      .sfp-cta { margin-top: auto; text-align: center; background: #25d366; color: #06261e; font-weight: 800; font-size: 12px; border-radius: 10px; padding: 10px; }
+
+      /* ── side-by-side tick table ── */
+      .sf-cmp-wrap { margin-top: 34px; border: 1px solid #dfe9e5; border-radius: 24px; background: #fff; box-shadow: 0 18px 50px rgba(10,42,34,.07); overflow-x: auto; }
+      .sf-cmp { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14.5px; min-width: 760px; }
+      .sf-cmp thead th { vertical-align: bottom; text-align: center; padding: 40px 14px 18px; border-bottom: 1px solid #e6ece9; background: #fff; position: relative; }
+      .sf-cmp thead th small { display: block; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #0f8a6a; }
+      .sf-cmp thead th b { display: block; font-size: 20px; color: #0a0f0d; margin: 4px 0; letter-spacing: -.01em; }
+      .sf-cmp thead th span { display: block; font-size: 26px; font-weight: 800; color: #0a2a22; letter-spacing: -.02em; }
+      .sf-cmp thead th i { display: block; font-style: normal; font-size: 12.5px; color: #5e6b66; margin-top: 4px; font-weight: 400; }
+      .sf-cmp thead th em { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-style: normal; background: #1ef7c4; color: #06261e; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+      .sf-cmp .sf-cmp-corner { text-align: left; width: 34%; }
+      .sf-cmp .sf-cmp-corner b { font-size: 18px; }
+      .sf-cmp tbody th { text-align: left; font-weight: 600; color: #26322e; padding: 13px 20px; border-bottom: 1px solid #eef2f0; }
+      .sf-cmp tbody td, .sf-cmp tfoot td { text-align: center; padding: 13px 12px; border-bottom: 1px solid #eef2f0; width: 22%; }
+      .sf-cmp .c1 { background: #f2fcf8; }
+      .sf-cmp thead th.c1 { background: #0a2a22; } .sf-cmp thead th.c1 small, .sf-cmp thead th.c1 span { color: #1ef7c4; } .sf-cmp thead th.c1 b { color: #fff; } .sf-cmp thead th.c1 i { color: rgba(255,255,255,.7); }
+      .sf-cmp-group th { background: #f4f7f6 !important; color: #0f8a6a !important; font-size: 12px !important; letter-spacing: .08em; text-transform: uppercase; font-weight: 800 !important; padding: 10px 20px !important; }
+      .sf-yes { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #00936d; color: #fff; }
+      .sf-yes svg { width: 15px; height: 15px; }
+      .sf-no { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #eef1f0; color: #a3aeaa; }
+      .sf-txt { font-size: 13.5px; font-weight: 700; color: #0a2a22; }
+      .sf-cmp tfoot th { text-align: left; padding: 13px 20px; color: #26322e; font-weight: 600; border-bottom: 1px solid #eef2f0; }
+      .sf-cmp tfoot td { font-weight: 600; color: #26322e; }
+      .sf-cmp-total th, .sf-cmp-total td { background: #0a2a22 !important; color: #fff !important; border: 0 !important; }
+      .sf-cmp-total td b { color: #1ef7c4; font-size: 19px; }
+      .sf-cmp-links td { border-bottom: 0 !important; padding: 16px 10px 22px !important; }
+      .sf-cmp-links th { border-bottom: 0 !important; }
+      .sf-cmp-links a { display: inline-block; padding: 9px 14px; border-radius: 99px; border: 1px solid #00936d; color: #007a5e; font-weight: 700; font-size: 13px; text-decoration: none; }
+      .sf-cmp-links .c1 a { background: #007a5e; color: #fff; }
+      .sf-every-note { margin-top: 16px; font-size: 14px; color: #5e6b66; }
+
+      /* ── per-option breakdown ── */
+      .sf-opt-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 30px; }
+      .sf-opt-tab { text-align: left; border: 1px solid #cfe6dd; background: #fff; border-radius: 18px; padding: 16px 18px; cursor: pointer; font: inherit; color: #0a0f0d; }
+      .sf-opt-tab small { display: block; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #0f8a6a; }
+      .sf-opt-tab b { display: block; font-size: 18px; margin: 3px 0; } .sf-opt-tab span { font-size: 16px; font-weight: 800; color: #0a2a22; }
+      .sf-opt-tab.active { background: #0a2a22; border-color: #0a2a22; color: #fff; box-shadow: 0 16px 40px rgba(10,42,34,.2); }
+      .sf-opt-tab.active small, .sf-opt-tab.active span { color: #1ef7c4; }
+      .sf-block { margin-top: 20px; background: #fff; border: 1px solid #dfe9e5; border-radius: 24px; overflow: hidden; box-shadow: 0 18px 50px rgba(10,42,34,.06); scroll-margin-top: 90px; }
+      .sf-block-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; padding: 24px 24px 18px; }
+      .sf-block-head small { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #0f8a6a; }
+      .sf-block-head h3 { margin: 6px 0 4px; font-size: 26px; letter-spacing: -.02em; color: #0a0f0d; }
+      .sf-block-head p { margin: 0; font-size: 14px; color: #5e6b66; max-width: 680px; }
+      .sf-block-head p.sf-meta { margin-top: 6px; color: #0a2a22; font-weight: 600; font-size: 13px; }
+      .sf-block-total { text-align: right; flex: none; }
+      .sf-block-total span { display: block; font-size: 12px; color: #5e6b66; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+      .sf-block-total strong { white-space: nowrap; font-size: 28px; color: #0a2a22; letter-spacing: -.02em; }
+      .sf-block-total em { display: block; font-style: normal; font-size: 12.5px; color: #5e6b66; margin-top: 2px; }
+      .sf-table-wrap { overflow-x: auto; }
+      .sf-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      .sf-table th { text-align: left; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: #5e6b66; padding: 12px 16px; background: #f4f7f6; border-top: 1px solid #e6ece9; border-bottom: 1px solid #e6ece9; }
+      .sf-table td { padding: 14px 16px; border-bottom: 1px solid #eef2f0; vertical-align: top; color: #3d4a45; line-height: 1.5; }
+      .sf-table td:first-child { color: #0f8a6a; font-weight: 800; width: 42px; }
+      .sf-table td b { display: block; color: #0a0f0d; font-size: 14.5px; margin-bottom: 3px; }
+      .sf-table td span { display: block; color: #5e6b66; font-size: 13.5px; }
+      .sf-table td:nth-child(3) { color: #0a2a22; }
+      .sf-table th:last-child, .sf-table td:last-child { text-align: right; white-space: nowrap; }
+      .sf-table td strong { color: #0a2a22; }
+      .sf-table tfoot td { background: #0a2a22; color: #fff; border: 0; padding: 16px; }
+      .sf-table tfoot td b { color: #fff; margin: 0; } .sf-table tfoot td strong { color: #1ef7c4; font-size: 18px; }
+      .sf-web { margin-top: 26px; }
+      .sf-web-table td:first-child { width: auto; color: #3d4a45; font-weight: 400; }
+      .sf-web s, .sf-web-table s { color: #8a9893; font-weight: 600; }
+      .sf-web-table em { font-style: normal; color: #1ef7c4; font-weight: 800; margin-left: 6px; } .sf-web-table tfoot s { color: rgba(255,255,255,.55); }
+      .sf-free-pill { font-style: normal; background: #1ef7c4; color: #06261e; padding: 3px 10px; border-radius: 999px; font-size: 16px; vertical-align: middle; margin-left: 6px; }
+      .sf-free { margin-top: 26px; padding: 24px; border-radius: 24px; background: #0a2a22; color: #fff; }
+      .sf-free > small { font-size: 12px; font-weight: 800; letter-spacing: .08em; color: #1ef7c4; }
+      .sf-free-grid { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .sf-free-grid div { padding: 14px 16px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+      .sf-free-grid b { display: block; font-size: 15px; } .sf-free-grid span { display: block; margin-top: 4px; font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.45; }
+      .sf-maint { margin-top: 26px; padding: 24px; border-radius: 24px; background: #fff; border: 1px solid #dfe9e5; }
+      .sf-maint-head small { font-size: 12px; font-weight: 800; letter-spacing: .08em; color: #0f8a6a; }
+      .sf-maint-head h3 { margin: 6px 0 4px; font-size: 24px; color: #0a0f0d; } .sf-maint-head p { margin: 0; font-size: 14px; color: #5e6b66; max-width: 760px; }
+      .sf-maint-grid { margin-top: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .sf-maint-grid div { padding: 16px 18px; border-radius: 16px; border: 1px solid #dfe9e5; background: #f6fdfa; }
+      .sf-maint-grid div.featured { background: #0a2a22; border-color: #0a2a22; color: #fff; }
+      .sf-maint-grid small { display: block; font-size: 12px; font-weight: 700; color: #0f8a6a; } .sf-maint-grid .featured small { color: #1ef7c4; }
+      .sf-maint-grid strong { display: block; font-size: 26px; margin: 6px 0 0; color: #0a2a22; } .sf-maint-grid .featured strong { color: #fff; }
+      .sf-maint-grid span { font-size: 13px; color: #5e6b66; } .sf-maint-grid .featured span { color: rgba(255,255,255,.7); }
+      .sf-maint-grid em { display: block; font-style: normal; font-size: 12.5px; color: #3d4a45; margin-top: 8px; } .sf-maint-grid .featured em { color: rgba(255,255,255,.8); }
+      .sf-pay-table td:first-child { width: auto; color: #0a0f0d; font-weight: 400; }
+      .sf-pay-table td, .sf-pay-table th { text-align: right; } .sf-pay-table td:first-child, .sf-pay-table th:first-child { text-align: left; }
+      #scope .delivery-timeline { margin-top: 30px; }
+
+      @media (max-width: 980px) {
+        #approach .steps { grid-template-columns: 1fr 1fr; }
+        .sf-free-grid, .sf-maint-grid { grid-template-columns: 1fr 1fr; }
       }
+      @media (max-width: 640px) {
+        #approach .steps { grid-template-columns: 1fr; }
+        .sf-cmp { min-width: 0; font-size: 12.5px; }
+        .sf-cmp .sf-cmp-corner { width: 31%; padding-left: 12px; } .sf-cmp .sf-cmp-corner b { font-size: 13px; } .sf-cmp .sf-cmp-corner small { display: none; }
+        .sf-cmp thead th { padding: 30px 4px 12px; }
+        .sf-cmp thead th b { font-size: 12.5px; } .sf-cmp thead th span { font-size: 13px; } .sf-cmp thead th i { display: none; } .sf-cmp thead th small { font-size: 9.5px; letter-spacing: .04em; }
+        .sf-cmp thead th em { font-size: 9px; padding: 2px 6px; }
+        .sf-cmp tbody th, .sf-cmp tfoot th { padding: 10px 8px 10px 12px; font-size: 12px; }
+        .sf-cmp tbody td, .sf-cmp tfoot td { padding: 10px 3px; width: auto; }
+        .sf-cmp-group th { padding: 8px 12px !important; font-size: 10.5px !important; }
+        .sf-yes, .sf-no { width: 22px; height: 22px; } .sf-txt { font-size: 11px; }
+        .sf-cmp-total td b { font-size: 12.5px; }
+        .sf-cmp tfoot td { font-size: 11px; }
+        .sf-cmp-links a { padding: 6px 7px; font-size: 10.5px; }
+        .sf-opt-tabs { grid-template-columns: 1fr; gap: 8px; }
+        .sf-opt-tab { padding: 12px 14px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .sf-opt-tab b { font-size: 16px; margin: 0; } .sf-opt-tab span { margin-left: auto; font-size: 15px; }
+        .sf-block-head { flex-direction: column; align-items: flex-start; padding: 20px 16px 14px; }
+        .sf-block-total { text-align: left; }
+        .sf-free-grid, .sf-maint-grid { grid-template-columns: 1fr; }
+        .sf-table thead { display: none; }
+        .sf-table:not(.sf-pay-table) tr { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; padding: 14px 16px; border-bottom: 1px solid #eef2f0; }
+        .sf-table:not(.sf-pay-table) td { padding: 0; border: 0; text-align: left !important; }
+        .sf-table:not(.sf-pay-table) tbody td:nth-child(3) { grid-column: 2; font-size: 13.5px; }
+        .sf-table:not(.sf-pay-table) tbody td:nth-child(4) { grid-column: 2; }
+        .sf-web-table tbody td:nth-child(2) { grid-column: 1 / -1; }
+        .sf-table:not(.sf-pay-table) tfoot tr { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #0a2a22; }
+        .sf-table:not(.sf-pay-table) tfoot td { padding: 0; background: transparent; }
+        .sf-table tfoot td:first-child { width: auto; }
+        .sf-pay-table { font-size: 12px; } .sf-pay-table td, .sf-pay-table th { padding: 10px 6px; }
+        #scope .delivery-table, #scope .delivery-table tbody { display: block; width: 100%; min-width: 0 !important; }
+        #scope .delivery-table thead { display: none; }
+        #scope .delivery-table tr { display: block; padding: 14px 4px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        #scope .delivery-table td { display: block; padding: 3px 0 !important; border: 0 !important; width: auto !important; }
+        #scope .delivery-table td:nth-child(2) { color: #1ef7c4; font-weight: 700; font-size: 13px; }
+      }
+
+      .sfui-top > div:first-child { white-space: nowrap; }
+      @media (max-width: 640px) { .sf-cmp thead th { padding-top: 34px; } }
       .sf-hero-logo { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
       .sf-hero-logo svg { width:52px; height:52px; flex:none; }
       .sf-hero-logo span { font-size:30px; font-weight:800; letter-spacing:-0.02em; color:#0a0f0d; }
@@ -4395,9 +4530,8 @@
             <span class="eyebrow"><i></i> Logistics &amp; ATM support platform proposal</span>
             <h1 class="display">Every shipment, visible to <em>every customer.</em></h1>
             <p class="lead" style="margin-top: 26px">
-              One system to run freight and ATM jobs, keep customers updated without the
-              phone calls, and see where time and money go. Three options, so you can start
-              where it makes sense and grow from there.
+              One system for freight and ATM jobs. Your team updates it, your customers see it,
+              and you see where time and money go.
             </p>
           </div>
           <div aria-label="Cargo port operations" class="hero-photo">
@@ -4420,15 +4554,15 @@
             <h2 class="title">Moving cargo is the work. The hard part is <span>keeping customers informed.</span></h2>
           </div>
           <p class="lead">
-            Today a shipment lives across Outlook, Zoho Books and phone calls. Customers
-            chase updates, and it is hard to see which stage slows things down.
+            Today a shipment lives in Outlook, Zoho Books and phone calls. Customers chase
+            updates, and delays are found late.
           </p>
         </div>
         <div class="problem-grid">
           <div class="problem-main">
             <div>
               <span class="eyebrow" style="color: #fff; border-color: rgba(255, 255, 255, 0.16)"><i></i> The goal</span>
-              <h3 style="margin-top: 18px">One record for every shipment and every ATM job, that your team and your customers both see.</h3>
+              <h3 style="margin-top: 18px">One record for every shipment and ATM job, shared by your team and your customers.</h3>
             </div>
             <div class="truths">
               <div class="truth"><small>Quoted</small><strong>What did the customer approve?</strong></div>
@@ -4456,103 +4590,133 @@
             <h2 class="title">Update once. <span>Everyone sees it.</span></h2>
           </div>
           <p class="lead">
-            Every shipment and every ATM gets a QR label. Staff scan it at each handover and
-            pick the step. The customer's tracking, notifications and reports update on their own.
+            Your team updates a shipment's status in the portal. The customer's tracking page,
+            messages and reports update on their own.
           </p>
         </div>
         <div class="method-grid">
           <div class="steps">
-            <div class="step"><span>01</span><div><b>Discover</b><p>Two workshops in Lagos and Abuja to map your flow, Zoho Books and ATM jobs.</p></div></div>
-            <div class="step"><span>02</span><div><b>Design</b><p>Clickable screens in your brand, approved before we build.</p></div></div>
-            <div class="step"><span>03</span><div><b>Build</b><p>Weekly progress you can click through, not a big reveal at the end.</p></div></div>
-            <div class="step"><span>04</span><div><b>Pilot</b><p>Real shipments and one ATM job run through it with your team.</p></div></div>
-            <div class="step"><span>05</span><div><b>Launch</b><p>Data moved over, staff trained, customers invited, six months of support.</p></div></div>
+            <div class="step"><span>01</span><div><b>Discover</b><p>Workshops in Lagos and Abuja.</p></div></div>
+            <div class="step"><span>02</span><div><b>Design</b><p>Screens approved before we build.</p></div></div>
+            <div class="step"><span>03</span><div><b>Build</b><p>Weekly progress you can click through.</p></div></div>
+            <div class="step"><span>04</span><div><b>Pilot</b><p>Real shipments with your team.</p></div></div>
+            <div class="step"><span>05</span><div><b>Launch</b><p>Data moved, team trained.</p></div></div>
           </div>
           <div>
-            <div aria-label="Splendid Freight prototype preview" class="demo-experience">
-              <div aria-label="Prototype devices" class="demo-tabs" role="tablist">
+            <div aria-label="Splendid Freight portal preview" class="demo-experience">
+              <div aria-label="Screens" class="demo-tabs" role="tablist">
                 <button aria-selected="true" class="demo-tab active" data-demo-tab="desktop" role="tab" type="button">
-                  <span>01</span><div><b>Operations portal</b><small>Shipments, quotes and ATM jobs</small></div>
+                  <span>01</span><div><b>Operations portal</b><small>Your team updates a shipment</small></div>
                 </button>
                 <button aria-selected="false" class="demo-tab" data-demo-tab="mobile" role="tab" type="button">
-                  <span>02</span><div><b>QR scanner</b><small>Staff phone at each handover</small></div>
+                  <span>02</span><div><b>Customer tracking</b><small>What the customer sees</small></div>
                 </button>
               </div>
               <div class="demo-panel active" data-demo-panel="desktop">
-                <div class="prototype">
-                  <div class="browser">
-                    <div class="browser-top"><i></i><i></i><i></i></div>
-                    <div class="app">
-                      <aside class="side">
-                        <div class="side-brand">SPLENDID</div>
-                        <div class="navitem active">Overview</div>
-                        <div class="navitem">Shipments</div>
-                        <div class="navitem">ATM jobs</div>
-                        <div class="navitem">Customers</div>
-                        <div class="navitem">Invoices</div>
-                        <div class="navitem">Website</div>
-                      </aside>
-                      <main class="dash">
-                        <div class="dash-head">
-                          <div><span class="section-no">Live operations view</span><h3>Overview</h3></div>
-                          <div class="avatar">MD</div>
-                        </div>
-                        <div class="stat-grid">
-                          <div class="stat"><small>In transit</small><strong>46</strong></div>
-                          <div class="stat"><small>At customs</small><strong>09</strong></div>
-                          <div class="stat accent"><small>Delayed</small><strong>03</strong></div>
-                          <div class="stat"><small>ATM jobs</small><strong>07</strong></div>
-                        </div>
-                        <div class="dash-panels">
-                          <div class="panel">
-                            <div class="row"><span>SF-24118 · Manchester to Lagos · Air</span><b>PAAR issued</b></div>
-                            <div class="row"><span>SF-24121 · Shenzhen to Apapa · Ocean</span><b>2 days late</b></div>
-                            <div class="row"><span>ATM-0392 · Relocation, Wuse to Garki</span><b>Staging</b></div>
-                            <div class="row"><span>Quote Q-1187 · 320 kg, 4 cartons</span><b>Accepted →</b></div>
-                          </div>
-                          <div class="panel">
-                            <div class="pulse"><div><strong>6.4</strong><small>avg days door to door</small></div></div>
-                            <div class="row"><span>On time this month</span><b>91%</b></div>
-                            <div class="row"><span>Unpaid invoices</span><b>5</b></div>
-                          </div>
-                        </div>
-                      </main>
-                    </div>
+                <div class="sfui-fit" data-w="1240"><div class="sfui-win">
+                  <div class="sfui-bar"><i></i><i></i><i></i><span class="sfui-url"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>portal.splendidfreight.com/shipments</span></div>
+                  <div class="sfui-app">
+                    <aside class="sfui-side">
+                      <div class="sfui-brand"><svg viewBox="0 0 40 40" aria-label="Splendid Freight" role="img"><defs><mask id="sfma"><rect width="40" height="40" fill="#fff"/><path d="M14 1.5C8 7.5 8.6 14.2 16.4 18.6C24.2 23 28.4 28.6 24.6 38.6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask></defs><circle cx="20" cy="20" r="19" fill="#1EF7C4" mask="url(#sfma)"/><circle cx="20" cy="20" r="19" fill="none" stroke="#007a5e" stroke-opacity=".25" stroke-width="1" /></svg><b>Splendid</b></div>
+                      <nav>
+                        <a><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
+                        <a class="on"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Shipments<em>58</em></a>
+                        <a><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg>Customs<em>9</em></a>
+                        <a><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>ATM jobs<em>7</em></a>
+                        <a><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1"/><path d="M16 3.5a4 4 0 0 1 0 7"/><path d="M22 21v-1a6 6 0 0 0-4-5.6"/></svg>Customers</a>
+                        <a><svg viewBox="0 0 24 24"><path d="M5 2v20l3-2 3 2 3-2 3 2 2-1.5V2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Invoices</a>
+                        <a><svg viewBox="0 0 24 24"><path d="M3 7h18v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7l2-4h14l2 4"/><circle cx="16" cy="14" r="1.5"/></svg>Expenses</a>
+                        <a><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16v-5M12 16V8M17 16v-8"/></svg>Reports</a>
+                        <a><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>Website</a>
+                      </nav>
+                      <div class="sfui-me"><span>MD</span><div><b>Meshack D.</b><small>Operations · Lagos</small></div></div>
+                    </aside>
+                    <main class="sfui-main">
+                      <div class="sfui-top">
+                        <div><h4>Shipments</h4><small>12 Nov · All branches</small></div>
+                        <div class="sfui-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search ref, customer or AWB</div>
+                        <span class="sfui-bell"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><i>3</i></span>
+                        <span class="sfui-btn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New shipment</span>
+                      </div>
+                      <div class="sfui-stats">
+                        <div><small>In transit</small><b>46</b><span>+4 this week</span></div>
+                        <div><small>At customs</small><b>9</b><span>avg 3.2 days</span></div>
+                        <div class="warn"><small>Delayed</small><b>3</b><span>needs action</span></div>
+                        <div><small>Delivered this week</small><b>21</b><span>95% on time</span></div>
+                      </div>
+                      <div class="sfui-filters"><span class="on">All 58</span><span>Air 24</span><span>Ocean 19</span><span>Road 15</span><i></i><span class="chip">Branch: All</span><span class="chip">This month</span></div>
+                      <table class="sfui-table">
+                        <thead><tr><th>Ref</th><th>Customer</th><th>Route</th><th>Mode</th><th>Stage</th><th>ETA</th><th>Updated</th></tr></thead>
+                        <tbody>
+                          <tr class="sel"><td><b>SF-24118</b></td><td>Acme Supplies Ltd</td><td>Manchester → Lagos MMIA</td><td>Air</td><td><span class="pill amber">Examination</span></td><td>14 Nov</td><td>12 min ago</td></tr>
+                          <tr><td><b>SF-24121</b></td><td>Kano Agro Exports</td><td>Shenzhen → Apapa</td><td>Ocean</td><td><span class="pill red">Delayed 2 days</span></td><td>18 Nov</td><td>1 h ago</td></tr>
+                          <tr><td><b>SF-24125</b></td><td>Zenith Medicals</td><td>Dubai → Abuja NAIA</td><td>Air</td><td><span class="pill teal">In transit</span></td><td>13 Nov</td><td>3 h ago</td></tr>
+                          <tr><td><b>SF-24130</b></td><td>Medplus Pharmacy</td><td>Lagos → Port Harcourt</td><td>Road</td><td><span class="pill teal">Out for delivery</span></td><td>Today</td><td>25 min ago</td></tr>
+                          <tr><td><b>SF-24131</b></td><td>Halden Energy</td><td>Houston → Onne</td><td>Ocean</td><td><span class="pill grey">PAAR issued</span></td><td>26 Nov</td><td>Yesterday</td></tr>
+                          <tr><td><b>ATM-0392</b></td><td>Access Bank</td><td>Wuse → Garki branch</td><td>ATM</td><td><span class="pill blue">Staging</span></td><td>15 Nov</td><td>2 h ago</td></tr>
+                          <tr><td><b>SF-24133</b></td><td>Lekki Gardens</td><td>Ningbo → Tin Can</td><td>Ocean</td><td><span class="pill grey">Booked</span></td><td>2 Dec</td><td>Today</td></tr>
+                        </tbody>
+                      </table>
+                    </main>
+                    <aside class="sfui-detail">
+                      <div class="sfui-dhead"><div><small>SF-24118 · AIR FREIGHT</small><h5>Acme Supplies Ltd</h5><p>Manchester → Lagos MMIA · 4 cartons · 320 kg</p></div><span class="pill amber">Examination</span></div>
+                      <div class="sfui-meta"><div><small>AWB</small><b>176-48213390</b></div><div><small>PAAR</small><b>NG-2026-118204</b></div><div><small>Handler</small><b>Ifeoma A.</b></div></div>
+                      <ol class="sfui-steps">
+                        <li class="done"><b>Picked up, Manchester</b><small>10 Nov · 09:14</small></li>
+                        <li class="done"><b>Landed, Lagos MMIA</b><small>11 Nov · 06:05</small></li>
+                        <li class="done"><b>PAAR issued, duty paid</b><small>11 Nov · 15:40</small></li>
+                        <li class="now"><b>Customs examination</b><small>Started 12 Nov · 09:30</small></li>
+                        <li><b>Customs release and gate pass</b></li>
+                        <li><b>Out for delivery</b></li>
+                        <li><b>Delivered</b></li>
+                      </ol>
+                      <div class="sfui-form">
+                        <b>Update status</b>
+                        <div class="sfui-select">Customs release and gate pass<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
+                        <div class="sfui-note">Released by NCS at 11:20. Truck booked for 2pm delivery to Ikeja.</div>
+                        <label><span class="box"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>Notify customer by email and WhatsApp</label>
+                        <div class="sfui-actions"><span class="ghost"><svg viewBox="0 0 24 24"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg>Attach</span><span class="primary">Save update</span></div>
+                      </div>
+                    </aside>
                   </div>
-                </div>
+                </div></div>
               </div>
               <div class="demo-panel" data-demo-panel="mobile" hidden="">
-                <div class="mobile-prototype">
+                <div class="mobile-prototype sfui-mobile">
                   <div class="mobile-explainer">
-                    <span class="client-demo-label">FIELD WORKFLOW</span>
-                    <h3>One scan updates the customer.</h3>
-                    <p>Scan the label, pick the step, add a photo. Done.</p>
-                    <div class="mobile-points"><span>QR labels for cargo and ATMs</span><span>Photo proof</span><span>Any phone</span></div>
+                    <span class="client-demo-label">WHAT THE CUSTOMER SEES</span>
+                    <h3>Your team saves a status. The customer sees it.</h3>
+                    <p>Every update from the portal appears on the customer's tracking page, with the step, time, note and documents.</p>
+                    <div class="mobile-points"><span>No login needed for the link</span><span>Documents to download</span><span>WhatsApp in one tap</span></div>
                   </div>
                   <div class="phone-frame">
                     <div class="phone-island"></div>
-                    <div class="phone-screen">
-                      <div class="phone-head"><div><small>LAGOS OPERATIONS</small><b>Scan shipment</b></div><span>SF</span></div>
-                      <div class="shift-card">
-                        <small>SF-24118 · AIR FREIGHT</small>
-                        <h4>Manchester to Lagos</h4>
-                        <p>4 cartons · 320 kg · Acme Supplies Ltd</p>
-                        <div class="location-pill">● Next step: customs release</div>
-                        <button type="button">Confirm step</button>
+                    <div class="phone-screen sfui-phone">
+                      <div class="sfp-top"><svg viewBox="0 0 40 40" aria-label="Splendid Freight" role="img"><defs><mask id="sfmb"><rect width="40" height="40" fill="#fff"/><path d="M14 1.5C8 7.5 8.6 14.2 16.4 18.6C24.2 23 28.4 28.6 24.6 38.6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask></defs><circle cx="20" cy="20" r="19" fill="#1EF7C4" mask="url(#sfmb)"/><circle cx="20" cy="20" r="19" fill="none" stroke="#007a5e" stroke-opacity=".25" stroke-width="1" /></svg><b>Splendid Freight</b><span>Track</span></div>
+                      <div class="sfp-card">
+                        <small>SHIPMENT SF-24118</small>
+                        <h4>Customs released</h4>
+                        <p>Updated 12 min ago by Splendid Freight</p>
+                        <div class="sfp-bar"><i style="width:72%"></i></div>
+                        <div class="sfp-route"><div><small>From</small><b>Manchester</b></div><span>✈</span><div><small>To</small><b>Lagos, Ikeja</b></div></div>
+                        <div class="sfp-eta"><small>Estimated delivery</small><b>Friday 14 November</b></div>
                       </div>
-                      <div class="phone-section">
-                        <b>Timeline</b>
-                        <div><span>01</span><p><strong>Picked up, Manchester</strong><small>10 Nov · 09:14</small></p></div>
-                        <div><span>02</span><p><strong>Landed, Lagos MMIA</strong><small>Customer notified</small></p></div>
+                      <div class="sfp-list">
+                        <div class="now"><i></i><p><b>Customs released</b><small>12 Nov · 11:20 · Truck booked for 2pm</small></p></div>
+                        <div><i></i><p><b>Customs examination</b><small>12 Nov · 09:30</small></p></div>
+                        <div><i></i><p><b>PAAR issued, duty paid</b><small>11 Nov · 15:40</small></p></div>
+                        <div><i></i><p><b>Landed, Lagos MMIA</b><small>11 Nov · 06:05</small></p></div>
                       </div>
-                      <div class="phone-nav"><b>Scan</b><span>Jobs</span><span>Photos</span></div>
+                      <div class="sfp-docs"><span>Airway bill.pdf</span><span>Invoice INV-2291.pdf</span></div>
+                      <div class="sfp-cta">Message us on WhatsApp</div>
                     </div>
                   </div>
                 </div>
               </div>
+
             </div>
             <p class="prototype-note">
-              Prototype direction only. See also the
+              Design direction. Final screens are approved with you. See also the
               <a href="https://www.ferrnagency.com/concept/splendid-freight-app/" target="_blank" rel="noopener">web app concept</a> and
               <a href="https://www.ferrnagency.com/concept/splendid-freight/" target="_blank" rel="noopener">website concept</a>.
             </p>
@@ -4568,58 +4732,19 @@
         </div>
         <div class="section-intro">
           <div>
-            <h2 class="title">Three ways to start. <span>Upgrade any time.</span></h2>
+            <h2 class="title">Three options. <span>Side by side.</span></h2>
           </div>
-          <p class="lead">
-            Each option includes everything in the one before it, plus the CRM with Zoho Books
-            and your new website. Start with one and move up later by paying only the difference.
-          </p>
+          <p class="lead">Each option is complete on its own. All three include the CRM, Zoho Books sync, data migration and a free new website.</p>
         </div>
-<div class="sf-tiers">
-<article class="sf-tier">
-          <small>Option 1 · For running the business</small>
-          <h3>Operations Portal</h3>
-          <div class="sf-price">₦9,500,000</div>
-          <p class="sf-split">₦3,800,000 to start · ₦5,700,000 at launch</p>
-          <p>Your team runs shipments and ATM jobs in one place. Customers follow a tracking link your team updates.</p>
-          <ul><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Shipments and Nigerian clearance steps</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>QR labels and phone updates</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Customer tracking link</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>ATM jobs and machine register</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Website editor</span></li></ul>
-          <div class="sf-tier-foot"><span>Live by</span><b>29 January 2027</b></div>
-          <a class="sf-tier-link" href="#opt1">See every feature</a>
-        </article>
-<article class="sf-tier featured"><span class="sf-badge">Recommended</span>
-          <small>Option 2 · For business customers</small>
-          <h3>Customer Portal</h3>
-          <div class="sf-price">₦15,500,000</div>
-          <p class="sf-split">₦6,200,000 to start · ₦9,300,000 at launch</p>
-          <p>Everything in Option 1, plus accounts where business customers request, approve and track.</p>
-          <ul><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Everything in Option 1</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Customer accounts with several users</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Shipment and ATM requests</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Quotes accepted online</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Automatic email and WhatsApp updates</span></li></ul>
-          <div class="sf-tier-foot"><span>Live by</span><b>26 February 2027</b></div>
-          <a class="sf-tier-link" href="#opt2">See every feature</a>
-        </article>
-<article class="sf-tier">
-          <small>Option 3 · For business and personal customers</small>
-          <h3>Full Platform</h3>
-          <div class="sf-price">₦24,000,000</div>
-          <p class="sf-split">₦9,600,000 to start · ₦14,400,000 at launch</p>
-          <p>Everything in Option 2, plus a B2C app with instant quotes, online payments and analytics.</p>
-          <ul><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Everything in Option 2</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Mobile app and B2C sign-up</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Instant quotes and online payments</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Quote and payment tracking</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Analytics for you and your customers</span></li></ul>
-          <div class="sf-tier-foot"><span>Live by</span><b>26 March 2027</b></div>
-          <a class="sf-tier-link" href="#opt3">See every feature</a>
-        </article>
-</div>
-        <div class="sf-every">
-          <div>
-            <small>IN EVERY OPTION</small>
-            <h3>CRM, invoices, expenses, Zoho Books and your data moved over</h3>
-          </div>
-          <ul>
-            <li>Customer CRM</li><li>Invoices</li><li>Expense tracker</li><li>Zoho Books sync</li><li>Bulk data migration</li><li>Free new website</li>
-          </ul>
-        </div>
+<div class="sf-cmp-wrap"><table class="sf-cmp">
+          <thead><tr><th class="sf-cmp-corner" scope="col"><small>Compare</small><b>What each option includes</b></th><th class="c0" scope="col"><small>Option 1</small><b>Operations Portal</b><span>₦11,000,000</span><i>Run the business</i></th><th class="c1 featured" scope="col"><em>Recommended</em><small>Option 2</small><b>Customer Portal</b><span>₦17,000,000</span><i>Serve business customers</i></th><th class="c2" scope="col"><small>Option 3</small><b>Full Platform</b><span>₦25,000,000</span><i>Business and personal customers</i></th></tr></thead>
+          <tbody><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">Operations</th></tr><tr><th scope="row">Shipment board for air, ocean and road</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Nigerian customs clearance steps</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Status updates by your team</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Shipment documents in one place</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Delay alerts</th><td class="c0"><span class="sf-txt">Your team</span></td><td class="c1"><span class="sf-txt">Team + customers</span></td><td class="c2"><span class="sf-txt">Team + customers</span></td></tr><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">ATM support</th></tr><tr><th scope="row">ATM job tracker with checklists</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Machine register and chain of custody</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Banks request ATM jobs online</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">Your customers</th></tr><tr><th scope="row">How customers track</th><td class="c0"><span class="sf-txt">Tracking link</span></td><td class="c1"><span class="sf-txt">Own account</span></td><td class="c2"><span class="sf-txt">Account + mobile app</span></td></tr><tr><th scope="row">Business accounts with several users</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Online shipment request form</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Automatic email and WhatsApp updates</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Order history and repeat orders</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Personal customers (B2C)</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Mobile app for Android and iPhone</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">24/7 tracking assistant</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">Quotes and payments</th></tr><tr><th scope="row">Quotes</th><td class="c0"><span class="sf-txt">Sent by email</span></td><td class="c1"><span class="sf-txt">Accepted online</span></td><td class="c2"><span class="sf-txt">Instant + accepted online</span></td></tr><tr><th scope="row">Online payments (naira, USD, GBP)</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Quote and payment tracking</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Cargo insurance at checkout</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">Finance and CRM</th></tr><tr><th scope="row">Customer CRM</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Invoices</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Expense tracker and profit per job</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Zoho Books sync</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Bulk data migration</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">Reports</th></tr><tr><th scope="row">Live operations dashboard</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Customer analytics</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Business analytics</th><td class="c0"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c1"><span class="sf-no" role="img" aria-label="Not included"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">Website</th></tr><tr><th scope="row">New website (worth ₦3,500,000)</th><td class="c0"><span class="sf-txt">Free</span></td><td class="c1"><span class="sf-txt">Free</span></td><td class="c2"><span class="sf-txt">Free</span></td></tr><tr><th scope="row">Website editor, blog and leads inbox</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr class="sf-cmp-group"><th colspan="4" scope="colgroup">Support</th></tr><tr><th scope="row">6 months hosting, support and training</th><td class="c0"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c1"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td><td class="c2"><span class="sf-yes" role="img" aria-label="Included"><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr><tr><th scope="row">Maintenance after month 6, optional</th><td class="c0"><span class="sf-txt">₦350,000/mo</span></td><td class="c1"><span class="sf-txt">₦500,000/mo</span></td><td class="c2"><span class="sf-txt">₦750,000/mo</span></td></tr><tr><th scope="row">Hosting after month 6, estimate</th><td class="c0"><span class="sf-txt">$40/mo</span></td><td class="c1"><span class="sf-txt">$60/mo</span></td><td class="c2"><span class="sf-txt">$90/mo</span></td></tr></tbody>
+          <tfoot><tr class="sf-cmp-total"><th scope="row">Total</th><td class="c0"><b>₦11,000,000</b></td><td class="c1"><b>₦17,000,000</b></td><td class="c2"><b>₦25,000,000</b></td></tr><tr><th scope="row">40% to start</th><td class="c0">₦4,400,000</td><td class="c1">₦6,800,000</td><td class="c2">₦10,000,000</td></tr><tr><th scope="row">60% at launch</th><td class="c0">₦6,600,000</td><td class="c1">₦10,200,000</td><td class="c2">₦15,000,000</td></tr><tr><th scope="row">Live by</th><td class="c0">29 January 2027</td><td class="c1">26 February 2027</td><td class="c2">26 March 2027</td></tr><tr class="sf-cmp-links"><th scope="row"></th><td class="c0"><a href="#breakdown" data-open-opt="1">See all 14 features</a></td><td class="c1"><a href="#breakdown" data-open-opt="2">See all 22 features</a></td><td class="c2"><a href="#breakdown" data-open-opt="3">See all 31 features</a></td></tr></tfoot>
+        </table></div>
       </div>
     </section>
 
-    <section class="proposal-page mint" id="budget">
+    <section class="proposal-page mint" id="breakdown">
       <div class="shell">
         <div class="page-head section-label-only">
           <span class="section-no">04 · What you get</span>
@@ -4628,74 +4753,109 @@
           <div>
             <h2 class="title">Every feature, <span>and why it matters.</span></h2>
           </div>
-          <p class="lead">
-            The full breakdown of each option, line by line, with what it does for your team and
-            your customers.
-          </p>
+          <p class="lead">Pick an option to see its full list and price.</p>
         </div>
-<div class="sf-block" id="opt1">
-          <div class="sf-block-head"><div><small>Option 1 · Operations Portal</small><h3>Operations Portal</h3><p>Includes the CRM, invoices, expenses, Zoho Books sync and data migration that come with every option.</p></div>
-            <div class="sf-block-total"><span>Option total</span><strong>₦9,500,000</strong></div></div>
+<div class="sf-opt-tabs" role="tablist" aria-label="Choose an option"><button type="button" class="sf-opt-tab" data-opt-tab="1" role="tab" aria-selected="false"><small>Option 1</small><b>Operations Portal</b><span>₦11,000,000</span></button><button type="button" class="sf-opt-tab active" data-opt-tab="2" role="tab" aria-selected="true"><small>Option 2</small><b>Customer Portal</b><span>₦17,000,000</span></button><button type="button" class="sf-opt-tab" data-opt-tab="3" role="tab" aria-selected="false"><small>Option 3</small><b>Full Platform</b><span>₦25,000,000</span></button></div>
+<div class="sf-block sf-opt-panel" data-opt-panel="1" hidden="">
+          <div class="sf-block-head"><div><small>Option 1 · Run the business</small><h3>Operations Portal</h3><p>Your team runs freight and ATM jobs in one portal. Customers follow a tracking link.</p><p class="sf-meta">14 features · live by 29 January 2027 · maintenance after month 6 ₦350,000/month, optional</p></div>
+            <div class="sf-block-total"><span>Total</span><strong>₦11,000,000</strong><em>₦4,400,000 to start · ₦6,600,000 at launch</em></div></div>
           <div class="sf-table-wrap"><table class="sf-table">
             <thead><tr><th>#</th><th>What you get</th><th>How it helps</th><th>Value</th></tr></thead>
             <tbody>
-<tr><td>01</td><td><b>Shipment control board</b><span>Every air, ocean and road shipment in one list, with status, owner and next step.</span></td><td>Answer "where is it?" in seconds, without digging through email.</td><td><strong>₦1,200,000</strong></td></tr>
-<tr><td>02</td><td><b>Nigerian clearance steps</b><span>Form M, PAAR, duty assessment and payment, examination, release, TDO or NAHCO/SAHCO gate pass, exit and delivery.</span></td><td>See exactly which customs step each shipment is waiting on.</td><td><strong>₦900,000</strong></td></tr>
-<tr><td>03</td><td><b>Customer tracking link</b><span>A private link and QR code per shipment that shows the customer every update your team posts.</span></td><td>Fewer "any update?" calls and emails for your team.</td><td><strong>₦700,000</strong></td></tr>
-<tr><td>04</td><td><b>QR labels and phone updates</b><span>Print a label per shipment. Staff scan it at the port, airport or warehouse, pick the step and add a photo.</span></td><td>Updates happen on the spot, with photo proof, in under a minute.</td><td><strong>₦800,000</strong></td></tr>
-<tr><td>05</td><td><b>Shipment documents</b><span>Bill of lading, airway bill, invoices, packing list, PAAR and proof of delivery stored on each shipment.</span></td><td>No more searching inboxes for the right document.</td><td><strong>₦500,000</strong></td></tr>
-<tr><td>06</td><td><b>ATM job tracker</b><span>Decommissioning, relocation from branch A to B, staging, civil works, cannibalisation and refurbishment, each with its own checklist.</span></td><td>Every ATM job follows the same steps, whoever is on site.</td><td><strong>₦1,000,000</strong></td></tr>
-<tr><td>07</td><td><b>ATM register and chain of custody</b><span>A QR-tagged record per machine: bank, branch, serial, condition photos, parts harvested and sign-off at each handover.</span></td><td>A clean audit trail to show banks, from pickup to installation.</td><td><strong>₦900,000</strong></td></tr>
-<tr><td>08</td><td><b>Website editor</b><span>Change services, pages, photos and blog posts, and read every website enquiry, from the portal.</span></td><td>Keep the website current without calling a developer.</td><td><strong>₦400,000</strong></td></tr>
-<tr><td>09</td><td><b>Customer CRM</b><span>Every customer company, contact, shipment, quote, note and follow-up in one place.</span></td><td>Anyone on the team can pick up a customer without a handover.</td><td><strong>₦700,000</strong></td></tr>
-<tr><td>10</td><td><b>Invoices</b><span>Create invoices from a shipment and see what is paid, part-paid or overdue.</span></td><td>Bill faster and see who owes what at a glance.</td><td><strong>₦600,000</strong></td></tr>
-<tr><td>11</td><td><b>Expense tracker</b><span>Log freight, duty, port charges, trucking and agent fees against each shipment or ATM job.</span></td><td>Know the real profit on every job, not just the revenue.</td><td><strong>₦600,000</strong></td></tr>
-<tr><td>12</td><td><b>Zoho Books sync</b><span>Customers, invoices and payments move both ways between the portal and Zoho Books.</span></td><td>No double entry, and your accountant keeps working in Zoho.</td><td><strong>₦700,000</strong></td></tr>
-<tr><td>13</td><td><b>Bulk data migration</b><span>Your existing customers, past shipments and invoices imported from Zoho Books, Excel and Outlook contacts.</span></td><td>Day one starts with your history, not an empty system.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>01</td><td><b>Shipment control board</b><span>All air, ocean and road shipments in one list, with stage, ETA and owner.</span></td><td>Answer "where is it?" in seconds.</td><td><strong>₦1,500,000</strong></td></tr>
+<tr><td>02</td><td><b>Nigerian customs steps</b><span>Form M, PAAR, duty, examination, release, TDO or gate pass, then delivery.</span></td><td>See which customs step is holding each shipment.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>03</td><td><b>Status updates by your team</b><span>Open a shipment, pick the new step, add a note or document, save.</span></td><td>One update keeps everyone informed.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>04</td><td><b>Customer tracking link</b><span>A private tracking page per shipment, updated when your team saves.</span></td><td>Fewer "any update?" calls.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>05</td><td><b>Delay alerts for your team</b><span>Each step has an expected time. Late steps alert the person in charge.</span></td><td>Fix delays before customers notice.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>06</td><td><b>Shipment documents</b><span>Bill of lading, airway bill, invoice, PAAR and proof of delivery on each shipment.</span></td><td>No more searching inboxes.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>07</td><td><b>ATM job tracker</b><span>Decommissioning, relocation, staging, civil works, cannibalisation and refurbishment, each with a checklist.</span></td><td>Every ATM job done the same way.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>08</td><td><b>ATM machine register</b><span>Each machine with bank, branch, serial, photos, parts and sign-offs.</span></td><td>A clear audit trail for banks.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>09</td><td><b>Website editor</b><span>Edit pages, services, photos and blog posts. Read every enquiry.</span></td><td>Keep the site current without a developer.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>10</td><td><b>Customer CRM</b><span>Every customer, contact, shipment, quote and follow-up in one place.</span></td><td>Anyone can pick up any customer.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>11</td><td><b>Invoices</b><span>Invoice from a shipment or ATM job. See paid, part-paid and overdue.</span></td><td>Bill faster and see who owes what.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>12</td><td><b>Expense tracker</b><span>Log freight, duty, port, trucking and agent costs per job.</span></td><td>Know the real profit on every job.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>13</td><td><b>Zoho Books sync</b><span>Customers, invoices and payments sync both ways with Zoho Books.</span></td><td>No double entry for your accounts team.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>14</td><td><b>Data migration</b><span>Your customers, past shipments and invoices moved in from Zoho, Excel and Outlook.</span></td><td>Start on day one with your history.</td><td><strong>₦500,000</strong></td></tr>
             </tbody>
-            <tfoot><tr><td colspan="3"><b>Option 1 total</b></td><td><strong>₦9,500,000</strong></td></tr></tfoot>
+            <tfoot><tr><td colspan="3"><b>Option 1 total</b></td><td><strong>₦11,000,000</strong></td></tr></tfoot>
           </table></div>
         </div>
-<div class="sf-block" id="opt2">
-          <div class="sf-block-head"><div><small>Option 2 adds · Customer Portal</small><h3>Customer Portal</h3><p>Option 2 total: ₦15,500,000, which is Option 1 (₦9,500,000) plus the lines below.</p></div>
-            <div class="sf-block-total"><span>These lines</span><strong>₦6,000,000</strong></div></div>
+<div class="sf-block sf-opt-panel" data-opt-panel="2">
+          <div class="sf-block-head"><div><small>Option 2 · Serve business customers</small><h3>Customer Portal</h3><p>The operations portal with accounts where business customers and banks request, approve and track.</p><p class="sf-meta">22 features · live by 26 February 2027 · maintenance after month 6 ₦500,000/month, optional</p></div>
+            <div class="sf-block-total"><span>Total</span><strong>₦17,000,000</strong><em>₦6,800,000 to start · ₦10,200,000 at launch</em></div></div>
           <div class="sf-table-wrap"><table class="sf-table">
             <thead><tr><th>#</th><th>What you get</th><th>How it helps</th><th>Value</th></tr></thead>
             <tbody>
-<tr><td>14</td><td><b>Customer accounts</b><span>Each business customer gets its own login, with several staff users per company.</span></td><td>Customers serve themselves, at any hour.</td><td><strong>₦1,000,000</strong></td></tr>
-<tr><td>15</td><td><b>Shipment request form</b><span>Origin, destination, weight, dimensions, commodity, pickup address and documents in one simple form.</span></td><td>Requests arrive complete, so quotes go out faster.</td><td><strong>₦900,000</strong></td></tr>
-<tr><td>16</td><td><b>ATM support requests</b><span>Banks request decommissioning, relocation, staging or refurbishment by branch and machine.</span></td><td>ATM work comes in structured, ready to schedule.</td><td><strong>₦800,000</strong></td></tr>
-<tr><td>17</td><td><b>Room for new services</b><span>Add warehousing, charter or haulage requests later without a rebuild.</span></td><td>The portal grows with the business.</td><td><strong>₦500,000</strong></td></tr>
-<tr><td>18</td><td><b>Tracking inside the account</b><span>All shipments and ATM jobs, their timelines and documents, ready to download.</span></td><td>One place for customers to see everything they have with you.</td><td><strong>₦900,000</strong></td></tr>
-<tr><td>19</td><td><b>Quotes in the account</b><span>Your team sends the quote to the account and the customer accepts it online. Payment stays offline.</span></td><td>Approvals in clicks, not email chains, and every quote on record.</td><td><strong>₦800,000</strong></td></tr>
-<tr><td>20</td><td><b>Automatic email and WhatsApp updates</b><span>Each step triggers a message, and late steps alert your team and the customer.</span></td><td>Customers hear about delays from you first.</td><td><strong>₦700,000</strong></td></tr>
-<tr><td>21</td><td><b>Order history and repeat orders</b><span>Past shipments with one-click repeat for regular lanes.</span></td><td>Makes it easy for customers to book with you again.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>01</td><td><b>Shipment control board</b><span>All air, ocean and road shipments in one list, with stage, ETA and owner.</span></td><td>Answer "where is it?" in seconds.</td><td><strong>₦1,500,000</strong></td></tr>
+<tr><td>02</td><td><b>Nigerian customs steps</b><span>Form M, PAAR, duty, examination, release, TDO or gate pass, then delivery.</span></td><td>See which customs step is holding each shipment.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>03</td><td><b>Status updates by your team</b><span>Open a shipment, pick the new step, add a note or document, save.</span></td><td>One update keeps everyone informed.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>04</td><td><b>Customer accounts</b><span>Each business customer gets a login for several staff.</span></td><td>Customers help themselves, any time.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>05</td><td><b>Tracking in the account</b><span>Every shipment and ATM job, with timeline and documents.</span></td><td>All their work with you in one place.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>06</td><td><b>Shipment request form</b><span>Origin, destination, weight, size, goods and pickup address in one form.</span></td><td>Complete requests, faster quotes.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>07</td><td><b>Quotes accepted online</b><span>You send the quote, the customer accepts in their account. Payment stays offline.</span></td><td>Approvals in a click, all on record.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>08</td><td><b>Email and WhatsApp updates</b><span>Each status your team saves messages the customer. Late steps send a delay notice.</span></td><td>Customers hear from you first.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>09</td><td><b>Order history and repeat orders</b><span>Past shipments, with one-click repeat.</span></td><td>Easy for customers to book again.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>10</td><td><b>Customer tracking link</b><span>A private tracking page per shipment, updated when your team saves.</span></td><td>Fewer "any update?" calls.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>11</td><td><b>Delay alerts for your team</b><span>Each step has an expected time. Late steps alert the person in charge.</span></td><td>Fix delays before customers notice.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>12</td><td><b>Shipment documents</b><span>Bill of lading, airway bill, invoice, PAAR and proof of delivery on each shipment.</span></td><td>No more searching inboxes.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>13</td><td><b>ATM job tracker</b><span>Decommissioning, relocation, staging, civil works, cannibalisation and refurbishment, each with a checklist.</span></td><td>Every ATM job done the same way.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>14</td><td><b>ATM machine register</b><span>Each machine with bank, branch, serial, photos, parts and sign-offs.</span></td><td>A clear audit trail for banks.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>15</td><td><b>ATM support requests</b><span>Banks request ATM work by branch and machine.</span></td><td>ATM jobs arrive ready to schedule.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>16</td><td><b>Room for new services</b><span>Add warehousing, charter or haulage later.</span></td><td>The portal grows with you.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>17</td><td><b>Website editor</b><span>Edit pages, services, photos and blog posts. Read every enquiry.</span></td><td>Keep the site current without a developer.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>18</td><td><b>Customer CRM</b><span>Every customer, contact, shipment, quote and follow-up in one place.</span></td><td>Anyone can pick up any customer.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>19</td><td><b>Invoices</b><span>Invoice from a shipment or ATM job. See paid, part-paid and overdue.</span></td><td>Bill faster and see who owes what.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>20</td><td><b>Expense tracker</b><span>Log freight, duty, port, trucking and agent costs per job.</span></td><td>Know the real profit on every job.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>21</td><td><b>Zoho Books sync</b><span>Customers, invoices and payments sync both ways with Zoho Books.</span></td><td>No double entry for your accounts team.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>22</td><td><b>Data migration</b><span>Your customers, past shipments and invoices moved in from Zoho, Excel and Outlook.</span></td><td>Start on day one with your history.</td><td><strong>₦500,000</strong></td></tr>
             </tbody>
-            <tfoot><tr><td colspan="3"><b>Option 2 total</b></td><td><strong>₦15,500,000</strong></td></tr></tfoot>
+            <tfoot><tr><td colspan="3"><b>Option 2 total</b></td><td><strong>₦17,000,000</strong></td></tr></tfoot>
           </table></div>
         </div>
-<div class="sf-block" id="opt3">
-          <div class="sf-block-head"><div><small>Option 3 adds · Full Platform</small><h3>Full Platform</h3><p>Option 3 total: ₦24,000,000, which is Option 2 (₦15,500,000) plus the lines below.</p></div>
-            <div class="sf-block-total"><span>These lines</span><strong>₦8,500,000</strong></div></div>
+<div class="sf-block sf-opt-panel" data-opt-panel="3" hidden="">
+          <div class="sf-block-head"><div><small>Option 3 · Business and personal customers</small><h3>Full Platform</h3><p>Business and personal customers, a mobile app, instant quotes, online payments and analytics.</p><p class="sf-meta">31 features · live by 26 March 2027 · maintenance after month 6 ₦750,000/month, optional</p></div>
+            <div class="sf-block-total"><span>Total</span><strong>₦25,000,000</strong><em>₦10,000,000 to start · ₦15,000,000 at launch</em></div></div>
           <div class="sf-table-wrap"><table class="sf-table">
             <thead><tr><th>#</th><th>What you get</th><th>How it helps</th><th>Value</th></tr></thead>
             <tbody>
-<tr><td>22</td><td><b>B2C sign-up</b><span>Individuals, such as online shoppers and diaspora senders, create their own accounts.</span></td><td>Opens a new customer group without extra staff.</td><td><strong>₦900,000</strong></td></tr>
-<tr><td>23</td><td><b>Mobile app</b><span>Installable app on Android and iPhone, with push notifications for every update.</span></td><td>Your brand on the customer's home screen.</td><td><strong>₦1,800,000</strong></td></tr>
-<tr><td>24</td><td><b>Instant quote calculator</b><span>Rate tables by lane, mode and weight give standard shipments a price on the spot.</span></td><td>Win price shoppers before they ask a competitor.</td><td><strong>₦1,200,000</strong></td></tr>
-<tr><td>25</td><td><b>Online payments</b><span>Paystack card, bank transfer and USSD in naira, plus card payments in USD and GBP.</span></td><td>Get paid before the cargo moves.</td><td><strong>₦1,000,000</strong></td></tr>
-<tr><td>26</td><td><b>Quote and payment tracking</b><span>Every quote from requested to sent, accepted, invoiced and paid, with reminders for unpaid ones.</span></td><td>Nothing slips between the quote and the cash.</td><td><strong>₦900,000</strong></td></tr>
-<tr><td>27</td><td><b>Cargo insurance at checkout</b><span>Declared value and cover option on each booking, with the policy stored on the shipment.</span></td><td>Extra revenue, and protection customers can see.</td><td><strong>₦500,000</strong></td></tr>
-<tr><td>28</td><td><b>Customer analytics</b><span>Each customer sees their spend, shipments, average days door to door and on-time rate.</span></td><td>Shows business customers the value you deliver.</td><td><strong>₦700,000</strong></td></tr>
-<tr><td>29</td><td><b>Business analytics</b><span>Revenue and margin by lane, customs time, delays by stage, top customers, quote win rate and ATM turnaround.</span></td><td>Decide on facts: which lanes, customers and steps to fix or grow.</td><td><strong>₦1,000,000</strong></td></tr>
-<tr><td>30</td><td><b>24/7 tracking assistant</b><span>An AI assistant in the app that answers "where is my shipment?" from live data.</span></td><td>Customers get answers at night and on weekends.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>01</td><td><b>Shipment control board</b><span>All air, ocean and road shipments in one list, with stage, ETA and owner.</span></td><td>Answer "where is it?" in seconds.</td><td><strong>₦1,500,000</strong></td></tr>
+<tr><td>02</td><td><b>Nigerian customs steps</b><span>Form M, PAAR, duty, examination, release, TDO or gate pass, then delivery.</span></td><td>See which customs step is holding each shipment.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>03</td><td><b>Status updates by your team</b><span>Open a shipment, pick the new step, add a note or document, save.</span></td><td>One update keeps everyone informed.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>04</td><td><b>Customer accounts</b><span>Each business customer gets a login for several staff.</span></td><td>Customers help themselves, any time.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>05</td><td><b>Personal customers (B2C)</b><span>Individuals, like online shoppers and diaspora senders, sign up.</span></td><td>A new customer group, no extra staff.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>06</td><td><b>Mobile app</b><span>Android and iPhone app with push notifications.</span></td><td>Your brand on the customer's phone.</td><td><strong>₦1,700,000</strong></td></tr>
+<tr><td>07</td><td><b>Tracking in the account</b><span>Every shipment and ATM job, with timeline and documents.</span></td><td>All their work with you in one place.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>08</td><td><b>Shipment request form</b><span>Origin, destination, weight, size, goods and pickup address in one form.</span></td><td>Complete requests, faster quotes.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>09</td><td><b>Instant quotes</b><span>Prices by lane, mode and weight, shown on the spot.</span></td><td>Win customers before they shop around.</td><td><strong>₦1,100,000</strong></td></tr>
+<tr><td>10</td><td><b>Quotes accepted online</b><span>You send the quote, the customer accepts in their account. Payment stays offline.</span></td><td>Approvals in a click, all on record.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>11</td><td><b>Online payments</b><span>Paystack card, transfer and USSD in naira, plus USD and GBP cards.</span></td><td>Get paid before cargo moves.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>12</td><td><b>Quote and payment tracking</b><span>Each quote from sent to accepted to paid, with reminders.</span></td><td>Nothing slips between quote and cash.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>13</td><td><b>Cargo insurance</b><span>Cover option on each booking, policy kept on the shipment.</span></td><td>Extra revenue and peace of mind.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>14</td><td><b>Email and WhatsApp updates</b><span>Each status your team saves messages the customer. Late steps send a delay notice.</span></td><td>Customers hear from you first.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>15</td><td><b>Order history and repeat orders</b><span>Past shipments, with one-click repeat.</span></td><td>Easy for customers to book again.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>16</td><td><b>24/7 tracking assistant</b><span>AI in the app answers "where is my shipment?" from live data.</span></td><td>Answers at night and weekends.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>17</td><td><b>Customer tracking link</b><span>A private tracking page per shipment, updated when your team saves.</span></td><td>Fewer "any update?" calls.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>18</td><td><b>Delay alerts for your team</b><span>Each step has an expected time. Late steps alert the person in charge.</span></td><td>Fix delays before customers notice.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>19</td><td><b>Shipment documents</b><span>Bill of lading, airway bill, invoice, PAAR and proof of delivery on each shipment.</span></td><td>No more searching inboxes.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>20</td><td><b>ATM job tracker</b><span>Decommissioning, relocation, staging, civil works, cannibalisation and refurbishment, each with a checklist.</span></td><td>Every ATM job done the same way.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>21</td><td><b>ATM machine register</b><span>Each machine with bank, branch, serial, photos, parts and sign-offs.</span></td><td>A clear audit trail for banks.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>22</td><td><b>ATM support requests</b><span>Banks request ATM work by branch and machine.</span></td><td>ATM jobs arrive ready to schedule.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>23</td><td><b>Room for new services</b><span>Add warehousing, charter or haulage later.</span></td><td>The portal grows with you.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>24</td><td><b>Customer analytics</b><span>Each customer sees spend, shipments, days door to door and on-time rate.</span></td><td>Shows the value you deliver.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>25</td><td><b>Business analytics</b><span>Revenue and margin by lane, customs time, delays, top customers and ATM turnaround.</span></td><td>Decide on facts.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>26</td><td><b>Website editor</b><span>Edit pages, services, photos and blog posts. Read every enquiry.</span></td><td>Keep the site current without a developer.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>27</td><td><b>Customer CRM</b><span>Every customer, contact, shipment, quote and follow-up in one place.</span></td><td>Anyone can pick up any customer.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>28</td><td><b>Invoices</b><span>Invoice from a shipment or ATM job. See paid, part-paid and overdue.</span></td><td>Bill faster and see who owes what.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>29</td><td><b>Expense tracker</b><span>Log freight, duty, port, trucking and agent costs per job.</span></td><td>Know the real profit on every job.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>30</td><td><b>Zoho Books sync</b><span>Customers, invoices and payments sync both ways with Zoho Books.</span></td><td>No double entry for your accounts team.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>31</td><td><b>Data migration</b><span>Your customers, past shipments and invoices moved in from Zoho, Excel and Outlook.</span></td><td>Start on day one with your history.</td><td><strong>₦500,000</strong></td></tr>
             </tbody>
-            <tfoot><tr><td colspan="3"><b>Option 3 total</b></td><td><strong>₦24,000,000</strong></td></tr></tfoot>
+            <tfoot><tr><td colspan="3"><b>Option 3 total</b></td><td><strong>₦25,000,000</strong></td></tr></tfoot>
           </table></div>
         </div>
 <div class="sf-block sf-web">
-          <div class="sf-block-head"><div><small>Included free in every option</small><h3>Your new website</h3><p>Built and launched in January, whichever option you choose.</p></div>
-            <div class="sf-block-total"><span>Website value</span><strong><s>₦3,500,000</s> <em>FREE</em></strong></div></div>
+          <div class="sf-block-head"><div><small>Free in every option</small><h3>Your new website</h3><p>Built and launched in January, whichever option you choose.</p></div>
+            <div class="sf-block-total"><span>Website value</span><strong><s>₦3,500,000</s> <em class="sf-free-pill">FREE</em></strong></div></div>
           <div class="sf-table-wrap"><table class="sf-table sf-web-table">
             <thead><tr><th>What you get</th><th>Value</th></tr></thead>
             <tbody>
@@ -4710,24 +4870,11 @@
             <tfoot><tr><td><b>Website total</b></td><td><strong><s>₦3,500,000</s> <em>₦0</em></strong></td></tr></tfoot>
           </table></div>
         </div>
-<div class="sf-free"><small>ALSO INCLUDED AT NO FEE</small><div class="sf-free-grid"><div><b>6 months hosting</b><span>Servers, database and storage for documents and photos.</span></div><div><b>6 months support</b><span>Fixes, small changes and help after launch.</span></div><div><b>Training</b><span>Hands-on sessions for operations, finance and management.</span></div><div><b>Roles and audit log</b><span>Control who sees what, and see who changed what.</span></div><div><b>Backups and monitoring</b><span>Daily backups and alerts if anything goes down.</span></div><div><b>Domain, email and SSL setup</b><span>Website, portal and messages sent from your own domain.</span></div></div></div>
-        <div class="maintenance-card">
-          <div class="maintenance-main">
-            <div>
-              <small>OPTIONAL AFTER THE FIRST 6 MONTHS</small>
-              <h4>Ongoing maintenance</h4>
-              <p>Updates, backups, monitoring, fixes and small changes. New features are quoted separately.</p>
-            </div>
-            <div class="maintenance-price"><strong>₦500,000</strong><span>per month · optional</span></div>
-          </div>
-          <div class="hosting-included-card">
-            <div>
-              <small>ESTIMATE</small>
-              <h4>Cloud hosting after month 6</h4>
-              <p>WhatsApp messages and payment fees are billed at Meta's and Paystack's own rates.</p>
-            </div>
-            <div class="hosting-included-price"><strong>$60</strong><span>estimated per month</span></div>
-          </div>
+<div class="sf-free"><small>ALSO IN EVERY OPTION, AT NO FEE</small><div class="sf-free-grid"><div><b>6 months hosting</b><span>Servers, database and storage for documents and photos.</span></div><div><b>6 months support</b><span>Fixes, small changes and help after launch.</span></div><div><b>Training</b><span>Hands-on sessions for operations, finance and management.</span></div><div><b>Roles and activity log</b><span>Control who sees what, and see who changed what.</span></div><div><b>Backups and monitoring</b><span>Daily backups and alerts if anything goes down.</span></div><div><b>Domain, email and SSL setup</b><span>Website, portal and messages sent from your own domain.</span></div></div></div>
+<div class="sf-maint">
+          <div class="sf-maint-head"><small>AFTER THE FIRST 6 MONTHS</small><h3>Maintenance matches the option you pick</h3>
+            <p>Updates, backups, monitoring, fixes and small changes. New features are quoted separately. WhatsApp and payment fees are billed by Meta and Paystack.</p></div>
+          <div class="sf-maint-grid"><div class=""><small>Option 1 · Operations Portal</small><strong>₦350,000</strong><span>per month, optional</span><em>Hosting about $40/month</em></div><div class="featured"><small>Option 2 · Customer Portal</small><strong>₦500,000</strong><span>per month, optional</span><em>Hosting about $60/month</em></div><div class=""><small>Option 3 · Full Platform</small><strong>₦750,000</strong><span>per month, optional</span><em>Hosting about $90/month</em></div></div>
         </div>
       </div>
     </section>
@@ -4735,13 +4882,13 @@
     <section class="proposal-page white" id="scope">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">05 · Timeline &amp; payment</span>
+          <span class="section-no">05 · Timeline</span>
         </div>
         <div class="section-intro">
           <div>
             <h2 class="title">Website in January. <span>Platform from late January.</span></h2>
           </div>
-          <p class="lead">Dates assume kickoff on 23 November 2026 and a short pause over Christmas and New Year.</p>
+          <p class="lead">Based on kickoff on 23 November 2026, with a short break over Christmas.</p>
         </div>
         <div class="timeline delivery-timeline">
           <div class="delivery-table-wrap">
@@ -4758,13 +4905,6 @@
             </table>
           </div>
         </div>
-<div class="sf-block sf-pay">
-          <div class="sf-block-head"><div><small>Payment</small><h3>40% to start, 60% at launch</h3><p>Upgrading later? You pay only the difference between options.</p></div></div>
-          <div class="sf-table-wrap"><table class="sf-table sf-pay-table">
-            <thead><tr><th>Option</th><th>Total</th><th>40% at kickoff</th><th>60% at launch</th></tr></thead>
-            <tbody><tr><td><b>Option 1 · Operations Portal</b></td><td>₦9,500,000</td><td>₦3,800,000</td><td>₦5,700,000</td></tr><tr><td><b>Option 2 · Customer Portal</b></td><td>₦15,500,000</td><td>₦6,200,000</td><td>₦9,300,000</td></tr><tr><td><b>Option 3 · Full Platform</b></td><td>₦24,000,000</td><td>₦9,600,000</td><td>₦14,400,000</td></tr></tbody>
-          </table></div>
-        </div>
       </div>
     </section>
 
@@ -4777,11 +4917,11 @@
           <div class="close-copy">
             <span class="eyebrow"><i></i> Ready to begin</span>
             <h2>Give every customer a window into <span>their cargo.</span></h2>
-            <p>Pick an option and we start with the discovery workshops. Your website goes live in January either way.</p>
+            <p>Pick an option and we start. Your new website goes live in January either way.</p>
             <div class="chips" style="margin-top: 22px">
               <span class="chip dark-chip">Free website</span
               ><span class="chip dark-chip">6 months support</span
-              ><span class="chip dark-chip">Upgrade any time</span>
+              ><span class="chip dark-chip">From ₦11m</span>
             </div>
             <div class="close-actions">
               <a class="approve" href="mailto:hello@ferrnagency.com?subject=Splendid%20Freight%20proposal%20approved&amp;body=Hello%20Ferrn%2C%0A%0AWe%20would%20like%20to%20proceed%20with%20Option%20___%20of%20the%20Splendid%20Freight%20platform%20proposal.%20Please%20send%20the%20commitment%20invoice.%0A%0AName%3A%0ARole%3A%0A"
@@ -5045,6 +5185,27 @@
           });
         });
       });
+    </script>
+    <script>
+      function openOpt(n) {
+        document.querySelectorAll('[data-opt-tab]').forEach(function (t) { var a = t.dataset.optTab === n; t.classList.toggle('active', a); t.setAttribute('aria-selected', a ? 'true' : 'false'); });
+        document.querySelectorAll('[data-opt-panel]').forEach(function (p) { p.hidden = p.dataset.optPanel !== n; });
+      }
+      document.querySelectorAll('[data-opt-tab]').forEach(function (t) { t.addEventListener('click', function () { openOpt(t.dataset.optTab); }); });
+      document.querySelectorAll('[data-open-opt]').forEach(function (a) { a.addEventListener('click', function () { openOpt(a.dataset.openOpt); }); });
+      function fitMocks() {
+        document.querySelectorAll('.sfui-fit').forEach(function (box) {
+          var inner = box.firstElementChild, w = Number(box.dataset.w || 1200);
+          if (!box.clientWidth) return;
+          if (box.clientWidth >= w) { inner.style.width = box.clientWidth + 'px'; inner.style.transform = 'none'; box.style.height = inner.offsetHeight + 'px'; return; }
+          inner.style.width = w + 'px';
+          var s = box.clientWidth / w;
+          inner.style.transform = 'scale(' + s + ')';
+          box.style.height = Math.ceil(inner.offsetHeight * s) + 'px';
+        });
+      }
+      window.addEventListener('resize', fitMocks); window.addEventListener('load', fitMocks); fitMocks();
+      document.querySelectorAll('[data-demo-tab]').forEach(function (t) { t.addEventListener('click', function () { setTimeout(fitMocks, 0); }); });
     </script>
   </body>
 </html>
