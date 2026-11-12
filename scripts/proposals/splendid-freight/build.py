@@ -1,8 +1,10 @@
-import base64, re
+import base64, re, sys
 import os
 HERE = os.path.dirname(os.path.abspath(__file__)) + '/'
 head = open(HERE + 'ataam_head.html').read()
 body_src = open(HERE + 'ataam_body.html').read().split('\n')
+sys.path.insert(0, HERE)
+import tiers as TI
 tpl = open(HERE + 'body.tpl.html').read()
 
 def uri(p):
@@ -73,7 +75,7 @@ extra_css = '''
       .budget-hero small, .budget-total-block small { color: rgba(255,255,255,.72) !important; }
       .commercial-table tr.group-row td { text-align: left !important; }
       .cred .project-link-btn { color: #1ef7c4 !important; border-color: rgba(30,247,196,.4) !important; }
-      .sf-hero-logo { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+TIERCSS      .sf-hero-logo { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
       .sf-hero-logo svg { width:52px; height:52px; flex:none; }
       .sf-hero-logo span { font-size:30px; font-weight:800; letter-spacing:-0.02em; color:#0a0f0d; }
       .chip.dark-chip { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color:#fff; }
@@ -81,6 +83,7 @@ extra_css = '''
       @media (max-width: 640px) { .sf-hero-logo span { font-size:24px; } .sf-hero-logo svg { width:42px; height:42px; } }
     </style>'''
 i = head.rfind('</style>')
+extra_css = extra_css.replace('TIERCSS', TI.CSS)
 head = head[:i] + extra_css + head[i + len('</style>'):]
 
 FERRN = '<svg aria-hidden="true" fill="none" viewbox="0 0 478 478" xmlns="http://www.w3.org/2000/svg"><rect fill="black" height="478" width="478"></rect><path d="M320.71 157.291V320.71H157.291V266.355H264.499V210.193H174.294V157.291H320.71Z" fill="#FF4100"></path></svg>'
@@ -88,55 +91,6 @@ ARROW = '<svg aria-hidden="true" fill="none" height="24" stroke="currentColor" s
 DL = '<svg aria-hidden="true" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>'
 SFMARK = '<svg viewBox="0 0 40 40" aria-label="Splendid Freight" role="img"><defs><mask id="sfm"><rect width="40" height="40" fill="#fff"/><path d="M14 1.5C8 7.5 8.6 14.2 16.4 18.6C24.2 23 28.4 28.6 24.6 38.6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask></defs><circle cx="20" cy="20" r="19" fill="#1EF7C4" mask="url(#sfm)"/><circle cx="20" cy="20" r="19" fill="none" stroke="#007a5e" stroke-opacity=".25" stroke-width="1" /></svg>'
 
-included = [
-    ('6-month cloud hosting + database baseline', 'Production environment, database, file storage for documents and photo proof, and agreed baseline usage for the first 6 months after launch.'),
-    ('QR label templates + printing setup', 'Shipment and ATM QR label designs, print-ready templates and setup on your office label printers.'),
-    ('Transactional email baseline', 'Sending quotes, approvals, milestone updates and delay alerts from your own Outlook domain, within agreed baseline volume.'),
-    ('Domain, DNS + SSL connection', 'Website and portal domains, DNS configuration, HTTPS and launch routing.'),
-    ('Backups, monitoring + error logging', 'Scheduled backups, uptime monitoring and error logging for launch operations.'),
-    ('6-month post-launch support + training', 'In-scope bug fixes, operational guidance, minor configuration changes, staff training and customer onboarding help for six months after go-live.'),
-]
-core = [
-    ('Discovery &amp; process mapping', 'Workshops with Lagos and Abuja teams, quote to delivery mapping, customs and inland stages, roles, reporting needs and success measures.', 1200000),
-    ('Product specification &amp; acceptance criteria', 'Detailed specification, milestone definitions, delay rules, user stories, screen inventory and acceptance criteria.', 900000),
-    ('UX/UI design: portal, dashboard &amp; scanner', 'Customer portal, operations dashboard and mobile QR scanner designs in Splendid Freight\'s brand, with clickable prototypes.', 1800000),
-    ('Website rebuild with AI assistant', 'New website with freight, warehousing and ATM logistics pages, SEO, quote requests and an AI assistant that answers questions and captures leads.', 2400000),
-    ('Website CMS, blog, leads &amp; visitor analytics', 'Blog publishing, a leads inbox for every website enquiry and visitor analytics inside the platform.', 800000),
-    ('Customer accounts &amp; B2B portal', 'Company accounts with multiple users, shipment history, documents, invoices and saved addresses. Structured for B2C later.', 1400000),
-    ('Quote to approval to invoice workflow', 'Online quote requests, staff pricing, quote sending, customer approval, number of days and supplier details, and invoice handoff.', 1600000),
-    ('Shipment tracking engine &amp; milestones', 'Air, ocean and road shipments with pickup, origin port, departure, arrival, customs, inland trucking and delivery milestones. Port to port supported.', 1700000),
-    ('QR labels &amp; staff scanner app', 'Unique QR per shipment, phone-based scanner for staff with time, location and photo proof on each milestone.', 1400000),
-    ('Delay rules &amp; customer notifications', 'Expected time per stage, overdue alerts to the team and automatic customer updates by email and WhatsApp.', 900000),
-    ('Analytics &amp; customer performance stats', 'Average days per shipment and stage, on-time rate, customs time, lane and customer reports, quote conversion and revenue dashboards.', 1000000),
-    ('Zoho Books &amp; Outlook integrations', 'Approved quotes create Zoho Books invoices and payment status syncs back. Platform email sent through your Microsoft 365 domain.', 1100000),
-    ('Cargo insurance in quotes &amp; shipments', 'Declared value, insurance cover option and premium on each quote, with policy documents stored on the shipment.', 500000),
-    ('Roles, security &amp; audit trail', 'Admin, operations, field staff and customer roles, secure sessions, permissions and a full log of every quote, scan and change.', 600000),
-    ('QA, pilot, deployment &amp; handoff', 'Cross-device testing, pilot with live shipments, production release, documentation and team walkthrough.', 700000),
-]
-atm = [
-    ('ATM workflow design &amp; specification', 'Job types for decommissioning, relocation from branch A to branch B, staging, civil works, cannibalisation and refurbishment, with their checklists.', 900000),
-    ('ATM asset register &amp; QR tags', 'A record per machine with bank, branch, serial, model, condition and full history, tagged with its own QR code.', 1300000),
-    ('Job scheduling, field teams &amp; photo proof', 'Job creation, team assignment, site checklists, before and after photos and milestone scans from the field.', 1500000),
-    ('Cannibalisation &amp; refurbishment tracking', 'Parts harvested from machines, parts stock, refurbishment steps, quality checks and machine readiness status.', 1300000),
-    ('Bank client view &amp; sign-off', 'Bank customers see job progress, photos and documents in their account and sign off completed jobs online.', 1200000),
-    ('ATM analytics &amp; SLA reporting', 'Job turnaround, SLA performance, machines by status and refurbishment output per month.', 800000),
-]
-assert sum(x[2] for x in core) == 18000000, sum(x[2] for x in core)
-assert sum(x[2] for x in atm) == 7000000, sum(x[2] for x in atm)
-
-rows = []
-n = 0
-for t, d in included:
-    n += 1
-    cls = 'included-row first-included' if n == 1 else 'included-row'
-    rows.append(f'<tr class="{cls}"><td>{n:02d}</td><td><b>{t}</b><span class="scope-tag">Included at no fee</span></td><td>{d}</td><td><strong>Included · ₦0</strong></td></tr>')
-for gi, (label, group) in enumerate([('Part A · Logistics platform &amp; website · ₦18,000,000', core), ('Part B · ATM support module · ₦7,000,000', atm)]):
-    rows.append(f'<tr class="group-row"><td colspan="4"><b>{label}</b></td></tr>')
-    for j, (t, d, a) in enumerate(group):
-        n += 1
-        cls = ' class="first-priced"' if j == 0 else ''
-        rows.append(f'<tr{cls}><td>{n:02d}</td><td><b>{t}</b></td><td>{d}</td><td><strong>₦{a:,}</strong></td></tr>')
-ROWS = '\n'.join('                  ' + r for r in rows)
 head = head.replace('    </style>', '      .commercial-table .group-row td { background: #0a2a22; color: #fff; padding: 14px 18px; font-size: 14px; letter-spacing: .02em; }\n      .commercial-table .group-row b { color: #1ef7c4; }\n    </style>', 1) if False else head
 # group-row css appended
 i = head.rfind('</style>')
@@ -149,7 +103,7 @@ CONTACT = lines(960, 1086)
 SCRIPT = lines(1094, 1110)
 
 body = tpl
-for k, v in {'FERRN': FERRN, 'ARROW': ARROW, 'DL': DL, 'SFMARK': SFMARK, 'ROWS': ROWS, 'TEAM': TEAM, 'CONTACT': CONTACT, 'SCRIPT': SCRIPT}.items():
+for k, v in {'FERRN': FERRN, 'ARROW': ARROW, 'DL': DL, 'SFMARK': SFMARK, 'TIERS': TI.tiers_html(), 'BREAKDOWN': TI.breakdown_html(), 'WEBSITE': TI.website_html(), 'FREE': TI.free_html(), 'PAY': TI.pay_html(), 'TEAM': TEAM, 'CONTACT': CONTACT, 'SCRIPT': SCRIPT}.items():
     body = body.replace('{{' + k + '}}', v)
 body = body.replace('?cc=anjola%40ferrnagency.com&amp;subject', '?subject')
 assert '{{' not in body

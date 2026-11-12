@@ -4274,6 +4274,93 @@
       .budget-hero small, .budget-total-block small { color: rgba(255,255,255,.72) !important; }
       .commercial-table tr.group-row td { text-align: left !important; }
       .cred .project-link-btn { color: #1ef7c4 !important; border-color: rgba(30,247,196,.4) !important; }
+
+      /* ── Splendid Freight options + breakdown ── */
+      .sf-tiers { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:34px; align-items:stretch; }
+      .sf-tier { position:relative; display:flex; flex-direction:column; gap:10px; padding:28px 24px 22px; border:1px solid #dfe9e5; border-radius:24px; background:#fff; box-shadow:0 18px 50px rgba(10,42,34,.07); }
+      .sf-tier small { font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#0f8a6a; }
+      .sf-tier h3 { font-size:28px; letter-spacing:-.02em; color:#0a0f0d; margin:0; }
+      .sf-price { font-size:40px; font-weight:800; letter-spacing:-.03em; color:#0a2a22; line-height:1.05; }
+      .sf-split { font-size:13px; color:#5e6b66; margin:0; }
+      .sf-tier > p { font-size:15px; line-height:1.55; color:#3d4a45; margin:4px 0 0; }
+      .sf-tier ul { list-style:none; padding:0; margin:8px 0 0; display:grid; gap:9px; }
+      .sf-tier li { display:flex; gap:9px; align-items:flex-start; font-size:14.5px; color:#0a0f0d; line-height:1.4; }
+      .sf-tier li svg { flex:none; margin-top:2px; color:#00936d; }
+      .sf-tier-foot { margin-top:auto; padding-top:16px; border-top:1px solid #e6ece9; display:flex; justify-content:space-between; font-size:13px; color:#5e6b66; }
+      .sf-tier-foot b { color:#0a0f0d; }
+      .sf-tier-link { font-size:14px; font-weight:700; color:#007a5e; text-decoration:none; }
+      .sf-tier-link:hover { text-decoration:underline; }
+      .sf-tier.featured { background:linear-gradient(160deg,#071f19,#0a3a2e); border-color:#0a3a2e; color:#fff; box-shadow:0 26px 60px rgba(10,42,34,.22); }
+      .sf-tier.featured small, .sf-tier.featured .sf-tier-link { color:#1ef7c4; }
+      .sf-tier.featured h3, .sf-tier.featured .sf-price, .sf-tier.featured li, .sf-tier.featured .sf-tier-foot b { color:#fff; }
+      .sf-tier.featured > p, .sf-tier.featured .sf-split, .sf-tier.featured .sf-tier-foot { color:rgba(255,255,255,.72); }
+      .sf-tier.featured li svg { color:#1ef7c4; }
+      .sf-tier.featured .sf-tier-foot { border-color:rgba(255,255,255,.14); }
+      .sf-badge { position:absolute; top:-12px; right:20px; background:#1ef7c4; color:#06261e; font-size:12px; font-weight:800; padding:6px 12px; border-radius:999px; }
+      .sf-every { margin-top:22px; display:flex; gap:24px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:22px 24px; border-radius:20px; background:#e8faf4; border:1px solid #c9efe2; }
+      .sf-every small { font-size:12px; font-weight:800; letter-spacing:.08em; color:#0f8a6a; }
+      .sf-every h3 { margin:6px 0 0; font-size:20px; color:#0a0f0d; max-width:520px; }
+      .sf-every ul { list-style:none; display:flex; flex-wrap:wrap; gap:8px; padding:0; margin:0; }
+      .sf-every li { background:#fff; border:1px solid #c9efe2; border-radius:999px; padding:7px 12px; font-size:13px; font-weight:700; color:#0a2a22; }
+      .sf-block { margin-top:26px; background:#fff; border:1px solid #dfe9e5; border-radius:24px; overflow:hidden; box-shadow:0 18px 50px rgba(10,42,34,.06); scroll-margin-top:90px; }
+      .sf-block-head { display:flex; justify-content:space-between; gap:20px; align-items:flex-end; padding:24px 24px 18px; }
+      .sf-block-head small { font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#0f8a6a; }
+      .sf-block-head h3 { margin:6px 0 4px; font-size:26px; letter-spacing:-.02em; color:#0a0f0d; }
+      .sf-block-head p { margin:0; font-size:14px; color:#5e6b66; max-width:640px; }
+      .sf-block-total { text-align:right; flex:none; }
+      .sf-block-total span { display:block; font-size:12px; color:#5e6b66; text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+      .sf-block-total strong { font-size:26px; color:#0a2a22; letter-spacing:-.02em; }
+      .sf-table-wrap { overflow-x:auto; }
+      .sf-table { width:100%; border-collapse:collapse; font-size:14px; }
+      .sf-table th { text-align:left; font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:#5e6b66; padding:12px 16px; background:#f4f7f6; border-top:1px solid #e6ece9; border-bottom:1px solid #e6ece9; }
+      .sf-table td { padding:14px 16px; border-bottom:1px solid #eef2f0; vertical-align:top; color:#3d4a45; line-height:1.5; }
+      .sf-table td:first-child { color:#0f8a6a; font-weight:800; width:42px; }
+      .sf-table td b { display:block; color:#0a0f0d; font-size:14.5px; margin-bottom:3px; }
+      .sf-table td span { display:block; color:#5e6b66; font-size:13.5px; }
+      .sf-table td:nth-child(3) { color:#0a2a22; }
+      .sf-table th:last-child, .sf-table td:last-child { text-align:right; white-space:nowrap; }
+      .sf-table td strong { color:#0a2a22; }
+      .sf-table tfoot td { background:#0a2a22; color:#fff; border:0; padding:16px; }
+      .sf-table tfoot td b { color:#fff; margin:0; }
+      .sf-table tfoot td strong { color:#1ef7c4; font-size:18px; }
+      .sf-web-table td:first-child { width:auto; color:#3d4a45; font-weight:400; }
+      .sf-web s, .sf-web-table s { color:#8a9893; font-weight:600; }
+      .sf-web em, .sf-web-table em { font-style:normal; color:#00936d; font-weight:800; margin-left:6px; }
+      .sf-web-table tfoot em { color:#1ef7c4; }
+      .sf-web-table tfoot s { color:rgba(255,255,255,.55); }
+      .sf-web .sf-block-total strong em { background:#1ef7c4; color:#06261e; padding:3px 10px; border-radius:999px; font-size:16px; vertical-align:middle; }
+      .sf-pay-table td:first-child { width:auto; color:#0a0f0d; font-weight:400; }
+      .sf-pay-table td, .sf-pay-table th { text-align:right; } .sf-pay-table td:first-child, .sf-pay-table th:first-child { text-align:left; }
+      .sf-free { margin-top:26px; padding:24px; border-radius:24px; background:#0a2a22; color:#fff; }
+      .sf-free > small { font-size:12px; font-weight:800; letter-spacing:.08em; color:#1ef7c4; }
+      .sf-free-grid { margin-top:14px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+      .sf-free-grid div { padding:14px 16px; border-radius:16px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); }
+      .sf-free-grid b { display:block; font-size:15px; }
+      .sf-free-grid span { display:block; margin-top:4px; font-size:13px; color:rgba(255,255,255,.7); line-height:1.45; }
+      #budget .maintenance-card { margin-top:26px; }
+      #scope .delivery-timeline { margin-top:30px; }
+      @media (max-width: 980px) { .sf-tiers { grid-template-columns:1fr; } .sf-free-grid { grid-template-columns:1fr 1fr; } }
+      @media (max-width: 640px) {
+        .sf-block-head { flex-direction:column; align-items:flex-start; padding:20px 16px 14px; }
+        .sf-block-total { text-align:left; }
+        .sf-free-grid { grid-template-columns:1fr; }
+        .sf-table thead { display:none; }
+        .sf-table:not(.sf-pay-table) tr { display:grid; grid-template-columns:auto 1fr; gap:4px 10px; padding:14px 16px; border-bottom:1px solid #eef2f0; }
+        .sf-table:not(.sf-pay-table) td { padding:0; border:0; text-align:left !important; }
+        .sf-table:not(.sf-pay-table) tbody td:nth-child(3) { grid-column:2; font-size:13.5px; }
+        .sf-table:not(.sf-pay-table) tbody td:nth-child(4) { grid-column:2; }
+        .sf-web-table tbody td:nth-child(2) { grid-column:1 / -1; }
+        .sf-table:not(.sf-pay-table) tfoot tr { display:flex; justify-content:space-between; align-items:center; gap:12px; background:#0a2a22; }
+        .sf-table:not(.sf-pay-table) tfoot td { padding:0; background:transparent; }
+        .sf-pay-table { font-size:13px; } .sf-pay-table td, .sf-pay-table th { padding:10px 8px; }
+        .sf-price { font-size:34px; }
+        .sf-table tfoot td:first-child { width:auto; }
+        #scope .delivery-table, #scope .delivery-table tbody { display:block; width:100%; min-width:0 !important; }
+        #scope .delivery-table thead { display:none; }
+        #scope .delivery-table tr { display:block; padding:14px 4px; border-bottom:1px solid rgba(255,255,255,.1); }
+        #scope .delivery-table td { display:block; padding:3px 0 !important; border:0 !important; width:auto !important; }
+        #scope .delivery-table td:nth-child(2) { color:#1ef7c4; font-weight:700; font-size:13px; }
+      }
       .sf-hero-logo { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
       .sf-hero-logo svg { width:52px; height:52px; flex:none; }
       .sf-hero-logo span { font-size:30px; font-weight:800; letter-spacing:-0.02em; color:#0a0f0d; }
@@ -4294,14 +4381,9 @@
         >
       </div>
       <div class="top-actions">
-        <button
-          class="btn primary"
-          onclick="document.getElementById('budget').scrollIntoView({ behavior: 'smooth' })"
-        >
-          Review budget <svg aria-hidden="true" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button
-        ><a class="btn secondary" download="" href="Splendid-Freight-Proposal.pdf"
-          >Download PDF <svg aria-hidden="true" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg></a
-        >
+        <button class="btn primary" onclick="document.getElementById('options').scrollIntoView({ behavior: 'smooth' })">
+          See the options <svg aria-hidden="true" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button
+        ><a class="btn secondary" download="" href="Splendid-Freight-Proposal.pdf">Download PDF <svg aria-hidden="true" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg></a>
       </div>
     </header>
 
@@ -4311,14 +4393,11 @@
           <div>
             <div class="sf-hero-logo"><svg viewBox="0 0 40 40" aria-label="Splendid Freight" role="img"><defs><mask id="sfm"><rect width="40" height="40" fill="#fff"/><path d="M14 1.5C8 7.5 8.6 14.2 16.4 18.6C24.2 23 28.4 28.6 24.6 38.6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/></mask></defs><circle cx="20" cy="20" r="19" fill="#1EF7C4" mask="url(#sfm)"/><circle cx="20" cy="20" r="19" fill="none" stroke="#007a5e" stroke-opacity=".25" stroke-width="1" /></svg><span>Splendid Freight</span></div>
             <span class="eyebrow"><i></i> Logistics &amp; ATM support platform proposal</span>
-            <h1 class="display">
-              Every shipment, visible to <em>every customer.</em>
-            </h1>
+            <h1 class="display">Every shipment, visible to <em>every customer.</em></h1>
             <p class="lead" style="margin-top: 26px">
-              One platform that runs Splendid Freight from quote to delivery. Customers
-              request quotes and track cargo in their own accounts, staff scan a QR code
-              at every handover, delays are flagged before customers have to ask, and
-              leadership sees how fast every lane, customer and ATM job really moves.
+              One system to run freight and ATM jobs, keep customers updated without the
+              phone calls, and see where time and money go. Three options, so you can start
+              where it makes sense and grow from there.
             </p>
           </div>
           <div aria-label="Cargo port operations" class="hero-photo">
@@ -4334,79 +4413,34 @@
     <section class="proposal-page mint" id="understanding">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">01 · Understanding of Problem</span>
+          <span class="section-no">01 · What we heard</span>
         </div>
         <div class="section-intro">
           <div>
-            <h2 class="title">
-              Moving cargo is the work. The hard part is
-              <span>keeping customers informed.</span>
-            </h2>
+            <h2 class="title">Moving cargo is the work. The hard part is <span>keeping customers informed.</span></h2>
           </div>
           <p class="lead">
-            Today a shipment lives across emails, Zoho Books and phone calls. Customers
-            ask where their cargo is, staff answer one by one, and nobody can say how
-            long a Manchester to Lagos air shipment takes on average, or which stage
-            causes the most delays.
+            Today a shipment lives across Outlook, Zoho Books and phone calls. Customers
+            chase updates, and it is hard to see which stage slows things down.
           </p>
         </div>
         <div class="problem-grid">
           <div class="problem-main">
             <div>
-              <span class="eyebrow" style="color: #fff; border-color: rgba(255, 255, 255, 0.16)"
-                ><i></i> Core understanding</span
-              >
-              <h3 style="margin-top: 18px">
-                Splendid Freight does not need another tracking link. It needs one
-                operating record for every shipment and every ATM job.
-              </h3>
-              <p>
-                Quote, approval, invoice, pickup, airport or port, customs, inland
-                trucking and delivery should all write to the same timeline, so the
-                customer, the operations team and management see the same truth.
-              </p>
+              <span class="eyebrow" style="color: #fff; border-color: rgba(255, 255, 255, 0.16)"><i></i> The goal</span>
+              <h3 style="margin-top: 18px">One record for every shipment and every ATM job, that your team and your customers both see.</h3>
             </div>
             <div class="truths">
-              <div class="truth">
-                <small>Quoted</small><strong>What did the customer approve?</strong>
-              </div>
-              <div class="truth">
-                <small>Scanned</small><strong>Where is the cargo right now?</strong>
-              </div>
-              <div class="truth">
-                <small>Flagged</small><strong>What is late, and who has been told?</strong>
-              </div>
+              <div class="truth"><small>Quoted</small><strong>What did the customer approve?</strong></div>
+              <div class="truth"><small>Tracked</small><strong>Where is the cargo right now?</strong></div>
+              <div class="truth"><small>Flagged</small><strong>What is late, and who knows?</strong></div>
             </div>
           </div>
           <div class="problem-side">
-            <div class="mini">
-              <span class="section-no">01</span><b>Status by email</b>
-              <p>
-                Customers chase updates over email and phone because there is no
-                account where they can see milestones for themselves.
-              </p>
-            </div>
-            <div class="mini">
-              <span class="section-no">02</span><b>Manual quote cycle</b>
-              <p>
-                Requests arrive as emails with weights, dimensions and addresses, then
-                move by hand into quotes, approvals and Zoho Books invoices.
-              </p>
-            </div>
-            <div class="mini">
-              <span class="section-no">03</span><b>Delays found late</b>
-              <p>
-                Customs holds and missed connections are discovered when a customer
-                calls, not when the milestone is overdue.
-              </p>
-            </div>
-            <div class="mini">
-              <span class="section-no">04</span><b>ATM jobs off the system</b>
-              <p>
-                Decommissioning, relocation, staging, civil works, cannibalisation and
-                refurbishment need their own trail of machines, parts and sign-offs.
-              </p>
-            </div>
+            <div class="mini"><span class="section-no">01</span><b>Updates by email</b><p>Customers ask for status because they cannot see it themselves.</p></div>
+            <div class="mini"><span class="section-no">02</span><b>Manual quote cycle</b><p>Requests, quotes and invoices move by hand between Outlook and Zoho Books.</p></div>
+            <div class="mini"><span class="section-no">03</span><b>Customs delays found late</b><p>A held PAAR or examination shows up when the customer calls.</p></div>
+            <div class="mini"><span class="section-no">04</span><b>ATM jobs off the record</b><p>Machines, parts and bank sign-offs live in spreadsheets and photos on phones.</p></div>
           </div>
         </div>
       </div>
@@ -4415,70 +4449,33 @@
     <section class="proposal-page dark" id="approach">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">02 · Approach &amp; Methodology</span>
+          <span class="section-no">02 · How it works</span>
         </div>
         <div class="section-intro">
           <div>
-            <h2 class="title">
-              Scan at every handover.
-              <span>Let the system tell the customer.</span>
-            </h2>
+            <h2 class="title">Update once. <span>Everyone sees it.</span></h2>
           </div>
           <p class="lead">
-            Every shipment and every ATM gets a QR code. Staff scan it at pickup, at
-            the airport or port, at customs and at delivery. Each scan updates the
-            customer's account, sends the right notification and feeds the analytics,
-            so updates happen without anyone writing an email.
+            Every shipment and every ATM gets a QR label. Staff scan it at each handover and
+            pick the step. The customer's tracking, notifications and reports update on their own.
           </p>
         </div>
         <div class="method-grid">
           <div class="steps">
-            <div class="step">
-              <span>01</span>
-              <div>
-                <b>Discover</b>
-                <p>Map the quote to delivery flow, ATM job types, Zoho Books and Outlook usage, roles and customer expectations.</p>
-              </div>
-            </div>
-            <div class="step">
-              <span>02</span>
-              <div>
-                <b>Design</b>
-                <p>Prototype the customer portal, operations dashboard and QR scanner in Splendid Freight's brand before full build.</p>
-              </div>
-            </div>
-            <div class="step">
-              <span>03</span>
-              <div>
-                <b>Build</b>
-                <p>Develop accounts, quoting, tracking, notifications, integrations, analytics and the ATM module in parallel streams.</p>
-              </div>
-            </div>
-            <div class="step">
-              <span>04</span>
-              <div>
-                <b>Validate</b>
-                <p>Run real shipments and a live ATM job through the system with your team and selected customers before launch.</p>
-              </div>
-            </div>
-            <div class="step">
-              <span>05</span>
-              <div>
-                <b>Launch &amp; improve</b>
-                <p>Go live, onboard customers to their accounts, train the team and refine with six months of included support.</p>
-              </div>
-            </div>
+            <div class="step"><span>01</span><div><b>Discover</b><p>Two workshops in Lagos and Abuja to map your flow, Zoho Books and ATM jobs.</p></div></div>
+            <div class="step"><span>02</span><div><b>Design</b><p>Clickable screens in your brand, approved before we build.</p></div></div>
+            <div class="step"><span>03</span><div><b>Build</b><p>Weekly progress you can click through, not a big reveal at the end.</p></div></div>
+            <div class="step"><span>04</span><div><b>Pilot</b><p>Real shipments and one ATM job run through it with your team.</p></div></div>
+            <div class="step"><span>05</span><div><b>Launch</b><p>Data moved over, staff trained, customers invited, six months of support.</p></div></div>
           </div>
           <div>
             <div aria-label="Splendid Freight prototype preview" class="demo-experience">
               <div aria-label="Prototype devices" class="demo-tabs" role="tablist">
                 <button aria-selected="true" class="demo-tab active" data-demo-tab="desktop" role="tab" type="button">
-                  <span>01</span>
-                  <div><b>Operations dashboard</b><small>Shipments, quotes and ATM jobs</small></div>
+                  <span>01</span><div><b>Operations portal</b><small>Shipments, quotes and ATM jobs</small></div>
                 </button>
                 <button aria-selected="false" class="demo-tab" data-demo-tab="mobile" role="tab" type="button">
-                  <span>02</span>
-                  <div><b>QR scanner</b><small>Staff phone at each handover</small></div>
+                  <span>02</span><div><b>QR scanner</b><small>Staff phone at each handover</small></div>
                 </button>
               </div>
               <div class="demo-panel active" data-demo-panel="desktop">
@@ -4490,38 +4487,33 @@
                         <div class="side-brand">SPLENDID</div>
                         <div class="navitem active">Overview</div>
                         <div class="navitem">Shipments</div>
-                        <div class="navitem">Quotes</div>
                         <div class="navitem">ATM jobs</div>
                         <div class="navitem">Customers</div>
-                        <div class="navitem">Analytics</div>
+                        <div class="navitem">Invoices</div>
+                        <div class="navitem">Website</div>
                       </aside>
                       <main class="dash">
                         <div class="dash-head">
-                          <div>
-                            <span class="section-no">Live operations view</span>
-                            <h3>Overview</h3>
-                          </div>
+                          <div><span class="section-no">Live operations view</span><h3>Overview</h3></div>
                           <div class="avatar">MD</div>
                         </div>
                         <div class="stat-grid">
                           <div class="stat"><small>In transit</small><strong>46</strong></div>
-                          <div class="stat"><small>In customs</small><strong>09</strong></div>
+                          <div class="stat"><small>At customs</small><strong>09</strong></div>
                           <div class="stat accent"><small>Delayed</small><strong>03</strong></div>
                           <div class="stat"><small>ATM jobs</small><strong>07</strong></div>
                         </div>
                         <div class="dash-panels">
                           <div class="panel">
-                            <div class="row"><span>SF-24118 · Manchester to Lagos · Air</span><b>Customs</b></div>
+                            <div class="row"><span>SF-24118 · Manchester to Lagos · Air</span><b>PAAR issued</b></div>
                             <div class="row"><span>SF-24121 · Shenzhen to Apapa · Ocean</span><b>2 days late</b></div>
                             <div class="row"><span>ATM-0392 · Relocation, Wuse to Garki</span><b>Staging</b></div>
-                            <div class="row"><span>Quote Q-1187 · 320 kg, 4 cartons</span><b>Approved →</b></div>
+                            <div class="row"><span>Quote Q-1187 · 320 kg, 4 cartons</span><b>Accepted →</b></div>
                           </div>
                           <div class="panel">
-                            <div class="pulse">
-                              <div><strong>6.4</strong><small>avg days door to door</small></div>
-                            </div>
+                            <div class="pulse"><div><strong>6.4</strong><small>avg days door to door</small></div></div>
                             <div class="row"><span>On time this month</span><b>91%</b></div>
-                            <div class="row"><span>Quotes awaiting reply</span><b>5</b></div>
+                            <div class="row"><span>Unpaid invoices</span><b>5</b></div>
                           </div>
                         </div>
                       </main>
@@ -4534,39 +4526,24 @@
                   <div class="mobile-explainer">
                     <span class="client-demo-label">FIELD WORKFLOW</span>
                     <h3>One scan updates the customer.</h3>
-                    <p>
-                      Drivers, warehouse and customs staff scan the shipment or ATM QR
-                      label, confirm the milestone and add a photo. The customer's
-                      timeline and notifications update instantly.
-                    </p>
-                    <div class="mobile-points">
-                      <span>QR labels for cargo and ATMs</span><span>Photo proof</span><span>Works on any phone</span>
-                    </div>
+                    <p>Scan the label, pick the step, add a photo. Done.</p>
+                    <div class="mobile-points"><span>QR labels for cargo and ATMs</span><span>Photo proof</span><span>Any phone</span></div>
                   </div>
                   <div class="phone-frame">
                     <div class="phone-island"></div>
                     <div class="phone-screen">
-                      <div class="phone-head">
-                        <div><small>LAGOS OPERATIONS</small><b>Scan shipment</b></div>
-                        <span>SF</span>
-                      </div>
+                      <div class="phone-head"><div><small>LAGOS OPERATIONS</small><b>Scan shipment</b></div><span>SF</span></div>
                       <div class="shift-card">
                         <small>SF-24118 · AIR FREIGHT</small>
                         <h4>Manchester to Lagos</h4>
                         <p>4 cartons · 320 kg · Acme Supplies Ltd</p>
-                        <div class="location-pill">● Next milestone: customs cleared</div>
-                        <button type="button">Confirm milestone</button>
+                        <div class="location-pill">● Next step: customs release</div>
+                        <button type="button">Confirm step</button>
                       </div>
                       <div class="phone-section">
                         <b>Timeline</b>
-                        <div>
-                          <span>01</span>
-                          <p><strong>Picked up, Manchester</strong><small>Scanned 10 Nov · 09:14</small></p>
-                        </div>
-                        <div>
-                          <span>02</span>
-                          <p><strong>Landed, Lagos MMIA</strong><small>Customer notified by email</small></p>
-                        </div>
+                        <div><span>01</span><p><strong>Picked up, Manchester</strong><small>10 Nov · 09:14</small></p></div>
+                        <div><span>02</span><p><strong>Landed, Lagos MMIA</strong><small>Customer notified</small></p></div>
                       </div>
                       <div class="phone-nav"><b>Scan</b><span>Jobs</span><span>Photos</span></div>
                     </div>
@@ -4575,12 +4552,181 @@
               </div>
             </div>
             <p class="prototype-note">
-              Prototype direction shown for proposal purposes. You can also open the
-              <a href="https://www.ferrnagency.com/concept/splendid-freight-app/" target="_blank" rel="noopener">web app concept</a>
-              and
-              <a href="https://www.ferrnagency.com/concept/splendid-freight/" target="_blank" rel="noopener">website concept</a>
-              we shared before the meeting. Final screens follow the approved specification.
+              Prototype direction only. See also the
+              <a href="https://www.ferrnagency.com/concept/splendid-freight-app/" target="_blank" rel="noopener">web app concept</a> and
+              <a href="https://www.ferrnagency.com/concept/splendid-freight/" target="_blank" rel="noopener">website concept</a>.
             </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="proposal-page white" id="options">
+      <div class="shell">
+        <div class="page-head section-label-only">
+          <span class="section-no">03 · Your options</span>
+        </div>
+        <div class="section-intro">
+          <div>
+            <h2 class="title">Three ways to start. <span>Upgrade any time.</span></h2>
+          </div>
+          <p class="lead">
+            Each option includes everything in the one before it, plus the CRM with Zoho Books
+            and your new website. Start with one and move up later by paying only the difference.
+          </p>
+        </div>
+<div class="sf-tiers">
+<article class="sf-tier">
+          <small>Option 1 · For running the business</small>
+          <h3>Operations Portal</h3>
+          <div class="sf-price">₦9,500,000</div>
+          <p class="sf-split">₦3,800,000 to start · ₦5,700,000 at launch</p>
+          <p>Your team runs shipments and ATM jobs in one place. Customers follow a tracking link your team updates.</p>
+          <ul><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Shipments and Nigerian clearance steps</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>QR labels and phone updates</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Customer tracking link</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>ATM jobs and machine register</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Website editor</span></li></ul>
+          <div class="sf-tier-foot"><span>Live by</span><b>29 January 2027</b></div>
+          <a class="sf-tier-link" href="#opt1">See every feature</a>
+        </article>
+<article class="sf-tier featured"><span class="sf-badge">Recommended</span>
+          <small>Option 2 · For business customers</small>
+          <h3>Customer Portal</h3>
+          <div class="sf-price">₦15,500,000</div>
+          <p class="sf-split">₦6,200,000 to start · ₦9,300,000 at launch</p>
+          <p>Everything in Option 1, plus accounts where business customers request, approve and track.</p>
+          <ul><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Everything in Option 1</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Customer accounts with several users</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Shipment and ATM requests</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Quotes accepted online</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Automatic email and WhatsApp updates</span></li></ul>
+          <div class="sf-tier-foot"><span>Live by</span><b>26 February 2027</b></div>
+          <a class="sf-tier-link" href="#opt2">See every feature</a>
+        </article>
+<article class="sf-tier">
+          <small>Option 3 · For business and personal customers</small>
+          <h3>Full Platform</h3>
+          <div class="sf-price">₦24,000,000</div>
+          <p class="sf-split">₦9,600,000 to start · ₦14,400,000 at launch</p>
+          <p>Everything in Option 2, plus a B2C app with instant quotes, online payments and analytics.</p>
+          <ul><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Everything in Option 2</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Mobile app and B2C sign-up</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Instant quotes and online payments</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Quote and payment tracking</span></li><li><svg viewBox="0 0 24 24" aria-hidden="true" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Analytics for you and your customers</span></li></ul>
+          <div class="sf-tier-foot"><span>Live by</span><b>26 March 2027</b></div>
+          <a class="sf-tier-link" href="#opt3">See every feature</a>
+        </article>
+</div>
+        <div class="sf-every">
+          <div>
+            <small>IN EVERY OPTION</small>
+            <h3>CRM, invoices, expenses, Zoho Books and your data moved over</h3>
+          </div>
+          <ul>
+            <li>Customer CRM</li><li>Invoices</li><li>Expense tracker</li><li>Zoho Books sync</li><li>Bulk data migration</li><li>Free new website</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="proposal-page mint" id="budget">
+      <div class="shell">
+        <div class="page-head section-label-only">
+          <span class="section-no">04 · What you get</span>
+        </div>
+        <div class="section-intro">
+          <div>
+            <h2 class="title">Every feature, <span>and why it matters.</span></h2>
+          </div>
+          <p class="lead">
+            The full breakdown of each option, line by line, with what it does for your team and
+            your customers.
+          </p>
+        </div>
+<div class="sf-block" id="opt1">
+          <div class="sf-block-head"><div><small>Option 1 · Operations Portal</small><h3>Operations Portal</h3><p>Includes the CRM, invoices, expenses, Zoho Books sync and data migration that come with every option.</p></div>
+            <div class="sf-block-total"><span>Option total</span><strong>₦9,500,000</strong></div></div>
+          <div class="sf-table-wrap"><table class="sf-table">
+            <thead><tr><th>#</th><th>What you get</th><th>How it helps</th><th>Value</th></tr></thead>
+            <tbody>
+<tr><td>01</td><td><b>Shipment control board</b><span>Every air, ocean and road shipment in one list, with status, owner and next step.</span></td><td>Answer "where is it?" in seconds, without digging through email.</td><td><strong>₦1,200,000</strong></td></tr>
+<tr><td>02</td><td><b>Nigerian clearance steps</b><span>Form M, PAAR, duty assessment and payment, examination, release, TDO or NAHCO/SAHCO gate pass, exit and delivery.</span></td><td>See exactly which customs step each shipment is waiting on.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>03</td><td><b>Customer tracking link</b><span>A private link and QR code per shipment that shows the customer every update your team posts.</span></td><td>Fewer "any update?" calls and emails for your team.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>04</td><td><b>QR labels and phone updates</b><span>Print a label per shipment. Staff scan it at the port, airport or warehouse, pick the step and add a photo.</span></td><td>Updates happen on the spot, with photo proof, in under a minute.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>05</td><td><b>Shipment documents</b><span>Bill of lading, airway bill, invoices, packing list, PAAR and proof of delivery stored on each shipment.</span></td><td>No more searching inboxes for the right document.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>06</td><td><b>ATM job tracker</b><span>Decommissioning, relocation from branch A to B, staging, civil works, cannibalisation and refurbishment, each with its own checklist.</span></td><td>Every ATM job follows the same steps, whoever is on site.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>07</td><td><b>ATM register and chain of custody</b><span>A QR-tagged record per machine: bank, branch, serial, condition photos, parts harvested and sign-off at each handover.</span></td><td>A clean audit trail to show banks, from pickup to installation.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>08</td><td><b>Website editor</b><span>Change services, pages, photos and blog posts, and read every website enquiry, from the portal.</span></td><td>Keep the website current without calling a developer.</td><td><strong>₦400,000</strong></td></tr>
+<tr><td>09</td><td><b>Customer CRM</b><span>Every customer company, contact, shipment, quote, note and follow-up in one place.</span></td><td>Anyone on the team can pick up a customer without a handover.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>10</td><td><b>Invoices</b><span>Create invoices from a shipment and see what is paid, part-paid or overdue.</span></td><td>Bill faster and see who owes what at a glance.</td><td><strong>₦600,000</strong></td></tr>
+<tr><td>11</td><td><b>Expense tracker</b><span>Log freight, duty, port charges, trucking and agent fees against each shipment or ATM job.</span></td><td>Know the real profit on every job, not just the revenue.</td><td><strong>₦600,000</strong></td></tr>
+<tr><td>12</td><td><b>Zoho Books sync</b><span>Customers, invoices and payments move both ways between the portal and Zoho Books.</span></td><td>No double entry, and your accountant keeps working in Zoho.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>13</td><td><b>Bulk data migration</b><span>Your existing customers, past shipments and invoices imported from Zoho Books, Excel and Outlook contacts.</span></td><td>Day one starts with your history, not an empty system.</td><td><strong>₦500,000</strong></td></tr>
+            </tbody>
+            <tfoot><tr><td colspan="3"><b>Option 1 total</b></td><td><strong>₦9,500,000</strong></td></tr></tfoot>
+          </table></div>
+        </div>
+<div class="sf-block" id="opt2">
+          <div class="sf-block-head"><div><small>Option 2 adds · Customer Portal</small><h3>Customer Portal</h3><p>Option 2 total: ₦15,500,000, which is Option 1 (₦9,500,000) plus the lines below.</p></div>
+            <div class="sf-block-total"><span>These lines</span><strong>₦6,000,000</strong></div></div>
+          <div class="sf-table-wrap"><table class="sf-table">
+            <thead><tr><th>#</th><th>What you get</th><th>How it helps</th><th>Value</th></tr></thead>
+            <tbody>
+<tr><td>14</td><td><b>Customer accounts</b><span>Each business customer gets its own login, with several staff users per company.</span></td><td>Customers serve themselves, at any hour.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>15</td><td><b>Shipment request form</b><span>Origin, destination, weight, dimensions, commodity, pickup address and documents in one simple form.</span></td><td>Requests arrive complete, so quotes go out faster.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>16</td><td><b>ATM support requests</b><span>Banks request decommissioning, relocation, staging or refurbishment by branch and machine.</span></td><td>ATM work comes in structured, ready to schedule.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>17</td><td><b>Room for new services</b><span>Add warehousing, charter or haulage requests later without a rebuild.</span></td><td>The portal grows with the business.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>18</td><td><b>Tracking inside the account</b><span>All shipments and ATM jobs, their timelines and documents, ready to download.</span></td><td>One place for customers to see everything they have with you.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>19</td><td><b>Quotes in the account</b><span>Your team sends the quote to the account and the customer accepts it online. Payment stays offline.</span></td><td>Approvals in clicks, not email chains, and every quote on record.</td><td><strong>₦800,000</strong></td></tr>
+<tr><td>20</td><td><b>Automatic email and WhatsApp updates</b><span>Each step triggers a message, and late steps alert your team and the customer.</span></td><td>Customers hear about delays from you first.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>21</td><td><b>Order history and repeat orders</b><span>Past shipments with one-click repeat for regular lanes.</span></td><td>Makes it easy for customers to book with you again.</td><td><strong>₦400,000</strong></td></tr>
+            </tbody>
+            <tfoot><tr><td colspan="3"><b>Option 2 total</b></td><td><strong>₦15,500,000</strong></td></tr></tfoot>
+          </table></div>
+        </div>
+<div class="sf-block" id="opt3">
+          <div class="sf-block-head"><div><small>Option 3 adds · Full Platform</small><h3>Full Platform</h3><p>Option 3 total: ₦24,000,000, which is Option 2 (₦15,500,000) plus the lines below.</p></div>
+            <div class="sf-block-total"><span>These lines</span><strong>₦8,500,000</strong></div></div>
+          <div class="sf-table-wrap"><table class="sf-table">
+            <thead><tr><th>#</th><th>What you get</th><th>How it helps</th><th>Value</th></tr></thead>
+            <tbody>
+<tr><td>22</td><td><b>B2C sign-up</b><span>Individuals, such as online shoppers and diaspora senders, create their own accounts.</span></td><td>Opens a new customer group without extra staff.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>23</td><td><b>Mobile app</b><span>Installable app on Android and iPhone, with push notifications for every update.</span></td><td>Your brand on the customer's home screen.</td><td><strong>₦1,800,000</strong></td></tr>
+<tr><td>24</td><td><b>Instant quote calculator</b><span>Rate tables by lane, mode and weight give standard shipments a price on the spot.</span></td><td>Win price shoppers before they ask a competitor.</td><td><strong>₦1,200,000</strong></td></tr>
+<tr><td>25</td><td><b>Online payments</b><span>Paystack card, bank transfer and USSD in naira, plus card payments in USD and GBP.</span></td><td>Get paid before the cargo moves.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>26</td><td><b>Quote and payment tracking</b><span>Every quote from requested to sent, accepted, invoiced and paid, with reminders for unpaid ones.</span></td><td>Nothing slips between the quote and the cash.</td><td><strong>₦900,000</strong></td></tr>
+<tr><td>27</td><td><b>Cargo insurance at checkout</b><span>Declared value and cover option on each booking, with the policy stored on the shipment.</span></td><td>Extra revenue, and protection customers can see.</td><td><strong>₦500,000</strong></td></tr>
+<tr><td>28</td><td><b>Customer analytics</b><span>Each customer sees their spend, shipments, average days door to door and on-time rate.</span></td><td>Shows business customers the value you deliver.</td><td><strong>₦700,000</strong></td></tr>
+<tr><td>29</td><td><b>Business analytics</b><span>Revenue and margin by lane, customs time, delays by stage, top customers, quote win rate and ATM turnaround.</span></td><td>Decide on facts: which lanes, customers and steps to fix or grow.</td><td><strong>₦1,000,000</strong></td></tr>
+<tr><td>30</td><td><b>24/7 tracking assistant</b><span>An AI assistant in the app that answers "where is my shipment?" from live data.</span></td><td>Customers get answers at night and on weekends.</td><td><strong>₦500,000</strong></td></tr>
+            </tbody>
+            <tfoot><tr><td colspan="3"><b>Option 3 total</b></td><td><strong>₦24,000,000</strong></td></tr></tfoot>
+          </table></div>
+        </div>
+<div class="sf-block sf-web">
+          <div class="sf-block-head"><div><small>Included free in every option</small><h3>Your new website</h3><p>Built and launched in January, whichever option you choose.</p></div>
+            <div class="sf-block-total"><span>Website value</span><strong><s>₦3,500,000</s> <em>FREE</em></strong></div></div>
+          <div class="sf-table-wrap"><table class="sf-table sf-web-table">
+            <thead><tr><th>What you get</th><th>Value</th></tr></thead>
+            <tbody>
+<tr><td><b>New website design</b><span>A fresh design in the Splendid Freight brand, built for phones first.</span></td><td><s>₦800,000</s></td></tr>
+<tr><td><b>Service pages</b><span>Air, ocean and road freight, customs clearance, warehousing, charter and ATM logistics.</span></td><td><s>₦700,000</s></td></tr>
+<tr><td><b>Quote request and tracking box</b><span>Request a quote or track a shipment straight from the homepage.</span></td><td><s>₦400,000</s></td></tr>
+<tr><td><b>AI website assistant</b><span>Answers questions and captures leads, day and night.</span></td><td><s>₦600,000</s></td></tr>
+<tr><td><b>Blog and news</b><span>Publish updates and guides that bring in search traffic.</span></td><td><s>₦300,000</s></td></tr>
+<tr><td><b>SEO and Google Business</b><span>Set up to be found in Lagos, Abuja and Port Harcourt searches.</span></td><td><s>₦400,000</s></td></tr>
+<tr><td><b>Visitor analytics and leads inbox</b><span>See who visits, from where, and every enquiry in one inbox.</span></td><td><s>₦300,000</s></td></tr>
+            </tbody>
+            <tfoot><tr><td><b>Website total</b></td><td><strong><s>₦3,500,000</s> <em>₦0</em></strong></td></tr></tfoot>
+          </table></div>
+        </div>
+<div class="sf-free"><small>ALSO INCLUDED AT NO FEE</small><div class="sf-free-grid"><div><b>6 months hosting</b><span>Servers, database and storage for documents and photos.</span></div><div><b>6 months support</b><span>Fixes, small changes and help after launch.</span></div><div><b>Training</b><span>Hands-on sessions for operations, finance and management.</span></div><div><b>Roles and audit log</b><span>Control who sees what, and see who changed what.</span></div><div><b>Backups and monitoring</b><span>Daily backups and alerts if anything goes down.</span></div><div><b>Domain, email and SSL setup</b><span>Website, portal and messages sent from your own domain.</span></div></div></div>
+        <div class="maintenance-card">
+          <div class="maintenance-main">
+            <div>
+              <small>OPTIONAL AFTER THE FIRST 6 MONTHS</small>
+              <h4>Ongoing maintenance</h4>
+              <p>Updates, backups, monitoring, fixes and small changes. New features are quoted separately.</p>
+            </div>
+            <div class="maintenance-price"><strong>₦500,000</strong><span>per month · optional</span></div>
+          </div>
+          <div class="hosting-included-card">
+            <div>
+              <small>ESTIMATE</small>
+              <h4>Cloud hosting after month 6</h4>
+              <p>WhatsApp messages and payment fees are billed at Meta's and Paystack's own rates.</p>
+            </div>
+            <div class="hosting-included-price"><strong>$60</strong><span>estimated per month</span></div>
           </div>
         </div>
       </div>
@@ -4589,202 +4735,35 @@
     <section class="proposal-page white" id="scope">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">03 · Scope &amp; Timeline</span>
+          <span class="section-no">05 · Timeline &amp; payment</span>
         </div>
         <div class="section-intro">
           <div>
-            <h2 class="title">
-              A full platform in 16 weeks.
-              <span>Live by mid March 2027.</span>
-            </h2>
+            <h2 class="title">Website in January. <span>Platform from late January.</span></h2>
           </div>
-          <p class="lead">
-            Delivery runs from kickoff through specification, design, build, testing
-            with your team and launch. The website and customer portal go first, the
-            QR tracking and ATM module follow, and every date moves with the kickoff date.
-          </p>
+          <p class="lead">Dates assume kickoff on 23 November 2026 and a short pause over Christmas and New Year.</p>
         </div>
-        <div class="scope-grid">
-          <div>
-            <div class="module-grid">
-              <div class="module">
-                <b>Customer accounts</b>
-                <p>Each B2B customer gets its own login with multiple users, shipment history, documents, invoices and saved addresses. B2C ready for the next phase.</p>
-              </div>
-              <div class="module">
-                <b>Quote portal</b>
-                <p>Customers request quotes with origin, destination, weight, dimensions, commodity and pickup address. Staff price and send the quote, the customer approves online.</p>
-              </div>
-              <div class="module">
-                <b>Shipment tracking</b>
-                <p>Milestones from pickup to origin airport or port, departure, arrival, customs in progress, customs cleared, inland trucking and delivery. Port to port supported.</p>
-              </div>
-              <div class="module">
-                <b>QR scanning</b>
-                <p>Printable QR labels for every shipment and ATM. Staff scan from any phone to confirm milestones with time, location and photo proof.</p>
-              </div>
-              <div class="module">
-                <b>Delay alerts</b>
-                <p>Expected time for each stage. When a milestone is overdue the team is alerted and the customer gets a clear update by email and WhatsApp.</p>
-              </div>
-              <div class="module">
-                <b>Analytics &amp; customer stats</b>
-                <p>Average days per shipment and per stage, on-time rate, customs time, lane and customer performance, quote conversion and revenue views.</p>
-              </div>
-              <div class="module">
-                <b>ATM support module</b>
-                <p>Decommissioning, relocation from branch A to branch B, staging, civil works, cannibalisation and refurbishment, with a QR tagged record per machine.</p>
-              </div>
-              <div class="module">
-                <b>Zoho Books, Outlook &amp; insurance</b>
-                <p>Approved quotes become Zoho Books invoices, emails go out through your Outlook domain, and cargo insurance cover is offered and recorded in the quote.</p>
-              </div>
-              <div class="module">
-                <b>Website rebuild</b>
-                <p>A faster, SEO ready website with service pages for freight, warehousing and ATM logistics, quote requests, a blog, visitor analytics and an AI assistant.</p>
-              </div>
-              <div class="module">
-                <b>Roles, security &amp; audit</b>
-                <p>Admin, operations, field staff and customer roles. Every quote, scan and status change is logged with who did it and when.</p>
-              </div>
-            </div>
-          </div>
-          <div class="timeline delivery-timeline">
-            <div class="delivery-timeline-head">
-              <div>
-                <h3>Delivery rhythm</h3>
-                <p>Target dates assume kickoff on 23 November 2026, with a short pause over the Christmas and New Year holidays.</p>
-              </div>
-              <div class="launch-chip">
-                <span>Target launch</span>
-                <strong>15 MAR 2027</strong>
-              </div>
-            </div>
-            <div class="delivery-table-wrap">
-              <table class="delivery-table">
-                <thead>
-                  <tr><th scope="col">Milestone</th><th scope="col">Target date</th><th scope="col">Delivery stage</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td><strong>Kickoff &amp; discovery workshops</strong><span>Logistics flow, ATM job types, Zoho Books and Outlook setup, roles and reporting needs.</span></td><td>23 November 2026</td><td><span class="stage-pill">Discovery</span></td></tr>
-                  <tr><td><strong>Product specification approved</strong><span>Flows, screens, milestones, delay rules, acceptance criteria and user stories.</span></td><td>4 December 2026</td><td><span class="stage-pill">Specification</span></td></tr>
-                  <tr><td><strong>Website, customer portal &amp; dashboard UI/UX</strong><span>Approved designs for the website, customer accounts, quote flow and operations dashboard.</span></td><td>18 December 2026</td><td><span class="stage-pill">Design</span></td></tr>
-                  <tr><td><strong>Website live &amp; QR scanner design</strong><span>New website launched with quote requests, blog and analytics. Scanner and ATM screens approved.</span></td><td>15 January 2027</td><td><span class="stage-pill">Website launch</span></td></tr>
-                  <tr><td><strong>Accounts, quotes &amp; tracking engine</strong><span>Customer accounts, quote to approval to invoice, shipment milestones and timelines.</span></td><td>5 February 2027</td><td><span class="stage-pill">Development</span></td></tr>
-                  <tr><td><strong>QR scanning, notifications &amp; integrations</strong><span>QR labels and scanner, delay alerts, email and WhatsApp updates, Zoho Books and Outlook.</span></td><td>19 February 2027</td><td><span class="stage-pill">Development</span></td></tr>
-                  <tr><td><strong>ATM module, insurance &amp; analytics</strong><span>ATM asset register, job workflows, parts tracking, insurance cover and reporting.</span></td><td>26 February 2027</td><td><span class="stage-pill">Development</span></td></tr>
-                  <tr><td><strong>QA &amp; pilot with live shipments</strong><span>Testing across roles and devices, then real shipments and an ATM job run through the system.</span></td><td>8 March 2027</td><td><span class="stage-pill">Pilot</span></td></tr>
-                  <tr><td><strong>Launch, customer onboarding &amp; handoff</strong><span>Production release, customer account invitations, staff training and documentation.</span></td><td>15 March 2027</td><td><span class="stage-pill launch">Launch</span></td></tr>
-                </tbody>
-              </table>
-            </div>
+        <div class="timeline delivery-timeline">
+          <div class="delivery-table-wrap">
+            <table class="delivery-table">
+              <thead><tr><th scope="col">Milestone</th><th scope="col">Target date</th><th scope="col">Option</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Kickoff &amp; discovery workshops</strong><span>Lagos and Abuja teams, Zoho Books, ATM jobs.</span></td><td>23 November 2026</td><td><span class="stage-pill">All options</span></td></tr>
+                <tr><td><strong>Screens approved</strong><span>Clickable designs signed off before build.</span></td><td>11 December 2026</td><td><span class="stage-pill">All options</span></td></tr>
+                <tr><td><strong>New website live</strong><span>Service pages, quote requests, tracking box, AI assistant.</span></td><td>15 January 2027</td><td><span class="stage-pill">All options</span></td></tr>
+                <tr><td><strong>Operations Portal live</strong><span>Shipments, ATM jobs, tracking links, CRM, Zoho Books, data moved.</span></td><td>29 January 2027</td><td><span class="stage-pill launch">Option 1</span></td></tr>
+                <tr><td><strong>Customer Portal live</strong><span>Customer accounts, requests, quotes, automatic updates.</span></td><td>26 February 2027</td><td><span class="stage-pill launch">Option 2</span></td></tr>
+                <tr><td><strong>Full Platform live</strong><span>B2C app, online payments, instant quotes, analytics.</span></td><td>26 March 2027</td><td><span class="stage-pill launch">Option 3</span></td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="proposal-page mint" id="budget">
-      <div class="shell">
-        <div class="page-head section-label-only">
-          <span class="section-no">04 · Budget</span>
-        </div>
-        <div class="budget-layout">
-          <div class="budget-hero">
-            <div class="budget-inline-intro">
-              <h2 class="title">
-                One investment for the platform
-                <span>Splendid Freight runs on.</span>
-              </h2>
-              <p class="lead">
-                ₦25,000,000 covers the complete engagement: the logistics platform and
-                new website (₦18,000,000) and the ATM support module (₦7,000,000), from
-                discovery and design through build, integrations, testing, launch and
-                six months of support.
-              </p>
-            </div>
-            <div class="budget-total-block">
-              <small>Total project investment</small>
-              <div class="price">₦25,000,000</div>
-              <p>
-                The investment is spread across 21 priced workstreams in two parts, so
-                you can see exactly what goes into the logistics platform, the website
-                and the ATM module.
-              </p>
-            </div>
-            <div class="pay">
-              <div><b>₦10,000,000</b><span>40% commitment fee · kickoff</span></div>
-              <div><b>₦15,000,000</b><span>60% final installment · production release &amp; handoff</span></div>
-            </div>
-          </div>
-
-          <div class="allocation commercial-breakdown">
-            <div class="commercial-head">
-              <div>
-                <span class="commercial-kicker">Commercial breakdown</span>
-                <h3>Breaking down the ₦25m investment</h3>
-                <p>21 priced workstreams across two parts, plus 6 services included at no fee, so the paid scope and the launch support are clear in one place.</p>
-              </div>
-              <div class="commercial-total"><span>Priced scope</span><strong>₦25,000,000</strong></div>
-            </div>
-            <div class="commercial-table-wrap">
-              <table class="commercial-table">
-                <thead>
-                  <tr><th>#</th><th>Workstream</th><th>What is delivered</th><th>Investment</th></tr>
-                </thead>
-                <tbody>
-                  <tr class="included-row first-included"><td>01</td><td><b>6-month cloud hosting + database baseline</b><span class="scope-tag">Included at no fee</span></td><td>Production environment, database, file storage for documents and photo proof, and agreed baseline usage for the first 6 months after launch.</td><td><strong>Included · ₦0</strong></td></tr>
-                  <tr class="included-row"><td>02</td><td><b>QR label templates + printing setup</b><span class="scope-tag">Included at no fee</span></td><td>Shipment and ATM QR label designs, print-ready templates and setup on your office label printers.</td><td><strong>Included · ₦0</strong></td></tr>
-                  <tr class="included-row"><td>03</td><td><b>Transactional email baseline</b><span class="scope-tag">Included at no fee</span></td><td>Sending quotes, approvals, milestone updates and delay alerts from your own Outlook domain, within agreed baseline volume.</td><td><strong>Included · ₦0</strong></td></tr>
-                  <tr class="included-row"><td>04</td><td><b>Domain, DNS + SSL connection</b><span class="scope-tag">Included at no fee</span></td><td>Website and portal domains, DNS configuration, HTTPS and launch routing.</td><td><strong>Included · ₦0</strong></td></tr>
-                  <tr class="included-row"><td>05</td><td><b>Backups, monitoring + error logging</b><span class="scope-tag">Included at no fee</span></td><td>Scheduled backups, uptime monitoring and error logging for launch operations.</td><td><strong>Included · ₦0</strong></td></tr>
-                  <tr class="included-row"><td>06</td><td><b>6-month post-launch support + training</b><span class="scope-tag">Included at no fee</span></td><td>In-scope bug fixes, operational guidance, minor configuration changes, staff training and customer onboarding help for six months after go-live.</td><td><strong>Included · ₦0</strong></td></tr>
-                  <tr class="group-row"><td colspan="4"><b>Part A · Logistics platform &amp; website · ₦18,000,000</b></td></tr>
-                  <tr class="first-priced"><td>07</td><td><b>Discovery &amp; process mapping</b></td><td>Workshops with Lagos and Abuja teams, quote to delivery mapping, customs and inland stages, roles, reporting needs and success measures.</td><td><strong>₦1,200,000</strong></td></tr>
-                  <tr><td>08</td><td><b>Product specification &amp; acceptance criteria</b></td><td>Detailed specification, milestone definitions, delay rules, user stories, screen inventory and acceptance criteria.</td><td><strong>₦900,000</strong></td></tr>
-                  <tr><td>09</td><td><b>UX/UI design: portal, dashboard &amp; scanner</b></td><td>Customer portal, operations dashboard and mobile QR scanner designs in Splendid Freight's brand, with clickable prototypes.</td><td><strong>₦1,800,000</strong></td></tr>
-                  <tr><td>10</td><td><b>Website rebuild with AI assistant</b></td><td>New website with freight, warehousing and ATM logistics pages, SEO, quote requests and an AI assistant that answers questions and captures leads.</td><td><strong>₦2,400,000</strong></td></tr>
-                  <tr><td>11</td><td><b>Website CMS, blog, leads &amp; visitor analytics</b></td><td>Blog publishing, a leads inbox for every website enquiry and visitor analytics inside the platform.</td><td><strong>₦800,000</strong></td></tr>
-                  <tr><td>12</td><td><b>Customer accounts &amp; B2B portal</b></td><td>Company accounts with multiple users, shipment history, documents, invoices and saved addresses. Structured for B2C later.</td><td><strong>₦1,400,000</strong></td></tr>
-                  <tr><td>13</td><td><b>Quote to approval to invoice workflow</b></td><td>Online quote requests, staff pricing, quote sending, customer approval, number of days and supplier details, and invoice handoff.</td><td><strong>₦1,600,000</strong></td></tr>
-                  <tr><td>14</td><td><b>Shipment tracking engine &amp; milestones</b></td><td>Air, ocean and road shipments with pickup, origin port, departure, arrival, customs, inland trucking and delivery milestones. Port to port supported.</td><td><strong>₦1,700,000</strong></td></tr>
-                  <tr><td>15</td><td><b>QR labels &amp; staff scanner app</b></td><td>Unique QR per shipment, phone-based scanner for staff with time, location and photo proof on each milestone.</td><td><strong>₦1,400,000</strong></td></tr>
-                  <tr><td>16</td><td><b>Delay rules &amp; customer notifications</b></td><td>Expected time per stage, overdue alerts to the team and automatic customer updates by email and WhatsApp.</td><td><strong>₦900,000</strong></td></tr>
-                  <tr><td>17</td><td><b>Analytics &amp; customer performance stats</b></td><td>Average days per shipment and stage, on-time rate, customs time, lane and customer reports, quote conversion and revenue dashboards.</td><td><strong>₦1,000,000</strong></td></tr>
-                  <tr><td>18</td><td><b>Zoho Books &amp; Outlook integrations</b></td><td>Approved quotes create Zoho Books invoices and payment status syncs back. Platform email sent through your Microsoft 365 domain.</td><td><strong>₦1,100,000</strong></td></tr>
-                  <tr><td>19</td><td><b>Cargo insurance in quotes &amp; shipments</b></td><td>Declared value, insurance cover option and premium on each quote, with policy documents stored on the shipment.</td><td><strong>₦500,000</strong></td></tr>
-                  <tr><td>20</td><td><b>Roles, security &amp; audit trail</b></td><td>Admin, operations, field staff and customer roles, secure sessions, permissions and a full log of every quote, scan and change.</td><td><strong>₦600,000</strong></td></tr>
-                  <tr><td>21</td><td><b>QA, pilot, deployment &amp; handoff</b></td><td>Cross-device testing, pilot with live shipments, production release, documentation and team walkthrough.</td><td><strong>₦700,000</strong></td></tr>
-                  <tr class="group-row"><td colspan="4"><b>Part B · ATM support module · ₦7,000,000</b></td></tr>
-                  <tr class="first-priced"><td>22</td><td><b>ATM workflow design &amp; specification</b></td><td>Job types for decommissioning, relocation from branch A to branch B, staging, civil works, cannibalisation and refurbishment, with their checklists.</td><td><strong>₦900,000</strong></td></tr>
-                  <tr><td>23</td><td><b>ATM asset register &amp; QR tags</b></td><td>A record per machine with bank, branch, serial, model, condition and full history, tagged with its own QR code.</td><td><strong>₦1,300,000</strong></td></tr>
-                  <tr><td>24</td><td><b>Job scheduling, field teams &amp; photo proof</b></td><td>Job creation, team assignment, site checklists, before and after photos and milestone scans from the field.</td><td><strong>₦1,500,000</strong></td></tr>
-                  <tr><td>25</td><td><b>Cannibalisation &amp; refurbishment tracking</b></td><td>Parts harvested from machines, parts stock, refurbishment steps, quality checks and machine readiness status.</td><td><strong>₦1,300,000</strong></td></tr>
-                  <tr><td>26</td><td><b>Bank client view &amp; sign-off</b></td><td>Bank customers see job progress, photos and documents in their account and sign off completed jobs online.</td><td><strong>₦1,200,000</strong></td></tr>
-                  <tr><td>27</td><td><b>ATM analytics &amp; SLA reporting</b></td><td>Job turnaround, SLA performance, machines by status and refurbishment output per month.</td><td><strong>₦800,000</strong></td></tr>
-                </tbody>
-                <tfoot><tr><td colspan="3"><b>Total project investment</b><span>Logistics platform &amp; website ₦18,000,000 · ATM support module ₦7,000,000</span></td><td><strong>₦25,000,000</strong></td></tr></tfoot>
-              </table>
-            </div>
-          </div>
-
-          <div class="maintenance-card">
-            <div class="maintenance-main">
-              <div>
-                <small>OPTIONAL ONGOING MAINTENANCE</small>
-                <h4>Available from 6 months after launch</h4>
-                <p>Covers routine maintenance, security and dependency updates, backups, monitoring, bug fixes, performance checks and minor operational support. New features such as B2C card payments are quoted separately.</p>
-              </div>
-              <div class="maintenance-price"><strong>₦500,000</strong><span>per month · optional</span></div>
-            </div>
-            <div class="hosting-included-card">
-              <div>
-                <small>ESTIMATE</small>
-                <h4>Cloud hosting</h4>
-                <p>Estimated running cost for the live platform after the included period. WhatsApp messages are billed at Meta's published rates.</p>
-              </div>
-              <div class="hosting-included-price"><strong>$60</strong><span>estimated per month</span></div>
-            </div>
-          </div>
+<div class="sf-block sf-pay">
+          <div class="sf-block-head"><div><small>Payment</small><h3>40% to start, 60% at launch</h3><p>Upgrading later? You pay only the difference between options.</p></div></div>
+          <div class="sf-table-wrap"><table class="sf-table sf-pay-table">
+            <thead><tr><th>Option</th><th>Total</th><th>40% at kickoff</th><th>60% at launch</th></tr></thead>
+            <tbody><tr><td><b>Option 1 · Operations Portal</b></td><td>₦9,500,000</td><td>₦3,800,000</td><td>₦5,700,000</td></tr><tr><td><b>Option 2 · Customer Portal</b></td><td>₦15,500,000</td><td>₦6,200,000</td><td>₦9,300,000</td></tr><tr><td><b>Option 3 · Full Platform</b></td><td>₦24,000,000</td><td>₦9,600,000</td><td>₦14,400,000</td></tr></tbody>
+          </table></div>
         </div>
       </div>
     </section>
@@ -4792,33 +4771,26 @@
     <section class="proposal-page dark" id="ready">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">05 · Ready to Begin</span>
+          <span class="section-no">06 · Ready to begin</span>
         </div>
         <div class="close-grid">
           <div class="close-copy">
             <span class="eyebrow"><i></i> Ready to begin</span>
             <h2>Give every customer a window into <span>their cargo.</span></h2>
-            <p>
-              The first milestone is a kickoff and two discovery workshops with your
-              Lagos and Abuja teams. From there we move straight into the specification,
-              designs and a website launch in January, with the full platform and ATM
-              module live in March.
-            </p>
+            <p>Pick an option and we start with the discovery workshops. Your website goes live in January either way.</p>
             <div class="chips" style="margin-top: 22px">
-              <span class="chip dark-chip">16-week delivery</span
-              ><span class="chip dark-chip">6 months support included</span
-              ><span class="chip dark-chip">₦25m project investment</span>
+              <span class="chip dark-chip">Free website</span
+              ><span class="chip dark-chip">6 months support</span
+              ><span class="chip dark-chip">Upgrade any time</span>
             </div>
             <div class="close-actions">
-              <a class="approve" href="mailto:hello@ferrnagency.com?subject=Splendid%20Freight%20proposal%20approved&amp;body=Hello%20Ferrn%2C%0A%0AWe%20approve%20the%20Splendid%20Freight%20platform%20proposal%20and%20would%20like%20to%20proceed.%20Please%20send%20the%20commitment%20invoice.%0A%0AName%3A%0ARole%3A%0A"
-                >Approve proposal &amp; proceed <svg aria-hidden="true" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a
+              <a class="approve" href="mailto:hello@ferrnagency.com?subject=Splendid%20Freight%20proposal%20approved&amp;body=Hello%20Ferrn%2C%0A%0AWe%20would%20like%20to%20proceed%20with%20Option%20___%20of%20the%20Splendid%20Freight%20platform%20proposal.%20Please%20send%20the%20commitment%20invoice.%0A%0AName%3A%0ARole%3A%0A"
+                >Approve &amp; choose an option <svg aria-hidden="true" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a
               ><a class="download" download="" href="Splendid-Freight-Proposal.pdf">Download PDF</a>
             </div>
           </div>
           <div class="close-photo">
-            <div class="close-photo-card">
-              <b>Built around Splendid Freight's operations.</b>
-            </div>
+            <div class="close-photo-card"><b>Built around Splendid Freight's operations.</b></div>
           </div>
         </div>
       </div>
@@ -4827,14 +4799,10 @@
     <section class="proposal-page team-closing" id="team">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">06 · Team</span>
+          <span class="section-no">07 · Team</span>
         </div>
         <div class="section-intro">
-          <div>
-            <h2 class="title">
-              The people responsible for <span>building it.</span>
-            </h2>
-          </div>
+          <div><h2 class="title">The people responsible for <span>building it.</span></h2></div>
         </div>
         <div class="team-grid">
           <article class="person">
@@ -4909,31 +4877,26 @@
     <section class="proposal-page white work-closing" id="work">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">07 · Relevant Work</span>
+          <span class="section-no">08 · Relevant work</span>
         </div>
         <div class="section-intro">
-          <div>
-            <h2 class="title">Work we've already <span>delivered.</span></h2>
-          </div>
-          <p class="lead">
-            Logistics and operations work that shows we understand freight, plus
-            enterprise platforms built for complex services and decision-makers.
-          </p>
+          <div><h2 class="title">Work we've already <span>delivered.</span></h2></div>
+          <p class="lead">Logistics work, plus platforms for complex businesses.</p>
         </div>
         <div class="credentials">
           <div class="cred">
             <b>Relay</b>
-            <p>A freight operations web app that turns the period after delivery into a visible, actionable revenue control workflow for logistics teams.</p>
+            <p>A freight operations web app that turns the period after delivery into a clear revenue control workflow.</p>
             <a class="project-link-btn" href="https://freight-app1.netlify.app/" rel="noopener" target="_blank">View Project</a>
           </div>
           <div class="cred">
             <b>Gromzia Ventures</b>
-            <p>A clearer digital presence for a long-established logistics business, built to show service breadth, trust and operating credibility.</p>
+            <p>A stronger online presence for an established logistics business, showing service range and credibility.</p>
             <a class="project-link-btn" href="https://www.gromzialtd.com/" rel="noopener" target="_blank">View Project</a>
           </div>
           <div class="cred">
             <b>M-P Infrastructure</b>
-            <p>Enterprise digital experience that organises a complex EPC business across telecoms, energy, civil works and real estate for decision-makers.</p>
+            <p>An enterprise site organising a complex EPC business across telecoms, energy and civil works.</p>
             <a class="project-link-btn" href="https://www.mpiafrica.com/" rel="noopener" target="_blank">View Project</a>
           </div>
         </div>
