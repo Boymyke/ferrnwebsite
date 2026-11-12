@@ -123,6 +123,14 @@ def _face(code, file, name):
 _face('AA', 'anjola', 'Anjola Ajayi')
 _face('WE', 'william', 'William Emelifonwu')
 _face('DO', 'daniel', 'Daniel Olusesi')
+_face('OM', 'osondu', 'Osondu Michael')
+LI = {'Anjola Ajayi': 'https://www.linkedin.com/in/lifewjola/', 'Osondu Michael': 'https://www.linkedin.com/in/osondu-micheal/',
+      'Oki Daniel': 'https://www.linkedin.com/in/daniel-oki-24055122a/', 'William Emelifonwu': 'https://www.linkedin.com/in/william-emelifonwu/',
+      'Daniel Olusesi': 'https://www.linkedin.com/in/daniel-olusesi/'}
+_LI_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>'
+for _n, _u in LI.items():
+    _i = TEAM.index('<h3>' + _n + '</h3>'); _e = TEAM.index('</article>', _i)
+    TEAM = TEAM[:_e] + f'<a class="sf-li" href="{_u}" target="_blank" rel="noopener" aria-label="{_n} on LinkedIn">{_LI_ICON}LinkedIn</a>\n          ' + TEAM[_e:]
 CONTACT = lines(960, 1086)
 SCRIPT = lines(1094, 1110)
 
