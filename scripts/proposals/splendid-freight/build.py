@@ -115,6 +115,21 @@ _will = """<article class="person">
           </article>"""
 TEAM, _n = _re.subn(r'<article class="person">\s*<div class="initials">SI</div>.*?</article>', _will, TEAM, flags=_re.S)
 assert _n == 1, _n
+_jer = """<article class="person">
+            <div class="initials">JO</div>
+            <h3>Jerome Opara</h3>
+            <div class="role">Product &amp; UI/UX Designer</div>
+            <ul class="person-credentials">
+              <li><strong>Federal University of Technology Owerri Graduate</strong></li>
+              <li><strong>Lead UI/UX Designer at Acad AI</strong></li>
+              <li><strong>Former Lead Product Designer, Nexa Studio &amp; MediFirst</strong></li>
+              <li><strong>3+ Years in Product &amp; UX Design</strong></li>
+              <li><strong>Design Systems, UX Strategy &amp; Conversion-Driven UX</strong></li>
+              <li><strong>SaaS and Logistics Dashboard Experience</strong></li>
+            </ul>
+          </article>"""
+TEAM, _n = _re.subn(r'<article class="person">\s*<div class="initials">OD</div>.*?</article>', _jer, TEAM, flags=_re.S)
+assert _n == 1, _n
 def _face(code, file, name):
     global TEAM
     uri = 'data:image/jpeg;base64,' + base64.b64encode(open(HERE + 'work/' + file + '.jpg', 'rb').read()).decode()
@@ -124,8 +139,9 @@ _face('AA', 'anjola', 'Anjola Ajayi')
 _face('WE', 'william', 'William Emelifonwu')
 _face('DO', 'daniel', 'Daniel Olusesi')
 _face('OM', 'osondu', 'Osondu Michael')
+_face('JO', 'jerome', 'Jerome Opara')
 LI = {'Anjola Ajayi': 'https://www.linkedin.com/in/lifewjola/', 'Osondu Michael': 'https://www.linkedin.com/in/osondu-micheal/',
-      'Oki Daniel': 'https://www.linkedin.com/in/daniel-oki-24055122a/', 'William Emelifonwu': 'https://www.linkedin.com/in/william-emelifonwu/',
+      'Jerome Opara': 'https://www.linkedin.com/in/jerome-opara-787572235/', 'William Emelifonwu': 'https://www.linkedin.com/in/william-emelifonwu/',
       'Daniel Olusesi': 'https://www.linkedin.com/in/daniel-olusesi/'}
 _LI_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>'
 for _n, _u in LI.items():
