@@ -241,8 +241,7 @@ WORK = [
 ]
 LOGO_DIR = HERE + '../../ferrnwebsite/public/assets/clients/' if False else '/home/claude/ferrnwebsite/public/assets/clients/'
 LOGOS = [('ataam', 'Ataam'), ('clientLogo1', 'M-P Infrastructure'), ('clientLogo10', 'Outbox Experience'), ('clientLogo12', 'WIB Fair'), ('clientLogo2', 'Gromzia'),
-         ('clientLogo3', 'Knomi'), ('clientLogo5', 'Synergix Africa'), ('clientLogo4', 'Aroda'), ('clientLogo8', 'Padher'), ('clientLogo6', 'Client'),
-         ('clientLogo7', 'Client'), ('clientLogo9', 'Client'), ('clientLogo11', 'Client')]
+         ('clientLogo5', 'Synergix Africa'), ('clientLogo4', 'Aroda')]
 
 def work_html():
     import os
