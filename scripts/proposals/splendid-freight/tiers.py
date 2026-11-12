@@ -68,6 +68,7 @@ FREE = [
     ('Domain, email and SSL setup', 'Website, portal and messages sent from your own domain.'),
 ]
 MAINT = [350000, 500000, 750000]
+WEEKS = [8, 12, 16]
 HOSTING = [40, 60, 90]
 OPTIONS = [
     dict(n='1', name='Operations Portal', keys=K1, who='Run the business', live='29 January 2027',
@@ -130,7 +131,7 @@ def compare_html():
             ('Business analytics', 'Margin by lane, customs time, delays by step, top customers and ATM turnaround.', has('banalytics')),
         ]),
         ('Website', [
-            ('New website (worth ₦3,500,000)', 'New design, service pages, quote and tracking box, AI assistant and SEO. Live in December.', txt('Free', 'Free', 'Free')),
+            ('New website (worth ₦3,500,000)', 'New design, service pages, quote and tracking box, AI assistant and SEO. Live in about 4 weeks.', txt('Free', 'Free', 'Free')),
             ('Website editor, blog and leads inbox', 'Update pages and posts yourself, and see every enquiry.', has('webedit')),
         ]),
         ('Support', [
@@ -151,7 +152,7 @@ def compare_html():
     foot = '<tr class="sf-cmp-total"><th scope="row">Total</th>' + ''.join(f'<td class="c{i}"><b>{N(p)}</b></td>' for i, p in enumerate(PRICES)) + '</tr>'
     foot += '<tr><th scope="row">40% to start</th>' + ''.join(f'<td class="c{i}">{N(round(p * .4))}</td>' for i, p in enumerate(PRICES)) + '</tr>'
     foot += '<tr><th scope="row">60% at launch</th>' + ''.join(f'<td class="c{i}">{N(p - round(p * .4))}</td>' for i, p in enumerate(PRICES)) + '</tr>'
-    foot += '<tr><th scope="row">Live by</th>' + ''.join(f'<td class="c{i}">{o["live"]}</td>' for i, o in enumerate(OPTIONS)) + '</tr>'
+    foot += '<tr><th scope="row">Ready in</th>' + ''.join(f'<td class="c{i}">About {w} weeks</td>' for i, w in enumerate(WEEKS)) + '</tr>'
     return f'''<div class="sf-cmp-wrap"><table class="sf-cmp">
           <thead><tr><th class="sf-cmp-corner" scope="col"><small>Compare</small><b>What each option includes</b></th>{head}</tr></thead>
           <tbody>{''.join(rows)}</tbody>
@@ -180,7 +181,7 @@ def breakdown_html():
 def website_html():
     trs = '\n'.join(f'<tr><td><b>{f}</b><span>{what}</span></td><td><s>{N(v)}</s></td></tr>' for f, what, v in WEBSITE)
     return f'''<div class="sf-block sf-web">
-          <div class="sf-block-head"><div><small>Free</small><h3>Your new website</h3><p>Live by 18 December 2026.</p></div>
+          <div class="sf-block-head"><div><small>Free</small><h3>Your new website</h3><p>Live in about 4 weeks from kickoff.</p></div>
             <div class="sf-block-total"><span>Website value</span><strong><s>{N(WEB_TOTAL)}</s> <em class="sf-free-pill">FREE</em></strong></div></div>
           <div class="sf-table-wrap"><table class="sf-table sf-web-table">
             <thead><tr><th>What you get</th><th>Value</th></tr></thead>
@@ -226,3 +227,34 @@ SCRIPT = '''<script>
     </script>'''
 
 CSS = open(HERE + 'tiers.css').read()
+
+import base64 as _b64, glob as _glob
+def _uri(path, mime):
+    return f'data:{mime};base64,' + _b64.b64encode(open(path, 'rb').read()).decode()
+WORK = [
+    ('relay', 'Relay', 'Freight web app', 'Tracks every delivery after drop-off so freight teams get paid on time.', 'https://freight-app1.netlify.app/'),
+    ('gromzia', 'Gromzia Ventures', 'Logistics website', 'A clear, credible website for an established logistics company.', 'https://www.gromzialtd.com/'),
+    ('mpi', 'M-P Infrastructure', 'Enterprise website', 'Telecoms, energy and civil works projects, organised for decision-makers.', 'https://www.mpiafrica.com/'),
+    ('synergix', 'Synergix Africa', 'Business support platform', 'Programmes, funding and tools in simple journeys for entrepreneurs.', 'https://www.synergixafrica.com/'),
+    ('aroda', 'Aroda Group', 'Multi-brand website', 'Several businesses told as one clear story.', 'https://www.arodagroup.com/'),
+    ('pwan', 'Partners West Africa', 'AI assistant', 'A chat assistant that helps people reach legal and civic guidance.', 'https://eha.partnersnigeria.org/'),
+]
+LOGO_DIR = HERE + '../../ferrnwebsite/public/assets/clients/' if False else '/home/claude/ferrnwebsite/public/assets/clients/'
+LOGOS = [('ataam', 'Ataam'), ('clientLogo1', 'M-P Infrastructure'), ('clientLogo10', 'Outbox Experience'), ('clientLogo12', 'WIB Fair'), ('clientLogo2', 'Gromzia'),
+         ('clientLogo3', 'Knomi'), ('clientLogo5', 'Synergix Africa'), ('clientLogo4', 'Aroda'), ('clientLogo8', 'Padher'), ('clientLogo6', 'Client'),
+         ('clientLogo7', 'Client'), ('clientLogo9', 'Client'), ('clientLogo11', 'Client')]
+
+def work_html():
+    import os
+    wdir = HERE + 'work/'
+    cards = ''.join(f'''<a class="sf-work-card" href="{u}" target="_blank" rel="noopener">
+            <div class="sf-work-img" style="background-image:url('{_uri(wdir + k + '.jpg', 'image/jpeg')}')"></div>
+            <div class="sf-work-body"><small>{tag}</small><b>{name}</b><p>{d}</p><span>View project →</span></div>
+          </a>''' for k, name, tag, d, u in WORK)
+    logos = ''.join(f'<span class="sf-logo"><img src="{_uri(LOGO_DIR + f + ".webp", "image/webp")}" alt="{n}"></span>' for f, n in LOGOS if os.path.exists(LOGO_DIR + f + '.webp'))
+    return f'''<div class="sf-work">
+          <div class="sf-work-head"><div><small>Relevant work</small><h3>Work we have already delivered</h3></div>
+            <p>Logistics products, plus websites and platforms for businesses with a lot to explain.</p></div>
+          <div class="sf-work-grid">{cards}</div>
+          <div class="sf-logos"><small>Trusted by</small><div class="sf-logo-row">{logos}</div></div>
+        </div>'''

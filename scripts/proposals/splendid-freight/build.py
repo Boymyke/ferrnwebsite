@@ -106,7 +106,7 @@ body = tpl
 mk = lambda i: SFMARK.replace('id="sfm"', f'id="sfm{i}"').replace('url(#sfm)', f'url(#sfm{i})')
 mocks = open(HERE + 'mocks.html').read()
 mocks = mocks.replace('{{SFMARK_SM}}', mk('a'), 1).replace('{{SFMARK_SM}}', mk('b'), 1)
-for k, v in {'FERRN': FERRN, 'ARROW': ARROW, 'DL': DL, 'SFMARK': SFMARK, 'MOCKS': mocks, 'COMPARE': TI.compare_html(), 'WEBSITE': TI.website_html(), 'FREE': TI.free_html(), 'MAINT': TI.maint_html(), 'TEAM': TEAM, 'CONTACT': CONTACT, 'SCRIPT': SCRIPT + '\n    ' + TI.SCRIPT}.items():
+for k, v in {'FERRN': FERRN, 'ARROW': ARROW, 'DL': DL, 'SFMARK': SFMARK, 'MOCKS': mocks, 'COMPARE': TI.compare_html(), 'WEBSITE': TI.website_html(), 'FREE': TI.free_html(), 'MAINT': TI.maint_html(), 'WORK': TI.work_html(), 'TEAM': TEAM, 'CONTACT': CONTACT, 'SCRIPT': SCRIPT + '\n    ' + TI.SCRIPT}.items():
     body = body.replace('{{' + k + '}}', v)
 body = body.replace('?cc=anjola%40ferrnagency.com&amp;subject', '?subject')
 assert '{{' not in body
