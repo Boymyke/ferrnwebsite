@@ -542,6 +542,23 @@ api.post('/:id/page/done', async (c) => {
   return c.json({ ok: true, url, row: strip(await first(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', p.id)) });
 });
 
+/** Password for a hosted proposal page (link proposals). Stored only as a hash; empty clears it. */
+api.post('/:id/password', async (c) => {
+  if (!can(c, 'sales')) return deny(c);
+  const u = c.get('user')!;
+  const p = await first<Record<string, any>>(c.env.DB, 'SELECT id, number, kind FROM proposals WHERE id = ?', c.req.param('id'));
+  if (!p) return c.json({ ok: false, error: 'Not found' }, 404);
+  if (p.kind !== 'link') return c.json({ ok: false, error: 'Built proposals use their access code instead.' }, 409);
+  const pw = String((await body(c)).password ?? '');
+  if (pw && (pw.length < 6 || pw.length > 100)) return c.json({ ok: false, error: 'Use 6 to 100 characters.' }, 422);
+  // a new gate secret signs everyone out of the old password
+  await run(c.env.DB, "UPDATE proposals SET code_hash = ?, gate_secret = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?",
+    pw ? await hashCode(`page:${pw}`) : null, newGateSecret(), u.name, p.id);
+  await addEvent(c.env.DB, p.id, 'code', u.name, pw ? 'Page password set' : 'Page password removed');
+  await audit(c, 'proposals', p.id, 'code', `${u.name} ${pw ? 'set' : 'removed'} the page password for ${p.number}`);
+  return c.json({ ok: true, row: strip(await first(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', p.id)) });
+});
+
 api.post('/:id/invoices', async (c) => {
   if (!can(c, 'sales')) return deny(c);
   const u = c.get('user')!;

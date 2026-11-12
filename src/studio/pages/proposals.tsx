@@ -821,6 +821,7 @@ function LinkProposalEditor({ id, loaded, reload }: { id: string | null; loaded?
   const [progress, setProgress] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState('edit');
+  const [pw, setPw] = useState('');
   const fileIn = useRef<HTMLInputElement>(null);
   const dirIn = useRef<HTMLInputElement>(null);
   useEffect(() => { if (row) { const x = toLink(row); setD(x); setSaved(JSON.stringify(x)); } }, [row]);
@@ -969,6 +970,14 @@ function LinkProposalEditor({ id, loaded, reload }: { id: string | null; loaded?
                   {d.client_email ? <a className="btn ghost sm" href={`mailto:${d.client_email}?subject=${encodeURIComponent(d.title || 'Our proposal')}&body=${encodeURIComponent(shareText)}`}><Mail {...I} />Email</a> : null}
                   {writable && ['draft', 'expired'].includes(row.status) ? <button className="btn ghost sm" disabled={busy} onClick={() => status('sent')}><Send {...I} />Mark as sent</button> : null}
                   {writable && row.status !== 'signed' ? <button className="btn ghost sm" disabled={busy} onClick={() => status('signed')}><CircleCheck {...I} />Mark accepted</button> : null}
+                </div> : null}
+                {row.page_slug && writable ? <div className="pp-pw" style={{ display: 'grid', gap: 6, margin: '12px 0' }}>
+                  <span className="small"><Lock size={13} /> Page password: <strong>{row.has_code ? 'on' : 'off'}</strong></span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={row.has_code ? 'New password' : 'Set a password'} style={{ flex: 1, minWidth: 0 }} />
+                    <button className="btn sm" disabled={busy || pw.length < 6} onClick={() => runIt(async () => { await api(`/proposals/${id}/password`, { body: { password: pw } }); setPw(''); toast('Password saved. Send it to the client separately.'); reload?.(); })}><KeyRound {...I} />Save</button>
+                    {row.has_code ? <button className="btn sm ghost" disabled={busy} onClick={() => { if (confirm('Remove the password? Anyone with the link can open the page.')) runIt(async () => { await api(`/proposals/${id}/password`, { body: { password: '' } }); toast('Password removed'); reload?.(); }); }}>Remove</button> : null}
+                  </div>
                 </div> : null}
                 <div className="pp-actions">
                   {writable && clientUrl ? <button className="btn ghost sm" disabled={busy} onClick={() => runIt(async () => { await api(`/proposals/${id}/revoke`, { body: { revoked: !row.revoked } }); toast(row.revoked ? 'Link switched back on' : 'Link switched off'); reload?.(); })}>{row.revoked ? <><LockOpen {...I} />Restore link</> : <><Lock {...I} />Switch link off</>}</button> : null}

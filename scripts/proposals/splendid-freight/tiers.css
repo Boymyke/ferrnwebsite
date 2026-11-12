@@ -184,7 +184,7 @@
       @media (max-width: 640px) {
         #approach .steps { grid-template-columns: 1fr; }
         .sf-cmp { min-width: 0; font-size: 12.5px; }
-        .sf-cmp .sf-cmp-corner { width: 31%; padding-left: 12px; } .sf-cmp .sf-cmp-corner b { font-size: 13px; } .sf-cmp .sf-cmp-corner small { display: none; }
+        .sf-cmp .sf-cmp-corner { width: 40%; padding-left: 12px; } .sf-cmp .sf-cmp-corner b { font-size: 13px; } .sf-cmp .sf-cmp-corner small { display: none; }
         .sf-cmp thead th { padding: 30px 4px 12px; }
         .sf-cmp thead th b { font-size: 12.5px; } .sf-cmp thead th span { font-size: 13px; } .sf-cmp thead th i { display: none; } .sf-cmp thead th small { font-size: 9.5px; letter-spacing: .04em; }
         .sf-cmp thead th em { font-size: 9px; padding: 2px 6px; }
@@ -220,3 +220,8 @@
 
       .sfui-top > div:first-child { white-space: nowrap; }
       @media (max-width: 640px) { .sf-cmp thead th { padding-top: 34px; } }
+
+      .sf-cmp tbody th b { display: block; font-size: 14.5px; color: #0a0f0d; font-weight: 700; }
+      .sf-cmp tbody th span { display: block; margin-top: 3px; font-size: 13px; line-height: 1.45; color: #5e6b66; font-weight: 400; }
+      .sf-cmp tbody td { vertical-align: middle; }
+      @media (max-width: 640px) { .sf-cmp tbody th b { font-size: 12px; } .sf-cmp tbody th span { font-size: 11px; } }
