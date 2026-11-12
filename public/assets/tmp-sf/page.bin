@@ -4504,6 +4504,54 @@
 
       .problem-main .truth small { display: block !important; color: #1ef7c4 !important; opacity: 1 !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; visibility: visible !important; }
       .problem-main .truth strong { color: #fff !important; }
+
+      /* ── 01 approach flow ── */
+      .sf-flow { margin-top: 34px; display: grid; gap: 0; }
+      .sf-lane { border-radius: 24px; padding: 26px 24px 22px; }
+      .sf-lane-now { background: #fff; border: 1px solid #e3e9e6; }
+      .sf-lane-next { background: linear-gradient(150deg, #071f19, #0a3a2e); color: #fff; box-shadow: 0 26px 60px rgba(10,42,34,.22); }
+      .sf-lane-head small { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #8a5a00; }
+      .sf-lane-next .sf-lane-head small { color: #1ef7c4; }
+      .sf-lane-head h3 { margin: 6px 0 0; font-size: 24px; letter-spacing: -.02em; color: #0a0f0d; }
+      .sf-lane-next .sf-lane-head h3 { color: #fff; }
+      .sf-track { margin-top: 20px; display: flex; align-items: stretch; gap: 0; }
+      .sf-node { flex: 1 1 0; min-width: 0; border-radius: 16px; padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+      .sf-node span { font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+      .sf-node b { font-size: 14.5px; line-height: 1.25; }
+      .sf-node small { font-size: 12.5px; line-height: 1.4; }
+      .sf-node.now { background: #f4f6f5; border: 1px dashed #c9d2ce; color: #26322e; }
+      .sf-node.now span { color: #8a9893; } .sf-node.now small { color: #6b7873; }
+      .sf-node.next { background: rgba(255,255,255,.07); border: 1px solid rgba(30,247,196,.28); color: #fff; }
+      .sf-node.next span { color: #1ef7c4; } .sf-node.next small { color: rgba(255,255,255,.72); }
+      .sf-flow-arrow { flex: none; width: 22px; display: grid; place-items: center; }
+      .sf-flow-arrow svg { width: 16px; height: 16px; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      .sf-lane-now .sf-flow-arrow svg { stroke: #b4bfbb; } .sf-lane-next .sf-flow-arrow svg { stroke: #1ef7c4; }
+      .sf-notes { margin-top: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+      .sf-notes div { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; }
+      .sf-notes i { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+      .sf-notes p { margin: 0; font-size: 13px; line-height: 1.45; }
+      .sf-notes b { display: block; font-size: 14px; margin-bottom: 2px; }
+      .sf-notes .bad { background: #fff6f5; border: 1px solid #f6d3cf; color: #5e3a36; } .sf-notes .bad i { background: #e5484d; } .sf-notes .bad b { color: #9b2c25; }
+      .sf-notes .good { background: rgba(30,247,196,.08); border: 1px solid rgba(30,247,196,.25); color: rgba(255,255,255,.78); } .sf-notes .good i { background: #1ef7c4; } .sf-notes .good b { color: #fff; }
+      .sf-bridge { display: grid; place-items: center; padding: 14px 0; position: relative; }
+      .sf-bridge::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: linear-gradient(#c9d2ce, #00936d); }
+      .sf-bridge span { position: relative; display: flex; align-items: center; gap: 8px; background: #1ef7c4; color: #06261e; font-weight: 800; font-size: 13px; padding: 9px 16px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,147,109,.3); }
+      .sf-bridge svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      @media (max-width: 1100px) {
+        .sf-track { flex-wrap: wrap; gap: 10px 0; }
+        .sf-node { flex: 1 1 calc(25% - 22px); }
+        .sf-notes { grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width: 640px) {
+        .sf-lane { padding: 20px 16px; }
+        .sf-lane-head h3 { font-size: 20px; }
+        .sf-track { flex-direction: column; gap: 0; }
+        .sf-node { flex: none; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 12px 14px; }
+        .sf-node small { flex-basis: 100%; padding-left: 28px; }
+        .sf-flow-arrow { width: 100%; height: 20px; }
+        .sf-flow-arrow svg { transform: rotate(90deg); }
+        .sf-notes { grid-template-columns: 1fr; }
+      }
       .sf-hero-logo { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
       .sf-hero-logo svg { width:52px; height:52px; flex:none; }
       .sf-hero-logo span { font-size:30px; font-weight:800; letter-spacing:-0.02em; color:#0a0f0d; }
@@ -4555,34 +4603,38 @@
     <section class="proposal-page mint" id="understanding">
       <div class="shell">
         <div class="page-head section-label-only">
-          <span class="section-no">01 · What we understood</span>
+          <span class="section-no">01 · Our approach</span>
         </div>
         <div class="section-intro">
           <div>
-            <h2 class="title">Moving cargo is the work. The hard part is <span>keeping customers informed.</span></h2>
+            <h2 class="title">From chasing updates to <span>one shared record.</span></h2>
           </div>
           <p class="lead">
             Today, a shipment lives in Outlook, Zoho Books and phone calls. Customers chase
             updates, and delays are found late.
           </p>
         </div>
-        <div class="problem-grid">
-          <div class="problem-main">
-            <div>
-              <span class="eyebrow" style="color: #fff; border-color: rgba(255, 255, 255, 0.16)"><i></i> The goal</span>
-              <h3 style="margin-top: 18px">One record for every shipment and ATM job, shared by your team and your customers.</h3>
-            </div>
-            <div class="truths">
-              <div class="truth"><small>Quoted</small><strong>What did the customer approve?</strong></div>
-              <div class="truth"><small>Tracked</small><strong>Where is the cargo right now?</strong></div>
-              <div class="truth"><small>Flagged</small><strong>What is late, and who knows?</strong></div>
+        <div class="sf-flow">
+          <div class="sf-lane sf-lane-now">
+            <div class="sf-lane-head"><small>Your process today</small><h3>Email, spreadsheets and phone calls</h3></div>
+            <div class="sf-track"><div class="sf-node now"><span>01</span><b>Request by email</b><small>Weight, size, goods and pickup address</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node now"><span>02</span><b>Quote by email</b><small>Priced and sent from Outlook</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node now"><span>03</span><b>Approval by email</b><small>Customer replies to confirm</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node now"><span>04</span><b>Invoice in Zoho</b><small>Typed in by hand</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node now"><span>05</span><b>Pickup and freight</b><small>Air, ocean or road</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node now"><span>06</span><b>Customs</b><small>PAAR, duty, examination, release</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node now"><span>07</span><b>Delivery</b><small>Inland truck to the door</small></div></div>
+            <div class="sf-notes">
+              <div class="bad"><i></i><p><b>Back and forth over email</b>Quotes and approvals sit in inboxes.</p></div>
+              <div class="bad"><i></i><p><b>"Any update?" calls</b>Customers cannot see where their cargo is.</p></div>
+              <div class="bad"><i></i><p><b>Delays found late</b>A held PAAR shows up when the customer calls.</p></div>
+              <div class="bad"><i></i><p><b>ATM jobs off the record</b>Machines and sign-offs live in photos and sheets.</p></div>
             </div>
           </div>
-          <div class="problem-side">
-            <div class="mini"><span class="section-no">01</span><b>Updates by email</b><p>Customers ask for status because they cannot see it themselves.</p></div>
-            <div class="mini"><span class="section-no">02</span><b>Manual quote cycle</b><p>Requests, quotes and invoices move by hand between Outlook and Zoho Books.</p></div>
-            <div class="mini"><span class="section-no">03</span><b>Customs delays found late</b><p>A held PAAR or examination shows up when the customer calls.</p></div>
-            <div class="mini"><span class="section-no">04</span><b>ATM jobs off the record</b><p>Machines, parts and bank sign-offs live in spreadsheets and photos on phones.</p></div>
+          <div class="sf-bridge" aria-hidden="true"><span><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>Where we take you</span></div>
+          <div class="sf-lane sf-lane-next">
+            <div class="sf-lane-head"><small>With your new platform</small><h3>One record your team and customers share</h3></div>
+            <div class="sf-track"><div class="sf-node next"><span>01</span><b>Request in the portal</b><small>A simple form or account</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node next"><span>02</span><b>Quote accepted online</b><small>One click to approve</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node next"><span>03</span><b>Invoice synced</b><small>Straight to Zoho Books</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node next"><span>04</span><b>Team updates the step</b><small>Pick the step, add a note, save</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node next"><span>05</span><b>Customer sees it live</b><small>Tracking page, email and WhatsApp</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node next"><span>06</span><b>Delays flagged early</b><small>Before the customer asks</small></div><span class="sf-flow-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="sf-node next"><span>07</span><b>Reports</b><small>Days, costs and profit per job</small></div></div>
+            <div class="sf-notes">
+              <div class="good"><i></i><p><b>No email chasing</b>Requests, quotes and invoices flow on their own.</p></div>
+              <div class="good"><i></i><p><b>Fewer calls</b>Customers see every step the moment you save it.</p></div>
+              <div class="good"><i></i><p><b>Delays handled early</b>Late steps alert your team first.</p></div>
+              <div class="good"><i></i><p><b>ATM jobs on record</b>Every machine, part and sign-off in one place.</p></div>
+            </div>
           </div>
         </div>
       </div>

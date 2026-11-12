@@ -228,3 +228,51 @@
 
       .problem-main .truth small { display: block !important; color: #1ef7c4 !important; opacity: 1 !important; font-size: 12px !important; font-weight: 800 !important; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; visibility: visible !important; }
       .problem-main .truth strong { color: #fff !important; }
+
+      /* ── 01 approach flow ── */
+      .sf-flow { margin-top: 34px; display: grid; gap: 0; }
+      .sf-lane { border-radius: 24px; padding: 26px 24px 22px; }
+      .sf-lane-now { background: #fff; border: 1px solid #e3e9e6; }
+      .sf-lane-next { background: linear-gradient(150deg, #071f19, #0a3a2e); color: #fff; box-shadow: 0 26px 60px rgba(10,42,34,.22); }
+      .sf-lane-head small { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #8a5a00; }
+      .sf-lane-next .sf-lane-head small { color: #1ef7c4; }
+      .sf-lane-head h3 { margin: 6px 0 0; font-size: 24px; letter-spacing: -.02em; color: #0a0f0d; }
+      .sf-lane-next .sf-lane-head h3 { color: #fff; }
+      .sf-track { margin-top: 20px; display: flex; align-items: stretch; gap: 0; }
+      .sf-node { flex: 1 1 0; min-width: 0; border-radius: 16px; padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+      .sf-node span { font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+      .sf-node b { font-size: 14.5px; line-height: 1.25; }
+      .sf-node small { font-size: 12.5px; line-height: 1.4; }
+      .sf-node.now { background: #f4f6f5; border: 1px dashed #c9d2ce; color: #26322e; }
+      .sf-node.now span { color: #8a9893; } .sf-node.now small { color: #6b7873; }
+      .sf-node.next { background: rgba(255,255,255,.07); border: 1px solid rgba(30,247,196,.28); color: #fff; }
+      .sf-node.next span { color: #1ef7c4; } .sf-node.next small { color: rgba(255,255,255,.72); }
+      .sf-flow-arrow { flex: none; width: 22px; display: grid; place-items: center; }
+      .sf-flow-arrow svg { width: 16px; height: 16px; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      .sf-lane-now .sf-flow-arrow svg { stroke: #b4bfbb; } .sf-lane-next .sf-flow-arrow svg { stroke: #1ef7c4; }
+      .sf-notes { margin-top: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+      .sf-notes div { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; }
+      .sf-notes i { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+      .sf-notes p { margin: 0; font-size: 13px; line-height: 1.45; }
+      .sf-notes b { display: block; font-size: 14px; margin-bottom: 2px; }
+      .sf-notes .bad { background: #fff6f5; border: 1px solid #f6d3cf; color: #5e3a36; } .sf-notes .bad i { background: #e5484d; } .sf-notes .bad b { color: #9b2c25; }
+      .sf-notes .good { background: rgba(30,247,196,.08); border: 1px solid rgba(30,247,196,.25); color: rgba(255,255,255,.78); } .sf-notes .good i { background: #1ef7c4; } .sf-notes .good b { color: #fff; }
+      .sf-bridge { display: grid; place-items: center; padding: 14px 0; position: relative; }
+      .sf-bridge::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: linear-gradient(#c9d2ce, #00936d); }
+      .sf-bridge span { position: relative; display: flex; align-items: center; gap: 8px; background: #1ef7c4; color: #06261e; font-weight: 800; font-size: 13px; padding: 9px 16px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,147,109,.3); }
+      .sf-bridge svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      @media (max-width: 1100px) {
+        .sf-track { flex-wrap: wrap; gap: 10px 0; }
+        .sf-node { flex: 1 1 calc(25% - 22px); }
+        .sf-notes { grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width: 640px) {
+        .sf-lane { padding: 20px 16px; }
+        .sf-lane-head h3 { font-size: 20px; }
+        .sf-track { flex-direction: column; gap: 0; }
+        .sf-node { flex: none; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 12px 14px; }
+        .sf-node small { flex-basis: 100%; padding-left: 28px; }
+        .sf-flow-arrow { width: 100%; height: 20px; }
+        .sf-flow-arrow svg { transform: rotate(90deg); }
+        .sf-notes { grid-template-columns: 1fr; }
+      }
