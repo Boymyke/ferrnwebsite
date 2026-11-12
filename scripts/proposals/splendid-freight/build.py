@@ -99,6 +99,22 @@ head = head[:i] + '  .commercial-table tr.group-row td { background: #0a2a22; co
 def lines(a, b):
     return '\n'.join(body_src[a - 1:b])
 TEAM = lines(830, 896)
+import re as _re
+_will = """<article class="person">
+            <div class="initials">WE</div>
+            <h3>William Emelifonwu</h3>
+            <div class="role">Full-Stack &amp; Fintech Software Engineer</div>
+            <ul class="person-credentials">
+              <li><strong>Babcock University Graduate</strong></li>
+              <li><strong>Certified Software Engineer (GMCPN, Computer Professionals of Nigeria)</strong></li>
+              <li><strong>Software Engineer &amp; Technical Analyst at Blaaiz (Fintech)</strong></li>
+              <li><strong>Technical Advisor at Acad AI</strong></li>
+              <li><strong>Former Frontend Engineer, Sterling Bank</strong></li>
+              <li><strong>6+ Years Building Web Applications (MERN, PHP)</strong></li>
+            </ul>
+          </article>"""
+TEAM, _n = _re.subn(r'<article class="person">\s*<div class="initials">SI</div>.*?</article>', _will, TEAM, flags=_re.S)
+assert _n == 1, _n
 CONTACT = lines(960, 1086)
 SCRIPT = lines(1094, 1110)
 
