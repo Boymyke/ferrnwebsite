@@ -4642,6 +4642,20 @@
         .sf-map-card { padding: 20px 14px; }
         .sf-pair { grid-template-columns: 1fr; } .sf-pair-arrow { height: 26px; } .sf-pair-arrow svg { transform: rotate(90deg); }
       }
+
+      /* ── how we deliver ── */
+      .sf-steps { margin-top: 30px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; counter-reset: s; }
+      .sf-step { position: relative; padding: 22px 18px 20px; border-radius: 22px; background: rgba(255,255,255,.05); border: 1px solid rgba(30,247,196,.18); display: flex; flex-direction: column; gap: 10px; }
+      .sf-step:not(:last-child)::after { content: ""; position: absolute; top: 40px; right: -14px; width: 14px; height: 2px; background: rgba(30,247,196,.5); }
+      .sf-step-top { display: flex; align-items: center; gap: 10px; }
+      .sf-step-top span { width: 36px; height: 36px; border-radius: 50%; background: #1ef7c4; color: #06261e; display: grid; place-items: center; font-size: 13px; font-weight: 800; flex: none; }
+      .sf-step-top b { font-size: 19px; color: #fff; letter-spacing: -.01em; }
+      .sf-step h4 { margin: 2px 0 0; font-size: 15px; line-height: 1.35; color: #1ef7c4; font-weight: 700; }
+      .sf-step ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 9px; }
+      .sf-step li { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.8); }
+      .sf-step li svg { flex: none; width: 15px; height: 15px; margin-top: 2px; fill: none; stroke: #1ef7c4; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+      @media (max-width: 1100px) { .sf-steps { grid-template-columns: 1fr 1fr; } .sf-step::after { display: none; } }
+      @media (max-width: 640px) { .sf-steps { grid-template-columns: 1fr; } }
       .sf-hero-logo { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
       .sf-hero-logo svg { width:52px; height:52px; flex:none; }
       .sf-hero-logo span { font-size:30px; font-weight:800; letter-spacing:-0.02em; color:#0a0f0d; }
@@ -4848,19 +4862,11 @@
             <h2 class="title">Clear steps. <span>No surprises.</span></h2>
           </div>
           <p class="lead">
-            You see progress every week, approve the screens before we build, and test with
-            real shipments before launch.
+            We speak with your team first, show you the whole flow before we build, and test
+            with real shipments before launch.
           </p>
         </div>
-        <div class="method-grid">
-          <div class="steps">
-            <div class="step"><span>01</span><div><b>Discover</b><p>Workshops in Lagos and Abuja.</p></div></div>
-            <div class="step"><span>02</span><div><b>Design</b><p>Screens approved before we build.</p></div></div>
-            <div class="step"><span>03</span><div><b>Build</b><p>Weekly progress you can click through.</p></div></div>
-            <div class="step"><span>04</span><div><b>Pilot</b><p>Real shipments with your team.</p></div></div>
-            <div class="step"><span>05</span><div><b>Launch</b><p>Data moved, team trained.</p></div></div>
-          </div>
-        </div>
+        <div class="sf-steps"><article class="sf-step"><div class="sf-step-top"><span>01</span><b>Discover</b></div><h4>We speak with your stakeholders</h4><ul><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Sessions with management, operations, finance and the ATM team</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Walk through how a shipment and an ATM job run today</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Review Zoho Books, Outlook and the documents you use</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Agree goals, priorities and what success looks like</li></ul></article><article class="sf-step"><div class="sf-step-top"><span>02</span><b>Design</b></div><h4>You see the whole flow before we build</h4><ul><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Map every step from request to delivery</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Clickable screens for your team and your customers</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Review sessions until it works the way you work</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Sign-off on the full flow before build starts</li></ul></article><article class="sf-step"><div class="sf-step-top"><span>03</span><b>Build</b></div><h4>Progress you can click through every week</h4><ul><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Built in short weekly cycles</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>A test link that updates every week</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Weekly check-in call and written update</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Your feedback goes into the next week</li></ul></article><article class="sf-step"><div class="sf-step-top"><span>04</span><b>Pilot</b></div><h4>Tested with real shipments</h4><ul><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Live shipments and one ATM job run through it</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Your team uses it day to day</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>We fix and polish what the pilot shows</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Security and access checks before launch</li></ul></article><article class="sf-step"><div class="sf-step-top"><span>05</span><b>Launch</b></div><h4>Go live with support</h4><ul><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Customers, shipments and invoices moved in</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Training for each team</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Customers invited to their accounts</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>6 months of support after launch</li></ul></article></div>
       </div>
     </section>
 
