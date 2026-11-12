@@ -72,7 +72,7 @@ HOSTING = [40, 60, 90]
 OPTIONS = [
     dict(n='1', name='Operations Portal', keys=K1, who='Run the business', live='29 January 2027',
          blurb='Your team runs freight and ATM jobs in one portal. Customers follow a tracking link.'),
-    dict(n='2', name='Customer Portal', keys=K2, who='Business and personal customers', live='26 February 2027', badge='Recommended',
+    dict(n='2', name='Customer Portal', keys=K2, who='Business and personal customers', live='26 February 2027',
          blurb='The operations portal, plus accounts where businesses, personal customers and banks request, approve and track.'),
     dict(n='3', name='Full Platform', keys=K3, who='The complete platform', live='26 March 2027',
          blurb='Everything in the customer portal, plus a mobile app, instant quotes, online payments and full analytics.'),
@@ -160,11 +160,11 @@ def compare_html():
         </table></div>'''
 
 def breakdown_html():
-    tabs = ''.join(f'<button type="button" class="sf-opt-tab{" active" if o["n"] == "2" else ""}" data-opt-tab="{o["n"]}" role="tab" aria-selected="{"true" if o["n"] == "2" else "false"}"><small>Option {o["n"]}</small><b>{o["name"]}</b><span>{N(p)}</span></button>' for o, p in zip(OPTIONS, PRICES))
+    tabs = ''.join(f'<button type="button" class="sf-opt-tab{" active" if o["n"] == "1" else ""}" data-opt-tab="{o["n"]}" role="tab" aria-selected="{"true" if o["n"] == "1" else "false"}"><small>Option {o["n"]}</small><b>{o["name"]}</b><span>{N(p)}</span></button>' for o, p in zip(OPTIONS, PRICES))
     panels = []
     for o, p, mt in zip(OPTIONS, PRICES, MAINT):
         trs = '\n'.join(f'<tr><td>{i + 1:02d}</td><td><b>{L[k][0]}</b><span>{L[k][1]}</span></td><td>{L[k][2]}</td><td><strong>{N(L[k][3])}</strong></td></tr>' for i, k in enumerate(o['keys']))
-        hide = '' if o['n'] == '2' else ' hidden=""'
+        hide = '' if o['n'] == '1' else ' hidden=""'
         panels.append(f'''<div class="sf-block sf-opt-panel" data-opt-panel="{o["n"]}"{hide}>
           <div class="sf-block-head"><div><small>Option {o["n"]} · {o["who"]}</small><h3>{o["name"]}</h3><p>{o["blurb"]}</p><p class="sf-meta">{len(o["keys"])} features · live by {o["live"]} · maintenance after month 6 {N(mt)}/month, optional</p></div>
             <div class="sf-block-total"><span>Total</span><strong>{N(p)}</strong><em>{N(round(p * .4))} to start · {N(p - round(p * .4))} at launch</em></div></div>
