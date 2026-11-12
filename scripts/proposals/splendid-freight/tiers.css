@@ -450,3 +450,5 @@
       @media (max-width: 640px) { .sf-see .sf-pair { grid-template-columns: 1fr; } }
       .sf-ba-table thead th:not(.next) { background: #eef3f1; }
 
+      #understanding .section-intro:not(.sf-see-intro) { display: block !important; }
+      #understanding .section-intro:not(.sf-see-intro) .lead { margin-top: 18px; max-width: 860px; }

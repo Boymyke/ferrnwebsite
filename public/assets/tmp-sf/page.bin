@@ -4726,6 +4726,8 @@
       @media (max-width: 640px) { .sf-see .sf-pair { grid-template-columns: 1fr; } }
       .sf-ba-table thead th:not(.next) { background: #eef3f1; }
 
+      #understanding .section-intro:not(.sf-see-intro) { display: block !important; }
+      #understanding .section-intro:not(.sf-see-intro) .lead { margin-top: 18px; max-width: 860px; }
       .sf-hero-logo { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
       .sf-hero-logo svg { width:52px; height:52px; flex:none; }
       .sf-hero-logo span { font-size:30px; font-weight:800; letter-spacing:-0.02em; color:#0a0f0d; }
