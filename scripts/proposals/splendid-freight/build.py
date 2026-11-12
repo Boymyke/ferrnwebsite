@@ -115,6 +115,14 @@ _will = """<article class="person">
           </article>"""
 TEAM, _n = _re.subn(r'<article class="person">\s*<div class="initials">SI</div>.*?</article>', _will, TEAM, flags=_re.S)
 assert _n == 1, _n
+def _face(code, file, name):
+    global TEAM
+    uri = 'data:image/jpeg;base64,' + base64.b64encode(open(HERE + 'work/' + file + '.jpg', 'rb').read()).decode()
+    TEAM, k = _re.subn(r'<div class="initials">' + code + '</div>', f'<div class="initials photo"><img src="{uri}" alt="{name}"></div>', TEAM)
+    assert k == 1, code
+_face('AA', 'anjola', 'Anjola Ajayi')
+_face('WE', 'william', 'William Emelifonwu')
+_face('DO', 'daniel', 'Daniel Olusesi')
 CONTACT = lines(960, 1086)
 SCRIPT = lines(1094, 1110)
 
