@@ -277,13 +277,21 @@ api.post('/invoices/:id/revoke', async (c) => {
 
 /* ══════════════ proposals ══════════════ */
 const P_FIELDS = ['lead_id', 'client_name', 'client_company', 'client_email', 'client_phone', 'title', 'summary', 'currency', 'discount_pct', 'vat',
-  'deposit_pct', 'invoice_on_sign', 'valid_until', 'status'] as const;
+  'deposit_pct', 'invoice_on_sign', 'valid_until', 'status', 'kind', 'link_url', 'page_slug'] as const;
+const LINK_STATUSES = ['draft', 'sent', 'viewed', 'signed', 'declined', 'expired'];
+export const cleanPageSlug = (s: unknown) => String(s ?? '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+const cleanUrl = (v: unknown) => { try { const u = new URL(String(v ?? '').trim()); return /^https?:$/.test(u.protocol) ? u.toString().slice(0, 600) : null; } catch { return null; } };
 function cleanProposal(b: Record<string, any>) {
   const out: Record<string, unknown> = {};
+  const isLink = b.kind === 'link';
   for (const k of P_FIELDS) {
     if (!(k in b)) continue;
     const v = b[k];
-    if (k === 'currency') out[k] = normCurrency(v);
+    if (k === 'kind') out[k] = v === 'link' ? 'link' : 'built';
+    else if (k === 'link_url') out[k] = cleanUrl(v);
+    else if (k === 'page_slug') out[k] = cleanPageSlug(v) || null;
+    else if (k === 'status' && isLink) { if (LINK_STATUSES.includes(v)) out[k] = v; }
+    else if (k === 'currency') out[k] = normCurrency(v);
     else if (k === 'discount_pct') out[k] = Math.max(0, Math.min(100, Number(v) || 0));
     else if (k === 'deposit_pct') out[k] = Math.max(1, Math.min(100, Number(v) || 100));
     else if (k === 'vat') out[k] = v ? 1 : 0;
@@ -356,9 +364,11 @@ api.post('/', async (c) => {
   if (!('sections_json' in data)) data.sections_json = JSON.stringify(DEFAULT_SECTIONS);
   if (!('items_json' in data)) data.items_json = '[]';
   if (!data.valid_until) data.valid_until = addDays(14);
-  if (data.status && data.status !== 'draft') data.status = 'draft';
+  if (data.status && data.status !== 'draft' && data.kind !== 'link') data.status = 'draft';
   const items = normItems(data.items_json);
-  data.total = computeTotals(items, Number(data.discount_pct ?? 0), data.vat === undefined ? 1 : Number(data.vat)).total;
+  data.total = data.kind === 'link' ? Math.max(0, Number(b.total) || 0) : computeTotals(items, Number(data.discount_pct ?? 0), data.vat === undefined ? 1 : Number(data.vat)).total;
+  if (data.kind === 'link') { if (b.status && LINK_STATUSES.includes(b.status)) data.status = b.status; if (data.status === 'sent') data.sent_at = new Date().toISOString(); }
+  if (data.kind !== 'link') { delete data.kind; delete data.link_url; delete data.page_slug; } // older databases may lack these columns
   const id = newId('pr_');
   Object.assign(data, { id, token: newDocToken(), gate_secret: newGateSecret(), created_by: u.name, updated_by: u.name, title: data.title ?? '' });
   for (let attempt = 0; ; attempt++) {
@@ -395,11 +405,19 @@ api.patch('/:id', async (c) => {
   const u = c.get('user')!; const id = c.req.param('id');
   const before = await first<Record<string, any>>(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', id);
   if (!before) return c.json({ ok: false, error: 'Not found' }, 404);
-  if (before.status === 'signed') return c.json({ ok: false, error: 'Signed proposals are locked so the signed version stays intact.' }, 409);
-  const data = cleanProposal(await body(c));
-  if (!Object.keys(data).length) return c.json({ ok: true, row: strip(before) });
+  const raw = await body(c);
+  const isLink = before.kind === 'link';
+  if (before.status === 'signed' && !isLink) return c.json({ ok: false, error: 'Signed proposals are locked so the signed version stays intact.' }, 409);
+  const data = cleanProposal({ ...raw, kind: before.kind });
+  delete data.kind;
+  if (!isLink) { delete data.link_url; delete data.page_slug; }
+  if (!Object.keys(data).length && !('total' in raw)) return c.json({ ok: true, row: strip(before) });
   const merged = { ...before, ...data };
-  data.total = computeTotals(normItems(merged.items_json), Number(merged.discount_pct), merged.vat).total;
+  data.total = isLink ? ('total' in raw ? Math.max(0, Number(raw.total) || 0) : Number(before.total) || 0) : computeTotals(normItems(merged.items_json), Number(merged.discount_pct), merged.vat).total;
+  if (isLink && data.status && data.status !== before.status) {
+    if (data.status === 'sent' && !before.sent_at) data.sent_at = new Date().toISOString();
+    if (data.status === 'signed' && !before.signed_at) data.signed_at = new Date().toISOString();
+  }
   data.updated_by = u.name; data.updated_at = new Date().toISOString();
   const cols = Object.keys(data);
   await run(c.env.DB, `UPDATE proposals SET ${cols.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, ...cols.map((k) => data[k]), id);
@@ -431,6 +449,7 @@ api.post('/:id/send', async (c) => {
   const p = await first<Record<string, any>>(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', c.req.param('id'));
   if (!p) return c.json({ ok: false, error: 'Not found' }, 404);
   if (p.status === 'signed') return c.json({ ok: false, error: 'Already signed — share the invoice instead.' }, 409);
+  if (p.kind === 'link') return c.json({ ok: false, error: 'Link proposals are shared by copying their link.' }, 409);
   if (!normItems(p.items_json).length && !normSections(p.sections_json).length) return c.json({ ok: false, error: 'Add some content before sending.' }, 422);
   if (p.valid_until && p.valid_until < today()) return c.json({ ok: false, error: 'The “valid until” date has passed. Update it, save, then send.' }, 422);
   const b = await body(c);
@@ -464,6 +483,65 @@ api.post('/:id/revoke', async (c) => {
   await audit(c, 'proposals', p.id, revoked ? 'revoke' : 'restore', `${u.name} ${revoked ? 'revoked' : 'restored'} the client link for ${p.number}`);
   return c.json({ ok: true, row: strip(await first(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', p.id)) });
 });
+/* ── hosted proposal pages (link proposals): files in R2 proposal-pages/<slug>/, served at /proposal/<slug>/ ── */
+const PAGE_TYPES: Record<string, string> = {
+  html: 'text/html; charset=utf-8', css: 'text/css; charset=utf-8', js: 'text/javascript; charset=utf-8', json: 'application/json', svg: 'image/svg+xml',
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', ico: 'image/x-icon', pdf: 'application/pdf',
+  woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', mp4: 'video/mp4', webm: 'video/webm', txt: 'text/plain; charset=utf-8',
+};
+export const pageType = (p: string) => PAGE_TYPES[(p.split('.').pop() || '').toLowerCase()] ?? 'application/octet-stream';
+const cleanPagePath = (p: string) => p.split('/').filter((x) => x && x !== '.' && x !== '..').join('/').slice(0, 300);
+async function pageSlugFor(c: C, p: Record<string, any>) {
+  if (p.page_slug) return p.page_slug as string;
+  const base = cleanPageSlug(p.client_company || p.client_name || p.title || p.number) || cleanPageSlug(p.number);
+  let slug = base;
+  for (let i = 0; i < 5 && (await first(c.env.DB, 'SELECT id FROM proposals WHERE page_slug = ? AND id != ?', slug, p.id)); i++) slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
+  await run(c.env.DB, 'UPDATE proposals SET page_slug = ? WHERE id = ?', slug, p.id);
+  return slug;
+}
+api.post('/:id/page/start', async (c) => {
+  if (!can(c, 'sales')) return deny(c);
+  const p = await first<Record<string, any>>(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', c.req.param('id'));
+  if (!p) return c.json({ ok: false, error: 'Not found' }, 404);
+  if (p.kind !== 'link') return c.json({ ok: false, error: 'Only link proposals can host a page.' }, 409);
+  const want = cleanPageSlug((await body(c)).slug);
+  if (want && want !== p.page_slug) {
+    if (await first(c.env.DB, 'SELECT id FROM proposals WHERE page_slug = ? AND id != ?', want, p.id)) return c.json({ ok: false, error: 'Another proposal already uses that address.' }, 409);
+    await run(c.env.DB, 'UPDATE proposals SET page_slug = ? WHERE id = ?', want, p.id); p.page_slug = want;
+  }
+  const slug = await pageSlugFor(c, p);
+  let cursor: string | undefined; // replace the old version completely
+  do {
+    const l = await c.env.MEDIA.list({ prefix: `proposal-pages/${slug}/`, cursor });
+    if (l.objects.length) await c.env.MEDIA.delete(l.objects.map((o) => o.key));
+    cursor = l.truncated ? l.cursor : undefined;
+  } while (cursor);
+  return c.json({ ok: true, slug });
+});
+api.put('/:id/page/file', async (c) => {
+  if (!can(c, 'sales')) return deny(c);
+  const p = await first<Record<string, any>>(c.env.DB, 'SELECT id, kind, page_slug FROM proposals WHERE id = ?', c.req.param('id'));
+  if (!p || p.kind !== 'link' || !p.page_slug) return c.json({ ok: false, error: 'Start the upload first.' }, 409);
+  const path = cleanPagePath(c.req.query('path') ?? '');
+  if (!path) return c.json({ ok: false, error: 'Missing path' }, 400);
+  if (Number(c.req.header('content-length') ?? 0) > 25 * 1024 * 1024) return c.json({ ok: false, error: `${path} is over 25 MB` }, 413);
+  await c.env.MEDIA.put(`proposal-pages/${p.page_slug}/${path}`, c.req.raw.body!, { httpMetadata: { contentType: pageType(path) } });
+  return c.json({ ok: true });
+});
+api.post('/:id/page/done', async (c) => {
+  if (!can(c, 'sales')) return deny(c);
+  const u = c.get('user')!;
+  const p = await first<Record<string, any>>(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', c.req.param('id'));
+  if (!p || !p.page_slug) return c.json({ ok: false, error: 'Nothing uploaded yet.' }, 409);
+  if (!(await c.env.MEDIA.head(`proposal-pages/${p.page_slug}/index.html`))) return c.json({ ok: false, error: 'The upload needs an index.html at the top level.' }, 422);
+  const url = `${c.env.SITE_URL || origin(c)}/proposal/${p.page_slug}/`;
+  const files = Number((await body(c)).files) || 0;
+  await run(c.env.DB, "UPDATE proposals SET link_url = ?, updated_by = ?, updated_at = datetime('now') WHERE id = ?", url, u.name, p.id);
+  await addEvent(c.env.DB, p.id, 'page', u.name, `Proposal page uploaded (${files} file${files === 1 ? '' : 's'})`);
+  await audit(c, 'proposals', p.id, 'upload', `${u.name} uploaded the page for proposal ${p.number}`);
+  return c.json({ ok: true, url, row: strip(await first(c.env.DB, 'SELECT * FROM proposals WHERE id = ?', p.id)) });
+});
+
 api.post('/:id/invoices', async (c) => {
   if (!can(c, 'sales')) return deny(c);
   const u = c.get('user')!;

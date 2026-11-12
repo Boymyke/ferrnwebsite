@@ -95,22 +95,22 @@ export function Demos() {
   );
 }
 
-type Picked = { path: string; data: Blob }[];
+export type Picked = { path: string; data: Blob }[];
 
-async function fromZip(file: File): Promise<Picked> {
+export async function fromZip(file: File): Promise<Picked> {
   const buf = new Uint8Array(await file.arrayBuffer());
   const files = await new Promise<Record<string, Uint8Array>>((res, rej) => unzip(buf, (err, out) => (err ? rej(err) : res(out))));
   return Object.entries(files).filter(([p, d]) => !p.endsWith('/') && d.length).map(([path, d]) => ({ path, data: new Blob([d as BlobPart]) }));
 }
 
 /** Drop the shared top folder (my-site/index.html → index.html) and junk files. */
-function normalise(items: Picked): Picked {
+export function normalise(items: Picked): Picked {
   const keep = items.filter((x) => !/(^|\/)(__MACOSX|\.DS_Store|Thumbs\.db|\.git)(\/|$)/.test(x.path)).map((x) => ({ ...x, path: x.path.replace(/^\/+/, '') }));
   const tops = new Set(keep.map((x) => x.path.split('/')[0]));
   if (tops.size === 1 && keep.every((x) => x.path.includes('/'))) { const t = [...tops][0] + '/'; return keep.map((x) => ({ ...x, path: x.path.slice(t.length) })); }
   return keep;
 }
-const findEntry = (items: Picked) => {
+export const findEntry = (items: Picked) => {
   const html = items.map((x) => x.path).filter((p) => /\.html?$/i.test(p)).sort((a, b) => a.split('/').length - b.split('/').length);
   return html.find((p) => /^index\.html?$/i.test(p)) ?? html.find((p) => /(^|\/)index\.html?$/i.test(p)) ?? html[0];
 };

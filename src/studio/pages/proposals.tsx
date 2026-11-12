@@ -5,6 +5,7 @@ import {
   Smartphone, Sparkles, Trash2, Wallet, X, MailOpen, MousePointerClick, AlertTriangle,
 } from 'lucide-react';
 import { ago, api, can, fmtDate, list, money } from '../api';
+import { fromZip, normalise, findEntry, type Picked } from './demos';
 import { Badge, Card, copy, Drawer, Empty, ErrorNote, History, Loading, Page, Tabs, useData, useRoute, useToast, useUser, waLink, Pager, usePaged } from '../ui';
 
 /* ── types & maths (mirrors src/worker/lib/docs.ts) ── */
@@ -54,11 +55,15 @@ export function Proposals() {
   const { path, go } = useRoute();
   const [p, qs] = path.split('?');
   const id = p.match(/^\/proposals\/([^/]+)/)?.[1];
+  if (id === 'new-link') return <LinkProposalEditor key="new-link" id={null} />;
   if (id) return <ProposalEditor key={id} id={id === 'new' ? null : id} />;
   const tab = new URLSearchParams(qs ?? '').get('tab') ?? 'proposals';
   return (
-    <Page title="Proposals" sub="Write proposals, collect e-signatures, then invoice and get paid — all on private, code-protected client pages."
-      actions={tab === 'proposals' ? <button className="btn primary" onClick={() => go('/proposals/new')}><Plus {...I} />New proposal</button> : null}>
+    <Page title="Proposals" sub="Build a proposal here with e-signature and invoicing, or add a link to a proposal page made elsewhere. Opens are tracked either way."
+      actions={tab === 'proposals' ? <>
+        <button className="btn" title="Paste a working link, or upload a proposal page built elsewhere" onClick={() => go('/proposals/new-link')}><Globe {...I} />Add proposal link</button>
+        <button className="btn primary" title="Write the proposal here, with e-signature and invoicing" onClick={() => go('/proposals/new')}><Plus {...I} />Build proposal</button>
+      </> : null}>
       <Tabs tabs={[['proposals', 'Proposals'], ['invoices', 'Invoices'], ['methods', 'Payment methods']]} value={tab}
         onChange={(t) => go(t === 'proposals' ? '/proposals' : `/proposals?tab=${t}`)} />
       {tab === 'invoices' ? <InvoicesTab /> : tab === 'methods' ? <MethodsTab /> : <ProposalList />}
@@ -103,7 +108,7 @@ function ProposalList() {
             <tr key={r.id} onClick={() => go(`/proposals/${r.id}`)} className={r.revoked ? 'dim' : ''}>
               <td><strong>{r.number}</strong></td>
               <td>{r.client_company || r.client_name || <span className="muted">—</span>}{r.client_company && r.client_name ? <div className="muted small">{r.client_name}</div> : null}</td>
-              <td>{r.title || <span className="muted">Untitled</span>}</td>
+              <td>{r.title || <span className="muted">Untitled</span>}{r.kind === 'link' ? <> <Badge tone="blue">{r.page_slug ? 'hosted page' : 'link'}</Badge></> : null}</td>
               <td className="nowrap">{money(r.total, r.currency)}</td>
               <td><DocStatus s={r.status} />{r.revoked ? <Badge tone="red">link off</Badge> : null}</td>
               <td className="muted nowrap">{r.view_count ? <><Eye size={13} /> {r.view_count} · {ago(r.last_viewed_at)}</> : '—'}</td>
@@ -154,6 +159,7 @@ function ProposalEditor({ id }: { id: string | null }) {
   }, [data]);
   const tt = useMemo(() => (d ? totals(d.items, Number(d.discount_pct) || 0, d.vat) : null), [d]);
   if (error) return <ErrorNote error={error} />;
+  if (id && data?.row?.kind === 'link') return <LinkProposalEditor id={id} loaded={data} reload={reload} />;
   if (!d || !tt) return <Loading />;
 
   const row = data?.row;
@@ -785,5 +791,199 @@ function MethodForm({ value, onDone }: { value: any; onDone: () => void }) {
         }}><Save {...I} />Save</button>
       </div>
     </div>
+  );
+}
+
+/* ══════════════ link proposals: a working link, or a page uploaded here and hosted at /proposal/<slug>/ ══════════════ */
+type LinkDraft = {
+  lead_id: string | null; client_name: string; client_company: string; client_email: string; client_phone: string; title: string; summary: string;
+  currency: 'NGN' | 'USD' | 'GBP'; total: number | string; deposit_pct: number | string; valid_until: string; status: string; link_url: string; page_slug: string;
+};
+const toLink = (r: any): LinkDraft => ({
+  lead_id: r?.lead_id ?? null, client_name: r?.client_name ?? '', client_company: r?.client_company ?? '', client_email: r?.client_email ?? '', client_phone: r?.client_phone ?? '',
+  title: r?.title ?? '', summary: r?.summary ?? '', currency: r?.currency ?? 'NGN', total: r?.total ?? '', deposit_pct: r?.deposit_pct ?? 40,
+  valid_until: r?.valid_until ?? new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10), status: r?.status ?? 'draft', link_url: r?.link_url ?? '', page_slug: r?.page_slug ?? '',
+});
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+
+function LinkProposalEditor({ id, loaded, reload }: { id: string | null; loaded?: any; reload?: () => void }) {
+  const toast = useToast();
+  const { go } = useRoute();
+  const user = useUser();
+  const writable = can(user, 'sales');
+  const leadParam = new URLSearchParams(location.search).get('lead');
+  const row = loaded?.row;
+  const [d, setD] = useState<LinkDraft>(() => toLink(row ?? { lead_id: leadParam }));
+  const [saved, setSaved] = useState(() => JSON.stringify(toLink(row ?? { lead_id: leadParam })));
+  const [mode, setMode] = useState<'url' | 'upload'>(row?.page_slug ? 'upload' : row?.link_url ? 'url' : 'upload');
+  const [files, setFiles] = useState<Picked>([]);
+  const [pickLabel, setPickLabel] = useState('');
+  const [progress, setProgress] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState('edit');
+  const fileIn = useRef<HTMLInputElement>(null);
+  const dirIn = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (row) { const x = toLink(row); setD(x); setSaved(JSON.stringify(x)); } }, [row]);
+  useEffect(() => {
+    if (!id && leadParam) api(`/r/leads/${leadParam}`).then((r) => setD((x) => ({ ...x, client_company: r.row.company ?? '', client_name: r.row.contact_name ?? '', client_email: r.row.email ?? '', client_phone: r.row.phone ?? '', title: x.title || `Proposal for ${r.row.company}` }))).catch(() => null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const set = <K extends keyof LinkDraft>(k: K, v: LinkDraft[K]) => setD((x) => ({ ...x, [k]: v }));
+  const dirty = JSON.stringify(d) !== saved;
+  const total = Number(d.total) || 0;
+  const dep = Math.round(total * (Number(d.deposit_pct) || 0) / 100);
+  const slug = d.page_slug || slugify(d.client_company || d.client_name || d.title);
+  const clientUrl = row?.page_slug && row?.link_url ? here(row.link_url) : row?.token ? `${location.origin}/p/${row.token}` : '';
+
+  const take = async (list: FileList | null) => {
+    const arr = Array.from(list ?? []); if (!arr.length) return;
+    try {
+      let picked: Picked;
+      if (arr.length === 1 && /\.zip$/i.test(arr[0].name)) picked = await fromZip(arr[0]);
+      else if (arr.length === 1 && /\.html?$/i.test(arr[0].name)) picked = [{ path: 'index.html', data: arr[0] }];
+      else picked = arr.map((f) => ({ path: (f as any).webkitRelativePath || f.name, data: f }));
+      picked = normalise(picked);
+      const entry = findEntry(picked);
+      if (!entry) return toast('No HTML page found. The upload needs an index.html', 'err');
+      if (!/^index\.html?$/i.test(entry)) {
+        if (picked.filter((x) => /\.html?$/i.test(x.path)).length === 1 && !entry.includes('/')) picked = picked.map((x) => (x.path === entry ? { ...x, path: 'index.html' } : x));
+        else return toast(`Put the main page at the top level as index.html (found ${entry})`, 'err');
+      }
+      setFiles(picked); setPickLabel(arr.length === 1 ? arr[0].name : `${picked.length} files`);
+    } catch (e: any) { toast('Could not read that: ' + e.message, 'err'); }
+  };
+
+  const save = async (quiet = false) => {
+    const body: Record<string, unknown> = { ...d, kind: 'link', total, deposit_pct: Number(d.deposit_pct) || 0, page_slug: undefined, link_url: mode === 'url' ? d.link_url : undefined };
+    if (mode === 'url' && d.link_url && !/^https?:\/\//i.test(d.link_url)) throw new Error('The link should start with https://');
+    const r = id ? await api(`/proposals/${id}`, { method: 'PATCH', body }) : await api('/proposals', { body });
+    const pid = r.row.id as string;
+    if (mode === 'upload' && files.length) {
+      setProgress(0);
+      await api(`/proposals/${pid}/page/start`, { body: { slug } });
+      let done = 0; const queue = [...files];
+      const worker = async () => {
+        for (let it = queue.shift(); it; it = queue.shift()) {
+          const res = await fetch(`/api/studio/proposals/${pid}/page/file?path=${encodeURIComponent(it.path)}`, { method: 'PUT', body: it.data, credentials: 'same-origin' });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || `Upload failed for ${it.path}`);
+          done++; setProgress(Math.round((done / files.length) * 100));
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(4, files.length) }, worker));
+      await api(`/proposals/${pid}/page/done`, { body: { files: files.length } });
+      setFiles([]); setPickLabel(''); setProgress(null);
+      toast('Page uploaded and live');
+    } else if (!quiet) toast('Saved');
+    setSaved(JSON.stringify(d));
+    if (!id) { go(`/proposals/${pid}`); return; }
+    reload?.();
+  };
+  const runIt = async (fn: () => Promise<unknown>) => { setBusy(true); try { await fn(); } catch (x: any) { toast(x.message, 'err'); setProgress(null); } finally { setBusy(false); } };
+  const status = (s: string) => runIt(async () => { await api(`/proposals/${id}`, { method: 'PATCH', body: { status: s } }); toast(`Marked as ${s}`); reload?.(); });
+  const shareText = `Hello${d.client_name ? ' ' + d.client_name.split(' ')[0] : ''}, here is our proposal${d.title ? ` for ${d.title.replace(/^proposal for /i, '')}` : ''}: ${clientUrl}`;
+
+  return (
+    <Page title={id ? `${row?.number ?? ''} ${d.title ? '· ' + d.title : ''}` : 'Add proposal link'}
+      sub={<><DocStatus s={row?.status ?? 'draft'} /> <Badge tone="blue">{row?.page_slug ? 'hosted page' : 'link'}</Badge>{row?.revoked ? <Badge tone="red">link switched off</Badge> : null}
+        {dirty || files.length ? <span className="muted small"> · unsaved changes</span> : row?.updated_by ? <span className="muted small"> · edited by {row.updated_by} {ago(row.updated_at)}</span> : null}</>}
+      actions={<>
+        <button className="btn ghost" onClick={() => go('/proposals')}><ArrowLeft {...I} />Proposals</button>
+        {writable ? <button className="btn primary" disabled={busy || (!dirty && !files.length && !!id)} onClick={() => runIt(() => save())}><Save {...I} />{files.length ? 'Save & upload' : 'Save'}</button> : null}
+      </>}>
+      {id ? <Tabs tabs={[['edit', 'Details'], ['timeline', 'Timeline'], ['history', 'History']]} value={tab} onChange={setTab} /> : null}
+      {tab === 'timeline' && id ? <Timeline events={loaded?.events ?? []} /> : tab === 'history' && id ? <Card><History entity="proposals" id={id} /></Card> : (
+        <div className="pp-layout">
+          <div>
+            <fieldset disabled={!writable} className="pp-fieldset">
+              <Card title="The proposal">
+                <div className="seg" role="radiogroup" aria-label="How the proposal is shared" style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+                  <button type="button" className={`btn sm ${mode === 'upload' ? 'primary' : 'ghost'}`} aria-pressed={mode === 'upload'} onClick={() => setMode('upload')}><FileText {...I} />Upload a page</button>
+                  <button type="button" className={`btn sm ${mode === 'url' ? 'primary' : 'ghost'}`} aria-pressed={mode === 'url'} onClick={() => setMode('url')}><Globe {...I} />Paste a working link</button>
+                </div>
+                {mode === 'url' ? (
+                  <div className="fields">
+                    <label className="field wide"><span>Proposal link</span><input type="url" value={d.link_url} placeholder="https://ferrn-proposals.pages.dev/client-proposal" onChange={(e) => set('link_url', e.target.value)} /></label>
+                    <p className="muted small wide">Clients get a Ferrn link that opens this page, so you can still see when they open it.</p>
+                  </div>
+                ) : (
+                  <div className="fields">
+                    <label className="field wide"><span>Address</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span className="muted small nowrap">{location.host}/proposal/</span>
+                        <input value={slug} disabled={!!row?.page_slug} onChange={(e) => set('page_slug', slugify(e.target.value))} placeholder="client-name" /></div></label>
+                    <div className="wide" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <button type="button" className="btn sm" onClick={() => fileIn.current?.click()}><FileText {...I} />Choose HTML, ZIP or files</button>
+                      <button type="button" className="btn sm ghost" onClick={() => dirIn.current?.click()}>Choose a folder</button>
+                      <input ref={fileIn} type="file" hidden multiple accept=".html,.htm,.zip,.css,.js,.png,.jpg,.jpeg,.webp,.svg,.pdf,.gif,.woff,.woff2" onChange={(e) => { take(e.target.files); e.target.value = ''; }} />
+                      <input ref={dirIn} type="file" hidden multiple {...({ webkitdirectory: '', directory: '' } as any)} onChange={(e) => { take(e.target.files); e.target.value = ''; }} />
+                      {pickLabel ? <span className="small"><strong>{pickLabel}</strong> ready · {files.length} file{files.length === 1 ? '' : 's'} · saved when you press Save &amp; upload</span>
+                        : row?.page_slug ? <span className="muted small">Live at <a href={here(row.link_url)} target="_blank" rel="noreferrer">/proposal/{row.page_slug}/</a>. Choose new files to replace it.</span>
+                        : <span className="muted small">One HTML file, a ZIP, or a folder with index.html and its images or PDF.</span>}
+                    </div>
+                    {progress !== null ? <div className="wide small">Uploading… {progress}%</div> : null}
+                  </div>
+                )}
+              </Card>
+              <Card title="Client">
+                <LeadPicker value={d.lead_id} onPick={(l) => setD((x) => ({ ...x, lead_id: l?.id ?? null, ...(l ? { client_company: x.client_company || l.company || '', client_name: x.client_name || l.contact_name || '', client_email: x.client_email || l.email || '', client_phone: x.client_phone || l.phone || '', title: x.title || `Proposal for ${l.company}` } : {}) }))} />
+                <div className="fields">
+                  <label className="field"><span>Company</span><input value={d.client_company} onChange={(e) => set('client_company', e.target.value)} /></label>
+                  <label className="field"><span>Contact name</span><input value={d.client_name} onChange={(e) => set('client_name', e.target.value)} /></label>
+                  <label className="field"><span>Email</span><input type="email" value={d.client_email} onChange={(e) => set('client_email', e.target.value)} /></label>
+                  <label className="field"><span>Phone (for WhatsApp)</span><input value={d.client_phone} onChange={(e) => set('client_phone', e.target.value)} /></label>
+                  <label className="field wide"><span>Title</span><input value={d.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Logistics and ATM support platform" /></label>
+                  <label className="field wide"><span>Notes (team only)</span><textarea rows={3} value={d.summary} onChange={(e) => set('summary', e.target.value)} placeholder="Scope, what was agreed on the call, anything the team should know." /></label>
+                </div>
+              </Card>
+            </fieldset>
+          </div>
+          <aside className="pp-side">
+            <Card title="Value & terms">
+              <fieldset disabled={!writable} className="pp-fieldset">
+                <div className="fields">
+                  <label className="field"><span>Currency</span><select value={d.currency} onChange={(e) => set('currency', e.target.value as LinkDraft['currency'])}><option>NGN</option><option>USD</option><option>GBP</option></select></label>
+                  <label className="field"><span>Total value</span><input type="number" min={0} value={d.total} onChange={(e) => set('total', e.target.value)} /></label>
+                  <label className="field"><span>Upfront %</span><input type="number" min={1} max={100} value={d.deposit_pct} onChange={(e) => set('deposit_pct', e.target.value)} /></label>
+                  <label className="field"><span>Valid until</span><input type="date" value={d.valid_until} onChange={(e) => set('valid_until', e.target.value)} /></label>
+                  {id ? <label className="field wide"><span>Status</span><select value={d.status} onChange={(e) => set('status', e.target.value)}>
+                    {['draft', 'sent', 'viewed', 'signed', 'declined', 'expired'].map((s) => <option key={s} value={s}>{s === 'signed' ? 'accepted / signed' : s}</option>)}</select></label> : null}
+                </div>
+              </fieldset>
+              <dl className="totals">
+                <dt className="grand">Total</dt><dd className="grand">{money(total, d.currency)}</dd>
+                <dt>Upfront ({Number(d.deposit_pct) || 0}%)</dt><dd>{money(dep, d.currency)}</dd>
+                <dt>Balance</dt><dd>{money(total - dep, d.currency)}</dd>
+              </dl>
+            </Card>
+            {id && row ? (
+              <Card title="Share with client">
+                <dl className="dl pp-dl">
+                  <dt>Status</dt><dd><DocStatus s={row.status} /></dd>
+                  <dt>Sent</dt><dd>{row.sent_at ? ago(row.sent_at) : '—'}</dd>
+                  <dt>Views</dt><dd>{row.view_count ? `${row.view_count} · last ${ago(row.last_viewed_at)}` : 'Not opened yet'}</dd>
+                  <dt>Link</dt><dd className="small" style={{ wordBreak: 'break-all' }}>{clientUrl || 'Add a link or upload a page'}</dd>
+                </dl>
+                {clientUrl && !row.revoked ? <div className="pp-actions">
+                  <button className="btn primary block" onClick={() => copy(clientUrl, toast, 'Client link copied')}><Copy {...I} />Copy client link</button>
+                  <a className="btn ghost sm" href={clientUrl} target="_blank" rel="noreferrer"><ExternalLink {...I} />Open</a>
+                  {d.client_phone ? <a className="btn ghost sm" href={waLink(d.client_phone, shareText)} target="_blank" rel="noreferrer"><MessageCircle {...I} />WhatsApp</a> : null}
+                  {d.client_email ? <a className="btn ghost sm" href={`mailto:${d.client_email}?subject=${encodeURIComponent(d.title || 'Our proposal')}&body=${encodeURIComponent(shareText)}`}><Mail {...I} />Email</a> : null}
+                  {writable && ['draft', 'expired'].includes(row.status) ? <button className="btn ghost sm" disabled={busy} onClick={() => status('sent')}><Send {...I} />Mark as sent</button> : null}
+                  {writable && row.status !== 'signed' ? <button className="btn ghost sm" disabled={busy} onClick={() => status('signed')}><CircleCheck {...I} />Mark accepted</button> : null}
+                </div> : null}
+                <div className="pp-actions">
+                  {writable && clientUrl ? <button className="btn ghost sm" disabled={busy} onClick={() => runIt(async () => { await api(`/proposals/${id}/revoke`, { body: { revoked: !row.revoked } }); toast(row.revoked ? 'Link switched back on' : 'Link switched off'); reload?.(); })}>{row.revoked ? <><LockOpen {...I} />Restore link</> : <><Lock {...I} />Switch link off</>}</button> : null}
+                  {can(user, 'editor') ? <button className="btn ghost sm danger" onClick={() => { if (confirm(`Delete ${row.number}? This can’t be undone.`)) runIt(async () => { await api(`/proposals/${id}`, { method: 'DELETE' }); toast('Deleted'); go('/proposals'); }); }}><Trash2 {...I} />Delete</button> : null}
+                </div>
+              </Card>
+            ) : <Card><p className="muted small">Save to get the client link. Opens are tracked so you can see when the client reads it.</p></Card>}
+            {clientUrl && row?.page_slug ? <Card title="Preview" actions={<a className="btn sm ghost" href={clientUrl} target="_blank" rel="noreferrer"><Eye {...I} />Full size</a>}>
+              <div className="pp-thumb" style={{ aspectRatio: '16 / 11', overflow: 'hidden', borderRadius: 8, border: '1px solid var(--line, #e5e5e5)' }}>
+                <iframe title="Proposal page preview" src={clientUrl} style={{ width: '250%', height: '250%', transform: 'scale(.4)', transformOrigin: '0 0', border: 0, pointerEvents: 'none' }} />
+              </div>
+            </Card> : null}
+          </aside>
+        </div>
+      )}
+    </Page>
   );
 }

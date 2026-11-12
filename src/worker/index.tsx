@@ -14,6 +14,7 @@ import publicApi from './routes/api-public';
 import authApi from './routes/auth';
 import studioApi from './routes/studio-api';
 import { demoSite, demosApi } from './routes/demos';
+import { proposalPages } from './routes/proposal-pages';
 import { voiceApi, voicePage } from './routes/voice';
 import { conceptAi } from './routes/concept-ai';
 import { pushPendingToEngine, runAutoProspect } from './lib/autoprospect';
@@ -86,6 +87,7 @@ app.route('/api', publicApi);
 
 /* Uploaded demo sites (R2) */
 app.route('/', demoSite);
+app.route('/', proposalPages);
 app.route('/', voicePage);
 
 /* Studio (installable PWA) */
