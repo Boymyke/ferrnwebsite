@@ -69,7 +69,7 @@ const OPENERS: { key: string; how: string; start: string }[] = [
   { key: 'question', how: 'Open with a short, genuine question about how they handle one specific thing in their business (enquiries, bookings, quotes, admissions, tracking). Then say why you ask.', start: 'a question word such as "How", "Do", "What" or "When"' },
   { key: 'detail', how: 'Open with the specific detail itself, quoted or named exactly as it appears on their site (a service, a programme, a number, an area they serve). Then the idea it gave you.', start: 'the detail itself, never with "I" or "Your"' },
   { key: 'customer', how: 'Open from their customer\'s side: describe in one line what someone looking for their service tonight would run into on their site. Then the fix.', start: 'the customer, e.g. "Someone looking for…" or "A parent comparing…"' },
-  { key: 'proof', how: 'Open with one short line about a result or build from Ferrn\'s real past work that is close to their business, then connect it to them in the next line.', start: 'the past project or what it did, e.g. "We rebuilt…" or "Last year a freight company…"' },
+  { key: 'proof', how: 'Open with one short line about a result or build from Ferrn\'s real past work that is close to their business, then connect it to them in the next line.', start: 'the past project or what it did, e.g. "We built…" or "A freight company we work with…"' },
   { key: 'greeting', how: 'Open with "Hi" and their first name (or the company name plus "team" if no name is given), then go straight to one useful idea for their business in plain words. No small talk.', start: '"Hi " and the name' },
   { key: 'compliment', how: 'Open with one honest, specific thing they do well (from the facts given), in a few words, then the one thing that undersells it online.', start: 'the thing they do well, never with "I love" or "Great"' },
   { key: 'direct', how: 'Open by saying in one plain line who you are and the one manual job you would take off their team first. Short sentences.', start: '"Michael here" or "Michael from Ferrn"' },
@@ -93,7 +93,7 @@ export function cleanDrafts(drafts: string[], recent: string[]): string[] {
 }
 
 /** Bump when the DM brief changes: waiting drafts written under an older version are rewritten by the cron. */
-const DRAFT_V = 4;
+const DRAFT_V = 5;
 /** Past work is only proof when it is the same kind of business. */
 const PROOF_NICHES = /^(logistics|engineering|construction|manufacturing)$/;
 const words = (t: string) => t.trim().split(/\s+/).length;
@@ -105,7 +105,7 @@ async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, un
     const moves = shuffle(OPENERS).filter((o) => (o.key !== 'greeting' || ctx.person || ctx.company) && (o.key !== 'proof' || PROOF_NICHES.test(String(ctx.niche ?? '')))).slice(0, 3);
     const spec = `${li ? 'Return JSON {"note": string, "drafts": [string, string, string]}.\n"note" is a LinkedIn connection request note, max 280 characters, personal, no pitch, about one specific thing they do.\n"drafts" are 3 first messages to send once they accept, 60-100 words each.'
       : 'Return JSON {"drafts": [string, string, string]}. 3 Instagram DMs, 35-60 words each, the way a person types a DM, no formal sign-off.'}
-Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move. Part 2: what the web app would do for them or their customers. Part 3: the free concept offer and the closing question. No sentence longer than 18 words. Never join ideas with commas into one long sentence.
+Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move. Part 2: what the web app would do for them or their customers. Part 3: the free concept offer and the closing question. Part 2 must name the actual job in their business (quotes, tracking, admissions, results, bookings, payments, orders), not \"serve clients better\". Never quote their phone number or address. No sentence longer than 18 words. Never join ideas with commas into one long sentence.
 Each draft uses a DIFFERENT opening move. Follow these exactly, in this order:
 ${moves.map((m, i) => `Draft ${i + 1}: ${m.how} It must start with ${m.start}.`).join('\n')}
 
@@ -126,8 +126,13 @@ Rules for every draft:
       ], { maxTokens: 1000, json: true, bucket: 'studio', temperature: 0.9 });
       const j = extractJson<{ drafts?: string[]; note?: string }>(r.text, {});
       if (j.note && !note) note = String(j.note).slice(0, 300);
-      const offer = (d: string) => /\bfree\b|no cost|at no charge/i.test(d) && /concept|mock-?up|preview|sample|draft version/i.test(d) && words(d) <= (li ? 120 : 75);
-      const ok = cleanDrafts([...best, ...(j.drafts ?? []).map(String).filter(offer)], recent);
+      const proofOk = PROOF_NICHES.test(String(ctx.niche ?? ''));
+      const offer = (d: string) => /\bfree\b|no cost|at no charge/i.test(d) && /concept|mock-?up|preview|sample|draft version/i.test(d)
+        && words(d) >= 28 && words(d) <= (li ? 120 : 75)
+        && !/\d{7,}|\+\d[\d\s-]{8,}/.test(d)                                   // never quote their phone number back at them
+        && (proofOk || !/relay|gromzia|synergix|m-p infrastructure|pwan|insightblitz|aroda/i.test(d)); // proof only from the same kind of business
+      const tidy = (d: string) => d.split(/\n/).map((l) => l.trim()).filter(Boolean).join('\n');
+      const ok = cleanDrafts([...best, ...(j.drafts ?? []).map(String).map(tidy).filter(offer)], recent);
       if (ok.length > best.length) best = ok.slice(0, 3);
     } catch (e) { console.warn('draftDm attempt', attempt, e); }
   }
