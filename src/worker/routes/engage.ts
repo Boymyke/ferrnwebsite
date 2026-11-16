@@ -56,7 +56,7 @@ function cleanUrl(v: unknown, platform: Platform): string | null {
   } catch { return null; }
 }
 
-const VOICE = `You write as Michael, founder of Ferrn Digital Agency in Lagos (websites, web apps, AI automation; ferrnagency.com).
+const VOICE = `You write as Michael, founder of Ferrn Digital Agency in Lagos (custom web apps and portals first, also websites and AI automation; ferrnagency.com).
 Voice: warm, direct, Nigerian-professional English, plain words, no hype, no exclamation marks, no emojis unless the platform context clearly invites one, no hashtags.
 Write complete sentences with normal punctuation (full stops, question marks) and line breaks between ideas in longer messages.
 Never invent facts about the person or their business. Use only what you are given. Never include links unless asked.`;
@@ -72,7 +72,7 @@ const OPENERS: { key: string; how: string; start: string }[] = [
   { key: 'proof', how: 'Open with one short line about a result or build from Ferrn\'s real past work that is close to their business, then connect it to them in the next line.', start: 'the past project or what it did, e.g. "We rebuilt…" or "Last year a freight company…"' },
   { key: 'greeting', how: 'Open with "Hi" and their first name (or the company name plus "team" if no name is given), then go straight to one useful idea for their business in plain words. No small talk.', start: '"Hi " and the name' },
   { key: 'compliment', how: 'Open with one honest, specific thing they do well (from the facts given), in a few words, then the one thing that undersells it online.', start: 'the thing they do well, never with "I love" or "Great"' },
-  { key: 'direct', how: 'Open by saying in one plain line who you are and the one thing you would fix first for them. Short sentences.', start: '"Michael here" or "Michael from Ferrn"' },
+  { key: 'direct', how: 'Open by saying in one plain line who you are and the one manual job you would take off their team first. Short sentences.', start: '"Michael here" or "Michael from Ferrn"' },
 ];
 const STOCK = /^\W*(i\s+(noticed|see|saw|came across|was (looking|checking|browsing|going)|just (saw|came|checked)|observed|hope|wanted to reach|stumbled)|your (website|company|business|firm|page|team|site|instagram|school|clinic|practice)\b|hope (you|this)|just (wanted|reaching)|i'?m reaching out|reaching out)/i;
 const firstWords = (t: string, n = 2) => t.trim().toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).slice(0, n).join(' ');
@@ -93,15 +93,19 @@ export function cleanDrafts(drafts: string[], recent: string[]): string[] {
 }
 
 /** Bump when the DM brief changes: waiting drafts written under an older version are rewritten by the cron. */
-const DRAFT_V = 3;
+const DRAFT_V = 4;
+/** Past work is only proof when it is the same kind of business. */
+const PROOF_NICHES = /^(logistics|engineering|construction|manufacturing)$/;
+const words = (t: string) => t.trim().split(/\s+/).length;
 
 async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, unknown>, recent: string[] = []) {
   const li = platform === 'linkedin';
   let best: string[] = []; let note: string | null = null;
   for (let attempt = 0; attempt < 3 && best.length < 3; attempt++) {
-    const moves = shuffle(OPENERS).filter((o) => o.key !== 'greeting' || ctx.person || ctx.company).slice(0, 3);
+    const moves = shuffle(OPENERS).filter((o) => (o.key !== 'greeting' || ctx.person || ctx.company) && (o.key !== 'proof' || PROOF_NICHES.test(String(ctx.niche ?? '')))).slice(0, 3);
     const spec = `${li ? 'Return JSON {"note": string, "drafts": [string, string, string]}.\n"note" is a LinkedIn connection request note, max 280 characters, personal, no pitch, about one specific thing they do.\n"drafts" are 3 first messages to send once they accept, 60-100 words each.'
-      : 'Return JSON {"drafts": [string, string, string]}. 3 Instagram DMs, 35-65 words each, the way a person types a DM: short lines, no formal sign-off.'}
+      : 'Return JSON {"drafts": [string, string, string]}. 3 Instagram DMs, 35-60 words each, the way a person types a DM, no formal sign-off.'}
+Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move. Part 2: what the web app would do for them or their customers. Part 3: the free concept offer and the closing question. No sentence longer than 18 words. Never join ideas with commas into one long sentence.
 Each draft uses a DIFFERENT opening move. Follow these exactly, in this order:
 ${moves.map((m, i) => `Draft ${i + 1}: ${m.how} It must start with ${m.start}.`).join('\n')}
 
@@ -111,7 +115,8 @@ Rules for every draft:
 - Never start a draft with "I noticed", "I see", "I saw", "I came across", "Your website", "Your company", "I hope" or "Just". No two drafts may start with the same word.
 - One idea per message. If our_angle is given, that is the idea: the web app or portal that would take a manual job off their team or let their customers serve themselves. Otherwise, the single change that would bring them more enquiries or bookings. Say what it does for them, in plain words, never in tech terms.
 - Make the free offer once, in your own words each time: we will put together a free concept of it for their business, so they can see it before deciding anything. No cost, no obligation.
-- Say who you are once, briefly (Michael, Ferrn, we build websites and web apps), anywhere except the first line unless the move says so.
+- Say who you are once, in a few words ("Michael, Ferrn" or "I run Ferrn, we build web apps"), anywhere except the first line unless the move says so. Do not list services.
+- Suggest one thing only. Never add "we can also help with" or a second fix. Mention past work only if it is the same kind of business as theirs.
 - End with one easy question that takes a yes, a no or a few words to answer, usually whether they would like to see the free concept. Vary the wording between drafts. Never ask for a call in the first message.
 - No links, no prices, no "DM me", no hashtags, no emojis.${recent.length ? `\n- These openings were used on other people recently. Do not reuse them or anything close: ${recent.slice(0, 12).map((r) => `"${r.split(/\s+/).slice(0, 6).join(' ')}…"`).join(', ')}` : ''}${attempt ? '\n- Your last attempt broke the opening rules. Check the first three words of every draft before you answer.' : ''}`;
     try {
@@ -121,7 +126,8 @@ Rules for every draft:
       ], { maxTokens: 1000, json: true, bucket: 'studio', temperature: 0.9 });
       const j = extractJson<{ drafts?: string[]; note?: string }>(r.text, {});
       if (j.note && !note) note = String(j.note).slice(0, 300);
-      const ok = cleanDrafts([...best, ...(j.drafts ?? []).map(String)], recent);
+      const offer = (d: string) => /\bfree\b|no cost|at no charge/i.test(d) && /concept|mock-?up|preview|sample|draft version/i.test(d) && words(d) <= (li ? 120 : 75);
+      const ok = cleanDrafts([...best, ...(j.drafts ?? []).map(String).filter(offer)], recent);
       if (ok.length > best.length) best = ok.slice(0, 3);
     } catch (e) { console.warn('draftDm attempt', attempt, e); }
   }
