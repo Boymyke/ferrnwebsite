@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Ferrn DM helper",
+  "version": "1.0.0",
+  "description": "One click in Ferrn Studio opens the Instagram or LinkedIn chat and types the message. You press Enter to send.",
+  "permissions": ["storage"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    { "matches": ["https://www.ferrnagency.com/studio/*", "https://ferrnagency.com/studio/*"], "js": ["studio.js"], "run_at": "document_start" },
+    { "matches": ["https://www.instagram.com/*"], "js": ["common.js", "instagram.js"], "run_at": "document_idle" },
+    { "matches": ["https://www.linkedin.com/*"], "js": ["common.js", "linkedin.js"], "run_at": "document_idle" }
+  ]
+}

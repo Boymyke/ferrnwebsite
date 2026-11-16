@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { AtSign, Bot, Briefcase as Linkedin, Camera as Instagram, Check, Copy, ExternalLink, Heart, Info, MessageSquareText, RefreshCw, Send, Sparkles, Trash2, Undo2, X } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AtSign, Bot, Download, Pause, Briefcase as Linkedin, Camera as Instagram, Check, Copy, ExternalLink, Heart, Info, MessageSquareText, RefreshCw, Send, Sparkles, Trash2, Undo2, X } from 'lucide-react';
 import { ago, api, list } from '../api';
 import { Badge, Card, Empty, ErrorNote, Loading, Page, Pager, Tabs, useData, usePaged, useRoute, useToast } from '../ui';
 
@@ -57,6 +57,18 @@ function copyOpen(text: string, url: string, toast: (t: string, k?: any) => void
   if (!w) toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err');
 }
 
+/** The Ferrn DM helper (a small Chrome extension) marks the page when it is installed. */
+function useHelper() {
+  const read = () => document.documentElement.dataset.ferrnHelper || '';
+  const [v, setV] = useState(read);
+  useEffect(() => { if (v) return; const t = setTimeout(() => setV(read()), 800); return () => clearTimeout(t); }, []);
+  return v;
+}
+/** Instagram restricts accounts that open many new chats quickly, so Send all keeps a human pace. */
+const DAILY_CAP = 25;
+const gap = () => 25 + Math.floor(Math.random() * 21); // 25 to 45 seconds between chats
+type Live = { it: Item; text: string; state: 'opening' | 'typed' | 'stuck' | 'error'; detail?: string };
+
 export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
   const toast = useToast();
   const [view, setView] = useState<'draft' | 'sent' | 'followup' | 'skipped'>('draft');
@@ -77,10 +89,14 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
     try { await api(`/engage/${id}`, { method: 'DELETE' }); toast('Removed'); reload(); } catch (x: any) { toast(x.message, 'err'); }
   };
   const isDm = kind === 'dm';
-  /** Copies the message and opens their DMs (or the post). It only moves to Sent once you confirm it went:
-   *  no app can press send inside Instagram or LinkedIn, so a click here is not proof the message was sent. */
+  const helper = useHelper();
+  const useHelperNow = isDm && !!helper;
+  const queue = useMemo(() => items.filter((i) => i.status === 'draft' && (!platform || i.platform === platform) && i.drafts[0]), [items, platform]);
+  const next = queue[0];
+
+  /* Without the helper: copy, open their profile, confirm here once it went. */
   const [pending, setPending] = useState<{ it: Item; text: string } | null>(null);
-  const send = async (it: Item, text: string) => {
+  const copySend = async (it: Item, text: string) => {
     const copied = copyNow(text); // must happen before the new tab steals focus
     const w = openTab(dmUrl(it));
     if (!w) { toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err'); return; }
@@ -93,16 +109,86 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
     const { it, text } = pending;
     const after = queue.find((q) => q.id !== it.id);
     setPending(null);
-    if (andNext && after) { await send(after, after.drafts[0]); } // open the next tab inside this click, before any await-free work is lost
+    if (andNext && after) { await copySend(after, after.drafts[0]); }
     await patch(it.id, { status: 'sent', sent_text: text }, andNext && after ? undefined : (isDm ? 'Marked as sent' : 'Marked as posted'));
   };
-  const queue = useMemo(() => items.filter((i) => i.status === 'draft' && (!platform || i.platform === platform) && i.drafts[0]), [items, platform]);
-  const next = queue[0];
+
+  /* With the helper: one click opens the chat with the message typed in; pressing Enter there marks it sent here. */
+  const [live, setLive] = useState<Live | null>(null);
+  const [auto, setAuto] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const ref = useRef({ live, auto, queue, items, done: new Set<string>() });
+  ref.current = { ...ref.current, live, auto, queue, items };
+  const sentToday = () => {
+    const day = new Date().toISOString().slice(0, 10);
+    return ref.current.items.filter((i) => i.kind === 'dm' && i.status === 'sent' && (i.done_at ?? '').slice(0, 10) === day && !ref.current.done.has(i.id)).length + ref.current.done.size;
+  };
+  const openChat = (it: Item, text: string) => {
+    copyNow(text); // a backup on the clipboard in case the chat box refuses the text
+    setCountdown(0);
+    setLive({ it, text, state: 'opening' });
+    window.postMessage({ source: 'ferrn-studio', type: 'open', url: dmUrl(it), id: it.id, text, note: it.note ?? '', platform: it.platform }, location.origin);
+  };
+  const nextUp = () => ref.current.queue.find((q) => !ref.current.done.has(q.id) && q.id !== ref.current.live?.it.id);
+  const stopAuto = (msg?: string) => { ref.current.auto = false; setAuto(false); setCountdown(0); if (msg) toast(msg); };
+  const queueNext = () => {
+    if (!ref.current.auto) return;
+    if (sentToday() >= DAILY_CAP) return stopAuto(`${DAILY_CAP} sent today. Stopping here so Instagram doesn’t limit your account. Carry on tomorrow.`);
+    if (!nextUp()) return stopAuto('All ready DMs are sent.');
+    setCountdown(gap());
+  };
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const t = setTimeout(() => {
+      if (countdown > 1) return setCountdown(countdown - 1);
+      setCountdown(0);
+      const n = nextUp();
+      if (ref.current.auto && n) openChat(n, n.drafts[0]);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [countdown]);
+  const markSent = async (it: Item, text: string, how: string) => {
+    ref.current.done.add(it.id);
+    setLive(null);
+    await patch(it.id, { status: 'sent', sent_text: text }, how);
+    queueNext();
+  };
+  const onMsg = useRef<((e: MessageEvent) => void) | null>(null);
+  onMsg.current = (e: MessageEvent) => {
+    if (e.source !== window || e.data?.source !== 'ferrn-helper') return;
+      const cur = ref.current.live;
+      if (!cur || e.data.id !== cur.it.id) return;
+      const name = cur.it.person || cur.it.company || 'them';
+      if (e.data.type === 'typed') setLive({ ...cur, state: 'typed', detail: e.data.detail });
+      else if (e.data.type === 'stuck') setLive({ ...cur, state: 'stuck', detail: e.data.detail });
+      else if (e.data.type === 'error') { setLive({ ...cur, state: 'error', detail: e.data.detail }); stopAuto(); }
+      else if (e.data.type === 'sent') markSent(cur.it, cur.text, `Sent to ${name}`);
+      else if (e.data.type === 'closed') { setLive(null); stopAuto(`Chat with ${name} closed without sending. It stays in Ready.`); }
+  };
+  useEffect(() => {
+    const on = (e: MessageEvent) => onMsg.current?.(e); // always the latest handler
+    window.addEventListener('message', on);
+    return () => window.removeEventListener('message', on);
+  }, []);
+  const send = async (it: Item, text: string) => (useHelperNow ? openChat(it, text) : copySend(it, text));
+  const sendAll = () => {
+    if (sentToday() >= DAILY_CAP) return toast(`${DAILY_CAP} already sent today. Instagram limits accounts that open too many new chats in a day.`, 'err');
+    const n = nextUp(); if (!n) return;
+    setAuto(true); ref.current.auto = true;
+    openChat(n, n.drafts[0]);
+  };
 
   return (
     <Page title={isDm ? 'Social DMs' : 'Interactions'}
-      sub={isDm ? 'AI writes Instagram DMs and LinkedIn messages for your leads. You paste and send each one yourself.' : 'AI writes thoughtful comments on other people’s posts. Like the post and drop the comment with a tap.'}>
-      <div className="callout"><Info size={15} /> <span><strong>Studio cannot press send for you.</strong> Instagram and LinkedIn do not let any app send a first {isDm ? 'message' : 'comment'}, and they restrict accounts that use bots for it. <strong>Copy &amp; open</strong> copies the text and opens {isDm ? 'their profile' : 'the post'}: {isDm ? 'click Message, paste, press Enter' : 'click Comment, paste, post'}, then confirm here and it moves to {isDm ? 'Sent' : 'Posted'}.</span></div>
+      sub={isDm ? (helper ? 'AI writes Instagram DMs and LinkedIn messages for your leads. One click opens each chat with the message typed.' : 'AI writes Instagram DMs and LinkedIn messages for your leads.') : 'AI writes thoughtful comments on other people’s posts. Like the post and drop the comment with a tap.'}>
+      {!isDm ? (
+        <div className="callout"><Info size={15} /> <span><strong>Copy &amp; open</strong> copies the comment and opens the post: click Comment, paste, post, then confirm here and it moves to Posted.</span></div>
+      ) : helper ? (
+        <div className="callout"><Check size={15} /> <span><strong>Ferrn DM helper is on.</strong> Click <strong>Send</strong> (or <strong>Send all</strong>): the chat opens with the message already typed. Press Enter there and Studio marks it sent, closes the chat and opens the next one. Instagram and LinkedIn don’t let any app press send, so that one key stays yours.</span></div>
+      ) : (
+        <div className="callout"><Download size={15} /> <span><strong>Make sending one click.</strong> Install the Ferrn DM helper in Chrome once (about a minute). After that, Send opens each chat with the message already typed: no copying or pasting, you just press Enter.
+          {' '}<a href="/assets/ferrn-dm-helper.zip" download>Download the helper</a>, unzip it, open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong> (top right), click <strong>Load unpacked</strong> and pick the unzipped folder. Then reload this page.</span></div>
+      )}
 
       <Autopilot kind={kind} />
 
@@ -121,7 +207,39 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
         <select value={platform} onChange={(e) => setPlatform(e.target.value as any)}><option value="">Both platforms</option><option value="instagram">Instagram</option><option value="linkedin">LinkedIn</option></select>
       </div>
 
-      {pending ? (
+      {useHelperNow && live ? (
+        <div className="eng-next">
+          <div><strong>{live.state === 'opening' ? `Opening the chat with ${live.it.person || live.it.company || 'them'}…`
+            : live.state === 'typed' ? `Message typed for ${live.it.person || live.it.company || 'them'}. Press Enter in that tab to send it.`
+            : live.state === 'stuck' ? 'The chat needs one click from you'
+            : 'The helper couldn’t open the chat'}</strong>
+            <span className="muted small">{live.state === 'typed' ? 'Studio marks it sent by itself and moves on.'
+              : live.state === 'stuck' ? `${live.detail ? live.detail + '. ' : ''}Click Message there; the text is typed for you (it is also on your clipboard, ${PASTE}).`
+              : live.state === 'error' ? (live.detail || 'Reload this page and try again.')
+              : 'It opens in a new tab next to this one.'}{auto ? ` Sending all: ${sentToday()} sent today, up to ${DAILY_CAP}.` : ''}</span></div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn" onClick={() => markSent(live.it, live.text, 'Marked as sent')}><Check size={15} />It’s sent</button>
+            {auto ? <button className="btn ghost" onClick={() => stopAuto('Stopped')}><Pause size={15} />Stop after this</button> : null}
+            <button className="btn ghost" onClick={() => { setLive(null); stopAuto(); }}>Cancel</button>
+          </div>
+        </div>
+      ) : useHelperNow && countdown > 0 ? (
+        <div className="eng-next">
+          <div><strong>Next chat opens in {countdown}s</strong><span className="muted small">A short pause between chats keeps Instagram from limiting your account. {sentToday()} sent today, up to {DAILY_CAP}.</span></div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn primary" onClick={() => { const n = nextUp(); if (n) openChat(n, n.drafts[0]); }}><Send size={15} />Open it now</button>
+            <button className="btn ghost" onClick={() => stopAuto('Stopped')}><Pause size={15} />Stop</button>
+          </div>
+        </div>
+      ) : useHelperNow && view === 'draft' && next ? (
+        <div className="eng-next">
+          <div><strong>{queue.length} ready to send</strong><span className="muted small">Next: {next.person || next.company || 'Profile'} · {PLAT[next.platform].label}. Send all opens each chat with the message typed; you press Enter, Studio does the rest.</span></div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn primary" onClick={sendAll}><Send size={15} />Send all</button>
+            <button className="btn" onClick={() => openChat(next, next.drafts[0])}>Send next</button>
+          </div>
+        </div>
+      ) : pending ? (
         <div className="eng-next">
           <div><strong>Did your {isDm ? 'message' : 'comment'} to {pending.it.person || pending.it.company || 'them'} go?</strong><span className="muted small">It is copied. In the tab that opened: {isDm ? `click Message, click the message box, press ${PASTE}, then Enter` : `click Comment, press ${PASTE}, then post`}. It stays in Ready until you confirm.</span></div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -133,7 +251,7 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
       ) : view === 'draft' && next ? (
         <div className="eng-next">
           <div><strong>{queue.length} ready to {isDm ? 'send' : 'post'}</strong><span className="muted small">Next: {next.person || next.company || 'Profile'} · {PLAT[next.platform].label}. Each click copies the message and opens {isDm ? 'their profile' : 'the post'}. You paste and press send there, then confirm here.</span></div>
-          <button className="btn primary" onClick={() => send(next, next.drafts[0])}><Send size={15} />Copy &amp; open next</button>
+          <button className="btn primary" onClick={() => copySend(next, next.drafts[0])}><Send size={15} />Copy &amp; open next</button>
         </div>
       ) : null}
 
@@ -143,7 +261,7 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
         </Empty>
       ) : (
         <>
-          <div className="eng-list">{pg.rows.map((it) => <ItemCard key={it.id} it={it} patch={patch} del={del} send={send} />)}</div>
+          <div className="eng-list">{pg.rows.map((it) => <ItemCard key={it.id} it={it} patch={patch} del={del} send={send} oneClick={useHelperNow} />)}</div>
           <Pager pg={pg} noun={isDm ? 'messages' : 'comments'} />
         </>
       )}
@@ -202,7 +320,7 @@ function NewItem({ kind, onDone }: { kind: 'dm' | 'comment'; onDone: (it: Item) 
   );
 }
 
-function ItemCard({ it, patch, del, send }: { it: Item; patch: (id: string, b: Record<string, unknown>, msg?: string) => Promise<void>; del: (id: string) => void; send: (it: Item, text: string) => Promise<void> }) {
+function ItemCard({ it, patch, del, send, oneClick }: { it: Item; patch: (id: string, b: Record<string, unknown>, msg?: string) => Promise<void>; del: (id: string) => void; send: (it: Item, text: string) => Promise<void> | void; oneClick?: boolean }) {
   const toast = useToast();
   const [pick, setPick] = useState(0);
   const [edit, setEdit] = useState<string[]>(it.drafts);
@@ -255,7 +373,7 @@ function ItemCard({ it, patch, del, send }: { it: Item; patch: (id: string, b: R
         {it.status === 'draft' ? (
           <>
             {!isDm ? <a className="btn sm ghost" href={it.url} target="_blank" rel="noreferrer" onClick={() => { if (!it.liked) patch(it.id, { liked: true }, 'Marked as liked'); }}><Heart size={14} />Open &amp; like</a> : null}
-            {text ? <button className="btn sm primary" onClick={() => send(it, text)}><Send size={14} />{isDm ? 'Copy & open chat' : 'Copy & open post'}</button> : null}
+            {text ? <button className="btn sm primary" onClick={() => send(it, text)}><Send size={14} />{oneClick ? 'Send' : isDm ? 'Copy & open chat' : 'Copy & open post'}</button> : null}
             {text ? <button className="btn sm ghost" onClick={() => copyOpen(text, dmUrl(it), toast)}><Copy size={14} />Copy only</button> : null}
             <button className="btn sm ghost" disabled={busy} onClick={redraft}><RefreshCw size={14} />{busy ? 'Writing…' : 'Rewrite'}</button>
             <button className="btn sm ghost" onClick={() => patch(it.id, { status: 'skipped' }, 'Skipped')}>Skip</button>
