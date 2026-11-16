@@ -187,7 +187,7 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
         <div className="callout"><Check size={15} /> <span><strong>Ferrn DM helper is on.</strong> Click <strong>Send</strong> (or <strong>Send all</strong>): the chat opens with the message already typed. Press Enter there and Studio marks it sent, closes the chat and opens the next one. Instagram and LinkedIn don’t let any app press send, so that one key stays yours.</span></div>
       ) : (
         <div className="callout"><Download size={15} /> <span><strong>Make sending one click.</strong> Install the Ferrn DM helper in Chrome once (about a minute). After that, Send opens each chat with the message already typed: no copying or pasting, you just press Enter.
-          {' '}<a href="/assets/ferrn-dm-helper.zip" download>Download the helper</a>, unzip it, open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong> (top right), click <strong>Load unpacked</strong> and pick the unzipped folder. Then reload this page.</span></div>
+          {' '}<a href="/assets/ferrn-dm-helper.zip?v=1.0.0" download>Download the helper</a>, unzip it, open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong> (top right), click <strong>Load unpacked</strong> and pick the unzipped folder. Then reload this page.</span></div>
       )}
 
       <Autopilot kind={kind} />
