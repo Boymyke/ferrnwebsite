@@ -21,6 +21,7 @@ export type Prospect = {
   needs?: string[];
   /** Why this business is not a fit (branch of a chain, too big, too small). Never added as a lead. */
   skip?: string;
+  appGaps?: string[];        // web-app signals from their site (no portal, PDF forms)
 };
 
 /* ── who is NOT a client for Ferrn ──
@@ -157,9 +158,9 @@ function emailsIn(html: string) {
 
 /** Visits a business's own website (home page + its contact page) and returns the business emails it
  *  publishes plus gaps we can point to in a first email. Never guesses an address. */
-export async function readWebsite(url: string, ms = 5000): Promise<{ emails: string[]; gaps: string[]; reached: boolean }> {
+export async function readWebsite(url: string, ms = 5000): Promise<{ emails: string[]; gaps: string[]; app: string[]; reached: boolean }> {
   const home = await getText(url, ms);
-  if (!home) return { emails: [], gaps: [], reached: false };
+  if (!home) return { emails: [], gaps: [], app: [], reached: false };
   const site = host(home.finalUrl);
   const hrefs = [...home.html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]);
   const contactHref = hrefs.find((h) => /contact|get-in-touch|reach-us|enquir|book/i.test(h) && !/mailto:|tel:|wa\.me|whatsapp/i.test(h));
@@ -183,7 +184,12 @@ export async function readWebsite(url: string, ms = 5000): Promise<{ emails: str
   if (!/<meta[^>]+name=["']description["'][^>]+content=["'][^"']{20,}/i.test(home.html) && !/<meta[^>]+content=["'][^"']{20,}["'][^>]+name=["']description/i.test(home.html)) gaps.push('No search description (Google shows random text)');
   if (/lorem ipsum|coming soon|under construction|website is being updated/i.test(html)) gaps.push('Placeholder or “coming soon” text on the site');
   if (/wix\.com|wixstatic|weebly\.com|godaddy\.com\/websites|squarespace-cdn|sites\.google\.com/i.test(home.html) && /(created|built|made|powered)\s+(with|by|on)\s+(wix|weebly|godaddy|squarespace)/i.test(home.html)) gaps.push('Free site-builder badge still showing');
-  return { emails, gaps, reached: true };
+  // Web-app signals: things their customers or staff still do by hand that a portal or app would handle.
+  const app: string[] = [];
+  const plain = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ');
+  if (!/log\s?-?in|sign\s?-?in|portal|my[-_ ]?account|dashboard|client[-_ ]?area|track(ing)?[-_ ]?(your|my|a|an)?[-_ ]?(shipment|order|parcel|cargo|application)|e-?learning|pay[-_ ]?(online|now|fees)|apply[-_ ]?(online|now)/i.test(plain)) app.push('No customer login, portal or online tracking');
+  if (hrefs.some((h) => /\.(pdf|docx?)(\?|$)/i.test(h) && /form|applic|admission|registr|enrol|referral|order|quote/i.test(h))) app.push('Forms are documents to download and fill by hand');
+  return { emails, gaps, app, reached: true };
 }
 
 /** Adds published emails and website gaps to search results (top `limit` with a real website), then re-scores. */
@@ -193,6 +199,7 @@ export async function enrichProspects(results: Prospect[], limit = 12, concurren
     await Promise.all(todo.slice(i, i + concurrency).map(async (r) => {
       const w = await readWebsite(r.website!);
       r.emails = w.emails;
+      r.appGaps = w.app;
       r.needs = r.needs ?? [];
       if (!w.reached) { r.needs.push('Website did not load'); r.reasons.unshift('Website did not load'); r.score = Math.min(100, r.score + 14); return; }
       for (const g of w.gaps) { r.needs.push(g); r.reasons.unshift(g); }

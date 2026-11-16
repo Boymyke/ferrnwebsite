@@ -42,6 +42,8 @@ export const NICHE_QUERY: Record<string, string> = {
   events: 'event centres and event planners', autodealer: 'car dealerships', manufacturing: 'manufacturing companies',
   travel: 'travel agencies and tour operators', studyabroad: 'study abroad and visa consultants',
   staffing: 'recruitment and outsourcing companies', security: 'security companies',
+  microfinance: 'microfinance banks and loan companies', insurance: 'insurance brokers', pharma: 'pharmaceutical distributors and wholesalers',
+  facility: 'facility management companies',
 };
 /** Other ways to say the same niche. Each visit to a pair uses the next wording, which surfaces different businesses. */
 export const NICHE_VARIANTS: Record<string, string[]> = {
@@ -64,31 +66,69 @@ export const NICHE_VARIANTS: Record<string, string[]> = {
   studyabroad: ['education consultants', 'visa and immigration consultants'],
   staffing: ['HR and recruitment agencies', 'outsourcing companies'],
   security: ['private security guard companies', 'CCTV and security systems companies'],
+  microfinance: ['microfinance banks', 'cooperative societies and thrift companies', 'asset finance and leasing companies'],
+  insurance: ['insurance brokerage firms', 'health maintenance organisations (HMO)'],
+  pharma: ['pharmaceutical companies', 'medical equipment suppliers'],
+  facility: ['estate and facility managers', 'property and facilities maintenance companies'],
+  lab: ['medical diagnostic centres', 'radiology and imaging centres'],
+  hospitality: ['boutique hotels', 'serviced apartments and suites'],
 };
+
+/** The web application each niche most often needs. Saved on the lead as the pitch, so every message leads with it. */
+export const WEBAPP_PITCH: Record<string, string> = {
+  logistics: 'Shipment tracking portal: customers request quotes and track cargo themselves, staff update status once',
+  clinic: 'Patient portal: online booking, records and results, with reminders, instead of phone calls and paper files',
+  fertility: 'Patient portal: private booking, treatment-cycle tracking and results for each patient',
+  lab: 'Results portal: patients and referring doctors book tests and collect results online',
+  dental: 'Booking and patient portal: appointments, treatment plans and payments online',
+  realestate: 'Buyer portal: each buyer sees their plot or unit, payment plan, receipts and documents; sales team tracks every lead',
+  school: 'Parent and admissions portal: apply online, pay fees, see results and notices in one place',
+  construction: 'Project portal: clients follow progress, photos, milestones and payments; the team tracks sites and costs',
+  engineering: 'Operations portal: jobs, crews, equipment and client reporting in one system instead of spreadsheets',
+  manufacturing: 'Distributor ordering portal: distributors place and track orders, with stock and invoices in one place',
+  solar: 'Customer portal: quotes, installation tracking, payment plans and maintenance requests online',
+  professional: 'Client portal: clients upload documents, follow their matter or filing, and pay invoices online',
+  autodealer: 'Inventory and enquiry system: live stock online, finance applications and lead tracking for the sales team',
+  staffing: 'Staffing platform: shifts, timesheets, compliance documents and client requests in one app',
+  security: 'Guard management app: rosters, patrol check-ins, incident reports and a client view',
+  microfinance: 'Loan portal: customers apply, upload documents and track repayments online; staff approve in one workflow',
+  insurance: 'Client portal: quotes, policy documents, renewals and claims tracking online',
+  pharma: 'B2B ordering portal: pharmacies and hospitals order, track delivery and see statements online',
+  facility: 'Service portal: residents and tenants log requests, pay service charges and see updates; managers track jobs',
+  hospitality: 'Direct booking system: guests book and pay on your own site, with a dashboard for rooms and enquiries',
+  homecare: 'Care management app: visit schedules, staff compliance, care notes and a family view',
+};
+/** Business-to-business niches have few Google reviews by nature, so a lower bar proves they are established. */
+const B2B = new Set(['logistics', 'construction', 'engineering', 'manufacturing', 'professional', 'staffing', 'security', 'insurance', 'pharma', 'facility', 'microfinance']);
+/** Size test (about $10k a month profit or more): a busy consumer business has 40+ reviews; a B2B firm with 12+ is established. */
+const bigEnough = (niche: string, reviews = 0) => reviews >= (B2B.has(niche) ? 12 : 40);
+
+
 
 /* Abroad, Ferrn wins with owner-run businesses that serve the African diaspora or are run by it, not with
  * polished high-street brands. These queries replace the generic one outside Nigeria, and a niche with no
  * entry here is not searched abroad at all (a private school in London is not a Ferrn client). */
 export const ABROAD_QUERY: Record<string, string> = {
   logistics: 'cargo and shipping to Nigeria and Africa companies', professional: 'immigration law firms and accountants for small businesses',
+  realestate: 'independent property management companies', homecare: 'independent home care agencies',
+  staffing: 'healthcare staffing and nursing agencies',
+  // kept for searches typed by hand in Studio; not in the default autopilot list
   ecommerce: 'African and Caribbean food and beauty stores', church: 'African churches', hospitality: 'Nigerian and African restaurants',
-  realestate: 'independent estate agents and property management companies', homecare: 'independent home care agencies',
-  staffing: 'healthcare staffing and nursing agencies', events: 'Nigerian and African wedding caterers and event planners',
-  travel: 'travel agencies for flights to Nigeria and Africa',
+  events: 'Nigerian and African wedding caterers and event planners', travel: 'travel agencies for flights to Nigeria and Africa',
 };
 export const ABROAD_VARIANTS: Record<string, string[]> = {
   logistics: ['African freight forwarders and shipping agents', 'barrel and container shipping to Africa'],
   professional: ['immigration lawyers', 'small business accountants and tax advisers'],
-  church: ['Nigerian churches', 'African charities and community organisations'],
   realestate: ['property management companies', 'independent letting agents'],
   homecare: ['domiciliary care agencies', 'supported living providers'],
   staffing: ['care staff recruitment agencies', 'nurse staffing agencies'],
-  events: ['African event halls and banquet venues', 'African party rentals and decorators'],
-  travel: ['African travel agents'],
-  ecommerce: ['African grocery stores', 'African fashion and fabric stores'],
+  church: ['Nigerian churches', 'African charities and community organisations'],
+  events: ['African event halls and banquet venues'], travel: ['African travel agents'], ecommerce: ['African grocery stores'],
 };
 /** Niches that only make sense abroad (in Lagos they are not who Ferrn sells to). */
 const ABROAD_ONLY = new Set(['church']);
+/** Abroad the autopilot only searches these (diaspora-facing and big enough); other ABROAD_QUERY entries are for manual searches. */
+const ABROAD_AUTO = new Set(['logistics', 'professional', 'realestate', 'homecare', 'staffing']);
 
 /** Parts of each city. A visit searches one of them, so the same pair reaches businesses the city-wide search never shows. */
 export const AREAS: Record<string, string[]> = {
@@ -108,8 +148,9 @@ export const AREAS: Record<string, string[]> = {
 
 export const DEFAULT_AUTO: AutoConfig = {
   enabled: false,
-  niches: ['logistics', 'clinic', 'fertility', 'dental', 'realestate', 'school', 'construction', 'engineering', 'solar', 'professional',
-    'studyabroad', 'interior', 'events', 'autodealer', 'manufacturing', 'travel', 'homecare', 'staffing', 'church'],
+  // Businesses that typically clear about $10k a month and run on processes a web app can take over.
+  niches: ['logistics', 'clinic', 'fertility', 'lab', 'realestate', 'school', 'construction', 'engineering', 'manufacturing', 'solar',
+    'professional', 'microfinance', 'insurance', 'pharma', 'facility', 'staffing', 'security', 'autodealer', 'hospitality', 'homecare'],
   cities: ['Lagos', 'London', 'Manchester', 'Birmingham', 'Houston', 'Dallas', 'Atlanta', 'New York', 'Washington DC', 'Toronto', 'Calgary', 'Dublin'],
   dailyCap: 12, minScore: 65, whatsappShare: 20,
 };
@@ -129,7 +170,7 @@ export function pairsOf(cfg: Pick<AutoConfig, 'niches' | 'cities'>): { ng: Pair[
   for (const n of cfg.niches) for (const c of cfg.cities) {
     if (isNigerian(c)) { if (!ABROAD_ONLY.has(n)) ng.push([n, c]); }
     // Abroad: only niches with a diaspora-facing query, or one the team typed in by hand.
-    else if (ABROAD_QUERY[n] || !NICHE_QUERY[n]) abroad.push([n, c]);
+    else if (ABROAD_AUTO.has(n) || !NICHE_QUERY[n]) abroad.push([n, c]);
   }
   return { ng, abroad };
 }
@@ -217,11 +258,16 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
       if (added >= limit) break;
       const email = x.emails?.[0];
       if (email) emails++;
-      if (x.score < cfg.minScore) continue;
       // Quality gate: a real, visible gap we can point to (never just review counts). Abroad needs two,
       // because a business with a decent site has no reason to hire an agency in another country.
       const needs = x.needs ?? [];
+      // Web-app fit: where this niche runs on a portal, a missing one is a real gap we can point to.
+      const key = nicheKey(niche);
+      if (WEBAPP_PITCH[key]) for (const g of x.appGaps ?? []) if (!needs.includes(g)) { needs.push(g); x.reasons.unshift(g); x.score = Math.min(100, x.score + 6); }
       if (needs.length < (nigeria ? 1 : 2)) continue;
+      // Size: only businesses big enough to pay for a web app.
+      if (!bigEnough(key, x.reviews)) continue;
+      if (x.score < cfg.minScore) continue;
       // Phone-only leads must be established enough to be worth a personal WhatsApp.
       if (!email && (x.reviews ?? 0) < 15) continue;
       // One lead per company: a second listing on a domain we already have is a branch.
@@ -237,13 +283,13 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
       const gaps = x.reasons.filter((r) => r !== 'Email published on their site').join('; ');
       const source = `Autopilot · Google Maps · ${query}`;
       await run(env.DB,
-        `INSERT INTO leads (id, created, niche, company, website, email, phone, city, country, tier, score, gaps, status, source, origin, found_by, maps_place_id, rating, notes, next_action, updated_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', ?, 'maps', 'auto', ?, ?, ?, ?, 'Autopilot')`,
-        id, today, nicheKey(niche), x.name.slice(0, 160), x.website ?? null, email ?? null, x.phone ?? null, city, countryOf(city) ?? 'Nigeria', tier, x.score,
-        gaps, source, x.place_id, x.rating ?? null,
+        `INSERT INTO leads (id, created, niche, company, website, email, phone, city, country, tier, score, gaps, pitch, status, source, origin, found_by, maps_place_id, rating, notes, next_action, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', ?, 'maps', 'auto', ?, ?, ?, ?, 'Autopilot')`,
+        id, today, key, x.name.slice(0, 160), x.website ?? null, email ?? null, x.phone ?? null, city, countryOf(city) ?? 'Nigeria', tier, x.score,
+        gaps, WEBAPP_PITCH[key] ?? null, source, x.place_id, x.rating ?? null,
         [x.address, x.maps_url, x.emails && x.emails.length > 1 ? `Other emails on site: ${x.emails.slice(1).join(', ')}` : ''].filter(Boolean).join('\n'),
         email ? 'Email sequence: written by the morning routine, sent by LeadsHunter' : 'Send a WhatsApp intro');
-      if (email) pushed.push({ id, company: x.name.slice(0, 160), website: x.website ?? '', email, phone: x.phone ?? '', city, niche: nicheKey(niche), tier, score: x.score, gaps, source, notes: x.address });
+      if (email) pushed.push({ id, company: x.name.slice(0, 160), website: x.website ?? '', email, phone: x.phone ?? '', city, niche: key, tier, score: x.score, gaps, pitch: WEBAPP_PITCH[key] ?? '', source, notes: x.address });
       else waAdded++;
       added++;
     }
@@ -267,7 +313,7 @@ async function pushToEngine(env: Bindings, leads: Record<string, unknown>[]) {
 }
 
 export async function pushPendingToEngine(env: Bindings) {
-  const rows = await all<any>(env.DB, `SELECT id, company, website, email, phone, city, niche, tier, score, gaps, source, notes FROM leads
+  const rows = await all<any>(env.DB, `SELECT id, company, website, email, phone, city, niche, tier, score, gaps, pitch, source, notes FROM leads
     WHERE found_by = 'auto' AND email IS NOT NULL AND email <> '' AND synced_at IS NULL AND created >= date('now','-7 day') LIMIT 50`).catch(() => []);
   if (rows.length) await pushToEngine(env, rows.map((r) => ({ ...r, notes: r.notes ?? '' })));
 }

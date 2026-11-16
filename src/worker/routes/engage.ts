@@ -5,6 +5,7 @@ import { requireUser } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { complete, extractJson } from '../lib/ai';
 import { chainReason } from '../lib/maps';
+import { WEBAPP_PITCH } from '../lib/autoprospect';
 
 /* Social engagement, assisted.
  *   DMs:          AI drafts an Instagram DM or a LinkedIn connection note + message for a lead.
@@ -25,7 +26,7 @@ export type EngageItem = {
   sent_text?: string | null; liked?: boolean;
   created_at: string; created_by: string; done_at?: string | null; done_by?: string | null; follow_up_at?: string | null;
   auto?: boolean; // drafted by the autopilot
-  v?: number;     // 2 = written with the varied-opening writer
+  v?: number;     // DRAFT_V = written with the current DM brief (older ones are rewritten)
   dm_url?: string | null; // Instagram: the instagram.com/direct/t/<id> thread, resolved from ig.me on the server
 };
 const KEY = 'private/studio/engage.json';
@@ -91,6 +92,9 @@ export function cleanDrafts(drafts: string[], recent: string[]): string[] {
   return out;
 }
 
+/** Bump when the DM brief changes: waiting drafts written under an older version are rewritten by the cron. */
+const DRAFT_V = 3;
+
 async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, unknown>, recent: string[] = []) {
   const li = platform === 'linkedin';
   let best: string[] = []; let note: string | null = null;
@@ -105,9 +109,10 @@ Rules for every draft:
 - Everything you know about them comes from THEIR WEBSITE and the notes given. You have not seen their ${li ? 'LinkedIn' : 'Instagram'} page, so never mention it, their posts, their feed or their followers. Say "your site" when you refer to what you saw.
 - Use one concrete detail from the facts given (a named service, place, number, programme, or one of gaps_we_saw). No generic praise such as "strong online presence", "wide range of services" or "great reviews".
 - Never start a draft with "I noticed", "I see", "I saw", "I came across", "Your website", "Your company", "I hope" or "Just". No two drafts may start with the same word.
-- One idea per message: the single change that would bring them more enquiries, bookings or saved time. Say what it does for them, in plain words.
+- One idea per message. If our_angle is given, that is the idea: the web app or portal that would take a manual job off their team or let their customers serve themselves. Otherwise, the single change that would bring them more enquiries or bookings. Say what it does for them, in plain words, never in tech terms.
+- Make the free offer once, in your own words each time: we will put together a free concept of it for their business, so they can see it before deciding anything. No cost, no obligation.
 - Say who you are once, briefly (Michael, Ferrn, we build websites and web apps), anywhere except the first line unless the move says so.
-- End with one easy question that takes a yes, a no or a few words to answer. Vary the question between drafts. Never ask for a call in the first message.
+- End with one easy question that takes a yes, a no or a few words to answer, usually whether they would like to see the free concept. Vary the wording between drafts. Never ask for a call in the first message.
 - No links, no prices, no "DM me", no hashtags, no emojis.${recent.length ? `\n- These openings were used on other people recently. Do not reuse them or anything close: ${recent.slice(0, 12).map((r) => `"${r.split(/\s+/).slice(0, 6).join(' ')}…"`).join(', ')}` : ''}${attempt ? '\n- Your last attempt broke the opening rules. Check the first three words of every draft before you answer.' : ''}`;
     try {
       const r = await complete(env, [
@@ -212,14 +217,14 @@ engageApi.post('/', async (c) => {
   try {
     if (kind === 'dm') {
       const r = await draftDm(c.env, platform, { person, role: lead?.role, company, niche: lead?.niche, city: lead?.city,
-        website: lead?.website, gaps_we_saw: lead?.gaps, our_angle: lead?.pitch, about_them: context }, recentOpenings(await load(c.env)));
+        website: lead?.website, gaps_we_saw: lead?.gaps, our_angle: lead?.pitch || WEBAPP_PITCH[lead?.niche ?? ''], about_them: context }, recentOpenings(await load(c.env)));
       drafts = r.drafts; note = r.note;
     } else {
       drafts = await draftComments(c.env, platform, { platform, post_url: url, author: person || company, post_text: context });
     }
   } catch (e) { console.warn('engage draft', e); }
   const item: EngageItem = { id: newId(), kind, platform, status: 'draft', lead_id: lead?.id ?? null, company, person, url, context, drafts, note,
-    created_at: iso(), created_by: u.name, v: 2 };
+    created_at: iso(), created_by: u.name, v: DRAFT_V };
   const items = await load(c.env);
   items.unshift(item);
   await save(c.env, items);
@@ -239,8 +244,8 @@ engageApi.patch('/:id', async (c) => {
     const lead = it.lead_id ? await first<Record<string, any>>(c.env.DB, 'SELECT company, niche, city, country, website, role, gaps, pitch FROM leads WHERE id = ?', it.lead_id) : null;
     if (it.kind === 'dm') {
       const r = await draftDm(c.env, it.platform, { person: it.person, company: it.company, niche: lead?.niche, city: lead?.city, website: lead?.website, role: lead?.role,
-        gaps_we_saw: lead?.gaps, our_angle: lead?.pitch, about_them: it.context }, [...it.drafts, ...recentOpenings(items, it.id)]);
-      if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; it.v = 2; }
+        gaps_we_saw: lead?.gaps, our_angle: lead?.pitch || WEBAPP_PITCH[lead?.niche ?? ''], about_them: it.context }, [...it.drafts, ...recentOpenings(items, it.id)]);
+      if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; it.v = DRAFT_V; }
     } else {
       const d = await draftComments(c.env, it.platform, { platform: it.platform, post_url: it.url, author: it.person || it.company, post_text: it.context, avoid: it.drafts });
       if (d.length) it.drafts = d;
@@ -269,18 +274,18 @@ engageApi.patch('/:id', async (c) => {
  *  Drafts for branches of chains are skipped instead: they are not Ferrn clients. */
 export async function rewriteOldDrafts(env: Bindings, limit: number) {
   const items = await load(env);
-  const old = items.filter((i) => i.kind === 'dm' && i.status === 'draft' && i.v !== 2);
+  const old = items.filter((i) => i.kind === 'dm' && i.status === 'draft' && i.v !== DRAFT_V);
   const done: { id: string; company?: string | null; ok: boolean; skipped?: string }[] = [];
   for (const it of old.slice(0, limit)) {
     const lead = it.lead_id ? await first<Record<string, any>>(env.DB, 'SELECT company, niche, city, website, role, gaps, pitch FROM leads WHERE id = ?', it.lead_id) : null;
     const chain = chainReason(it.company ?? lead?.company ?? '', lead?.website);
-    if (chain) { it.status = 'skipped'; it.done_at = iso(); it.done_by = 'Studio'; it.v = 2; it.context = `Not a fit: ${chain}. ${it.context ?? ''}`.slice(0, 600); done.push({ id: it.id, company: it.company, ok: true, skipped: chain }); continue; }
+    if (chain) { it.status = 'skipped'; it.done_at = iso(); it.done_by = 'Studio'; it.v = DRAFT_V; it.context = `Not a fit: ${chain}. ${it.context ?? ''}`.slice(0, 600); done.push({ id: it.id, company: it.company, ok: true, skipped: chain }); continue; }
     try {
       const r = await draftDm(env, it.platform, { person: it.person, company: it.company, niche: lead?.niche, city: lead?.city, website: lead?.website, role: lead?.role,
-        gaps_we_saw: lead?.gaps, our_angle: lead?.pitch, about_them: it.context }, recentOpenings(items.filter((x) => x.v === 2), it.id));
-      if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; it.v = 2; }
+        gaps_we_saw: lead?.gaps, our_angle: lead?.pitch || WEBAPP_PITCH[lead?.niche ?? ''], about_them: it.context }, recentOpenings(items.filter((x) => x.v === DRAFT_V), it.id));
+      if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; it.v = DRAFT_V; }
       else it.v = (it.v ?? 0) - 1; // count failed tries (negative) so one stubborn draft can't block the rest
-      if ((it.v ?? 0) <= -3) it.v = 2;
+      if ((it.v ?? 0) <= -3) it.v = DRAFT_V;
       done.push({ id: it.id, company: it.company, ok: r.drafts.length > 0 });
     } catch (e) { console.warn('rewriteOldDrafts', it.id, e); done.push({ id: it.id, company: it.company, ok: false }); }
   }
@@ -385,17 +390,19 @@ export async function runEngageAutopilot(env: Bindings) {
     } catch { continue; }
     if (!html) continue;
     const links = socialLinks(html);
-    const platform: Platform | null = links.ig.length ? 'instagram' : links.li.length ? 'linkedin' : null;
+    // Web-app buyers (operations, B2B) are decided by a person on LinkedIn; consumer brands live on Instagram.
+    const b2b = /^(logistics|construction|engineering|manufacturing|professional|staffing|security|insurance|pharma|facility|microfinance|realestate)$/.test(l.niche ?? '');
+    const platform: Platform | null = b2b && links.li.length ? 'linkedin' : links.ig.length ? 'instagram' : links.li.length ? 'linkedin' : null;
     if (!platform) continue;
     const url = platform === 'instagram' ? `https://www.instagram.com/${links.ig[0]}/` : `https://www.linkedin.com/in/${links.li[0]}/`;
     const context = pageText(html);
     try {
       const d = await draftDm(env, platform, { person: l.contact_name, role: l.role, company: l.company, niche: l.niche, city: l.city,
-        website: l.website, gaps_we_saw: l.gaps, our_angle: l.pitch, about_them: `From their website: ${context}` }, [...fresh, ...items].filter((i) => i.kind === 'dm').slice(0, 14).map((i) => i.drafts[0] ?? ''));
+        website: l.website, gaps_we_saw: l.gaps, our_angle: l.pitch || WEBAPP_PITCH[l.niche ?? ''], about_them: `From their website: ${context}` }, [...fresh, ...items].filter((i) => i.kind === 'dm').slice(0, 14).map((i) => i.drafts[0] ?? ''));
       if (!d.drafts.length) continue;
       fresh.push({ id: newId(), kind: 'dm', platform, status: 'draft', lead_id: l.id, company: l.company, person: l.contact_name ?? null, url,
         context: `From their website${links.liCo.length ? ` (LinkedIn page: linkedin.com/company/${links.liCo[0]})` : ''}: ${context.slice(0, 500)}`,
-        drafts: d.drafts, note: d.note, created_at: iso(), created_by: 'Autopilot', auto: true, v: 2 });
+        drafts: d.drafts, note: d.note, created_at: iso(), created_by: 'Autopilot', auto: true, v: DRAFT_V });
     } catch (e) { console.warn('engage autopilot draft', l.id, e); }
   }
   if (fresh.length) {
