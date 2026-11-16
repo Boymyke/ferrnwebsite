@@ -93,7 +93,7 @@ export function cleanDrafts(drafts: string[], recent: string[]): string[] {
 }
 
 /** Bump when the DM brief changes: waiting drafts written under an older version are rewritten by the cron. */
-const DRAFT_V = 5;
+const DRAFT_V = 6;
 /** Past work is only proof when it is the same kind of business. */
 const PROOF_NICHES = /^(logistics|engineering|construction|manufacturing)$/;
 const words = (t: string) => t.trim().split(/\s+/).length;
@@ -105,7 +105,8 @@ async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, un
     const moves = shuffle(OPENERS).filter((o) => (o.key !== 'greeting' || ctx.person || ctx.company) && (o.key !== 'proof' || PROOF_NICHES.test(String(ctx.niche ?? '')))).slice(0, 3);
     const spec = `${li ? 'Return JSON {"note": string, "drafts": [string, string, string]}.\n"note" is a LinkedIn connection request note, max 280 characters, personal, no pitch, about one specific thing they do.\n"drafts" are 3 first messages to send once they accept, 60-100 words each.'
       : 'Return JSON {"drafts": [string, string, string]}. 3 Instagram DMs, 35-60 words each, the way a person types a DM, no formal sign-off.'}
-Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move. Part 2: what the web app would do for them or their customers. Part 3: the free concept offer and the closing question. Part 2 must name the actual job in their business (quotes, tracking, admissions, results, bookings, payments, orders), not \"serve clients better\". Never quote their phone number or address. No sentence longer than 18 words. Never join ideas with commas into one long sentence.
+Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move. Part 2: their need and what fixing it does for their business. Name the actual job (quotes, tracking, admissions, results, bookings, payments, orders) and the gain in their terms: fewer calls, faster payment, no lost enquiries, staff hours back. Never \"serve clients better\". Part 3: the close. No sentence longer than 18 words. Never join ideas with commas into one long sentence. Never quote their phone number or address.
+The three drafts must use three DIFFERENT closes, in this order: Draft 1 ends with a genuine question about how they handle that job today. Draft 2 offers to send a short note on how it would work for their business and asks if they want it. Draft 3 offers to put together a free concept of it for them to look at, no obligation, and asks if they want to see it. Only draft 3 may use the word \"free\".
 Each draft uses a DIFFERENT opening move. Follow these exactly, in this order:
 ${moves.map((m, i) => `Draft ${i + 1}: ${m.how} It must start with ${m.start}.`).join('\n')}
 
@@ -113,11 +114,10 @@ Rules for every draft:
 - Everything you know about them comes from THEIR WEBSITE and the notes given. You have not seen their ${li ? 'LinkedIn' : 'Instagram'} page, so never mention it, their posts, their feed or their followers. Say "your site" when you refer to what you saw.
 - Use one concrete detail from the facts given (a named service, place, number, programme, or one of gaps_we_saw). No generic praise such as "strong online presence", "wide range of services" or "great reviews".
 - Never start a draft with "I noticed", "I see", "I saw", "I came across", "Your website", "Your company", "I hope" or "Just". No two drafts may start with the same word.
-- One idea per message. If our_angle is given, that is the idea: the web app or portal that would take a manual job off their team or let their customers serve themselves. Otherwise, the single change that would bring them more enquiries or bookings. Say what it does for them, in plain words, never in tech terms.
-- Make the free offer once, in your own words each time: we will put together a free concept of it for their business, so they can see it before deciding anything. No cost, no obligation.
+- One idea per message, and it is about THEM, not about us. If our_angle is given, that is the idea: the web app or portal that would take a manual job off their team or let their customers serve themselves. Otherwise, the single change that would bring them more enquiries or bookings. Spend most of the words on their situation and what they gain, in plain words, never in tech terms. Do not describe Ferrn's services.
 - Say who you are once, in a few words ("Michael, Ferrn" or "I run Ferrn, we build web apps"), anywhere except the first line unless the move says so. Do not list services.
 - Suggest one thing only. Never add "we can also help with" or a second fix. Mention past work only if it is the same kind of business as theirs.
-- End with one easy question that takes a yes, a no or a few words to answer, usually whether they would like to see the free concept. Vary the wording between drafts. Never ask for a call in the first message.
+- End with one easy question that takes a yes, a no or a few words to answer. Never ask for a call in the first message.
 - No links, no prices, no "DM me", no hashtags, no emojis.${recent.length ? `\n- These openings were used on other people recently. Do not reuse them or anything close: ${recent.slice(0, 12).map((r) => `"${r.split(/\s+/).slice(0, 6).join(' ')}…"`).join(', ')}` : ''}${attempt ? '\n- Your last attempt broke the opening rules. Check the first three words of every draft before you answer.' : ''}`;
     try {
       const r = await complete(env, [
@@ -127,8 +127,7 @@ Rules for every draft:
       const j = extractJson<{ drafts?: string[]; note?: string }>(r.text, {});
       if (j.note && !note) note = String(j.note).slice(0, 300);
       const proofOk = PROOF_NICHES.test(String(ctx.niche ?? ''));
-      const offer = (d: string) => /\bfree\b|no cost|at no charge/i.test(d) && /concept|mock-?up|preview|sample|draft version/i.test(d)
-        && words(d) >= 28 && words(d) <= (li ? 120 : 75)
+      const offer = (d: string) => words(d) >= 26 && words(d) <= (li ? 120 : 75)
         && !/\d{7,}|\+\d[\d\s-]{8,}/.test(d)                                   // never quote their phone number back at them
         && (proofOk || !/relay|gromzia|synergix|m-p infrastructure|pwan|insightblitz|aroda/i.test(d)); // proof only from the same kind of business
       const tidy = (d: string) => d.split(/\n/).map((l) => l.trim()).filter(Boolean).join('\n');

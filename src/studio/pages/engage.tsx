@@ -77,22 +77,32 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
     try { await api(`/engage/${id}`, { method: 'DELETE' }); toast('Removed'); reload(); } catch (x: any) { toast(x.message, 'err'); }
   };
   const isDm = kind === 'dm';
-  /** One click: copy the message, open the DM thread (or the post), and move it to Sent. */
+  /** Copies the message and opens their DMs (or the post). It only moves to Sent once you confirm it went:
+   *  no app can press send inside Instagram or LinkedIn, so a click here is not proof the message was sent. */
+  const [pending, setPending] = useState<{ it: Item; text: string } | null>(null);
   const send = async (it: Item, text: string) => {
     const copied = copyNow(text); // must happen before the new tab steals focus
     const w = openTab(dmUrl(it));
     if (!w) { toast('Your browser blocked the new tab. Allow pop-ups for Studio', 'err'); return; }
-    if (!copied) toast('Couldn’t copy automatically. Copy the text from the Sent tab', 'err');
-    const thread = /\/direct\/t\//.test(dmUrl(it)) || it.platform !== 'instagram';
-    await patch(it.id, { status: 'sent', sent_text: text }, isDm ? `Message copied. In Instagram, ${thread ? '' : 'click Message, then '}click the message box, press ${PASTE}, then Enter` : `Comment copied. On the post, click Comment, press ${PASTE}, then post`);
+    if (!copied) toast('Couldn’t copy automatically. Use Copy only on the card', 'err');
+    setPending({ it, text });
+    toast(isDm ? `Message copied. In ${PLAT[it.platform].label}: click Message, click the message box, press ${PASTE}, then Enter` : `Comment copied. On the post, click Comment, press ${PASTE}, then post`);
+  };
+  const confirmSent = async (andNext: boolean) => {
+    if (!pending) return;
+    const { it, text } = pending;
+    const after = queue.find((q) => q.id !== it.id);
+    setPending(null);
+    if (andNext && after) { await send(after, after.drafts[0]); } // open the next tab inside this click, before any await-free work is lost
+    await patch(it.id, { status: 'sent', sent_text: text }, andNext && after ? undefined : (isDm ? 'Marked as sent' : 'Marked as posted'));
   };
   const queue = useMemo(() => items.filter((i) => i.status === 'draft' && (!platform || i.platform === platform) && i.drafts[0]), [items, platform]);
   const next = queue[0];
 
   return (
     <Page title={isDm ? 'Social DMs' : 'Interactions'}
-      sub={isDm ? 'AI writes Instagram DMs and LinkedIn messages for your leads. You send each one with a tap.' : 'AI writes thoughtful comments on other people’s posts. Like the post and drop the comment with a tap.'}>
-      <div className="callout"><Info size={15} /> <span><strong>Open &amp; send</strong> copies the message, opens {isDm ? 'their DMs' : 'the post'} and moves it to {isDm ? 'Sent' : 'Posted'} in one click. You paste and press send there, because Instagram and LinkedIn block apps from sending cold {isDm ? 'DMs' : 'comments'} and restrict accounts that use bots for it.</span></div>
+      sub={isDm ? 'AI writes Instagram DMs and LinkedIn messages for your leads. You paste and send each one yourself.' : 'AI writes thoughtful comments on other people’s posts. Like the post and drop the comment with a tap.'}>
+      <div className="callout"><Info size={15} /> <span><strong>Studio cannot press send for you.</strong> Instagram and LinkedIn do not let any app send a first {isDm ? 'message' : 'comment'}, and they restrict accounts that use bots for it. <strong>Copy &amp; open</strong> copies the text and opens {isDm ? 'their profile' : 'the post'}: {isDm ? 'click Message, paste, press Enter' : 'click Comment, paste, post'}, then confirm here and it moves to {isDm ? 'Sent' : 'Posted'}.</span></div>
 
       <Autopilot kind={kind} />
 
@@ -111,10 +121,19 @@ export function Engage({ kind }: { kind: 'dm' | 'comment' }) {
         <select value={platform} onChange={(e) => setPlatform(e.target.value as any)}><option value="">Both platforms</option><option value="instagram">Instagram</option><option value="linkedin">LinkedIn</option></select>
       </div>
 
-      {view === 'draft' && next ? (
+      {pending ? (
         <div className="eng-next">
-          <div><strong>{queue.length} ready to {isDm ? 'send' : 'post'}</strong><span className="muted small">Next: {next.person || next.company || 'Profile'} · {PLAT[next.platform].label}. Each click copies the message, opens {isDm ? 'their DMs' : 'the post'} and marks it sent, then moves to the next one.</span></div>
-          <button className="btn primary" onClick={() => send(next, next.drafts[0])}><Send size={15} />Open &amp; send next</button>
+          <div><strong>Did your {isDm ? 'message' : 'comment'} to {pending.it.person || pending.it.company || 'them'} go?</strong><span className="muted small">It is copied. In the tab that opened: {isDm ? `click Message, click the message box, press ${PASTE}, then Enter` : `click Comment, press ${PASTE}, then post`}. It stays in Ready until you confirm.</span></div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {queue.some((q) => q.id !== pending.it.id) ? <button className="btn primary" onClick={() => confirmSent(true)}><Send size={15} />Yes, open the next</button> : null}
+            <button className="btn" onClick={() => confirmSent(false)}>Yes, {isDm ? 'sent' : 'posted'}</button>
+            <button className="btn ghost" onClick={() => setPending(null)}>Not yet</button>
+          </div>
+        </div>
+      ) : view === 'draft' && next ? (
+        <div className="eng-next">
+          <div><strong>{queue.length} ready to {isDm ? 'send' : 'post'}</strong><span className="muted small">Next: {next.person || next.company || 'Profile'} · {PLAT[next.platform].label}. Each click copies the message and opens {isDm ? 'their profile' : 'the post'}. You paste and press send there, then confirm here.</span></div>
+          <button className="btn primary" onClick={() => send(next, next.drafts[0])}><Send size={15} />Copy &amp; open next</button>
         </div>
       ) : null}
 
@@ -236,7 +255,7 @@ function ItemCard({ it, patch, del, send }: { it: Item; patch: (id: string, b: R
         {it.status === 'draft' ? (
           <>
             {!isDm ? <a className="btn sm ghost" href={it.url} target="_blank" rel="noreferrer" onClick={() => { if (!it.liked) patch(it.id, { liked: true }, 'Marked as liked'); }}><Heart size={14} />Open &amp; like</a> : null}
-            {text ? <button className="btn sm primary" onClick={() => send(it, text)}><Send size={14} />{isDm ? 'Open & send' : 'Open & post'}</button> : null}
+            {text ? <button className="btn sm primary" onClick={() => send(it, text)}><Send size={14} />{isDm ? 'Copy & open chat' : 'Copy & open post'}</button> : null}
             {text ? <button className="btn sm ghost" onClick={() => copyOpen(text, dmUrl(it), toast)}><Copy size={14} />Copy only</button> : null}
             <button className="btn sm ghost" disabled={busy} onClick={redraft}><RefreshCw size={14} />{busy ? 'Writing…' : 'Rewrite'}</button>
             <button className="btn sm ghost" onClick={() => patch(it.id, { status: 'skipped' }, 'Skipped')}>Skip</button>
