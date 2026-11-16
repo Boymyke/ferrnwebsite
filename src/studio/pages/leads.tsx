@@ -282,7 +282,7 @@ function Autopilot() {
   const runNow = async () => { setBusy(true); try { const r = await api('/prospects/auto/run', { body: {} }); toast(`Searched “${r.result.query}” · ${r.result.added} new leads`); reload(); } catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); } };
   const days = data?.byDay ?? [];
   const max = Math.max(1, ...days.map((d: any) => Number(d.auto) + Number(d.claude)));
-  const pairs = c.niches.length * c.cities.length;
+  const plan = data?.plan;
   return (
     <Card className="autopilot" title={<span className="ap-title"><Zap size={16} />Lead autopilot <Badge tone={c.enabled ? 'green' : 'default'}>{c.enabled ? 'on' : 'off'}</Badge></span>}
       actions={<>
@@ -301,7 +301,7 @@ function Autopilot() {
         <label className="ap-field"><span className="side-label">Minimum score</span><input type="number" min={0} max={100} disabled={!admin} value={c.minScore} onChange={(e) => setCfg({ ...c, minScore: Number(e.target.value) })} /></label>
         <label className="ap-field"><span className="side-label">WhatsApp-only leads (max %)</span><input type="number" min={0} max={100} disabled={!admin} value={c.whatsappShare ?? 20} onChange={(e) => setCfg({ ...c, whatsappShare: Number(e.target.value) })} /></label>
       </div>
-      <p className="muted small">{pairs} searches in rotation, one every 10 minutes, each at most once a day. Email first: leads with a published email fill the day and go to LeadsHunter, where the morning routine writes and queues their emails. Phone-only leads are kept for Lagos only, up to {c.whatsappShare ?? 20}% of the day. {c.lastRun ? <>Last run {ago(c.lastRun.at)}: “{c.lastRun.query}” — {c.lastRun.seen} businesses seen{c.lastRun.emails != null ? `, ${c.lastRun.emails} with an email` : ''}, {c.lastRun.added} added{c.lastRun.error ? <span className="err"> · {c.lastRun.error}</span> : null}.</> : 'Not run yet.'}</p>
+      <p className="muted small">{plan ? <>{plan.lagos} Lagos and {plan.abroad} abroad searches take turns, one every 10 minutes. Each visit covers a different part of the city with different wording, so results stay fresh. {plan.perDay != null ? <>Up to {plan.perDay} searches a day ({plan.searchedToday} so far today), set from the {plan.mapsLeft} free Google Maps searches left this month. </> : null}</> : null}Abroad, only diaspora-facing niches are searched. Email first: leads with a published email fill the day and go to LeadsHunter, where the morning routine writes and queues their emails. Phone-only leads are kept for Lagos only, up to {c.whatsappShare ?? 20}% of the day. {c.lastRun ? <>Last run {ago(c.lastRun.at)}: “{c.lastRun.query}” — {c.lastRun.seen} businesses seen{c.lastRun.fresh != null ? `, ${c.lastRun.fresh} new to us` : ''}{c.lastRun.emails != null ? `, ${c.lastRun.emails} with an email` : ''}, {c.lastRun.added} added{c.lastRun.error ? <span className="err"> · {c.lastRun.error}</span> : null}.</> : 'Not run yet.'}</p>
       {dirty && admin ? <div className="row-actions"><button className="btn sm primary" onClick={() => save()}>Save changes</button><button className="btn sm ghost" onClick={() => setCfg(null)}>Discard</button></div> : null}
       <div className="ap-bottom">
         <div className="ap-chart" aria-label="Leads found per day, last 30 days">

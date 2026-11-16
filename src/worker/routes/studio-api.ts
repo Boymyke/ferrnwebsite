@@ -11,7 +11,7 @@ import { engineCall, engineConfigured, hasHandledBy, shapeDash, syncEngine } fro
 import { captureSite } from '../lib/capture';
 import { fromOf } from '../lib/email';
 import { searchPlaces } from '../lib/maps';
-import { getAuto, NICHE_QUERY, runAutoProspect, saveAuto, LAGOS_AND_ABROAD, type AutoConfig } from '../lib/autoprospect';
+import { getAuto, NICHE_QUERY, pairsOf, runAutoProspect, saveAuto, searchAllowance, LAGOS_AND_ABROAD, type AutoConfig } from '../lib/autoprospect';
 import { enrichProspects, placeQuery } from '../lib/maps';
 import { CORE_FLOW, NICHE_PRODUCT, NICHE_QUESTIONS, OBJECTIONS, nicheKey } from '../content/meeting-playbook';
 import { quoteTotals, type QuoteItem } from '../views/quote';
@@ -162,14 +162,17 @@ studio.get('/prospects/auto', async (c): Promise<Response> => {
   const cfg = await getAuto(c.env);
   const recent = await all(c.env.DB, "SELECT id, company, niche, city, score, tier, phone, email, website, status, created FROM leads WHERE found_by IN ('auto','claude') ORDER BY created DESC, updated_at DESC LIMIT 30");
   const byDay = await all(c.env.DB, "SELECT created AS day, SUM(found_by='auto') AS auto, SUM(found_by='claude') AS claude FROM leads WHERE found_by IN ('auto','claude') AND created >= date('now','-29 day') GROUP BY created ORDER BY created");
-  return c.json({ ok: true, config: cfg, niches: Object.keys(NICHE_QUERY), cities: LAGOS_AND_ABROAD, hasKey: !!c.env.GOOGLE_MAPS_API_KEY, recent, byDay });
+  const pairs = pairsOf(cfg); const allow = await searchAllowance(c.env).catch(() => null);
+  const today = new Date().toISOString().slice(0, 10);
+  const plan = { lagos: pairs.ng.length, abroad: pairs.abroad.length, perDay: allow?.perDay ?? null, mapsLeft: allow?.left ?? null, mapsLimit: allow?.limit ?? null, searchedToday: cfg.day?.date === today ? cfg.day.searches : 0 };
+  return c.json({ ok: true, config: cfg, plan, niches: Object.keys(NICHE_QUERY), cities: LAGOS_AND_ABROAD, hasKey: !!c.env.GOOGLE_MAPS_API_KEY, recent, byDay });
 });
 studio.put('/prospects/auto', async (c): Promise<Response> => {
   const u = c.get('user')!;
   if (!can(u, 'admin')) return c.json({ ok: false, error: 'Only admins change the autopilot.' }, 403);
   const b = (await c.req.json().catch(() => ({}))) as Partial<AutoConfig>;
   const cur = await getAuto(c.env);
-  const list = (x: unknown) => (Array.isArray(x) ? x.map((s) => clamp(s, 60)).filter(Boolean).slice(0, 20) : undefined);
+  const list = (x: unknown) => (Array.isArray(x) ? x.map((s) => clamp(s, 60)).filter(Boolean).slice(0, 30) : undefined);
   const next: AutoConfig = { ...cur, enabled: b.enabled ?? cur.enabled, niches: list(b.niches) ?? cur.niches, cities: list(b.cities) ?? cur.cities,
     dailyCap: Math.max(1, Math.min(200, Number(b.dailyCap ?? cur.dailyCap) || 25)), minScore: Math.max(0, Math.min(100, Number(b.minScore ?? cur.minScore) || 0)),
     whatsappShare: Math.max(0, Math.min(100, Number(b.whatsappShare ?? cur.whatsappShare ?? 20))) };

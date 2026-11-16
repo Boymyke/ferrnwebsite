@@ -44,13 +44,13 @@ export function chainReason(name: string, website?: string): string | null {
 
 /* ── where we prospect: Lagos plus abroad markets ── */
 export const CITY_COUNTRY: Record<string, string> = {
-  lagos: 'Nigeria', lekki: 'Nigeria', ikeja: 'Nigeria', 'victoria island': 'Nigeria', ikoyi: 'Nigeria', yaba: 'Nigeria', surulere: 'Nigeria',
+  lagos: 'Nigeria', abuja: 'Nigeria', 'port harcourt': 'Nigeria', ibadan: 'Nigeria', lekki: 'Nigeria', ikeja: 'Nigeria', 'victoria island': 'Nigeria', ikoyi: 'Nigeria', yaba: 'Nigeria', surulere: 'Nigeria',
   london: 'UK', manchester: 'UK', birmingham: 'UK', leeds: 'UK', liverpool: 'UK', glasgow: 'UK', edinburgh: 'UK', bristol: 'UK',
   houston: 'USA', atlanta: 'USA', dallas: 'USA', 'new york': 'USA', chicago: 'USA', 'washington dc': 'USA', maryland: 'USA', miami: 'USA', 'los angeles': 'USA',
   toronto: 'Canada', calgary: 'Canada', vancouver: 'Canada', ottawa: 'Canada',
   dubai: 'UAE', dublin: 'Ireland', amsterdam: 'Netherlands', accra: 'Ghana', nairobi: 'Kenya', johannesburg: 'South Africa',
 };
-export const LAGOS_AND_ABROAD = ['Lagos', 'London', 'Manchester', 'Birmingham', 'Houston', 'Atlanta', 'Dallas', 'New York', 'Toronto', 'Dubai'];
+export const LAGOS_AND_ABROAD = ['Lagos', 'London', 'Manchester', 'Birmingham', 'Houston', 'Dallas', 'Atlanta', 'New York', 'Washington DC', 'Toronto', 'Calgary', 'Dublin', 'Dubai'];
 export const countryOf = (city: string): string | null => {
   const c = city.trim().toLowerCase();
   if (CITY_COUNTRY[c]) return CITY_COUNTRY[c];

@@ -1,8 +1,14 @@
 /**
  * Autopilot prospecting: on the cron, search Google Maps for the configured niches × cities,
  * read each business's own website for a published email and visible gaps, score it, and add
- * the best new ones to Leads (found_by = 'auto'). One niche×city pair per run, so the
- * 10-minute cron spreads the work across the day.
+ * the best new ones to Leads (found_by = 'auto'). One search per run, so the 10-minute cron
+ * spreads the work across the day.
+ *
+ * Staying fresh: Google returns the same top 20 for the same words, so a niche × city pair that
+ * is searched the same way every day runs dry in about a week. Each visit to a pair therefore uses
+ * a different area of the city and a different wording (see searchFor), and Lagos and abroad
+ * take turns. The number of searches a day is set from what is left of the month's free Google
+ * Maps allowance, so the autopilot never runs out mid-month and never produces a bill.
  *
  * Email first: leads with a published business email fill the day. Phone-only (WhatsApp) leads
  * are allowed only in Nigeria and only up to `whatsappShare` % of the daily cap. Email leads are
@@ -10,7 +16,7 @@
  */
 import type { Bindings } from './env';
 import { all, first, getSetting, newId, run, setSetting } from './db';
-import { countryOf, enrichProspects, isNigerian, LAGOS_AND_ABROAD, placeQuery, searchPlaces } from './maps';
+import { countryOf, enrichProspects, isNigerian, LAGOS_AND_ABROAD, mapsBudget, placeQuery, searchPlaces } from './maps';
 import { engineCall, engineConfigured } from './engine';
 
 export type AutoConfig = {
@@ -21,7 +27,9 @@ export type AutoConfig = {
   minScore: number;          // 0–100
   whatsappShare: number;     // max % of the daily cap that may be phone-only (Nigeria only)
   cursor?: number;           // which pair runs next
-  lastRun?: { at: string; query: string; added: number; seen: number; emails?: number; error?: string };
+  visits?: Record<string, number>;               // per "niche|city": how many times it has been searched (picks area + wording)
+  day?: { date: string; searches: number };      // Google Maps searches used today
+  lastRun?: { at: string; query: string; added: number; seen: number; fresh?: number; emails?: number; error?: string };
 };
 
 export const NICHE_QUERY: Record<string, string> = {
@@ -30,19 +38,80 @@ export const NICHE_QUERY: Record<string, string> = {
   shortlet: 'shortlet apartments', hospitality: 'hotels', solar: 'solar installation companies', ngo: 'NGOs and associations',
   ecommerce: 'fashion and beauty stores', professional: 'law firms and accounting firms',
   homecare: 'home care agencies', cleaning: 'commercial cleaning companies', construction: 'construction companies', church: 'churches',
+  engineering: 'engineering and oil and gas services companies', interior: 'interior design and furniture companies',
+  events: 'event centres and event planners', autodealer: 'car dealerships', manufacturing: 'manufacturing companies',
+  travel: 'travel agencies and tour operators', studyabroad: 'study abroad and visa consultants',
+  staffing: 'recruitment and outsourcing companies', security: 'security companies',
+};
+/** Other ways to say the same niche. Each visit to a pair uses the next wording, which surfaces different businesses. */
+export const NICHE_VARIANTS: Record<string, string[]> = {
+  logistics: ['freight forwarding and customs clearing agents', 'haulage and trucking companies', 'cargo and courier companies'],
+  clinic: ['specialist hospitals', 'medical centres', 'maternity and children hospitals'],
+  fertility: ['IVF centres', 'gynaecology and women\'s health clinics'],
+  dental: ['orthodontists and dental implant clinics', 'dentists'],
+  realestate: ['property developers', 'estate surveyors and valuers', 'property management companies'],
+  school: ['private secondary schools', 'montessori and nursery schools', 'international schools'],
+  construction: ['building contractors', 'civil engineering contractors', 'architecture firms'],
+  engineering: ['oil and gas servicing companies', 'electrical and mechanical engineering companies', 'marine and offshore services companies'],
+  solar: ['solar and inverter companies', 'power and energy solutions companies'],
+  professional: ['law firms', 'chartered accounting and audit firms', 'business and management consulting firms'],
+  homecare: ['home nursing services', 'elderly care services'],
+  interior: ['interior designers', 'furniture makers and showrooms', 'kitchen and wardrobe companies'],
+  events: ['event halls and banquet venues', 'wedding planners and event decorators'],
+  autodealer: ['car dealers', 'auto sales and leasing companies'],
+  manufacturing: ['food processing companies', 'packaging and plastics manufacturers', 'agro-processing and export companies'],
+  travel: ['travel and visa agencies', 'tour operators'],
+  studyabroad: ['education consultants', 'visa and immigration consultants'],
+  staffing: ['HR and recruitment agencies', 'outsourcing companies'],
+  security: ['private security guard companies', 'CCTV and security systems companies'],
 };
 
 /* Abroad, Ferrn wins with owner-run businesses that serve the African diaspora or are run by it, not with
- * polished high-street brands. These queries replace the generic one outside Nigeria. */
+ * polished high-street brands. These queries replace the generic one outside Nigeria, and a niche with no
+ * entry here is not searched abroad at all (a private school in London is not a Ferrn client). */
 export const ABROAD_QUERY: Record<string, string> = {
   logistics: 'cargo and shipping to Nigeria and Africa companies', professional: 'immigration law firms and accountants for small businesses',
   ecommerce: 'African and Caribbean food and beauty stores', church: 'African churches', hospitality: 'Nigerian and African restaurants',
   realestate: 'independent estate agents and property management companies', homecare: 'independent home care agencies',
+  staffing: 'healthcare staffing and nursing agencies', events: 'Nigerian and African wedding caterers and event planners',
+  travel: 'travel agencies for flights to Nigeria and Africa',
+};
+export const ABROAD_VARIANTS: Record<string, string[]> = {
+  logistics: ['African freight forwarders and shipping agents', 'barrel and container shipping to Africa'],
+  professional: ['immigration lawyers', 'small business accountants and tax advisers'],
+  church: ['Nigerian churches', 'African charities and community organisations'],
+  realestate: ['property management companies', 'independent letting agents'],
+  homecare: ['domiciliary care agencies', 'supported living providers'],
+  staffing: ['care staff recruitment agencies', 'nurse staffing agencies'],
+  events: ['African event halls and banquet venues', 'African party rentals and decorators'],
+  travel: ['African travel agents'],
+  ecommerce: ['African grocery stores', 'African fashion and fabric stores'],
+};
+/** Niches that only make sense abroad (in Lagos they are not who Ferrn sells to). */
+const ABROAD_ONLY = new Set(['church']);
+
+/** Parts of each city. A visit searches one of them, so the same pair reaches businesses the city-wide search never shows. */
+export const AREAS: Record<string, string[]> = {
+  lagos: ['Lekki', 'Victoria Island', 'Ikoyi', 'Ikeja', 'Yaba', 'Surulere', 'Ajah', 'Gbagada', 'Apapa', 'Festac', 'Magodo', 'Isolo', 'Ogba', 'Ilupeju', 'Maryland'],
+  london: ['Peckham', 'Woolwich', 'Croydon', 'Barking', 'Tottenham', 'Lewisham', 'Hackney', 'Enfield', 'Thamesmead', 'Stratford'],
+  manchester: ['Salford', 'Moss Side', 'Cheetham Hill', 'Oldham', 'Bolton', 'Stockport'],
+  birmingham: ['Handsworth', 'Erdington', 'Wolverhampton', 'Coventry', 'Walsall'],
+  houston: ['Southwest Houston', 'Katy', 'Sugar Land', 'Missouri City', 'Richmond', 'Pearland'],
+  dallas: ['Arlington', 'Irving', 'Garland', 'Plano', 'Grand Prairie'],
+  atlanta: ['Marietta', 'Lawrenceville', 'Stone Mountain', 'Decatur', 'Norcross', 'Duluth'],
+  'new york': ['Bronx', 'Brooklyn', 'Queens', 'Newark'],
+  'washington dc': ['Silver Spring', 'Bowie', 'Laurel', 'Hyattsville', 'Baltimore'],
+  toronto: ['Brampton', 'Mississauga', 'Scarborough', 'Etobicoke', 'North York', 'Ajax'],
+  calgary: ['Northeast Calgary', 'Airdrie', 'Edmonton'],
+  dublin: ['Blanchardstown', 'Tallaght', 'Swords', 'Lucan'],
 };
 
 export const DEFAULT_AUTO: AutoConfig = {
-  enabled: false, niches: ['logistics', 'clinic', 'fertility', 'realestate', 'school', 'construction', 'professional', 'homecare'],
-  cities: ['Lagos', 'London', 'Manchester', 'Houston', 'Atlanta', 'Toronto'], dailyCap: 12, minScore: 70, whatsappShare: 20,
+  enabled: false,
+  niches: ['logistics', 'clinic', 'fertility', 'dental', 'realestate', 'school', 'construction', 'engineering', 'solar', 'professional',
+    'studyabroad', 'interior', 'events', 'autodealer', 'manufacturing', 'travel', 'homecare', 'staffing', 'church'],
+  cities: ['Lagos', 'London', 'Manchester', 'Birmingham', 'Houston', 'Dallas', 'Atlanta', 'New York', 'Washington DC', 'Toronto', 'Calgary', 'Dublin'],
+  dailyCap: 12, minScore: 65, whatsappShare: 20,
 };
 export { LAGOS_AND_ABROAD };
 
@@ -53,12 +122,54 @@ export const saveAuto = (env: Bindings, cfg: AutoConfig, by: string) => setSetti
 
 const nicheKey = (n: string) => (NICHE_QUERY[n] ? n : n.toLowerCase().replace(/[^a-z]+/g, '-').slice(0, 40));
 
+type Pair = readonly [niche: string, city: string];
+/** Which niche × city pairs are worth searching, split so Lagos and abroad can take turns. */
+export function pairsOf(cfg: Pick<AutoConfig, 'niches' | 'cities'>): { ng: Pair[]; abroad: Pair[] } {
+  const ng: Pair[] = [], abroad: Pair[] = [];
+  for (const n of cfg.niches) for (const c of cfg.cities) {
+    if (isNigerian(c)) { if (!ABROAD_ONLY.has(n)) ng.push([n, c]); }
+    // Abroad: only niches with a diaspora-facing query, or one the team typed in by hand.
+    else if (ABROAD_QUERY[n] || !NICHE_QUERY[n]) abroad.push([n, c]);
+  }
+  return { ng, abroad };
+}
+/** The pair for step `s`: even steps Lagos, odd steps abroad (whichever exists). */
+const pairAt = (p: { ng: Pair[]; abroad: Pair[] }, s: number): Pair | null => {
+  const lists = [p.ng, p.abroad].filter((l) => l.length);
+  if (!lists.length) return null;
+  const list = lists[s % lists.length];
+  return list[Math.floor(s / lists.length) % list.length];
+};
+
+/** The words for visit number `visit` to a pair: walks every area × wording combination before repeating. */
+export function searchFor(niche: string, city: string, visit: number): { query: string; area: string } {
+  const nigeria = isNigerian(city);
+  const abroadWords = !nigeria && ABROAD_QUERY[niche];
+  const phrases = abroadWords ? [abroadWords, ...(ABROAD_VARIANTS[niche] ?? [])] : [NICHE_QUERY[niche] ?? niche, ...(NICHE_VARIANTS[niche] ?? [])];
+  const areas = ['', ...(AREAS[city.trim().toLowerCase()] ?? [])];
+  const k = ((visit % (areas.length * phrases.length)) + areas.length * phrases.length) % (areas.length * phrases.length);
+  const ai = k % areas.length;
+  const phrase = phrases[(ai + Math.floor(k / areas.length)) % phrases.length];
+  const area = areas[ai];
+  const country = countryOf(city);
+  return { area, query: area ? `${phrase} in ${area}, ${city.trim()}${country ? `, ${country}` : ''}` : placeQuery(phrase, city) };
+}
+
+/** Searches allowed today: what is left of the month's free Google Maps allowance, spread over the days left
+ *  (a tenth is kept back for searches made by hand in Studio). */
+export async function searchAllowance(env: Bindings, now = new Date()) {
+  const b = await mapsBudget(env);
+  const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  const daysLeft = daysInMonth - now.getUTCDate() + 1;
+  return { perDay: Math.max(0, Math.min(60, Math.floor((b.left * 0.9) / daysLeft))), left: b.left, limit: b.limit };
+}
+
 export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by?: string } = {}) {
   const cfg = await getAuto(env);
   if (!opts.force && !cfg.enabled) return { skipped: 'off' };
   if (!env.GOOGLE_MAPS_API_KEY) return { skipped: 'no GOOGLE_MAPS_API_KEY' };
-  const pairs = cfg.niches.flatMap((n) => cfg.cities.map((c) => [n, c] as const));
-  if (!pairs.length) return { skipped: 'no niches or cities' };
+  const pairs = pairsOf(cfg);
+  if (!pairs.ng.length && !pairs.abroad.length) return { skipped: 'no niches or cities' };
 
   const today = new Date().toISOString().slice(0, 10);
   const counts = await first<{ n: number; wa: number }>(env.DB,
@@ -66,16 +177,30 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
   const room = Math.max(0, cfg.dailyCap - (counts?.n ?? 0));
   const waRoom = Math.max(0, Math.floor((cfg.dailyCap * (cfg.whatsappShare ?? 20)) / 100) - (counts?.wa ?? 0));
   if (!room && !opts.force) return { skipped: 'daily cap reached' };
-  // Each pair is searched at most once a day unless forced.
-  const i = (cfg.cursor ?? 0) % pairs.length;
-  const [niche, city] = pairs[i];
-  cfg.cursor = (i + 1) % pairs.length;
-  const doneKey = `autoprospect:${today}:${niche}:${city}`;
-  if (!opts.force && (await env.CACHE.get(doneKey))) { await saveAuto(env, cfg, 'autopilot'); return { skipped: 'pair already searched today' }; }
+  // Stay inside the month's free Google Maps allowance: a fixed number of searches a day.
+  const day = cfg.day?.date === today ? cfg.day : { date: today, searches: 0 };
+  if (!opts.force) {
+    const allow = await searchAllowance(env);
+    if (day.searches >= allow.perDay) return { skipped: allow.left ? 'today\'s searches are used' : 'Google Maps allowance for the month is used' };
+  }
+  // Next pair that has not been searched today (a pair is searched at most once a day unless forced).
+  let step = cfg.cursor ?? 0, pair: Pair | null = null, doneKey = '';
+  for (let tries = 0; tries < 8; tries++, step++) {
+    const p = pairAt(pairs, step); if (!p) break;
+    doneKey = `autoprospect:${today}:${p[0]}:${p[1]}`;
+    if (opts.force || !(await env.CACHE.get(doneKey))) { pair = p; step++; break; }
+  }
+  cfg.cursor = step % 1_000_000;
+  if (!pair) { await saveAuto(env, cfg, 'autopilot'); return { skipped: 'pairs already searched today' }; }
+  const [niche, city] = pair;
+  const vKey = `${niche}|${city}`;
+  const visit = (cfg.visits?.[vKey] ?? 0) + 1; // visit 0 is the plain city-wide search the autopilot used before
+  cfg.visits = { ...(cfg.visits ?? {}), [vKey]: visit };
+  cfg.day = { date: today, searches: day.searches + 1 };
 
   const nigeria = isNigerian(city);
-  const query = placeQuery((!nigeria && ABROAD_QUERY[niche]) || NICHE_QUERY[niche] || niche, city);
-  let added = 0, seen = 0, emails = 0, waAdded = 0, error: string | undefined;
+  const { query } = searchFor(niche, city, visit);
+  let added = 0, seen = 0, freshN = 0, emails = 0, waAdded = 0, error: string | undefined;
   const pushed: Record<string, unknown>[] = [];
   try {
     const { results } = await searchPlaces(env, query);
@@ -83,6 +208,7 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
     const known = new Set((await all<{ maps_place_id: string }>(env.DB, 'SELECT maps_place_id FROM leads WHERE maps_place_id IS NOT NULL')).map((x) => x.maps_place_id));
     // Not a fit: branches of chains and franchises, national brands (they can't or won't buy from an agency).
     const fresh = results.filter((x) => !known.has(x.place_id) && (!x.status || x.status === 'OPERATIONAL') && !x.skip);
+    freshN = fresh.length;
     await enrichProspects(fresh, 14);
     const domainOf = (u?: string | null) => { try { return new URL(u!).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } };
     const knownDomains = new Set((await all<{ website: string }>(env.DB, "SELECT website FROM leads WHERE website IS NOT NULL AND website <> ''")).map((x) => domainOf(x.website)).filter(Boolean));
@@ -106,7 +232,7 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
       if (!email && (!nigeria || !x.phone || waAdded >= waRoom)) continue;
       if (await first(env.DB, 'SELECT id FROM leads WHERE company = ? AND city = ?', x.name, city)) continue;
       if (email && (await first(env.DB, 'SELECT id FROM leads WHERE lower(email) = ?', email))) continue;
-      const tier = x.score >= 82 && needs.length >= 2 && (x.reviews ?? 0) >= 40 ? 'A' : x.score >= 70 ? 'B' : 'C';
+      const tier = x.score >= 80 && needs.length >= 2 && (x.reviews ?? 0) >= 40 ? 'A' : 'B'; // no Tier C: below the minimum score is not added
       const id = newId('L-');
       const gaps = x.reasons.filter((r) => r !== 'Email published on their site').join('; ');
       const source = `Autopilot · Google Maps · ${query}`;
@@ -124,9 +250,9 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
     await env.CACHE.put(doneKey, '1', { expirationTtl: 60 * 60 * 26 });
   } catch (e: any) { error = String(e?.message ?? e).slice(0, 300); }
   if (pushed.length) await pushToEngine(env, pushed);
-  cfg.lastRun = { at: new Date().toISOString(), query, added, seen, emails, ...(error ? { error } : {}) };
+  cfg.lastRun = { at: new Date().toISOString(), query, added, seen, fresh: freshN, emails, ...(error ? { error } : {}) };
   await saveAuto(env, cfg, opts.by ?? 'autopilot');
-  return { query, added, seen, emails, error };
+  return { query, added, seen, fresh: freshN, emails, error };
 }
 
 /** Hands email leads to LeadsHunter (the morning routine writes their emails). Best effort: if the
