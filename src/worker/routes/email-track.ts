@@ -122,7 +122,7 @@ export async function syncOutreachEmails(env: Bindings, dash: { recentSent?: any
           company = excluded.company, lead_id = excluded.lead_id, sent_at = excluded.sent_at,
           status = CASE WHEN excluded.status = 'failed' THEN 'failed' ELSE email_log.status END, error = excluded.error,
           updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`)
-      .bind(id, kind, from, clamp(m.to, 200), clamp(m.subject, 300) || null, clamp(m.company, 200) || null, clamp(m.lead_id, 80) || null,
+      .bind(id, kind, (m.from ? clamp(m.from, 200) : '') || from, clamp(m.to, 200), clamp(m.subject, 300) || null, clamp(m.company, 200) || null, clamp(m.lead_id, 80) || null,
         m.status === 'failed' ? 'failed' : 'sent', m.status === 'failed' ? clamp(m.error, 500) || null : null, sentAt);
   });
   for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));

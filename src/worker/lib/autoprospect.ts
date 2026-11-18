@@ -250,7 +250,7 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
     // Not a fit: branches of chains and franchises, national brands (they can't or won't buy from an agency).
     const fresh = results.filter((x) => !known.has(x.place_id) && (!x.status || x.status === 'OPERATIONAL') && !x.skip);
     freshN = fresh.length;
-    await enrichProspects(fresh, 14);
+    await enrichProspects(fresh, 20);
     const domainOf = (u?: string | null) => { try { return new URL(u!).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; } };
     const knownDomains = new Set((await all<{ website: string }>(env.DB, "SELECT website FROM leads WHERE website IS NOT NULL AND website <> ''")).map((x) => domainOf(x.website)).filter(Boolean));
     const limit = Math.max(room, opts.force ? 10 : 0);

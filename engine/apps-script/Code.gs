@@ -19,9 +19,9 @@ var TZ = 'Africa/Lagos';
 var HEADERS = {
   Leads: ['id', 'created', 'niche', 'company', 'website', 'email', 'phone', 'contact_name', 'role', 'city',
     'tier', 'score', 'gaps', 'pitch', 'est_value', 'status', 'preview_url', 'last_contact', 'last_reply',
-    'next_action', 'needs_you', 'needs_you_reason', 'notes', 'source', 'thread_id', 'handler'],
+    'next_action', 'needs_you', 'needs_you_reason', 'notes', 'source', 'thread_id', 'handler', 'sender'],
   Messages: ['id', 'lead_id', 'step', 'channel', 'to', 'subject', 'body', 'delay_days', 'send_after',
-    'created', 'status', 'approved', 'sent_at', 'thread_id', 'gmail_id', 'error'],
+    'created', 'status', 'approved', 'sent_at', 'thread_id', 'gmail_id', 'error', 'from', 'variant'],
   Inbox: ['id', 'lead_id', 'thread_id', 'gmail_id', 'from', 'received_at', 'subject', 'body', 'status',
     'classification', 'handled_at'],
   Suppression: ['email', 'reason', 'added'],
@@ -49,6 +49,14 @@ var DEFAULT_SETTINGS = [
   ['SEND_DAYS', '1,2,3,4,5', 'Days to send: 1=Mon ... 7=Sun.'],
   ['SEND_START_HOUR', '8', 'Earliest send hour, Lagos time.'],
   ['SEND_END_HOUR', '17', 'Last send hour, Lagos time.'],
+  ['VOLUME_FROM', '', 'Second sending address for standard leads (for example this Gmail account). Blank = everything sends from FROM_ALIAS.'],
+  ['PREMIUM_RULE', 'A,partner,abroad', 'Leads that always send from FROM_ALIAS: A = Tier A, partner = agency partners, abroad = clients outside Nigeria. Everything else uses VOLUME_FROM.'],
+  ['VOLUME_CAP_FIRST', '25', 'Max first emails a day from VOLUME_FROM.'],
+  ['VOLUME_CAP_TOTAL', '50', 'Max emails a day of any kind from VOLUME_FROM (after warm-up).'],
+  ['VOLUME_BATCH_SIZE', '15', 'Max cold emails from VOLUME_FROM in each SEND_BATCHES window.'],
+  ['VOLUME_GAP_MINUTES', '8', 'Minimum minutes between two cold emails from VOLUME_FROM (0 to 8 extra added).'],
+  ['VOLUME_RAMP', '10,5', 'Warm-up for VOLUME_FROM: first day allowed, then added each sending day, until VOLUME_CAP_TOTAL.'],
+  ['VOLUME_START', '', 'Set automatically: the day VOLUME_FROM first sent.'],
   ['SIGNATURE', 'Michael\nFerrn Digital Agency\nferrnagency.com', 'Added under every email.'],
   ['OPT_OUT_LINE', 'P.S. If this isn\'t relevant, just reply "no thanks" and I won\'t email again.', 'Added to first emails and follow-ups.'],
   ['OWNER_NAME', 'Michael', 'Your first name (used in messages).'],
@@ -146,6 +154,7 @@ function tick() {
   if (!lock.tryLock(5000)) return;
   try {
     safe_('trigger', ensureTrigger_);
+    safe_('schema', ensureSchema_);
     safe_('ingest', ingest_);
     safe_('replies', checkReplies_);
     safe_('stale', markStale_);
@@ -154,6 +163,30 @@ function tick() {
   } finally {
     lock.releaseLock();
   }
+}
+
+/** Adds new columns and settings to an existing install, once per schema version (no need to rerun setup). */
+var SCHEMA_V = '3';
+function ensureSchema_() {
+  var props = PropertiesService.getScriptProperties();
+  if (props.getProperty('SCHEMA_V') === SCHEMA_V) return;
+  addMissingColumns_();
+  var st = table_('Settings'), have = {};
+  st.rows.forEach(function (r) { have[r.key] = true; });
+  var add = DEFAULT_SETTINGS.filter(function (d) { return !have[d[0]]; }).map(function (d) { return { key: d[0], value: d[1], help: d[2] }; });
+  if (add.length) appendObjects_('Settings', add);
+  props.setProperty('SCHEMA_V', SCHEMA_V);
+  log_('info', 'schema', 'Engine updated to schema ' + SCHEMA_V + (add.length ? ' (new settings: ' + add.map(function (a) { return a.key; }).join(', ') + ')' : ''));
+}
+function addMissingColumns_() {
+  var ss = SpreadsheetApp.getActive();
+  Object.keys(HEADERS).forEach(function (name) {
+    var sh = ss.getSheetByName(name);
+    if (!sh || !sh.getLastColumn()) return;
+    var current = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    var missing = HEADERS[name].filter(function (x) { return current.indexOf(x) === -1; });
+    if (missing.length) sh.getRange(1, current.length + 1, 1, missing.length).setValues([missing]);
+  });
 }
 
 /** Older installs ran every 10 minutes; spaced batches need a 5-minute tick. Swaps the trigger once, by itself. */
@@ -257,7 +290,8 @@ function processBatch_(data) {
     newMsgs.push({
       id: 'M-' + shortId_(), lead_id: leadId, step: String(m.step === undefined ? 0 : m.step), channel: channel,
       to: to, subject: m.subject || '', body: m.body || '', delay_days: delay || '', send_after: sendAfter,
-      created: now, status: status, approved: '', sent_at: '', thread_id: '', gmail_id: '', error: ''
+      created: now, status: status, approved: '', sent_at: '', thread_id: '', gmail_id: '', error: '', from: '',
+      variant: String(m.variant || '').slice(0, 200)
     });
     msgs++;
     if (String(m.step) === '0' && ['New', 'Preview ready'].indexOf(lead.status) > -1) {
@@ -443,12 +477,15 @@ function findDuplicate_(rows, L) {
 }
 
 // ───────────────────────────── sending ─────────────────────────────
-/** Sends what is due, paced so the inbox looks like a person and not a bulk sender:
+/** Sends what is due, paced so each inbox looks like a person and not a bulk sender.
+ *  There can be two senders: FROM_ALIAS (premium: Tier A, partner agencies, clients abroad) and VOLUME_FROM
+ *  (standard leads). Each has its own caps, batch size, spacing and (VOLUME_FROM) a warm-up ramp.
  *  - replies to people who wrote back: any time in working hours, up to 3 per tick;
- *  - cold emails (first emails and follow-ups): only inside SEND_BATCHES windows, at most BATCH_SIZE per
- *    window, ONE per tick, at least GAP_MINUTES (+0 to 8) after the previous cold email;
- *  - daily caps (DAILY_CAP_FIRST, DAILY_CAP_TOTAL) on top.
- *  ignoreWindow (dashboard "send all now") skips the windows and spacing but keeps the caps. */
+ *  - cold emails (first emails and follow-ups): only inside SEND_BATCHES windows, ONE per sender per tick,
+ *    at least the sender's gap (+0 to 8 min) after its previous cold email, at most its batch size per window;
+ *    follow-ups and new first emails alternate;
+ *  - every lead keeps the sender of its first email for the whole thread.
+ *  ignoreWindow (dashboard "send all now") skips windows and spacing but keeps the caps. */
 function sendDue_(ignoreWindow) {
   var s = settings_();
   if (!isTrue_(s.AUTO_SEND) && !ignoreWindow) return;
@@ -459,20 +496,20 @@ function sendDue_(ignoreWindow) {
   var now = new Date();
   var today = dayKey_(now);
   var win = ignoreWindow ? null : batchWindow_(s, now);
-  var sentToday = 0, firstToday = 0, coldInWindow = 0, lastCold = null;
+  var senders = senders_(s, now);
+  var stat = {};
+  senders.forEach(function (x) { stat[x.address] = { sentToday: 0, firstToday: 0, coldInWindow: 0, lastCold: null }; });
   mT.rows.forEach(function (m) {
     if (m.status !== 'sent' || m.channel !== 'email' || !m.sent_at) return;
     var at = new Date(m.sent_at);
     if (dayKey_(at) !== today) return;
-    sentToday++;
-    if (String(m.step) === '0') firstToday++;
+    var st = stat[String(m.from || senders[0].address).toLowerCase()] || stat[senders[0].address];
+    st.sentToday++;
+    if (String(m.step) === '0') st.firstToday++;
     if (String(m.step) === 'R') return;
-    if (!lastCold || at > lastCold) lastCold = at;
-    if (win && at >= win.start && at <= win.end) coldInWindow++;
+    if (!st.lastCold || at > st.lastCold) st.lastCold = at;
+    if (win && at >= win.start && at <= win.end) st.coldInWindow++;
   });
-  var capTotal = Number(s.DAILY_CAP_TOTAL || 40), capFirst = Number(s.DAILY_CAP_FIRST || 20);
-  var batchSize = Number(s.BATCH_SIZE || 10);
-  var gapMs = Number(s.GAP_MINUTES || 12) * 60000;
   var holdMs = Number(s.HOLD_MINUTES || 0) * 60000;
   var order = { R: 0, '3': 1, '2': 2, '1': 3, '0': 4 };
   var due = mT.rows.filter(function (m) {
@@ -480,32 +517,91 @@ function sendDue_(ignoreWindow) {
   }).sort(function (a, b) {
     return (order[String(a.step)] || 9) - (order[String(b.step)] || 9) || new Date(a.send_after) - new Date(b.send_after);
   });
-  // A few minutes of jitter per gap, fixed for a given previous send, so it never runs like clockwork.
-  var jitter = lastCold ? (Math.floor(lastCold.getTime() / 60000) * 7919 % 9) * 60000 : 0; // 0 to 8 minutes
-  var coldOpen = ignoreWindow || (win && coldInWindow < batchSize && (!lastCold || now - lastCold >= gapMs + jitter));
-  // Inside a window, alternate follow-ups and new first emails, so follow-ups never crowd out new companies.
-  if (!ignoreWindow) {
-    var rep = due.filter(function (m) { return String(m.step) === 'R'; });
-    var fol = due.filter(function (m) { return ['1', '2', '3'].indexOf(String(m.step)) > -1; });
-    var fst = due.filter(function (m) { return String(m.step) === '0'; });
-    due = rep.concat(coldInWindow % 2 === 0 ? fst.concat(fol) : fol.concat(fst));
+  var byKey = {};
+  senders.forEach(function (x) { byKey[x.address] = x; });
+  var pickSender = function (m) { var L = leads[m.lead_id]; return byKey[senderFor_(L, s, senders)] || senders[0]; };
+  // replies first, any sender
+  var replies = 0;
+  due.filter(function (m) { return String(m.step) === 'R'; }).forEach(function (m) {
+    var snd = pickSender(m), st = stat[snd.address];
+    if (replies >= 3 || st.sentToday >= snd.capTotal) return;
+    if (deliver_(m, leads[m.lead_id], mT, lT, s, snd.address)) { replies++; st.sentToday++; Utilities.sleep(1500); }
+  });
+  // cold emails, per sender
+  senders.forEach(function (snd) {
+    var st = stat[snd.address];
+    var mine = due.filter(function (m) { return String(m.step) !== 'R' && m.status === 'queued' && pickSender(m) === snd; });
+    if (!mine.length) return;
+    var jitter = st.lastCold ? (Math.floor(st.lastCold.getTime() / 60000) * 7919 % 9) * 60000 : 0; // 0 to 8 minutes
+    var open = ignoreWindow || (win && st.coldInWindow < snd.batch && (!st.lastCold || now - st.lastCold >= snd.gapMs + jitter));
+    if (!open) return;
+    if (!ignoreWindow) {
+      var fol = mine.filter(function (m) { return String(m.step) !== '0'; });
+      var fst = mine.filter(function (m) { return String(m.step) === '0'; });
+      mine = st.coldInWindow % 2 === 0 ? fst.concat(fol) : fol.concat(fst);
+    }
+    var cold = 0;
+    for (var i = 0; i < mine.length; i++) {
+      var m = mine[i];
+      var isFirst = String(m.step) === '0';
+      if (st.sentToday >= snd.capTotal) break;
+      if (!ignoreWindow && cold >= 1) break;
+      if (ignoreWindow && cold >= 12) break;
+      if (isFirst && holdMs && m.approved !== 'Y' && (now - new Date(m.created)) < holdMs) continue;
+      if (isFirst && st.firstToday >= snd.capFirst) continue;
+      if (!deliver_(m, leads[m.lead_id], mT, lT, s, snd.address)) continue;
+      st.sentToday++; cold++;
+      if (isFirst) st.firstToday++;
+      if (snd.volume && !s.VOLUME_START) { setSetting_('VOLUME_START', today); s.VOLUME_START = today; }
+      Utilities.sleep(1500);
+    }
+  });
+}
+
+/** The sending addresses, with their limits. senders_[0] is always the premium address (FROM_ALIAS). */
+function senders_(s, now) {
+  var premium = fromCheck_(s).address.toLowerCase();
+  var list = [{ address: premium, volume: false, capFirst: Number(s.DAILY_CAP_FIRST || 20), capTotal: Number(s.DAILY_CAP_TOTAL || 40),
+    batch: Number(s.BATCH_SIZE || 10), gapMs: Number(s.GAP_MINUTES || 12) * 60000 }];
+  var vol = String(s.VOLUME_FROM || '').trim().toLowerCase();
+  if (vol && vol !== premium && senderOk_(vol)) {
+    var ramp = String(s.VOLUME_RAMP || '10,5').split(',').map(Number);
+    var days = s.VOLUME_START ? sendingDaysSince_(s.VOLUME_START, now, s) : 0;
+    var capTotal = Math.min(Number(s.VOLUME_CAP_TOTAL || 50), (ramp[0] || 10) + (ramp[1] || 5) * days);
+    list.push({ address: vol, volume: true, capTotal: capTotal, capFirst: Math.min(Number(s.VOLUME_CAP_FIRST || 25), capTotal),
+      batch: Number(s.VOLUME_BATCH_SIZE || 15), gapMs: Number(s.VOLUME_GAP_MINUTES || 8) * 60000 });
   }
-  var replies = 0, cold = 0;
-  for (var i = 0; i < due.length; i++) {
-    var m = due[i];
-    var isReply = String(m.step) === 'R';
-    var isFirst = String(m.step) === '0';
-    if (sentToday >= capTotal) break;
-    if (isReply ? replies >= 3 : (!coldOpen || (!ignoreWindow && cold >= 1) || (ignoreWindow && cold >= 12))) continue;
-    if (isFirst && holdMs && m.approved !== 'Y' && (now - new Date(m.created)) < holdMs) continue;
-    if (isFirst && firstToday >= capFirst) continue;
-    var ok = deliver_(m, leads[m.lead_id], mT, lT, s);
-    if (!ok) continue;
-    sentToday++;
-    if (isFirst) firstToday++;
-    if (isReply) replies++; else cold++;
-    Utilities.sleep(1500);
+  return list;
+}
+/** Sending days (SEND_DAYS) between the warm-up start and today, not counting today. */
+function sendingDaysSince_(startKey, now, s) {
+  var days = String(s.SEND_DAYS || '1,2,3,4,5').split(',').map(Number), n = 0;
+  var d = new Date(String(startKey).slice(0, 10) + 'T12:00:00+01:00');
+  while (dayKey_(d) < dayKey_(now) && n < 400) {
+    if (days.indexOf(Number(Utilities.formatDate(d, TZ, 'u'))) > -1) n++;
+    d = new Date(d.getTime() + 86400000);
   }
+  return n;
+}
+/** Gmail can send as its own address, or as an alias it has verified under "Send mail as". */
+function senderOk_(addr) {
+  var me = Session.getEffectiveUser().getEmail().toLowerCase();
+  if (addr === me) return true;
+  try { return GmailApp.getAliases().map(function (a) { return String(a).toLowerCase(); }).indexOf(addr) > -1; } catch (e) { return false; }
+}
+/** Which address a lead's emails come from: the one already used for it, else premium or volume by PREMIUM_RULE. */
+function senderFor_(lead, s, senders) {
+  senders = senders || senders_(s, new Date());
+  var premium = senders[0].address, vol = senders[1] ? senders[1].address : '';
+  if (!lead) return premium;
+  var had = String(lead.sender || '').toLowerCase();
+  if (had) return (had === premium || had === vol) ? had : premium;
+  if (lead.thread_id || !vol) return premium; // already started from the main address before volume sending existed
+  var rule = String(s.PREMIUM_RULE || 'A,partner,abroad').toLowerCase().split(',').map(function (x) { return x.trim(); });
+  var abroad = lead.city && !/lagos|abuja|port harcourt|ibadan|nigeria|lekki|ikeja|ikoyi|victoria island|yaba|surulere|ajah|apapa/i.test(String(lead.city));
+  if ((rule.indexOf('a') > -1 && String(lead.tier).toUpperCase() === 'A') || (rule.indexOf('partner') > -1 && lead.niche === 'partner') ||
+    (rule.indexOf('abroad') > -1 && abroad)) return premium;
+  return vol;
 }
 
 /** The SEND_BATCHES window we're in right now (Lagos time), or null. */
@@ -526,7 +622,8 @@ function lagosTime_(day, h, mi) {
 }
 
 /** Sends one message row. Returns true when an email actually went out. */
-function deliver_(m, lead, mT, lT, s) {
+function deliver_(m, lead, mT, lT, s, fromAddr) {
+  fromAddr = fromAddr || senderFor_(lead, s);
   var step = String(m.step);
   var isReply = step === 'R';
   if (!lead) { updateRow_(mT, m, { status: 'cancelled', error: 'lead missing' }); return false; }
@@ -549,12 +646,13 @@ function deliver_(m, lead, mT, lT, s) {
     var body = m.body + '\n\n' + (s.SIGNATURE || '');
     if (!isReply && s.OPT_OUT_LINE) body += '\n\n' + s.OPT_OUT_LINE;
     var track = trackingOn_(s) ? { id: 'lh-' + String(m.id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60), t: Date.now() } : null;
-    var res = sendRaw_(m.to, subject, body, threadId, meta ? meta.lastMessageId : '', s, track);
+    var res = sendRaw_(m.to, subject, body, threadId, meta ? meta.lastMessageId : '', s, track, fromAddr);
     var now = new Date();
     if (track && !s.TRACKING_SINCE) { setSetting_('TRACKING_SINCE', new Date(track.t).toISOString()); s.TRACKING_SINCE = new Date(track.t).toISOString(); }
-    updateRow_(mT, m, { status: 'sent', sent_at: now, thread_id: res.threadId, gmail_id: res.id, error: '' });
+    updateRow_(mT, m, { status: 'sent', sent_at: now, thread_id: res.threadId, gmail_id: res.id, error: '', from: fromAddr });
     var ch = { last_contact: now };
     if (!lead.thread_id) ch.thread_id = res.threadId;
+    if (!lead.sender) ch.sender = fromAddr;
     if (step === '0') ch.status = 'Contacted';
     else if (!isReply && ['Contacted', 'Following up', 'Queued'].indexOf(lead.status) > -1) ch.status = 'Following up';
     if (isReply) ch.next_action = 'Replied to them ' + stamp_();
@@ -582,8 +680,8 @@ function scheduleFollowUps_(leadId, from, mT) {
   });
 }
 
-function sendRaw_(to, subject, text, threadId, inReplyTo, s, track) {
-  var fromAddr = fromCheck_(s).address;
+function sendRaw_(to, subject, text, threadId, inReplyTo, s, track, fromAddr) {
+  fromAddr = fromAddr && senderOk_(String(fromAddr).toLowerCase()) ? fromAddr : fromCheck_(s).address;
   var from = (s.SENDER_NAME ? encodeWord_(s.SENDER_NAME) + ' ' : '') + '<' + fromAddr + '>';
   var html = toHtml_(text);
   if (track) html = trackHtml_(html, track, s);
@@ -754,6 +852,40 @@ function markStale_() {
 }
 
 // ───────────────────────────── brief for the AI routine ─────────────────────────────
+/** Reply rates of first emails by variant tag (open:, close:, subject:, angle: ...), sender and niche, plus examples. */
+function learnings_(lT, mT, inT) {
+  var since = Date.now() - 45 * 86400000;
+  var leads = indexBy_(lT.rows, 'id');
+  var replied = {}, optout = {};
+  inT.rows.forEach(function (r) {
+    var c = String(r.classification || '').toLowerCase();
+    if (/auto-reply|bounce/.test(c)) return;
+    if (/not interested|unsubscribe|opt/.test(c)) optout[r.lead_id] = true; else replied[r.lead_id] = true;
+  });
+  lT.rows.forEach(function (r) {
+    if (['Replied', 'Interested', 'Call booked', 'Proposal sent', 'Won'].indexOf(r.status) > -1) replied[r.id] = true;
+    if (r.status === 'Opted out') optout[r.id] = true;
+  });
+  var firsts = mT.rows.filter(function (m) { return String(m.step) === '0' && m.status === 'sent' && m.channel === 'email' && m.sent_at && new Date(m.sent_at).getTime() >= since; });
+  if (!firsts.length) return ['(no first emails sent in the last 45 days)'];
+  var groups = {};
+  var add = function (k, m) { var g = groups[k] = groups[k] || { n: 0, r: 0, o: 0 }; g.n++; if (replied[m.lead_id]) g.r++; if (optout[m.lead_id]) g.o++; };
+  firsts.forEach(function (m) {
+    var L = leads[m.lead_id] || {};
+    add('ALL', m);
+    add('sender:' + (m.from || 'main'), m);
+    if (L.niche) add('niche:' + L.niche, m);
+    String(m.variant || '').split('|').map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean).forEach(function (t) { add(t, m); });
+  });
+  var rows = Object.keys(groups).sort(function (a, b) { return a === 'ALL' ? -1 : b === 'ALL' ? 1 : groups[b].n - groups[a].n; }).slice(0, 40).map(function (k) {
+    var g = groups[k];
+    return k + ': sent ' + g.n + ', replied ' + g.r + ' (' + Math.round(100 * g.r / g.n) + '%), opted out ' + g.o + (g.n < 8 ? ' [small sample]' : '');
+  });
+  var good = firsts.filter(function (m) { return replied[m.lead_id]; }).slice(-6).map(function (m) { return 'GOT A REPLY | ' + (m.variant || '-') + ' | subject: ' + m.subject + ' | opening: ' + String(m.body).split('\n').filter(String)[0].slice(0, 140); });
+  var quiet = firsts.filter(function (m) { return !replied[m.lead_id] && !optout[m.lead_id]; }).slice(-6).map(function (m) { return 'NO REPLY YET | ' + (m.variant || '-') + ' | subject: ' + m.subject + ' | opening: ' + String(m.body).split('\n').filter(String)[0].slice(0, 140); });
+  return rows.concat(good, quiet);
+}
+
 function writeBrief_() {
   var s = settings_();
   if (!s.BRIEF_DOC_ID) return;
@@ -765,7 +897,7 @@ function writeBrief_() {
   out.push('');
   out.push('== CONFIG ==');
   ['INBOX_FOLDER_ID', 'PREVIEWS_REPO', 'PREVIEW_BASE_URL', 'LEADS_PER_RUN', 'PREVIEWS_PER_RUN', 'NICHES', 'CITIES',
-    'OWNER_NAME', 'OWNER_WHATSAPP', 'AUTO_SEND', 'DAILY_CAP_FIRST', 'FROM_ALIAS'].forEach(function (k) {
+    'OWNER_NAME', 'OWNER_WHATSAPP', 'AUTO_SEND', 'DAILY_CAP_FIRST', 'FROM_ALIAS', 'VOLUME_FROM', 'PREMIUM_RULE'].forEach(function (k) {
     out.push(k + ': ' + (s[k] || ''));
   });
   out.push('');
@@ -811,6 +943,10 @@ function writeBrief_() {
   waiting.forEach(function (r) {
     out.push([r.id, r.company, r.website || '-', r.email, r.city, r.niche, 'tier ' + (r.tier || '-'), 'gaps: ' + String(r.gaps || '').slice(0, 300)].join(' | '));
   });
+  out.push('');
+
+  out.push('== WHAT IS WORKING (first emails, last 45 days; use it to choose subjects, openings and closes) ==');
+  learnings_(lT, mT, inT).forEach(function (l) { out.push(l); });
   out.push('');
 
   out.push('== RFPS ALREADY FOUND (for de-duplication) ==');
@@ -898,7 +1034,7 @@ function getDashboardData() {
     }
     return {
       id: m.id, lead_id: m.lead_id, company: L.company || '', step: String(m.step), channel: m.channel, to: m.to,
-      subject: m.subject, body: m.body, status: m.status, send_at: iso_(sendAt), sent_at: iso_(m.sent_at),
+      subject: m.subject, body: m.body, status: m.status, send_at: iso_(sendAt), sent_at: iso_(m.sent_at), from: m.from || '', variant: m.variant || '',
       error: m.error, wa_link: m.channel === 'whatsapp' ? waLink_(m.to, m.body) : '',
       tracked: !!(m.channel === 'email' && s.TRACKING_SINCE && m.sent_at && new Date(m.sent_at) >= new Date(s.TRACKING_SINCE))
     };
@@ -1089,7 +1225,7 @@ function dashAction(action, p) {
       // From the Studio autopilot: leads with a published email, ready for the morning routine to write to.
       return processBatch_({ leads: (p.leads || []).slice(0, 50) });
     case 'setSetting':
-      if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'SEND_BATCHES', 'BATCH_SIZE', 'GAP_MINUTES', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET', 'CITIES', 'NICHES', 'LEADS_PER_RUN', 'TRACK_EMAILS'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value).slice(0, 500));
+      if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'SEND_BATCHES', 'BATCH_SIZE', 'GAP_MINUTES', 'VOLUME_FROM', 'PREMIUM_RULE', 'VOLUME_CAP_FIRST', 'VOLUME_CAP_TOTAL', 'VOLUME_BATCH_SIZE', 'VOLUME_GAP_MINUTES', 'VOLUME_RAMP', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET', 'CITIES', 'NICHES', 'LEADS_PER_RUN', 'TRACK_EMAILS'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value).slice(0, 500));
       break;
     case 'runNow':
       tick();

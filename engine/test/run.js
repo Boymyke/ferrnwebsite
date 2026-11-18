@@ -329,4 +329,43 @@ console.log('15. RFPs from the RFP scout');
   ok(E.rows('RFPs').length === 1, 'same title and buyer from another site is a duplicate');
 }
 
+console.log('16. two senders: premium (michael@ferrnagency.com) and volume (the Gmail account)');
+{
+  const E = makeEnv({ now: '2026-11-16T07:00:00+01:00' }); // Monday
+  E.ctx.setup();
+  E.set('HOLD_MINUTES', '0');
+  E.set('VOLUME_FROM', 'osondumichealcharles@gmail.com');
+  const L = [], M = [];
+  for (let i = 0; i < 6; i++) { L.push({ key: 'a' + i, company: 'Alpha ' + i + 'p', tier: 'A', city: 'Lagos', email: `a${i}@alpha${i}.ng`, website: `alpha${i}.ng` }); M.push({ lead_key: 'a' + i, step: 0, subject: 'tracking for alpha', body: 'Hi', variant: 'open:question|close:a' }, { lead_key: 'a' + i, step: 1, delay_days: 3, body: 'fu' }); }
+  for (let i = 0; i < 40; i++) { L.push({ key: 'b' + i, company: 'Beta ' + i + 'p', tier: 'B', city: 'Lagos', email: `b${i}@beta${i}.ng`, website: `beta${i}.ng` }); M.push({ lead_key: 'b' + i, step: 0, subject: 'quick one', body: 'Hi', variant: 'open:detail|close:b' }); }
+  L.push({ key: 'u', company: 'UK Cargo', tier: 'B', city: 'London', email: 'ops@ukcargo.co.uk', website: 'ukcargo.co.uk' }); M.push({ lead_key: 'u', step: 0, subject: 'hi', body: 'Hi' });
+  L.push({ key: 'p', company: 'Brand Studio', tier: 'B', niche: 'partner', city: 'Lagos', email: 'hi@brandstudio.ng', website: 'brandstudio.ng' }); M.push({ lead_key: 'p', step: 0, subject: 'hi', body: 'Hi' });
+  E.dropFile('batch-s.json', { leads: L, messages: M });
+  const day = '2026-11-16';
+  for (let mins = 7 * 60; mins <= 18 * 60; mins += 5) { E.setNow(`${day}T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); }
+  const fromOf = (x) => (x.raw.match(/^From: .*<([^>]+)>/m) || [])[1];
+  const toOf = (x) => (x.raw.match(/^To: (.*)$/m) || [])[1].trim();
+  const prem = E.sent.filter(x => fromOf(x) === 'michael@ferrnagency.com'), vol = E.sent.filter(x => fromOf(x) === 'osondumichealcharles@gmail.com');
+  ok(prem.length && prem.every(x => /alpha|ukcargo|brandstudio/.test(toOf(x))), 'Tier A, abroad and partner leads go from michael@ferrnagency.com (' + prem.length + ')');
+  ok(vol.length && vol.every(x => /beta/.test(toOf(x))), 'standard Lagos leads go from the Gmail account (' + vol.length + ')');
+  ok(vol.length === 10, 'first day of warm-up: 10 from the Gmail account (sent ' + vol.length + ')');
+  const vt = vol.map(x => x.at.getTime()).sort((a, b) => a - b);
+  ok(vt.slice(1).every((t, i) => t - vt[i] >= 8 * 60000), 'Gmail account sends are spaced at least 8 minutes apart');
+  ok(vol.every(x => /\/api\/e\/o\//.test(Buffer.from(x.raw.split('text/html; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n')[1].split('\r\n--')[0].replace(/\r\n/g, ''), 'base64').toString())), 'emails from the Gmail account are tracked too');
+  ok(E.rows('Leads').filter(l => /beta/.test(l.email) && l.thread_id).every(l => l.sender === 'osondumichealcharles@gmail.com'), 'each lead remembers its sender');
+  // follow-ups keep the sender of the first email
+  for (let d of ['2026-11-19', '2026-11-20']) for (let mins = 8 * 60 + 30; mins <= 11 * 60 + 30; mins += 5) { E.setNow(`${d}T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); }
+  const fus = E.sent.filter(x => /In-Reply-To/.test(x.raw));
+  ok(fus.length && fus.every(x => fromOf(x) === 'michael@ferrnagency.com' && /alpha/.test(toOf(x))), 'follow-ups go from the same address as the first email');
+  const v2 = E.sent.filter(x => fromOf(x) === 'osondumichealcharles@gmail.com' && x.at.toISOString().startsWith('2026-11-19')).length;
+  ok(v2 > 10, 'warm-up raises the Gmail account allowance on later days (' + v2 + ' on day 4)');
+  // learning from replies
+  const lead = E.rows('Leads').find(l => l.email === 'b0@beta0.ng');
+  E.ctx.dashAction('setStatus', { lead_id: lead.id, status: 'Interested' });
+  E.ctx.writeBrief_();
+  const br = Object.values(E.docs).pop();
+  ok(/== WHAT IS WORKING[\s\S]*close:b: sent \d+, replied 1/.test(br) && /GOT A REPLY \| open:detail\|close:b/.test(br), 'brief shows reply rates by variant so the morning run can learn');
+  ok(E.rows('Settings').some(r => r.key === 'VOLUME_START' && r.value), 'warm-up start recorded');
+}
+
 console.log(`\nALL ${passed} CHECKS PASSED`);

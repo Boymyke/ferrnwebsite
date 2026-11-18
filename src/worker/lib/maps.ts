@@ -147,7 +147,17 @@ async function getText(url: string, ms: number): Promise<{ html: string; finalUr
   } catch { return null; }
 }
 
-function emailsIn(html: string) {
+/** Cloudflare's email obfuscation (very common on Nigerian business sites): hex key + XOR'd bytes. */
+function cfDecode(hex: string): string {
+  try {
+    const key = parseInt(hex.slice(0, 2), 16); let out = '';
+    for (let i = 2; i < hex.length; i += 2) out += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16) ^ key);
+    return out;
+  } catch { return ''; }
+}
+export function emailsIn(html: string) {
+  const cf = [...html.matchAll(/data-cfemail=["']([0-9a-f]{6,})["']|\/cdn-cgi\/l\/email-protection#([0-9a-f]{6,})/gi)].map((m) => cfDecode(m[1] || m[2])).join(' ');
+  html = (html + ' ' + cf).replace(/&#(\d{2,3});/g, (_, n) => String.fromCharCode(Number(n))).replace(/&#x([0-9a-f]{2});/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
   const text = html.replace(/&#64;|&#x40;|\s*\[\s*at\s*\]\s*|\s+\(at\)\s+/gi, '@').replace(/&#46;|\s*\[\s*dot\s*\]\s*/gi, '.');
   const found = new Set<string>();
   for (const m of text.matchAll(/mailto:([^"'?<>]+)/gi)) { try { found.add(decodeURIComponent(m[1]).toLowerCase()); } catch { found.add(m[1].toLowerCase()); } }
@@ -163,10 +173,15 @@ export async function readWebsite(url: string, ms = 5000): Promise<{ emails: str
   if (!home) return { emails: [], gaps: [], app: [], reached: false };
   const site = host(home.finalUrl);
   const hrefs = [...home.html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]);
-  const contactHref = hrefs.find((h) => /contact|get-in-touch|reach-us|enquir|book/i.test(h) && !/mailto:|tel:|wa\.me|whatsapp/i.test(h));
-  let contact: { html: string } | null = null;
-  if (contactHref) { try { const u = new URL(contactHref, home.finalUrl); if (host(u.href) === site) contact = await getText(u.href, ms); } catch { /* bad link */ } }
-  const all = [...emailsIn(home.html), ...(contact ? emailsIn(contact.html) : [])];
+  // Up to two more pages from their own site: the contact page first, then about/team (where named decision-makers are).
+  const sameSite = (h: string) => { try { const u = new URL(h, home.finalUrl); return host(u.href) === site ? u.href.split('#')[0] : null; } catch { return null; } };
+  const pick = (re: RegExp) => hrefs.filter((h) => re.test(h) && !/mailto:|tel:|wa\.me|whatsapp|\.(pdf|jpe?g|png|docx?)$/i.test(h)).map(sameSite).find(Boolean) ?? null;
+  const homeEmails = emailsIn(home.html);
+  let pages = [pick(/contact|get-in-touch|reach-us|enquir/i), pick(/about|team|leadership|management|who-we-are|our-people/i)].filter((x): x is string => !!x && x !== home.finalUrl);
+  if (!pages.length && !homeEmails.length) pages = ['/contact', '/contact-us'].map((p) => new URL(p, home.finalUrl).href);
+  const extra = (await Promise.all([...new Set(pages)].slice(0, 2).map((u) => getText(u, ms)))).filter((x): x is { html: string; finalUrl: string } => !!x);
+  const contact = extra.length ? { html: extra.map((x) => x.html).join('\n') } : null;
+  const all = [...homeEmails, ...(contact ? emailsIn(contact.html) : [])];
   const rank = (e: string) => (host('https://' + e.split('@')[1]) === site ? 0 : FREE_MAIL.test(e) ? 2 : 1) * 10 + (/^(info|hello|contact|enquir|admin|office|sales|admissions|bookings?)@/.test(e) ? 0 : 1);
   const emails = [...new Set(all)].filter((e) => !host('https://' + e.split('@')[1]).match(/^(sentry|wix|squarespace|shopify)/)).sort((a, b) => rank(a) - rank(b)).slice(0, 3);
   const html = home.html + (contact?.html ?? '');
@@ -193,7 +208,7 @@ export async function readWebsite(url: string, ms = 5000): Promise<{ emails: str
 }
 
 /** Adds published emails and website gaps to search results (top `limit` with a real website), then re-scores. */
-export async function enrichProspects(results: Prospect[], limit = 12, concurrency = 6): Promise<Prospect[]> {
+export async function enrichProspects(results: Prospect[], limit = 20, concurrency = 7): Promise<Prospect[]> {
   const todo = results.filter((r) => !r.skip && r.website && !/facebook|instagram|linktr|wa\.me/i.test(r.website)).slice(0, limit);
   for (let i = 0; i < todo.length; i += concurrency) {
     await Promise.all(todo.slice(i, i + concurrency).map(async (r) => {
