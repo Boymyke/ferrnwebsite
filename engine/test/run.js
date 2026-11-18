@@ -65,7 +65,7 @@ console.log('4. follow-up on the weekend waits for Monday, threads correctly');
 E.setNow('2026-11-01T10:00:00+01:00'); // Sunday
 E.ctx.tick();
 ok(E.sent.length === 1, 'nothing sent on Sunday');
-E.setNow('2026-11-02T08:10:00+01:00'); // Monday
+E.setNow('2026-11-02T08:40:00+01:00'); // Monday, inside the morning batch
 E.ctx.tick();
 ok(E.sent.length === 2, 'follow-up 1 sent Monday morning');
 ok(E.sent[1].threadId === E.sent[0].threadId, 'follow-up sent in the same Gmail thread');
@@ -122,11 +122,13 @@ E.setNow('2026-11-03T09:00:00+01:00');
 E.ctx.tick();
 E.setNow('2026-11-03T09:40:00+01:00');
 E.ctx.tick();
+E.setNow('2026-11-03T09:55:00+01:00'); // cold emails go one at a time, at least 12 minutes apart
+E.ctx.tick();
 const beta = E.rows('Leads').find(l => l.company === 'Beta Clinic');
 const gamma = E.rows('Leads').find(l => l.company === 'Gamma Homes');
 ok(beta.thread_id && gamma.thread_id, 'both first emails sent');
 E.inboundThreads.push({ id: beta.thread_id, messages: [{ id: 'in2', from: 'hello@betaclinic.ng', date: new Date('2026-11-03T10:00:00+01:00'), subject: 'Re', body: 'No thanks, please remove me.' }] });
-E.inboundThreads.push({ id: gamma.thread_id, messages: [{ id: 'in3', from: 'Mail Delivery Subsystem <mailer-daemon@googlemail.com>', date: new Date('2026-11-03T09:41:00+01:00'), subject: 'Delivery Status Notification', body: 'Address not found sales@gammahomes.ng' }] });
+E.inboundThreads.push({ id: gamma.thread_id, messages: [{ id: 'in3', from: 'Mail Delivery Subsystem <mailer-daemon@googlemail.com>', date: new Date('2026-11-03T09:58:00+01:00'), subject: 'Delivery Status Notification', body: 'Address not found sales@gammahomes.ng' }] });
 E.setNow('2026-11-03T10:05:00+01:00');
 E.ctx.tick();
 ok(E.rows('Leads').find(l => l.id === beta.id).status === 'Opted out', 'opt-out detected');
@@ -137,15 +139,43 @@ E.dropFile('batch-4.json', { leads: [{ key: 'b2', company: 'Beta Clinic Two', em
 E.ctx.tick();
 ok(E.rows('Leads').filter(l => l.email === 'hello@betaclinic.ng').length === 1, 'opted-out address never re-added');
 
-console.log('8. daily caps');
+console.log('8. spaced batches + daily caps');
 const many = [], mm = [];
 for (let i = 0; i < 30; i++) { many.push({ key: 'k' + i, company: 'Co ' + i + 'x', email: `a${i}@co${i}.ng`, website: `co${i}.ng` }); mm.push({ lead_key: 'k' + i, step: 0, subject: 'Hi', body: 'b' }); }
 E.dropFile('batch-5.json', { leads: many, messages: mm });
 E.set('HOLD_MINUTES', '0');
-E.setNow('2026-11-04T09:00:00+01:00');
-for (let t = 0; t < 6; t++) { E.ctx.tick(); }
-const firstsToday = E.sent.filter(s => s.at.toISOString().startsWith('2026-11-04') && !/In-Reply-To/.test(s.raw)).length;
-ok(firstsToday === 25, 'first-touch cap of 25/day respected (sent ' + firstsToday + ')');
+const day = '2026-11-04';
+for (let mins = 7 * 60; mins <= 18 * 60; mins += 5) {   // a whole Wednesday, ticking every 5 minutes
+  E.setNow(`${day}T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`);
+  E.ctx.tick();
+}
+const todays = E.sent.filter(s => s.at.toISOString().startsWith(day)).map(s => s.at.getTime()).sort((a, b) => a - b);
+const lagosHM = (t) => new Date(t + 3600000).toISOString().slice(11, 16);
+const morning = todays.filter(t => lagosHM(t) >= '08:30' && lagosHM(t) <= '11:30').length;
+const afternoon = todays.filter(t => lagosHM(t) >= '13:30' && lagosHM(t) <= '16:30').length;
+ok(todays.length === 20, 'two batches, 20 cold emails in the day (sent ' + todays.length + ')');
+ok(morning === 10 && afternoon === 10, 'ten in the morning window, ten in the afternoon (' + morning + ' + ' + afternoon + ')');
+ok(todays.every(t => (lagosHM(t) >= '08:30' && lagosHM(t) <= '11:30') || (lagosHM(t) >= '13:30' && lagosHM(t) <= '16:30')), 'nothing cold outside the windows');
+const gaps = todays.slice(1).map((t, i) => (t - todays[i]) / 60000);
+ok(gaps.every(g => g >= 12), 'at least 12 minutes between cold emails (smallest gap ' + Math.min(...gaps) + ' min)');
+ok(new Set(gaps.filter(g => g < 60)).size > 1, 'gaps vary, not clockwork');
+// follow-ups and new first emails share the windows
+const nl = [], nm = [];
+for (let i = 0; i < 4; i++) { nl.push({ key: 'n' + i, company: 'New ' + i + 'q', email: `n${i}@new${i}.ng`, website: `new${i}.ng` }); nm.push({ lead_key: 'n' + i, step: 0, subject: 'Hi', body: 'b' }, { lead_key: 'n' + i, step: 1, delay_days: 1, body: 'fu' }); }
+E.dropFile('batch-5b.json', { leads: nl, messages: nm });
+const runMorning = (d) => { for (let mins = 8 * 60 + 30; mins <= 11 * 60 + 30; mins += 5) { E.setNow(`${d}T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); } };
+E.set('BATCH_SIZE', '30'); E.set('DAILY_CAP_FIRST', '30'); E.set('GAP_MINUTES', '1');
+runMorning('2026-11-09');                 // Monday: clear every waiting first email, so the 4 follow-ups fall due Tuesday
+E.set('BATCH_SIZE', '10'); E.set('DAILY_CAP_FIRST', '20'); E.set('GAP_MINUTES', '12');
+const more = [], moreM = [];
+for (let i = 0; i < 12; i++) { more.push({ key: 'm' + i, company: 'More ' + i + 'z', email: `m${i}@more${i}.ng`, website: `more${i}.ng` }); moreM.push({ lead_key: 'm' + i, step: 0, subject: 'Hi', body: 'b' }); }
+E.dropFile('batch-5c.json', { leads: more, messages: moreM });
+const sentBefore = E.sent.length;
+runMorning('2026-11-10');                 // Tuesday: 4 follow-ups due and 12 new first emails waiting
+const tue = E.sent.slice(sentBefore);
+ok(tue.some(x => !/In-Reply-To/.test(x.raw)) && tue.some(x => /In-Reply-To/.test(x.raw)), 'new first emails and follow-ups share the window (' + tue.filter(x => /In-Reply-To/.test(x.raw)).length + ' follow-ups, ' + tue.filter(x => !/In-Reply-To/.test(x.raw)).length + ' first)');
+ok(tue.length === 10, 'still 10 in the window');
+ok(E.triggers.length === 1 && E.props.TICK_EVERY === '5', 'engine switched itself to a 5-minute tick');
 
 console.log('9. dashboard + WhatsApp flow');
 const kola = E.rows('Leads').find(l => l.company === 'Kola Haulage');

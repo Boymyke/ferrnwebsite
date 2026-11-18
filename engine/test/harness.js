@@ -149,6 +149,7 @@ function makeEnv(opts = {}) {
     openById: (id) => ({ getBody: () => ({ setText: (t) => { docs[id] = t; } }) }),
   };
   const triggers = [];
+  const props = {};
   const ScriptApp = {
     getProjectTriggers: () => triggers,
     deleteTrigger: (t) => { triggers.splice(triggers.indexOf(t), 1); },
@@ -157,6 +158,7 @@ function makeEnv(opts = {}) {
   const ctx = {
     SpreadsheetApp: { getActive: () => ss, getUi: () => ({ createMenu: () => ({ addItem() { return this; }, addToUi() {} }) }) },
     Utilities, Gmail, GmailApp, DriveApp, DocumentApp, ScriptApp,
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] ?? null, setProperty: (k, v) => { props[k] = String(v); } }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => me }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
     HtmlService: {}, console,
@@ -172,7 +174,7 @@ function makeEnv(opts = {}) {
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(__dirname + '/../apps-script/Code.gs', 'utf8'), ctx);
   return {
-    ctx, sheets, sent, inboundThreads, driveFiles, docs,
+    ctx, sheets, sent, inboundThreads, driveFiles, docs, triggers, props,
     setNow: (d) => { clock = new RealDate(d); },
     dropFile: (name, obj) => {
       const inboxId = ctx.settings_().INBOX_FOLDER_ID;

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ago, api, can, create, fmtDate, list, ngn, remove, update } from '../api';
 import { Badge, Card, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, useUser, waLink, type FieldDef, Pager, usePaged } from '../ui';
-import { Bot, CalendarPlus, ExternalLink, Globe, Hand, MailOpen, MessageCircle, Radar, SearchX, Trash2, UserPlus, Workflow, MapPin, Play, Sparkles, Zap, Plus, X as XIcon } from 'lucide-react';
+import { Bot, CalendarPlus, Handshake, ExternalLink, Globe, Hand, MailOpen, MessageCircle, Radar, SearchX, Trash2, UserPlus, Workflow, MapPin, Play, Sparkles, Zap, Plus, X as XIcon } from 'lucide-react';
 
 /** Where a lead came from, as an icon chip. */
 export function LeadOrigin({ l }: { l: any; full?: boolean }) {
@@ -18,7 +18,7 @@ export function LeadOrigin({ l }: { l: any; full?: boolean }) {
 
 
 export const LEAD_STATUSES = ['New', 'Preview ready', 'Queued', 'WhatsApp ready', 'Contacted', 'Following up', 'Replied', 'Interested', 'Call booked', 'Proposal sent', 'Won', 'Lost', 'Opted out', 'Bounced'];
-export const NICHES = ['clinic', 'school', 'logistics', 'realestate', 'hospitality', 'solar', 'ngo', 'ecommerce', 'professional', 'other'];
+export const NICHES = ['logistics', 'clinic', 'fertility', 'lab', 'realestate', 'facility', 'school', 'construction', 'engineering', 'manufacturing', 'solar', 'microfinance', 'insurance', 'pharma', 'staffing', 'security', 'professional', 'autodealer', 'hospitality', 'homecare', 'ngo', 'ecommerce', 'partner', 'other'];
 const CITIES = ['Lagos', 'Lekki', 'Ikeja', 'Victoria Island', 'London', 'Manchester', 'Birmingham', 'Houston', 'Atlanta', 'Dallas', 'New York', 'Toronto', 'Dubai'];
 
 const LEAD_FIELDS: FieldDef[] = [
@@ -55,7 +55,7 @@ export function Leads() {
         {can(user, 'sales') ? <button className="btn primary" onClick={() => setAdding(true)}><Plus size={15} strokeWidth={2.2} />Add lead</button> : null}
       </>}>
       <div className="lead-kinds">
-        {([['', 'All leads', Sparkles, 'Everything in the pipeline'], ['inbound', 'Inbound', Globe, 'Came to us: website forms, chat, WhatsApp, referrals'], ['found', 'Found by us', Bot, 'Claude, autopilot, LeadsHunter and Maps searches'], ['team', 'Added by team', UserPlus, 'Typed in by someone on the team']] as const).map(([k, label, Icon, hint]) => (
+        {([['', 'All leads', Sparkles, 'Everything in the pipeline'], ['inbound', 'Inbound', Globe, 'Came to us: website forms, chat, WhatsApp, referrals'], ['found', 'Found by us', Bot, 'Claude, autopilot, LeadsHunter and Maps searches'], ['team', 'Added by team', UserPlus, 'Typed in by someone on the team'], ['partners', 'Agency partners', Handshake, 'Agencies we collaborate with: white-label builds and referrals']] as const).map(([k, label, Icon, hint]) => (
           <button key={k} className={`lead-kind ${kind === k ? 'active' : ''}`} onClick={() => setKind(k)} title={hint}>
             <Icon size={16} strokeWidth={1.9} /><span>{label}</span><b>{counts.data ? (k ? counts.data[k] : counts.data.all) : '·'}</b>
             {k === 'inbound' && counts.data?.inbound_week ? <em>+{counts.data.inbound_week} this week</em> : null}

@@ -41,8 +41,11 @@ var DEFAULT_SETTINGS = [
   ['SENDER_NAME', 'Michael | Ferrn Digital Agency', 'Name people see.'],
   ['TRACK_EMAILS', 'TRUE', 'TRUE = record opens and link clicks (Studio → Emails). FALSE = plain emails, no tracking.'],
   ['TRACKING_BASE', 'https://www.ferrnagency.com', 'Website that records opens and clicks.'],
-  ['DAILY_CAP_FIRST', '25', 'Max first-touch emails per day. Keeps your domain out of spam.'],
-  ['DAILY_CAP_TOTAL', '60', 'Max emails of any kind per day.'],
+  ['DAILY_CAP_FIRST', '20', 'Max first-touch emails per day. Keeps your domain out of spam.'],
+  ['DAILY_CAP_TOTAL', '40', 'Max emails of any kind per day (first emails, follow-ups and replies).'],
+  ['SEND_BATCHES', '08:30-11:30,13:30-16:30', 'Windows for cold emails (first emails and follow-ups), Lagos time. Replies to people who wrote back go out any time in working hours.'],
+  ['BATCH_SIZE', '10', 'Max cold emails in each window.'],
+  ['GAP_MINUTES', '12', 'Minimum minutes between two cold emails (0 to 8 extra minutes are added so the timing never looks robotic).'],
   ['SEND_DAYS', '1,2,3,4,5', 'Days to send: 1=Mon ... 7=Sun.'],
   ['SEND_START_HOUR', '8', 'Earliest send hour, Lagos time.'],
   ['SEND_END_HOUR', '17', 'Last send hour, Lagos time.'],
@@ -118,11 +121,12 @@ function setup() {
   setSetting_('BRIEF_DOC_ID', briefId);
   if (!settings_().API_KEY) setSetting_('API_KEY', 'fk_' + Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '').slice(0, 16));
 
-  // one trigger, every 10 minutes
+  // one trigger, every 5 minutes (sending is spaced by GAP_MINUTES, so this only sets the timing grain)
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'tick') ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('tick').timeBased().everyMinutes(10).create();
+  ScriptApp.newTrigger('tick').timeBased().everyMinutes(5).create();
+  PropertiesService.getScriptProperties().setProperty('TICK_EVERY', '5');
 
   writeBrief_();
   log_('info', 'setup', 'Setup complete. Inbox folder ' + inbox.getId());
@@ -141,6 +145,7 @@ function tick() {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) return;
   try {
+    safe_('trigger', ensureTrigger_);
     safe_('ingest', ingest_);
     safe_('replies', checkReplies_);
     safe_('stale', markStale_);
@@ -149,6 +154,16 @@ function tick() {
   } finally {
     lock.releaseLock();
   }
+}
+
+/** Older installs ran every 10 minutes; spaced batches need a 5-minute tick. Swaps the trigger once, by itself. */
+function ensureTrigger_() {
+  var props = PropertiesService.getScriptProperties();
+  if (props.getProperty('TICK_EVERY') === '5') return;
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'tick') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('tick').timeBased().everyMinutes(5).create();
+  props.setProperty('TICK_EVERY', '5');
+  log_('info', 'trigger', 'Engine now checks every 5 minutes (spaced sending)');
 }
 
 function safe_(name, fn) {
@@ -428,6 +443,12 @@ function findDuplicate_(rows, L) {
 }
 
 // ───────────────────────────── sending ─────────────────────────────
+/** Sends what is due, paced so the inbox looks like a person and not a bulk sender:
+ *  - replies to people who wrote back: any time in working hours, up to 3 per tick;
+ *  - cold emails (first emails and follow-ups): only inside SEND_BATCHES windows, at most BATCH_SIZE per
+ *    window, ONE per tick, at least GAP_MINUTES (+0 to 8) after the previous cold email;
+ *  - daily caps (DAILY_CAP_FIRST, DAILY_CAP_TOTAL) on top.
+ *  ignoreWindow (dashboard "send all now") skips the windows and spacing but keeps the caps. */
 function sendDue_(ignoreWindow) {
   var s = settings_();
   if (!isTrue_(s.AUTO_SEND) && !ignoreWindow) return;
@@ -437,14 +458,21 @@ function sendDue_(ignoreWindow) {
   var leads = indexBy_(lT.rows, 'id');
   var now = new Date();
   var today = dayKey_(now);
-  var sentToday = 0, firstToday = 0;
+  var win = ignoreWindow ? null : batchWindow_(s, now);
+  var sentToday = 0, firstToday = 0, coldInWindow = 0, lastCold = null;
   mT.rows.forEach(function (m) {
-    if (m.status === 'sent' && m.channel === 'email' && m.sent_at && dayKey_(new Date(m.sent_at)) === today) {
-      sentToday++;
-      if (String(m.step) === '0') firstToday++;
-    }
+    if (m.status !== 'sent' || m.channel !== 'email' || !m.sent_at) return;
+    var at = new Date(m.sent_at);
+    if (dayKey_(at) !== today) return;
+    sentToday++;
+    if (String(m.step) === '0') firstToday++;
+    if (String(m.step) === 'R') return;
+    if (!lastCold || at > lastCold) lastCold = at;
+    if (win && at >= win.start && at <= win.end) coldInWindow++;
   });
-  var capTotal = Number(s.DAILY_CAP_TOTAL || 60), capFirst = Number(s.DAILY_CAP_FIRST || 25);
+  var capTotal = Number(s.DAILY_CAP_TOTAL || 40), capFirst = Number(s.DAILY_CAP_FIRST || 20);
+  var batchSize = Number(s.BATCH_SIZE || 10);
+  var gapMs = Number(s.GAP_MINUTES || 12) * 60000;
   var holdMs = Number(s.HOLD_MINUTES || 0) * 60000;
   var order = { R: 0, '3': 1, '2': 2, '1': 3, '0': 4 };
   var due = mT.rows.filter(function (m) {
@@ -452,16 +480,49 @@ function sendDue_(ignoreWindow) {
   }).sort(function (a, b) {
     return (order[String(a.step)] || 9) - (order[String(b.step)] || 9) || new Date(a.send_after) - new Date(b.send_after);
   });
-  var sentThisTick = 0;
-  for (var i = 0; i < due.length && sentThisTick < 12; i++) {
+  // A few minutes of jitter per gap, fixed for a given previous send, so it never runs like clockwork.
+  var jitter = lastCold ? (Math.floor(lastCold.getTime() / 60000) * 7919 % 9) * 60000 : 0; // 0 to 8 minutes
+  var coldOpen = ignoreWindow || (win && coldInWindow < batchSize && (!lastCold || now - lastCold >= gapMs + jitter));
+  // Inside a window, alternate follow-ups and new first emails, so follow-ups never crowd out new companies.
+  if (!ignoreWindow) {
+    var rep = due.filter(function (m) { return String(m.step) === 'R'; });
+    var fol = due.filter(function (m) { return ['1', '2', '3'].indexOf(String(m.step)) > -1; });
+    var fst = due.filter(function (m) { return String(m.step) === '0'; });
+    due = rep.concat(coldInWindow % 2 === 0 ? fst.concat(fol) : fol.concat(fst));
+  }
+  var replies = 0, cold = 0;
+  for (var i = 0; i < due.length; i++) {
     var m = due[i];
+    var isReply = String(m.step) === 'R';
     var isFirst = String(m.step) === '0';
-    if (isFirst && holdMs && m.approved !== 'Y' && (now - new Date(m.created)) < holdMs) continue;
     if (sentToday >= capTotal) break;
+    if (isReply ? replies >= 3 : (!coldOpen || (!ignoreWindow && cold >= 1) || (ignoreWindow && cold >= 12))) continue;
+    if (isFirst && holdMs && m.approved !== 'Y' && (now - new Date(m.created)) < holdMs) continue;
     if (isFirst && firstToday >= capFirst) continue;
     var ok = deliver_(m, leads[m.lead_id], mT, lT, s);
-    if (ok) { sentToday++; sentThisTick++; if (isFirst) firstToday++; Utilities.sleep(1500); }
+    if (!ok) continue;
+    sentToday++;
+    if (isFirst) firstToday++;
+    if (isReply) replies++; else cold++;
+    Utilities.sleep(1500);
   }
+}
+
+/** The SEND_BATCHES window we're in right now (Lagos time), or null. */
+function batchWindow_(s, now) {
+  var spec = String(s.SEND_BATCHES || '08:30-11:30,13:30-16:30');
+  var day = Utilities.formatDate(now, TZ, 'yyyy-MM-dd');
+  var parts = spec.split(',');
+  for (var i = 0; i < parts.length; i++) {
+    var m = parts[i].trim().match(/^(\d{1,2}):?(\d{2})?\s*-\s*(\d{1,2}):?(\d{2})?$/);
+    if (!m) continue;
+    var start = lagosTime_(day, Number(m[1]), Number(m[2] || 0)), end = lagosTime_(day, Number(m[3]), Number(m[4] || 0));
+    if (now >= start && now <= end) return { start: start, end: end };
+  }
+  return null;
+}
+function lagosTime_(day, h, mi) {
+  return new Date(day + 'T' + ('0' + h).slice(-2) + ':' + ('0' + mi).slice(-2) + ':00+01:00'); // Lagos is UTC+1 all year
 }
 
 /** Sends one message row. Returns true when an email actually went out. */
@@ -872,7 +933,7 @@ function getDashboardData() {
     generated_at: iso_(now),
     settings: {
       AUTO_SEND: isTrue_(s.AUTO_SEND), HOLD_MINUTES: Number(s.HOLD_MINUTES || 0), DAILY_CAP_FIRST: Number(s.DAILY_CAP_FIRST || 0),
-      DAILY_CAP_TOTAL: Number(s.DAILY_CAP_TOTAL || 0), FROM_ALIAS: s.FROM_ALIAS, MONTHLY_TARGET: Number(s.MONTHLY_TARGET || 30000000),
+      DAILY_CAP_TOTAL: Number(s.DAILY_CAP_TOTAL || 0), SEND_BATCHES: s.SEND_BATCHES || '08:30-11:30,13:30-16:30', BATCH_SIZE: Number(s.BATCH_SIZE || 10), GAP_MINUTES: Number(s.GAP_MINUTES || 12), FROM_ALIAS: s.FROM_ALIAS, MONTHLY_TARGET: Number(s.MONTHLY_TARGET || 30000000),
       FROM_ACTUAL: fromInfo.address, FROM_OK: fromInfo.ok, GMAIL_ACCOUNT: fromInfo.me, TRACK_EMAILS: trackingOn_(s),
       PREVIEW_BASE_URL: s.PREVIEW_BASE_URL, SEND_START_HOUR: s.SEND_START_HOUR, SEND_END_HOUR: s.SEND_END_HOUR,
       sheet_url: SpreadsheetApp.getActive().getUrl()
@@ -1028,7 +1089,7 @@ function dashAction(action, p) {
       // From the Studio autopilot: leads with a published email, ready for the morning routine to write to.
       return processBatch_({ leads: (p.leads || []).slice(0, 50) });
     case 'setSetting':
-      if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET', 'CITIES', 'NICHES', 'LEADS_PER_RUN', 'TRACK_EMAILS'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value).slice(0, 500));
+      if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'SEND_BATCHES', 'BATCH_SIZE', 'GAP_MINUTES', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET', 'CITIES', 'NICHES', 'LEADS_PER_RUN', 'TRACK_EMAILS'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value).slice(0, 500));
       break;
     case 'runNow':
       tick();

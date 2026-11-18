@@ -146,15 +146,16 @@ studio.get('/history/:entity/:id', async (c): Promise<Response> => {
 /* Leads split: inbound (came to us) vs found (we went out and found them). */
 const LEAD_KINDS: Record<string, string> = {
   inbound: "origin IN ('website','referral')",
-  found: "(origin IN ('engine','maps') OR found_by IN ('claude','auto'))",
+  found: "(origin IN ('engine','maps') OR found_by IN ('claude','auto')) AND COALESCE(niche, '') <> 'partner'",
   team: "origin = 'studio' AND found_by IS NULL",
+  partners: "niche = 'partner'",
 };
 studio.get('/leads/counts', async (c): Promise<Response> => {
   const row = await first<any>(c.env.DB, `SELECT COUNT(*) AS all_, ${Object.entries(LEAD_KINDS).map(([k, w]) => `SUM(CASE WHEN ${w} THEN 1 ELSE 0 END) AS ${k}`).join(', ')},
     SUM(CASE WHEN found_by = 'claude' THEN 1 ELSE 0 END) AS claude, SUM(CASE WHEN found_by = 'auto' THEN 1 ELSE 0 END) AS auto,
     SUM(CASE WHEN origin = 'engine' THEN 1 ELSE 0 END) AS engine, SUM(CASE WHEN origin IN ('website','referral') AND created >= date('now','-7 day') THEN 1 ELSE 0 END) AS inbound_week
     FROM leads`);
-  return c.json({ ok: true, counts: { all: row?.all_ ?? 0, inbound: row?.inbound ?? 0, found: row?.found ?? 0, team: row?.team ?? 0, claude: row?.claude ?? 0, auto: row?.auto ?? 0, engine: row?.engine ?? 0, inbound_week: row?.inbound_week ?? 0 } });
+  return c.json({ ok: true, counts: { all: row?.all_ ?? 0, inbound: row?.inbound ?? 0, found: row?.found ?? 0, team: row?.team ?? 0, partners: row?.partners ?? 0, claude: row?.claude ?? 0, auto: row?.auto ?? 0, engine: row?.engine ?? 0, inbound_week: row?.inbound_week ?? 0 } });
 });
 
 /* Autopilot prospecting settings */
