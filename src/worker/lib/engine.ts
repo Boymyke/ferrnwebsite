@@ -49,7 +49,10 @@ export async function syncEngine(env: Bindings): Promise<{ leads: number } | nul
   if (!engineConfigured(env)) return null;
   const dash = shapeDash(await engineCall<any>(env, 'getDashboardData'));
   await env.CACHE.put('engine:snapshot', JSON.stringify(dash), { expirationTtl: 60 * 60 * 6 });
-  const leads: any[] = dash.leads ?? [];
+  // Leads on Studio's Cold calls list are kept by Studio (call outcomes, notes, Needs you), so the mirror skips them.
+  let onCalls = new Set<string>();
+  try { const o = await env.MEDIA.get('private/studio/calls.json'); if (o) onCalls = new Set(((await o.json()) as { lead_id: string }[]).map((i) => i.lead_id)); } catch { /* none yet */ }
+  const leads: any[] = (dash.leads ?? []).filter((L: any) => !onCalls.has(L.id));
   // Until migration 0011 (leads.handled_by) is applied, mirror leads without it rather than failing the sync.
   const takeover = await hasHandledBy(env);
   const stmts = leads.map((L) => takeover ?

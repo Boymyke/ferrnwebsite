@@ -38,7 +38,8 @@ async function saveCalls(env: Bindings, items: CallItem[]) {
 /** In the email section already: actually emailed (a thread, a contact date, or a status past "not sent yet").
  *  Leads that are only waiting for their first email (New, Queued) can still move to Cold calls; the engine then
  *  stops their email (doNotEmail). */
-const IN_EMAIL = "(thread_id IS NOT NULL OR (last_contact IS NOT NULL AND COALESCE(next_action, '') NOT LIKE 'Cold call%') OR COALESCE(status, 'New') NOT IN ('New', 'Queued', 'WhatsApp ready'))";
+const IN_EMAIL = "(COALESCE(status, '') <> 'Bounced' AND (thread_id IS NOT NULL OR (last_contact IS NOT NULL AND COALESCE(next_action, '') NOT LIKE 'Cold call%') OR COALESCE(status, 'New') NOT IN ('New', 'Queued', 'WhatsApp ready')))";
+// Bounced is the exception: the email never arrived, so a call is the first real contact (Michael, 19 Nov 2026).
 const digitsOf = (p?: string | null) => String(p ?? '').replace(/\D/g, '').replace(/^(234|44|1)/, '').replace(/^0/, '');
 const domainOfUrl = (u?: string | null) => String(u ?? '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split(/[/?#]/)[0];
 
@@ -99,6 +100,23 @@ callsApi.post('/', async (c) => {
   return c.json({ ok: true, added: r.added, in_email: r.in_email.length });
 });
 
+/** Lead ids on the call list (for the Leads page buttons). */
+callsApi.get('/ids', async (c) => c.json({ ok: true, ids: (await loadCalls(c.env)).map((i) => i.lead_id) }));
+
+/** Bounced emails with a phone number that aren't on the call list yet. GET counts them, POST moves them. */
+async function bouncedToMove(env: Bindings) {
+  const on = new Set((await loadCalls(env)).map((i) => i.lead_id));
+  const rows = await all<{ id: string }>(env.DB, "SELECT id FROM leads WHERE status = 'Bounced' AND phone IS NOT NULL AND trim(phone) <> ''");
+  return rows.map((r) => r.id).filter((id) => !on.has(id));
+}
+callsApi.get('/bounced', async (c) => c.json({ ok: true, count: (await bouncedToMove(c.env)).length }));
+callsApi.post('/bounced', async (c) => {
+  const u = c.get('user')!;
+  const r = await addToCalls(c.env, await bouncedToMove(c.env), u.name, c.executionCtx);
+  if (r.added) await audit(c, 'calls', null, 'add', `${u.name} moved ${r.added} bounced email lead${r.added === 1 ? '' : 's'} to Cold calls`);
+  return c.json({ ok: true, added: r.added });
+});
+
 /** Logs a call (or just updates notes / the callback time). Outcomes are written back to the lead. */
 callsApi.patch('/:id', async (c) => {
   const u = c.get('user')!;
@@ -114,7 +132,7 @@ callsApi.patch('/:id', async (c) => {
     if (b.outcome !== 'to_call') { it.attempts += 1; it.last_called_at = iso(); }
     it.log.unshift({ at: iso(), by: u.name, outcome: b.outcome, ...(note ? { note } : {}) });
     it.log = it.log.slice(0, 50);
-    const lead = await first<any>(c.env.DB, 'SELECT id, company, status, notes FROM leads WHERE id = ?', it.lead_id);
+    const lead = await first<any>(c.env.DB, 'SELECT id, company, status, notes, origin FROM leads WHERE id = ?', it.lead_id);
     if (lead && b.outcome !== 'to_call') {
       const day = new Date().toISOString().slice(0, 10);
       const line = `${day} call (${u.name}): ${LABEL[b.outcome]}${note ? ` · ${note}` : ''}`;
@@ -131,6 +149,14 @@ callsApi.patch('/:id', async (c) => {
       const keys = Object.keys(set);
       await run(c.env.DB, `UPDATE leads SET ${keys.map((k) => `${k} = ?`).join(', ')}, updated_by = ?, updated_at = datetime('now') WHERE id = ?`, ...keys.map((k) => set[k]), u.name, lead.id);
       await audit(c, 'leads', lead.id, 'call', `${u.name} called ${lead.company}: ${LABEL[b.outcome]}`);
+      // Engine leads: tell the engine too, so its next sync doesn't undo this and its brief stays right.
+      if (engineConfigured(c.env) && lead.origin && ['engine', 'maps'].includes(lead.origin)) {
+        const p = (async () => {
+          if (set.status) await engineCall(c.env, 'dashAction', ['setStatus', { lead_id: lead.id, status: set.status }]);
+          await engineCall(c.env, 'dashAction', ['note', { lead_id: lead.id, note: line }]);
+        })().catch((e) => console.warn('call outcome to engine', e));
+        c.executionCtx.waitUntil(p);
+      }
     }
   }
   await saveCalls(c.env, items);

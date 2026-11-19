@@ -166,6 +166,11 @@ export function Calls() {
   const [sel, setSel] = useState<string | null>(null);
   const [upload, setUpload] = useState<null | { busy: boolean; result?: any; file?: string }>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bounced = useData(() => api<{ count: number }>('/calls/bounced').then((r) => r.count).catch(() => 0), [data?.rows?.length]);
+  const moveBounced = async () => {
+    try { const r = await api('/calls/bounced', { body: {} }); toast(`${r.added} bounced email lead${r.added === 1 ? '' : 's'} added to the call list`); reload(); }
+    catch (x: any) { toast(x.message, 'err'); }
+  };
   const rows: Row[] = data?.rows ?? [];
   const now = Date.now();
   const due = (r: Row) => r.status === 'callback' && (!r.callback_at || new Date(r.callback_at).getTime() <= now + 864e5);
@@ -208,6 +213,7 @@ export function Calls() {
       actions={<>
         <input ref={fileRef} type="file" accept=".csv,.xlsx,text/csv" hidden onChange={(e) => onFile(e.target.files?.[0])} />
         <button className="btn sm primary" disabled={!!upload?.busy} onClick={() => fileRef.current?.click()}><Upload size={14} />{upload?.busy ? 'Uploading…' : 'Upload companies'}</button>
+        {bounced.data ? <button className="btn sm" onClick={moveBounced} title="Leads whose email bounced: phone them instead"><PhoneOff size={14} />Add {bounced.data} bounced emails</button> : null}
         <button className="btn sm ghost" onClick={reload}><RefreshCw size={14} />Refresh</button>
       </>}>
       {error ? <ErrorNote error={error} onRetry={reload} /> : null}

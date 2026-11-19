@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ago, api, can, create, fmtDate, list, ngn, remove, update } from '../api';
 import { Badge, Card, Drawer, EditedBy, Empty, ErrorNote, Fields, History, Loading, Page, Status, Tabs, useData, useRoute, useToast, useUser, waLink, type FieldDef, Pager, usePaged } from '../ui';
-import { Bot, CalendarPlus, Handshake, ExternalLink, Globe, Hand, MailOpen, MessageCircle, Radar, SearchX, Trash2, UserPlus, Workflow, MapPin, Play, Sparkles, Zap, Plus, X as XIcon } from 'lucide-react';
+import { Bot, CalendarPlus, PhoneCall, Handshake, ExternalLink, Globe, Hand, MailOpen, MessageCircle, Radar, SearchX, Trash2, UserPlus, Workflow, MapPin, Play, Sparkles, Zap, Plus, X as XIcon } from 'lucide-react';
 
 /** Where a lead came from, as an icon chip. */
 export function LeadOrigin({ l }: { l: any; full?: boolean }) {
@@ -47,6 +47,24 @@ export function Leads() {
   const [adding, setAdding] = useState(false);
   const total = useMemo(() => (data ?? []).reduce((a: number, l: any) => a + (Number(l.est_value) || 0), 0), [data]);
   const pg = usePaged<any>(data, 'leads', [q, status, niche, kind]);
+  const calls = useData(() => api<{ ids: string[] }>('/calls/ids').then((r) => new Set(r.ids)).catch(() => new Set<string>()), []);
+  const bounced = useData(() => api<{ count: number }>('/calls/bounced').then((r) => r.count).catch(() => 0), [calls.data?.size]);
+  const [moving, setMoving] = useState('');
+  const moveToCalls = async (e: React.MouseEvent, l: any) => {
+    e.stopPropagation();
+    setMoving(l.id);
+    try {
+      const r = await api('/calls', { body: { lead_ids: [l.id] } });
+      if (r.added) toast(`${l.company} moved to Cold calls`, 'ok', { action: { label: 'Open', onClick: () => go('/calls') } });
+      else toast(r.in_email ? `${l.company} is already in email outreach, so it stays email-only` : 'Already on Cold calls', 'info');
+      calls.reload();
+    } catch (x: any) { toast(x.message, 'err'); } finally { setMoving(''); }
+  };
+  const moveBounced = async () => {
+    setMoving('bounced');
+    try { const r = await api('/calls/bounced', { body: {} }); toast(`${r.added} bounced lead${r.added === 1 ? '' : 's'} moved to Cold calls`, 'ok', { action: { label: 'Open', onClick: () => go('/calls') } }); calls.reload(); }
+    catch (x: any) { toast(x.message, 'err'); } finally { setMoving(''); }
+  };
 
   return (
     <Page title="Leads" sub={`${data?.length ?? 0} leads · ${ngn(total)} estimated value`}
@@ -68,18 +86,21 @@ export function Leads() {
         <select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All statuses</option>{LEAD_STATUSES.map((s) => <option key={s}>{s}</option>)}</select>
         <select value={niche} onChange={(e) => setNiche(e.target.value)}><option value="">All niches</option>{NICHES.map((s) => <option key={s}>{s}</option>)}</select>
         <Tabs tabs={[['table', 'Table'], ['board', 'Board']]} value={view} onChange={(v) => setView(v as any)} />
+        {can(user, 'sales') && bounced.data ? <button className="btn sm" disabled={moving === 'bounced'} onClick={moveBounced} title="Email bounced, so phone them instead"><PhoneCall size={14} strokeWidth={2} />Move {bounced.data} bounced to cold calls</button> : null}
       </div>
       {loading ? <Loading /> : error ? <ErrorNote error={error} /> : !data?.length ? (kind === 'inbound' ? <Empty icon={Globe} title="No website leads yet">Contact forms, chat and WhatsApp enquiries appear here automatically.</Empty>
         : kind === 'found' ? <Empty icon={Bot} title="No found leads yet" action={<button className="btn sm primary" onClick={() => go('/prospect')}><Radar size={14} />Open lead finder</button>}>Turn on the autopilot or connect LeadsHunter and leads start arriving here.</Empty>
         : <Empty icon={SearchX} title="No leads match">Try clearing a filter or searching another name.</Empty>) : view === 'table' ? (
         <div className="table-wrap">
           <table className="table clickable">
-            <thead><tr><th>Company</th><th>Niche · City</th><th>Tier</th><th>Status</th><th>Value</th><th>Last contact</th><th>Next action</th></tr></thead>
+            <thead><tr><th>Company</th><th>Niche · City</th><th>Tier</th><th>Status</th><th>Value</th><th>Last contact</th><th>Next action</th><th></th></tr></thead>
             <tbody>{pg.rows.map((l: any) => (
               <tr key={l.id} onClick={() => go(`/leads/${l.id}`)}>
                 <td><strong>{l.company}</strong>{l.needs_you === 'Y' ? <Badge tone="orange">needs you</Badge> : null}{l.handled_by ? <Badge tone="purple">{`with ${String(l.handled_by).split(' ')[0]}`}</Badge> : null}<div className="lead-sub"><LeadOrigin l={l} /><span className="muted small">{l.email || l.phone || ''}</span></div></td>
                 <td>{l.niche} · {l.city}</td><td>{l.tier}</td><td><Status s={l.status} /></td><td>{ngn(l.est_value)}</td>
                 <td className="muted">{fmtDate(l.last_contact)}</td><td className="muted small">{(l.next_action || '').slice(0, 60)}</td>
+                <td className="nowrap">{calls.data?.has(l.id) ? <Badge tone="blue">On cold calls</Badge>
+                  : l.phone && can(user, 'sales') ? <button className="btn sm ghost" disabled={moving === l.id} onClick={(e) => moveToCalls(e, l)} title="Phone them instead of emailing"><PhoneCall size={13} strokeWidth={2} />Move to cold call</button> : null}</td>
               </tr>
             ))}</tbody>
           </table>
@@ -144,7 +165,7 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
   const addCall = async () => {
     try {
       const r = await api('/calls', { body: { lead_ids: [id] } });
-      if (r.added) { toast('Added to Cold calls'); go('/calls'); }
+      if (r.added) { toast('Moved to Cold calls'); go('/calls'); }
       else toast(r.in_email ? 'Already in email outreach, so it stays email-only' : 'Already on the call list', 'info');
     } catch (x: any) { toast(x.message, 'err'); }
   };
@@ -169,7 +190,8 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
         <button className="btn sm" onClick={() => go(`/meetings/new?lead=${id}`)}><CalendarPlus size={14} strokeWidth={2} />Book meeting</button>
         <button className="btn sm primary" onClick={() => go(`/quotes/new?lead=${id}`)}>Draft quote</button>
         <button className="btn sm ghost" onClick={() => go(`/social?lead=${id}`)}>Draft a DM</button>
-        {lead.phone ? <button className="btn sm ghost" disabled={!!busy} onClick={addCall} title="Phone them instead of emailing">Add to cold calls</button> : null}
+        {lead.phone ? <button className="btn sm ghost" disabled={!!busy} onClick={addCall} title="Phone them instead of emailing">
+          <PhoneCall size={14} strokeWidth={2} />Move to cold call</button> : null}
         {can(user, 'sales') ? (lead.handled_by
           ? <button className="btn sm ghost" disabled={!!busy} onClick={() => takeOver(false)} title="AI replies, follow-ups and the WhatsApp bot start again"><Bot size={14} strokeWidth={2} />Hand back to automation</button>
           : <button className="btn sm" disabled={!!busy} onClick={() => takeOver(true)} title="Stops AI replies, automatic follow-ups and the WhatsApp bot for this lead"><Hand size={14} strokeWidth={2} />Take over</button>) : null}
