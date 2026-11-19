@@ -152,8 +152,7 @@ callsApi.post('/:id/prep', async (c) => {
   const lead = await first<any>(c.env.DB, `SELECT ${LEAD_COLS} FROM leads WHERE id = ?`, it.lead_id);
   if (!lead) return c.json({ ok: false, error: 'Lead not found' }, 404);
   const abroad = lead.country && !/nigeria/i.test(lead.country);
-  let r: { text: string };
-  try { r = await complete(c.env, [
+  const msgs: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
     { role: 'system', content: `You prepare a short cold-call guide for Michael, who runs Ferrn Digital Agency in Lagos (websites first, then web apps such as portals and booking or tracking systems).
 He is phoning a business he has never spoken to. The call must feel easy and respectful, give the owner something useful in the first 30 seconds, and end with a small yes: a free homepage mock-up sent by email or WhatsApp, or a 15-minute look at it together.
 Use ONLY the facts given about the company. Never invent numbers, clients, awards or problems. If a fact is marked unconfirmed, say "check first".
@@ -175,8 +174,20 @@ Hard rules: never use the words "enquiry", "enquiries", "inquiry", "inquiries", 
 Example of the standard (different company; never copy it): opener "Good morning, is this Mrs Adeyemi? My name is Michael, I run Ferrn, a web design company here in Lagos. I looked at your school online and found that the admission form is a Word file parents have to print. Have I caught you at a bad time?"; question "When a parent hears about Greenfield and looks you up, what do they usually do next?"; objection {"they_say": "Parents just call the office.", "you_say": "That makes sense, and the office knows them well. Many parents now look a school up at night, before they call. Can I send you a free mock-up of an admissions page so you can see what they would see?"}.` },
     { role: 'user', content: JSON.stringify({ company: lead.company, contact: lead.contact_name, role: lead.role, sector: lead.niche, city: lead.city, country: lead.country, website: lead.website,
       what_we_found: lead.gaps, pitch: lead.pitch, notes: lead.notes, phone_known: !!lead.phone }) },
-  ], { maxTokens: 1400, json: true, bucket: 'studio', temperature: 0.5 }); }
-  catch (e) { console.warn('call prep', e); return c.json({ ok: false, error: 'Could not prepare the call right now. The guide below still works.' }, 502); }
+  ];
+  const BANNED = /\b(enquir\w*|inquir\w*|leads?|online presence|functional website|customer experience|I noticed|I came across)\b/gi;
+  let r: { text: string } = { text: '' };
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      r = await complete(c.env, msgs, { maxTokens: 1400, json: true, bucket: 'studio', temperature: 0.5 });
+      const hits = [...new Set((r.text.match(BANNED) ?? []).map((w) => w.toLowerCase()))];
+      if (!hits.length) break;
+      msgs.push({ role: 'assistant', content: r.text }, { role: 'user', content: `Rewrite it without these words: ${hits.join(', ')}. Same JSON shape.` });
+    }
+  } catch (e) { console.warn('call prep', e); return c.json({ ok: false, error: 'Could not prepare the call right now. The guide below still works.' }, 502); }
+  // Last resort if the model still slips: plain swaps that read naturally on a call.
+  r.text = r.text.replace(/\binquiries\b|\benquiries\b/gi, 'questions').replace(/\binquiry\b|\benquiry\b/gi, 'question').replace(/online presence/gi, 'website')
+    .replace(/functional website/gi, 'working website').replace(/customer experience/gi, 'what customers see').replace(/\bI noticed\b/g, 'I saw');
   const prep = extractJson<Record<string, unknown>>(r.text, {});
   if (!prep || !prep.opener) return c.json({ ok: false, error: 'Could not prepare the call. Try again.' }, 502);
   it.prep = prep; it.prep_at = iso();
