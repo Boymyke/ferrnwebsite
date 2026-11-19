@@ -141,6 +141,13 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
     try { const row = await update('leads', id, draft!); setData(row); setDraft(null); toast('Saved'); } catch (x: any) { toast(x.message, 'err'); }
   };
   const waText = `Hello ${lead.contact_name || lead.company + ' team'}, this is Michael from Ferrn Digital Agency.`;
+  const addCall = async () => {
+    try {
+      const r = await api('/calls', { body: { lead_ids: [id] } });
+      if (r.added) { toast('Added to Cold calls'); go('/calls'); }
+      else toast(r.in_email ? 'Already in email outreach, so it stays email-only' : 'Already on the call list', 'info');
+    } catch (x: any) { toast(x.message, 'err'); }
+  };
   const takeOver = async (on: boolean) => {
     setBusy('take');
     try { const r = await api(`/leads/${id}/takeover`, { body: { on } }); setData(r.row); toast(on ? 'You’re handling this lead — automation paused' : 'Handed back to the automation'); }
@@ -162,6 +169,7 @@ function LeadDrawer({ id, onClose }: { id: string; onClose: () => void }) {
         <button className="btn sm" onClick={() => go(`/meetings/new?lead=${id}`)}><CalendarPlus size={14} strokeWidth={2} />Book meeting</button>
         <button className="btn sm primary" onClick={() => go(`/quotes/new?lead=${id}`)}>Draft quote</button>
         <button className="btn sm ghost" onClick={() => go(`/social?lead=${id}`)}>Draft a DM</button>
+        {lead.phone ? <button className="btn sm ghost" disabled={!!busy} onClick={addCall} title="Phone them instead of emailing">Add to cold calls</button> : null}
         {can(user, 'sales') ? (lead.handled_by
           ? <button className="btn sm ghost" disabled={!!busy} onClick={() => takeOver(false)} title="AI replies, follow-ups and the WhatsApp bot start again"><Bot size={14} strokeWidth={2} />Hand back to automation</button>
           : <button className="btn sm" disabled={!!busy} onClick={() => takeOver(true)} title="Stops AI replies, automatic follow-ups and the WhatsApp bot for this lead"><Hand size={14} strokeWidth={2} />Take over</button>) : null}

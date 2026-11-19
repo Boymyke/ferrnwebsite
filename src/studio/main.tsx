@@ -18,6 +18,7 @@ import { BobPage, Faqs, Links, Profile, Projects, Seasons, SiteContent, Testimon
 import { Content } from './pages/content';
 import { CarouselStudio } from './pages/carousel';
 import { WhatsApp } from './pages/whatsapp';
+import { Calls } from './pages/calls';
 import { Settings, TeamAccess } from './pages/team';
 import { Demos } from './pages/demos';
 import { Concepts } from './pages/concepts';
@@ -26,14 +27,14 @@ import { Emails } from './pages/emails';
 import { Engage } from './pages/engage';
 import { Rfps } from './pages/rfps';
 import {
-  LayoutDashboard, AtSign, Heart, Users, Radar, Send, MessageCircle, CalendarClock, Receipt, PenSquare, Megaphone, Package, ShoppingBag, Inbox,
+  LayoutDashboard, AtSign, Heart, Users, Radar, Send, MessageCircle, PhoneCall, CalendarClock, Receipt, PenSquare, Megaphone, Package, ShoppingBag, Inbox,
   UserSquare2, Quote, Newspaper, ShieldCheck, Settings as SettingsIcon, ExternalLink, Menu, MonitorPlay, SunMoon, Search, LogOut,
 } from 'lucide-react';
 
 const I = (C: React.ComponentType<any>) => <C size={17} strokeWidth={1.8} aria-hidden="true" />;
 
 const NAV: { group: string; items: [string, string, React.ReactNode, User['role']?][] }[] = [
-  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/concepts', 'Concepts', I(Lightbulb)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/social', 'Social DMs', I(AtSign)], ['/emails', 'Emails', I(MailOpen)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)], ['/rfps', 'RFPs', I(FileSearch)]] },
+  { group: 'Main', items: [['/', 'Dashboard', I(LayoutDashboard)], ['/analytics', 'Analytics', I(Activity)], ['/leads', 'Leads', I(Users)], ['/concepts', 'Concepts', I(Lightbulb)], ['/prospect', 'Find leads', I(Radar)], ['/outreach', 'Outreach', I(Send)], ['/social', 'Social DMs', I(AtSign)], ['/emails', 'Emails', I(MailOpen)], ['/whatsapp', 'WhatsApp', I(MessageCircle)], ['/calls', 'Cold calls', I(PhoneCall)], ['/meetings', 'Meetings', I(CalendarClock)], ['/quotes', 'Quotes', I(Receipt)], ['/proposals', 'Proposals', I(FileSignature)], ['/rfps', 'RFPs', I(FileSearch)]] },
   { group: 'Marketing', items: [['/content', 'Content', I(PenSquare)], ['/interactions', 'Interactions', I(Heart)], ['/ads', 'Ads', I(Megaphone)]] },
   { group: 'Marketplace', items: [['/marketplace/products', 'Products', I(Package)], ['/marketplace/demos', 'Demos', I(MonitorPlay)], ['/marketplace/orders', 'Orders', I(ShoppingBag)], ['/marketplace/requests', 'Enquiries', I(Inbox)]] },
   { group: 'Projects', items: [['/projects', 'Projects', I(FolderKanban)]] },
@@ -54,6 +55,7 @@ function Router() {
   if (p.startsWith('/interactions')) return <Engage kind="comment" />;
   if (p.startsWith('/emails')) return <Emails />;
   if (p.startsWith('/whatsapp')) return <WhatsApp />;
+  if (p.startsWith('/calls')) return <Calls />;
   if (p.startsWith('/meetings')) return <Meetings />;
   if (p.startsWith('/quotes')) return <Quotes />;
   if (p.startsWith('/proposals')) return <Proposals />;

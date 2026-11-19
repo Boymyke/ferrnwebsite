@@ -238,7 +238,7 @@ function processBatch_(data) {
   (data.leads || []).forEach(function (L) {
     var key = L.key || L.company;
     var dup = findDuplicate_(leadsT.rows, L);
-    if (dup || (L.email && suppressed[String(L.email).trim().toLowerCase()])) { dups++; keyToId[key] = null; return; }
+    if (dup || (L.email && suppressed[String(L.email).trim().toLowerCase()]) || (L.company && suppressed['company:' + String(L.company).trim().toLowerCase()])) { dups++; keyToId[key] = null; return; }
     var row = {};
     HEADERS.Leads.forEach(function (h) { row[h] = L[h] !== undefined ? L[h] : ''; });
     // Leads pushed from Studio keep their id, so the website and the sheet stay one record.
@@ -983,6 +983,14 @@ function writeBrief_() {
   lT.rows.forEach(function (r) {
     out.push([r.id, r.company, domainOf_(r.website), r.email, digits_(r.phone), r.niche, r.city, r.status, r.tier].join(' | '));
   });
+  // Companies on Studio's Cold calls list: phoned, never emailed. Treat them as existing leads.
+  var calls = {};
+  table_('Suppression').rows.forEach(function (r) {
+    var m = String(r.reason || '').match(/^cold call: (.*?) \| (.*?) \| (.*)$/);
+    if (!m || calls[m[1].toLowerCase()]) return;
+    calls[m[1].toLowerCase()] = true;
+    out.push(['-', m[1], m[2], /@/.test(r.email) ? r.email : '', m[3], '-', '-', 'Cold call (do not email)', '-'].join(' | '));
+  });
   DocumentApp.openById(s.BRIEF_DOC_ID).getBody().setText(out.join('\n'));
 }
 
@@ -1247,6 +1255,16 @@ function dashAction(action, p) {
     case 'addLeads':
       // From the Studio autopilot: leads with a published email, ready for the morning routine to write to.
       return processBatch_({ leads: (p.leads || []).slice(0, 50) });
+    case 'doNotEmail':
+      // From Studio Cold calls: companies Michael phones instead. Never emailed, never added again by the
+      // morning run (they are listed under ALL LEADS in the brief), keyed by email or else by company name.
+      (p.items || []).slice(0, 500).forEach(function (x) {
+        var company = String(x.company || '').trim();
+        var why = ('cold call: ' + [company, String(x.domain || '').toLowerCase(), digits_(x.phone)].join(' | ')).slice(0, 300);
+        if (x.email) addSuppression_(String(x.email).trim(), why);
+        if (company) addSuppression_('company:' + company.toLowerCase(), why);
+      });
+      break;
     case 'setSetting':
       if (['AUTO_SEND', 'HOLD_MINUTES', 'DAILY_CAP_FIRST', 'DAILY_CAP_TOTAL', 'SEND_BATCHES', 'BATCH_SIZE', 'GAP_MINUTES', 'VOLUME_FROM', 'PREMIUM_RULE', 'VOLUME_CAP_FIRST', 'VOLUME_CAP_TOTAL', 'VOLUME_BATCH_SIZE', 'VOLUME_GAP_MINUTES', 'VOLUME_RAMP', 'PREVIEW_BASE_URL', 'MONTHLY_TARGET', 'CITIES', 'NICHES', 'LEADS_PER_RUN', 'TRACK_EMAILS'].indexOf(p.key) > -1) setSetting_(p.key, String(p.value).slice(0, 500));
       break;

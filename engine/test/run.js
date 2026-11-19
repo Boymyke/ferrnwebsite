@@ -381,4 +381,24 @@ console.log('17. reply checks stay inside the Gmail read quota');
   ok(E.gmailQueries.every(q => /-category:promotions/.test(q) && /-category:social/.test(q)), 'newsletters and social mail are skipped');
 }
 
+console.log('18. Studio cold-call list: never emailed, never re-added');
+{
+  const E = makeEnv({ now: '2026-11-19T09:00:00+01:00' });
+  E.ctx.setup();
+  E.ctx.dashAction('doNotEmail', { items: [{ company: 'Spry Nigeria Limited', email: 'wandea@spry.com.ng', phone: '+234 909 936 9377', domain: 'spry.com.ng' }, { company: 'Dayplus Limited', phone: '0802 072 2022' }] });
+  E.dropFile('cc.json', { leads: [
+    { key: 's', company: 'Spry Nigeria Limited', email: 'info@spry.com.ng', city: 'Lagos', tier: 'B' },
+    { key: 'd', company: 'Dayplus Limited', email: 'hello@dayplus.ng', city: 'Lagos', tier: 'B' },
+    { key: 'w', company: 'Wandea Freight', email: 'wandea@spry.com.ng', city: 'Lagos', tier: 'B' },
+    { key: 'ok', company: 'Fresh Co', email: 'hi@fresh.ng', city: 'Lagos', tier: 'B' }],
+    messages: [{ lead_key: 's', step: 0, subject: 'x', body: 'Hi' }, { lead_key: 'ok', step: 0, subject: 'x', body: 'Hi' }] });
+  E.ctx.tick();
+  const names = E.rows('Leads').map(l => l.company);
+  ok(!names.includes('Spry Nigeria Limited') && !names.includes('Dayplus Limited') && !names.includes('Wandea Freight') && names.includes('Fresh Co'), 'cold-call companies (by name or email) are not added by the morning run');
+  ok(!E.rows('Messages').some(m => /spry|dayplus/i.test(m.to || '')), 'and no email is queued for them');
+  E.ctx.writeBrief_();
+  const br = Object.values(E.docs).pop();
+  ok(/Spry Nigeria Limited \| spry\.com\.ng \| wandea@spry\.com\.ng \| 2349099369377 \| - \| - \| Cold call \(do not email\)/.test(br) && /Dayplus Limited \|  \|  \| 08020722022/.test(br), 'the brief lists them under ALL LEADS for de-duplication');
+}
+
 console.log(`\nALL ${passed} CHECKS PASSED`);

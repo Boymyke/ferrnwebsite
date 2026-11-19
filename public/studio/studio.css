@@ -833,3 +833,36 @@ ul.plain, ol.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; } u
 .eng-next { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--o) 40%, var(--line)); border-radius: 12px; background: color-mix(in srgb, var(--o) 6%, var(--panel)); margin: 0 0 14px; flex-wrap: wrap; }
 .eng-next > div { display: grid; gap: 2px; flex: 1; min-width: 220px; }
 .eng-next .btn { flex: none; }
+
+/* Cold calls */
+.call-avatar { background: color-mix(in srgb, var(--o) 15%, transparent) !important; color: var(--o) !important; }
+.call-card { gap: 4px; }
+.call-card .row-actions .btn { display: inline-flex; gap: 6px; align-items: center; }
+.call-facts { display: grid; gap: 8px; margin: 4px 0 12px; }
+.call-facts div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; }
+.call-facts dt { color: var(--muted); font-size: 12.5px; padding-top: 2px; }
+.call-facts dd { margin: 0; line-height: 1.5; }
+.call-facts .pre { white-space: pre-line; font-size: 13px; }
+.callout.warn { border-color: color-mix(in srgb, #e5a400 45%, var(--line)); background: color-mix(in srgb, #e5a400 9%, var(--panel)); }
+.call-upload { display: flex; gap: 10px; align-items: flex-start; }
+.call-upload span { flex: 1; }
+.call-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: 600; margin: 18px 0 8px; }
+.call-log textarea { margin-bottom: 8px; }
+.call-log .row-actions { margin-bottom: 6px; align-items: center; }
+.call-cb { width: auto !important; padding: 6px 10px !important; font-size: 13px; }
+.call-script { display: grid; gap: 12px; }
+.call-step { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+.call-n { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--o); color: #fff; font-size: 12.5px; font-weight: 600; }
+.call-step h4, .call-prep h4 { margin: 2px 0 6px; font-size: 13.5px; font-weight: 600; }
+.call-step p, .call-step ul, .call-prep p, .call-prep ul { margin: 0 0 6px; line-height: 1.55; font-size: 13.5px; }
+.call-step ul, .call-prep ul, .call-guide ul, .call-guide ol { padding-left: 18px; }
+.call-say { border-left: 3px solid var(--o); background: var(--panel2); border-radius: 8px; padding: 8px 12px; }
+.call-prep { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; background: color-mix(in srgb, var(--o) 4%, var(--panel)); }
+.call-obj { margin-bottom: 10px; } .call-obj b { display: block; margin-bottom: 4px; font-weight: 600; } .call-obj p { margin: 0; line-height: 1.55; }
+.call-objs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+.call-wa { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; background: var(--panel2); }
+.call-wa span { flex: 1; white-space: pre-wrap; }
+.call-history { display: grid; gap: 8px; } .call-history p { margin: 4px 0 0; font-size: 13.5px; }
+.call-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.call-guide li { margin-bottom: 6px; line-height: 1.55; }
+@media (max-width: 900px) { .call-guide, .call-objs { grid-template-columns: 1fr; } .call-facts div { grid-template-columns: 1fr; gap: 2px; } }

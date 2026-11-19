@@ -24,6 +24,7 @@ import proposalsApi from './routes/proposals';
 import clientDocs from './routes/client-docs';
 import { emailStudio, emailTrack, syncEmailStatus } from './routes/email-track';
 import { engageApi, importInteractions, runEngageAutopilot } from './routes/engage';
+import { callsApi } from './routes/calls';
 import { orderActions } from './routes/order-actions';
 import { notificationsApi } from './routes/notifications';
 import { studioShell } from './routes/studio-shell';
@@ -77,6 +78,7 @@ app.route('/api/studio/analytics', analyticsStudio);
 app.route('/api/studio/proposals', proposalsApi);
 app.route('/api/studio/emails', emailStudio);
 app.route('/api/studio/engage', engageApi);
+app.route('/api/studio/calls', callsApi);
 app.route('/api/studio/order', orderActions);
 app.route('/api/studio/notifications', notificationsApi);
 app.route('/api/e', emailTrack); // email open pixel, click redirects, LeadsHunter send log
