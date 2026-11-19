@@ -76,7 +76,7 @@ function script(l: Lead) {
     gatekeeper: `Good ${daypart()}. Please may I speak with ${who}? My name is Michael, from Ferrn. It's about ${l.company}'s website.`,
     gatekeeperWhy: `If they ask what it's about: "I found something on ${l.company}'s website that affects how customers find you, and I'd like to tell ${name ? fn : 'the person in charge'} about it. It takes two minutes." If ${fn || 'they'} isn't in: "When is the best time to reach ${fn || 'them'}? And is there an email or WhatsApp I can send a short note to?" Get the receptionist's name and thank them by name.`,
     opener: `Good ${daypart()}, is this ${name || `the owner of ${l.company}`}? ... ${fn ? fn + ', my' : 'My'} name is Michael. I run Ferrn, a web design company${where}. I'm calling because I ${dom ? `looked at ${dom}` : `looked ${l.company} up online`} and found something I think you'd want to know about. Have I caught you at a bad time?`,
-    finding: `"${finding}"`,
+    finding: l.gaps ? `In your own words, tell them what you found: ${l.gaps}` : `"${finding}"`,
     why: `Then say why it matters, in one breath: "${abroad ? 'When' : 'These days, when'} someone hears about ${l.company} and looks you up, this is the first thing they see of you, before they ever call. For a ${sectorWord(l)} company your size, it makes you look smaller than you are."`,
     questions: [
       `How do most of your new clients find you at the moment?`,
@@ -326,7 +326,7 @@ function CallCard({ r, onSaved, onRemoved, openLead }: { r: Row; onSaved: (r: Ro
       <div className="call-script">
         <Step n={1} title="If someone else picks up"><Say>{s.gatekeeper}</Say><p className="muted">{s.gatekeeperWhy}</p></Step>
         <Step n={2} title="Open (ask for permission)"><Say>{s.opener}</Say><p className="muted">Asking “have I caught you at a bad time?” lets them say “no, go ahead”, so they feel in control. If it is a bad time, book a time and hang up.</p></Step>
-        <Step n={3} title="Give them the finding"><Say>{s.finding}</Say><p className="muted">{s.why}</p></Step>
+        <Step n={3} title="Give them the finding"><Say>{s.finding}</Say><p className="muted">Keep it to one or two sentences, said plainly, as something you saw yourself: “I looked at your website and it doesn’t load at the moment.” {s.why}</p></Step>
         <Step n={4} title="Ask, then listen (pick two or three)"><ul>{s.questions.map((x) => <li key={x}>“{x}”</li>)}</ul><p className="muted">Let them talk. Write their words in the note box: they're your best material for the mock-up.</p></Step>
         <Step n={5} title="Tell them (under 30 seconds)"><ul>{s.tell.map((x) => <li key={x}>{x}</li>)}</ul></Step>
         <Step n={6} title="The free offer and next step"><Say>{s.close}</Say></Step>
