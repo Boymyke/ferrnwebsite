@@ -4,7 +4,7 @@ import { all, clamp, first, getSetting, setSetting } from '../lib/db';
 import { requireUser } from '../lib/auth';
 import { audit } from '../lib/audit';
 import { complete, extractJson } from '../lib/ai';
-import { chainReason } from '../lib/maps';
+import { chainReason, readWebsite } from '../lib/maps';
 import { WEBAPP_PITCH } from '../lib/autoprospect';
 
 /* Social engagement, assisted.
@@ -298,8 +298,22 @@ export async function rewriteOldDrafts(env: Bindings, limit: number) {
     const chain = chainReason(it.company ?? lead?.company ?? '', lead?.website);
     if (chain) { it.status = 'skipped'; it.done_at = iso(); it.done_by = 'Studio'; it.v = DRAFT_V; it.context = `Not a fit: ${chain}. ${it.context ?? ''}`.slice(0, 600); done.push({ id: it.id, company: it.company, ok: true, skipped: chain }); continue; }
     try {
+      // 19 Nov 2026: businesses whose website is already well built are not approached. Re-read the site; if it
+      // loads and shows none of the strong problems, skip the DM. Otherwise its current problems feed the draft.
+      let found: string[] = [];
+      const site = lead?.website && !/facebook|instagram|linktr|wa\.me|business\.site|wixsite|blogspot/i.test(lead.website) ? lead.website : null;
+      if (site) {
+        const w = await readWebsite(/^https?:/i.test(site) ? site : `https://${site}`, 6000).catch(() => null);
+        if (w?.reached && !w.strong.length) {
+          it.status = 'skipped'; it.done_at = iso(); it.done_by = 'Studio'; it.v = DRAFT_V;
+          it.context = `Not a fit: website already well built. ${it.context ?? ''}`.slice(0, 600);
+          done.push({ id: it.id, company: it.company, ok: true, skipped: 'website already well built' });
+          continue;
+        }
+        found = w?.reached ? w.strong : ['Website did not load'];
+      }
       const r = await draftDm(env, it.platform, { person: it.person, company: it.company, niche: lead?.niche, city: lead?.city, website: lead?.website, role: lead?.role,
-        gaps_we_saw: lead?.gaps, our_angle: lead?.pitch || WEBAPP_PITCH[lead?.niche ?? ''], about_them: it.context }, recentOpenings(items.filter((x) => x.v === DRAFT_V), it.id));
+        gaps_we_saw: [found.join('; '), lead?.gaps].filter(Boolean).join('; '), our_angle: lead?.pitch || WEBAPP_PITCH[lead?.niche ?? ''], about_them: it.context }, recentOpenings(items.filter((x) => x.v === DRAFT_V), it.id));
       if (r.drafts.length) { it.drafts = r.drafts; it.note = r.note ?? it.note; it.v = DRAFT_V; }
       else it.v = (it.v ?? 0) - 1; // count failed tries (negative) so one stubborn draft can't block the rest
       if ((it.v ?? 0) <= -3) it.v = DRAFT_V;
@@ -406,6 +420,10 @@ export async function runEngageAutopilot(env: Bindings) {
       if (r.ok && /html/i.test(r.headers.get('content-type') ?? '')) html = (await r.text()).slice(0, 400_000);
     } catch { continue; }
     if (!html) continue;
+    // Not businesses whose website is already well built (19 Nov 2026).
+    const w = await readWebsite(/^https?:\/\//i.test(l.website) ? l.website : `https://${l.website}`, 6000).catch(() => null);
+    if (w?.reached && !w.strong.length) continue;
+    const found = w?.strong ?? [];
     const links = socialLinks(html);
     // Web-app buyers (operations, B2B) are decided by a person on LinkedIn; consumer brands live on Instagram.
     const b2b = /^(logistics|construction|engineering|manufacturing|professional|staffing|security|insurance|pharma|facility|microfinance|realestate)$/.test(l.niche ?? '');
@@ -415,7 +433,7 @@ export async function runEngageAutopilot(env: Bindings) {
     const context = pageText(html);
     try {
       const d = await draftDm(env, platform, { person: l.contact_name, role: l.role, company: l.company, niche: l.niche, city: l.city,
-        website: l.website, gaps_we_saw: l.gaps, our_angle: l.pitch || WEBAPP_PITCH[l.niche ?? ''], about_them: `From their website: ${context}` }, [...fresh, ...items].filter((i) => i.kind === 'dm').slice(0, 14).map((i) => i.drafts[0] ?? ''));
+        website: l.website, gaps_we_saw: [found.join('; '), l.gaps].filter(Boolean).join('; '), our_angle: l.pitch || WEBAPP_PITCH[l.niche ?? ''], about_them: `From their website: ${context}` }, [...fresh, ...items].filter((i) => i.kind === 'dm').slice(0, 14).map((i) => i.drafts[0] ?? ''));
       if (!d.drafts.length) continue;
       fresh.push({ id: newId(), kind: 'dm', platform, status: 'draft', lead_id: l.id, company: l.company, person: l.contact_name ?? null, url,
         context: `From their website${links.liCo.length ? ` (LinkedIn page: linkedin.com/company/${links.liCo[0]})` : ''}: ${context.slice(0, 500)}`,
