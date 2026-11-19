@@ -866,3 +866,6 @@ ul.plain, ol.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; } u
 .call-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .call-guide li { margin-bottom: 6px; line-height: 1.55; }
 @media (max-width: 900px) { .call-guide, .call-objs { grid-template-columns: 1fr; } .call-facts div { grid-template-columns: 1fr; gap: 2px; } }
+.call-row-end { display: flex; align-items: center; gap: 6px; }
+.call-copy { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: var(--muted); border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+.call-copy:hover { color: var(--o); border-color: var(--o); }

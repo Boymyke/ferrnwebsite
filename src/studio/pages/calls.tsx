@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { unzipSync, strFromU8 } from 'fflate';
 import {
-  AlertTriangle, BookOpen, CalendarClock, Check, ExternalLink, Globe, Info, Mail, MessageCircle, Phone, PhoneCall, PhoneOff,
+  AlertTriangle, BookOpen, CalendarClock, Check, Copy, ExternalLink, Globe, Info, Mail, MessageCircle, Phone, PhoneCall, PhoneOff,
   RefreshCw, Sparkles, Trash2, Upload, UserRound,
 } from 'lucide-react';
 import { ago, api, fmtDate, fromLocalInput, toLocalInput } from '../api';
@@ -44,6 +44,16 @@ function telHref(phone?: string | null, country?: string | null) {
   if (d.startsWith('0')) return 'tel:+' + (uk ? '44' : '234') + d.slice(1);
   if (d.startsWith('234') || d.startsWith('44')) return 'tel:+' + d;
   return 'tel:' + d;
+}
+
+/** The number as a phone dialler wants it: +234..., no spaces. */
+const dialable = (phone?: string | null, country?: string | null) => telHref(phone, country).replace(/^tel:/, '');
+function copyNumber(phone: string | null | undefined, country: string | null | undefined, toast: (t: string, k?: any) => void) {
+  const n = dialable(phone, country);
+  if (!n) { toast('No phone number for this company', 'warn'); return; }
+  const done = () => toast(`Copied ${n}. Paste it into your phone.`);
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(n).then(done).catch(() => prompt('Copy this number:', n));
+  else prompt('Copy this number:', n);
 }
 
 /* ── the words for one call, built from what we know about the company ── */
@@ -223,7 +233,12 @@ export function Calls() {
                   <b>{r.lead.company}{r.lead.tier ? <Badge tone={r.lead.tier === 'A' ? 'orange' : 'default'}>{r.lead.tier}</Badge> : null}{due(r) ? <Badge tone="orange">due</Badge> : null}</b>
                   <small>{[r.lead.contact_name, r.lead.city].filter(Boolean).join(' · ') || r.lead.phone}</small>
                 </span>
-                <small className="muted">{r.status === 'callback' && r.callback_at ? fmtDate(r.callback_at, true) : r.attempts ? `${r.attempts}×` : ''}</small>
+                <span className="call-row-end">
+                  <small className="muted">{r.status === 'callback' && r.callback_at ? fmtDate(r.callback_at, true) : r.attempts ? `${r.attempts}×` : ''}</small>
+                  {r.lead.phone ? <span role="button" tabIndex={0} className="call-copy" title={`Copy ${dialable(r.lead.phone, r.lead.country)}`}
+                    onClick={(e) => { e.stopPropagation(); copyNumber(r.lead.phone, r.lead.country, toast); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); copyNumber(r.lead.phone, r.lead.country, toast); } }}><Copy size={14} /></span> : null}
+                </span>
               </button>
             ))}
             <Pager pg={pg} noun="companies" />
@@ -288,7 +303,10 @@ function CallCard({ r, onSaved, onRemoved, openLead }: { r: Row; onSaved: (r: Ro
         <button className="btn sm ghost danger" onClick={remove} title="Take off the call list"><Trash2 size={14} /></button>
       </div>}>
       <div className="row-actions">
-        {tel ? <a className="btn primary" href={tel}><Phone size={15} />Call {l.phone}</a> : <Badge tone="red">No phone number</Badge>}
+        {tel ? <>
+          <button className="btn primary" onClick={() => copyNumber(l.phone, l.country, toast)} title="Copies the number so you can paste it into your phone"><Copy size={15} />Copy {dialable(l.phone, l.country)}</button>
+          <a className="btn ghost" href={tel} title="Calls from this device (works on a phone or with a calling app)"><Phone size={15} />Call</a>
+        </> : <Badge tone="red">No phone number</Badge>}
         {wa ? <a className="btn ghost" href={wa} target="_blank" rel="noreferrer"><MessageCircle size={15} />WhatsApp</a> : null}
         {l.email ? <a className="btn ghost" href={`mailto:${l.email}`}><Mail size={15} />{l.email}</a> : null}
         {l.website ? <a className="btn ghost" href={/^https?:/i.test(l.website) ? l.website : `https://${l.website}`} target="_blank" rel="noreferrer"><Globe size={15} />Website</a> : null}
