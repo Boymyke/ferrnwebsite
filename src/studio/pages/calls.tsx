@@ -29,7 +29,12 @@ const TONE: Record<Outcome, string> = {
   to_call: 'blue', no_answer: 'default', callback: 'orange', interested: 'green', mockup: 'green', meeting: 'green',
   not_interested: 'default', wrong_number: 'red', do_not_call: 'red',
 };
-const OPEN: Outcome[] = ['to_call', 'no_answer'];
+const OPEN: Outcome[] = ['to_call'];
+/* No answer: how many tries in a row went unanswered, and whether it's time for the next one. */
+const missedInARow = (r: { log: { outcome: Outcome }[] }) => { let n = 0; for (const h of r.log) { if (h.outcome === 'no_answer') n++; else break; } return n; };
+const RETRY_HOURS = 20;
+const readyAgain = (r: { status: Outcome; last_called_at?: string | null }) => r.status === 'no_answer' && (!r.last_called_at || Date.now() - new Date(r.last_called_at).getTime() >= RETRY_HOURS * 36e5);
+const partOfDay = (iso?: string | null) => { if (!iso) return ''; const h = new Date(iso).getHours(); return h < 12 ? 'morning' : h < 16 ? 'afternoon' : 'evening'; };
 const WARM: Outcome[] = ['interested', 'mockup', 'meeting'];
 const DONE: Outcome[] = ['not_interested', 'wrong_number', 'do_not_call'];
 
@@ -161,7 +166,7 @@ export function Calls() {
   const toast = useToast();
   const { go } = useRoute();
   const { data, loading, error, reload, setData } = useData(() => api<{ rows: Row[] }>('/calls'), []);
-  const [tab, setTab] = useState<'open' | 'callback' | 'warm' | 'done' | 'guide'>('open');
+  const [tab, setTab] = useState<'open' | 'noanswer' | 'callback' | 'warm' | 'done' | 'guide'>('open');
   const [q, setQ] = useState('');
   const [sel, setSel] = useState<string | null>(null);
   const [upload, setUpload] = useState<null | { busy: boolean; result?: any; file?: string }>(null);
@@ -176,11 +181,12 @@ export function Calls() {
   const due = (r: Row) => r.status === 'callback' && (!r.callback_at || new Date(r.callback_at).getTime() <= now + 864e5);
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    const inTab = (r: Row) => tab === 'open' ? OPEN.includes(r.status) : tab === 'callback' ? r.status === 'callback' : tab === 'warm' ? WARM.includes(r.status) : DONE.includes(r.status);
+    const inTab = (r: Row) => tab === 'open' ? OPEN.includes(r.status) : tab === 'noanswer' ? r.status === 'no_answer' : tab === 'callback' ? r.status === 'callback' : tab === 'warm' ? WARM.includes(r.status) : DONE.includes(r.status);
     const tierRank = (t?: string | null) => ({ A: 0, B: 1, C: 2 } as Record<string, number>)[t ?? ''] ?? 3;
     return rows.filter(inTab)
       .filter((r) => !s || `${r.lead.company} ${r.lead.contact_name ?? ''} ${r.lead.city ?? ''} ${r.lead.niche ?? ''}`.toLowerCase().includes(s))
       .sort((a, b) => tab === 'callback' ? String(a.callback_at ?? '').localeCompare(String(b.callback_at ?? ''))
+        : tab === 'noanswer' ? (Number(readyAgain(b)) - Number(readyAgain(a))) || (missedInARow(a) - missedInARow(b)) || String(a.last_called_at ?? '').localeCompare(String(b.last_called_at ?? ''))
         : (a.attempts - b.attempts) || (tierRank(a.lead.tier) - tierRank(b.lead.tier)) || a.lead.company.localeCompare(b.lead.company));
   }, [rows, tab, q]);
   const pg = usePaged<Row>(list, 'calls', [q, tab]);
@@ -204,7 +210,7 @@ export function Calls() {
 
   if (loading && !data) return <Loading />;
   const counts = {
-    open: rows.filter((r) => OPEN.includes(r.status)).length, callback: rows.filter((r) => r.status === 'callback').length,
+    open: rows.filter((r) => OPEN.includes(r.status)).length, noanswer: rows.filter((r) => r.status === 'no_answer').length, ready: rows.filter(readyAgain).length, callback: rows.filter((r) => r.status === 'callback').length,
     dueNow: rows.filter(due).length, warm: rows.filter((r) => WARM.includes(r.status)).length, done: rows.filter((r) => DONE.includes(r.status)).length,
     week: rows.filter((r) => r.last_called_at && now - new Date(r.last_called_at).getTime() < 7 * 864e5).length,
   };
@@ -218,13 +224,14 @@ export function Calls() {
       </>}>
       {error ? <ErrorNote error={error} onRetry={reload} /> : null}
       {upload?.result ? <UploadResult r={upload.result} file={upload.file} onClose={() => setUpload(null)} /> : null}
-      <div className="kpi-row wa-kpis">
-        <div className="kpi"><h4>To call</h4><strong>{counts.open}</strong><small>not reached yet</small></div>
+      <div className="kpi-row five">
+        <div className="kpi"><h4>To call</h4><strong>{counts.open}</strong><small>not called yet</small></div>
+        <div className="kpi"><h4>No answer</h4><strong>{counts.noanswer}</strong><small>{counts.ready} ready to try again</small></div>
         <div className="kpi"><h4>Call back</h4><strong>{counts.callback}</strong><small>{counts.dueNow} due today</small></div>
         <div className="kpi"><h4>Interested</h4><strong>{counts.warm}</strong><small>incl. free mock-ups and meetings</small></div>
         <div className="kpi"><h4>Called · 7 days</h4><strong>{counts.week}</strong><small>{counts.done} closed</small></div>
       </div>
-      <Tabs tabs={[['open', `To call (${counts.open})`], ['callback', `Call back (${counts.callback})`], ['warm', `Interested (${counts.warm})`], ['done', `Closed (${counts.done})`], ['guide', 'Call guide']]} value={tab} onChange={(v) => { setTab(v as any); setSel(null); }} />
+      <Tabs tabs={[['open', `To call (${counts.open})`], ['noanswer', `No answer (${counts.noanswer})`], ['callback', `Call back (${counts.callback})`], ['warm', `Interested (${counts.warm})`], ['done', `Closed (${counts.done})`], ['guide', 'Call guide']]} value={tab} onChange={(v) => { setTab(v as any); setSel(null); }} />
       {tab === 'guide' ? <Guide /> : !rows.length ? (
         <Card><Empty icon={PhoneCall} title="No companies to call yet" action={<button className="btn sm primary" onClick={() => fileRef.current?.click()}><Upload size={14} />Upload companies</button>}>
           Upload a CSV or Excel sheet with at least a Company and a Phone column (Email, Contact, Sector, Where, Tier and notes are picked up too). Or open a lead and choose “Add to cold calls”.
@@ -232,15 +239,16 @@ export function Calls() {
       ) : (
         <div className="wa-layout">
           <Card className="wa-list" title={<input className="input" placeholder="Search companies" value={q} onChange={(e) => setQ(e.target.value)} />}>
-            {!list.length ? <Empty compact icon={Check} title="Nothing here">{tab === 'callback' ? 'No call-backs waiting.' : 'Nothing in this list right now.'}</Empty> : pg.rows.map((r) => (
+            {!list.length ? <Empty compact icon={Check} title="Nothing here">{tab === 'callback' ? 'No call-backs waiting.' : tab === 'noanswer' ? 'Everyone you called picked up. When a call goes unanswered, log “No answer” and it waits here for the next try.' : 'Nothing in this list right now.'}</Empty> : pg.rows.map((r) => (
               <button key={r.id} className={`wa-row ${sel === r.id ? 'on' : ''}`} onClick={() => setSel(r.id)}>
                 <span className="avatar call-avatar">{r.lead.company.slice(0, 1).toUpperCase()}</span>
                 <span className="wa-row-main">
-                  <b>{r.lead.company}{r.lead.tier ? <Badge tone={r.lead.tier === 'A' ? 'orange' : 'default'}>{r.lead.tier}</Badge> : null}{due(r) ? <Badge tone="orange">due</Badge> : null}</b>
-                  <small>{[r.lead.contact_name, r.lead.city].filter(Boolean).join(' · ') || r.lead.phone}</small>
+                  <b>{r.lead.company}{r.lead.tier ? <Badge tone={r.lead.tier === 'A' ? 'orange' : 'default'}>{r.lead.tier}</Badge> : null}{due(r) ? <Badge tone="orange">due</Badge> : null}
+                    {r.status === 'no_answer' ? (missedInARow(r) >= 3 ? <Badge>3 tries</Badge> : readyAgain(r) ? <Badge tone="green">try again</Badge> : null) : null}</b>
+                  <small>{r.status === 'no_answer' ? `No answer ${missedInARow(r)}× · last tried ${r.last_called_at ? `${fmtDate(r.last_called_at, true)} (${partOfDay(r.last_called_at)})` : ''}` : [r.lead.contact_name, r.lead.city].filter(Boolean).join(' · ') || r.lead.phone}</small>
                 </span>
                 <span className="call-row-end">
-                  <small className="muted">{r.status === 'callback' && r.callback_at ? fmtDate(r.callback_at, true) : r.attempts ? `${r.attempts}×` : ''}</small>
+                  <small className="muted">{r.status === 'callback' && r.callback_at ? fmtDate(r.callback_at, true) : r.status !== 'no_answer' && r.attempts ? `${r.attempts}×` : ''}</small>
                   {r.lead.phone ? <span role="button" tabIndex={0} className="call-copy" title={`Copy ${dialable(r.lead.phone, r.lead.country)}`}
                     onClick={(e) => { e.stopPropagation(); copyNumber(r.lead.phone, r.lead.country, toast); }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); copyNumber(r.lead.phone, r.lead.country, toast); } }}><Copy size={14} /></span> : null}
@@ -323,6 +331,7 @@ function CallCard({ r, onSaved, onRemoved, openLead }: { r: Row; onSaved: (r: Ro
         <div><dt>What we found</dt><dd>{l.gaps || <span className="muted">Nothing recorded</span>}</dd></div>
         {callNotes(l.notes).filter((x) => !/^\d{4}-\d\d-\d\d call/.test(x)).length ? <div><dt>Notes</dt><dd className="pre">{callNotes(l.notes).filter((x) => !/^\d{4}-\d\d-\d\d call/.test(x)).join('\n')}</dd></div> : null}
       </dl>
+      {r.status === 'no_answer' ? <NoAnswerNote r={r} /> : null}
       {checks.length ? <div className="callout warn"><AlertTriangle size={15} /> <span><strong>Before you dial:</strong> {checks.map((c) => c.replace(/^Check first:\s*/, '')).join(' ')}</span></div> : null}
       {s.abroad ? <div className="callout"><Info size={15} /> <span><strong>Calling abroad.</strong> UK business hours are 9:00 to 17:00 UK time (an hour behind Lagos in winter). Before a sales call to a UK business, check the number isn't on the Corporate TPS list (tpsservices.co.uk).</span></div> : null}
 
@@ -370,6 +379,20 @@ function CallCard({ r, onSaved, onRemoved, openLead }: { r: Row; onSaved: (r: Ro
         ))}</div>
       </> : null}
     </Card>
+  );
+}
+
+function NoAnswerNote({ r }: { r: Row }) {
+  const n = missedInARow(r), last = r.last_called_at, part = partOfDay(last);
+  const other = part === 'morning' ? 'the afternoon (14:00 to 16:00)' : 'the morning (10:00 to 12:00)';
+  const hoursLeft = last ? Math.ceil(RETRY_HOURS - (Date.now() - new Date(last).getTime()) / 36e5) : 0;
+  return (
+    <div className={`callout ${n >= 3 ? 'warn' : ''}`}><PhoneOff size={15} /> <span>
+      <strong>No answer {n}× in a row</strong>{last ? <>, last tried {fmtDate(last, true)} ({part})</> : null}.{' '}
+      {n >= 3 ? <>That’s three tries: stop calling for now. Send the WhatsApp below and give it a week, or log “Do not call” if the number seems dead.</>
+        : readyAgain(r) ? <>Ready for another try. Call in {other} this time, and send the WhatsApp if it goes unanswered again.</>
+        : <>Try again in about {hoursLeft} hour{hoursLeft === 1 ? '' : 's'}, in {other}. If you haven’t yet, send the WhatsApp below so they know who’s calling.</>}
+    </span></div>
   );
 }
 
