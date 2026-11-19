@@ -35,8 +35,10 @@ export async function loadCalls(env: Bindings): Promise<CallItem[]> {
 async function saveCalls(env: Bindings, items: CallItem[]) {
   await env.MEDIA.put(KEY, JSON.stringify(items.slice(0, 2000)), { httpMetadata: { contentType: 'application/json' } });
 }
-/** In the email section already: the engine or the autopilot has it, or it has an email thread. Those stay email-only. */
-const IN_EMAIL = "(origin IN ('engine','maps') OR found_by IN ('auto','claude') OR thread_id IS NOT NULL OR (last_contact IS NOT NULL AND COALESCE(next_action, '') NOT LIKE 'Cold call%'))";
+/** In the email section already: actually emailed (a thread, a contact date, or a status past "not sent yet").
+ *  Leads that are only waiting for their first email (New, Queued) can still move to Cold calls; the engine then
+ *  stops their email (doNotEmail). */
+const IN_EMAIL = "(thread_id IS NOT NULL OR (last_contact IS NOT NULL AND COALESCE(next_action, '') NOT LIKE 'Cold call%') OR COALESCE(status, 'New') NOT IN ('New', 'Queued', 'WhatsApp ready'))";
 const digitsOf = (p?: string | null) => String(p ?? '').replace(/\D/g, '').replace(/^(234|44|1)/, '').replace(/^0/, '');
 const domainOfUrl = (u?: string | null) => String(u ?? '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split(/[/?#]/)[0];
 
@@ -259,6 +261,7 @@ export async function importCompanies(env: Bindings, rows: Record<string, string
   };
   existing.forEach(index);
   const seenInFile = new Set<string>();
+  const holdEmail: string[] = [];
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     const company = clamp(pick(r, /^company/i, /^business/i, /^name$/i, /organi[sz]ation/i), 160);
@@ -283,9 +286,16 @@ export async function importCompanies(env: Bindings, rows: Record<string, string
     if (seenInFile.has(fileKey)) { out.skipped.push({ row: i + 2, why: `${company}: listed twice in the file` }); continue; }
     seenInFile.add(fileKey);
     const d = digitsOf(phone), w = domainOfUrl(website);
-    let lead = (email && byEmail.get(email)) || (d.length >= 7 && byPhone.get(d)) || (w && byDomain.get(w)) || byName.get(fileKey) || null;
-    // Already in the email section (and not one of ours from Cold calls): leave it there, don't add it twice.
+    // Same company: same email or same name; a shared phone or website only counts when the names agree too
+    // (sister companies in one group often share a switchboard, e.g. Chogon Guards and Chogon Properties).
+    const sameName = (x: any) => { const a = norm(x?.company ?? ''), b = fileKey; return !!a && !!b && (a === b || a.startsWith(b) || b.startsWith(a)); };
+    const viaPhone = d.length >= 7 ? byPhone.get(d) : null, viaDomain = w ? byDomain.get(w) : null;
+    let lead = (email && byEmail.get(email)) || byName.get(fileKey) || (sameName(viaPhone) ? viaPhone : null) || (sameName(viaDomain) ? viaDomain : null) || null;
+    const sister = !lead ? ([viaPhone, viaDomain].find((x) => x && !sameName(x)) ?? null) : null;
+    // Already emailed (and not one of ours from Cold calls): leave it in email, don't add it twice.
     if (lead && lead.in_email && !onCalls.has(lead.id)) { out.in_email.push(company); continue; }
+    // A sister company we've already emailed shares this number: calling would reach the same people twice.
+    if (sister && sister.in_email && !onCalls.has(sister.id)) { out.in_email.push(`${company} (shares a ${viaPhone === sister ? 'phone number' : 'website'} with ${sister.company})`); continue; }
     const notes = [
       size && `Size: ${size}`, siteStatus && `Website (checked): ${siteStatus}`, sector && `Sector: ${sector}`,
       tierRaw && !tier && `Tier: ${tierRaw.toLowerCase()} (to confirm)`, check && `Check first: ${check}`,
@@ -311,10 +321,18 @@ export async function importCompanies(env: Bindings, rows: Record<string, string
       lead = { id, company, email, phone, website, in_email: 0 };
       index(lead);
       out.added++;
+      if (sister) {
+        const why = `Same ${viaPhone === sister ? 'phone number' : 'website'} as ${sister.company} (${sister.id}).`;
+        await run(env.DB, `UPDATE leads SET notes = ? || COALESCE(notes, '') WHERE id = ?`, `${why}\n`, id);
+        await run(env.DB, `UPDATE leads SET notes = ? || COALESCE(notes, ''), next_action = 'Cold call: covered by ${company.replace(/'/g, '')}', updated_by = ?, updated_at = datetime('now') WHERE id = ?`,
+          `${day}: same ${viaPhone === sister ? 'phone number' : 'website'} as ${company}, which is on Cold calls. Email stopped so the group gets one approach.\n`, by, sister.id);
+        if (toCalls && phone) holdEmail.push(sister.id);
+      }
     }
     if (toCalls && phone) callIds.push(lead.id);
   }
   if (callIds.length) { const a = await addToCalls(env, callIds, by, ctx); out.to_calls = a.added; }
+  if (holdEmail.length) { const p = markNoEmail(env, holdEmail).catch((e) => console.warn('doNotEmail sisters', e)); if (ctx) ctx.waitUntil(p); else await p; }
   return out;
 }
 
