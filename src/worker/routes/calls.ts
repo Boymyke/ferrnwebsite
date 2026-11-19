@@ -251,8 +251,8 @@ export async function importCompanies(env: Bindings, rows: Record<string, string
     const company = clamp(pick(r, /^company/i, /^business/i, /^name$/i, /organi[sz]ation/i), 160);
     if (!company) { if (Object.values(r).some((v) => String(v ?? '').trim())) out.skipped.push({ row: i + 2, why: 'no company name' }); continue; }
     const email = clamp(pick(r, /^e-?mail/i), 120).toLowerCase().replace(/^mailto:/, '');
-    const phone = clamp(pick(r, /phone|mobile|tel|whatsapp/i), 60);
-    const contactRaw = pick(r, /decision/i, /^contact/i, /owner|director|^ceo|manager|person/i);
+    const phone = clamp(pick(r, /phone|mobile|\btel\b|whatsapp/i), 60);
+    const contactRaw = pick(r, /decision/i, /^contact/i, /\b(owner|director|ceo|md|manager|person)\b/i);
     const cm = contactRaw.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
     const contact = clamp(cm ? cm[1] : contactRaw, 120), role = clamp(pick(r, /^role|title|position/i) || (cm ? cm[2] : ''), 80);
     const sector = pick(r, /sector|industry|niche|category/i);
