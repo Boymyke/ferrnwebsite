@@ -258,10 +258,12 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
       if (added >= limit) break;
       const email = x.emails?.[0];
       if (email) emails++;
-      // Quality gate: a real, visible gap we can point to (never just review counts). Abroad needs two,
-      // because a business with a decent site has no reason to hire an agency in another country.
+      // Quality gate (19 Nov 2026): only businesses whose website is missing, broken, dated or weak. A well-built
+      // site is skipped even if it has no portal. Abroad also needs a second thing to point to, because a business
+      // with a decent site has little reason to hire an agency in another country.
       const needs = x.needs ?? [];
-      // Web-app fit: where this niche runs on a portal, a missing one is a real gap we can point to.
+      if (!(x.siteIssues ?? []).length) continue;
+      // Web-app fit: where this niche runs on a portal, a missing one is extra detail for the message.
       const key = nicheKey(niche);
       if (WEBAPP_PITCH[key]) for (const g of x.appGaps ?? []) if (!needs.includes(g)) { needs.push(g); x.reasons.unshift(g); x.score = Math.min(100, x.score + 6); }
       if (needs.length < (nigeria ? 1 : 2)) continue;

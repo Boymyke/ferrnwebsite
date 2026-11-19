@@ -583,11 +583,21 @@ function sendingDaysSince_(startKey, now, s) {
   }
   return n;
 }
+/** Gmail's "Send mail as" addresses, kept for 6 hours so the 5-minute tick doesn't spend Gmail reads on them. */
+function aliases_() {
+  var cache = null, hit = null;
+  try { cache = CacheService.getScriptCache(); hit = cache.get('ALIASES'); } catch (e) { cache = null; }
+  if (hit) return JSON.parse(hit);
+  var list = [];
+  try { list = GmailApp.getAliases().map(function (a) { return String(a).toLowerCase(); }); } catch (e) { return []; }
+  if (cache) try { cache.put('ALIASES', JSON.stringify(list), 21600); } catch (e) {}
+  return list;
+}
 /** Gmail can send as its own address, or as an alias it has verified under "Send mail as". */
 function senderOk_(addr) {
   var me = Session.getEffectiveUser().getEmail().toLowerCase();
   if (addr === me) return true;
-  try { return GmailApp.getAliases().map(function (a) { return String(a).toLowerCase(); }).indexOf(addr) > -1; } catch (e) { return false; }
+  return aliases_().indexOf(addr) > -1;
 }
 /** Which address a lead's emails come from: the one already used for it, else premium or volume by PREMIUM_RULE. */
 function senderFor_(lead, s, senders) {
@@ -730,7 +740,7 @@ function fromCheck_(s) {
   var want = String(s.FROM_ALIAS || '').trim();
   if (!want || want.toLowerCase() === me.toLowerCase()) return { address: me, ok: true, me: me, wanted: want || me };
   var aliases = [];
-  try { aliases = GmailApp.getAliases().map(function (a) { return String(a).toLowerCase(); }); } catch (e) { aliases = []; }
+  aliases = aliases_();
   var ok = aliases.indexOf(want.toLowerCase()) > -1;
   return { address: ok ? want : me, ok: ok, me: me, wanted: want };
 }
@@ -766,12 +776,24 @@ function checkReplies_() {
   mine[Session.getEffectiveUser().getEmail().toLowerCase()] = true;
   if (s.FROM_ALIAS) mine[String(s.FROM_ALIAS).toLowerCase()] = true;
 
-  // inbound mail from the last 2 days only (runs every 10 minutes, so nothing is missed)
-  var threads = GmailApp.search('newer_than:2d -from:me -in:drafts -in:trash -in:spam', 0, 250);
+  // Apps Script allows a personal Gmail account only so many Gmail reads a day, and the 5-minute tick
+  // used them all up on 19 Nov 2026. So: check every REPLY_CHECK_MINUTES (15), only mail that arrived
+  // since the last check (30 minutes of overlap; `seen` drops repeats), skip promotions/social/forums,
+  // and read all threads' messages in one call.
+  var props = PropertiesService.getScriptProperties();
+  var everyMin = props.getProperty('REPLY_EVERY_MIN');
+  everyMin = everyMin !== null ? Number(everyMin) : Number(s.REPLY_CHECK_MINUTES || 15);
+  var nowMs = new Date().getTime();
+  var last = Number(props.getProperty('REPLIES_AT') || 0);
+  if (last && nowMs - last < everyMin * 60000) return;
+  var since = last && nowMs - last < 2 * 86400000 ? Math.floor((last - 30 * 60000) / 1000) : 0;
+  var q = (since ? 'after:' + since : 'newer_than:2d') + ' -from:me -in:drafts -in:trash -in:spam -category:promotions -category:social -category:forums';
+  var threads = GmailApp.search(q, 0, 100);
+  var msgsByThread = threads.length ? GmailApp.getMessagesForThreads(threads) : [];
   var newRows = [];
-  threads.forEach(function (th) {
+  threads.forEach(function (th, ti) {
     var threadLead = byThread[th.getId()];
-    th.getMessages().forEach(function (msg) {
+    (msgsByThread[ti] || []).forEach(function (msg) {
       var gid = msg.getId();
       if (seen[gid]) return;
       var fromEmail = extractEmail_(msg.getFrom());
@@ -819,6 +841,7 @@ function checkReplies_() {
     appendObjects_('Inbox', newRows);
     log_('info', 'replies', newRows.length + ' new inbound message(s)');
   }
+  props.setProperty('REPLIES_AT', String(nowMs));
 }
 
 /** cancels pending follow-ups (and first messages too when `all`). Replies (step R) are kept unless `all`. */

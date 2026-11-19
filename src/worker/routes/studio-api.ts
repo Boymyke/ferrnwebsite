@@ -470,7 +470,7 @@ studio.get('/meetings/:id/brief', async (c): Promise<Response> => {
   const product = await first<any>(c.env.DB, 'SELECT slug, name, tagline, price_ngn_setup, price_ngn_monthly, price_usd_setup, price_usd_monthly FROM products WHERE slug = ?', NICHE_PRODUCT[key]);
   const gaps = (lead?.gaps ?? '').split(/;\s*/).filter(Boolean);
   return c.json({ ok: true, meeting: m, lead, product, gaps,
-    gapQuestions: gaps.slice(0, 4).map((g: string) => `We noticed: ${g}. How is that affecting enquiries today?`),
+    gapQuestions: gaps.slice(0, 4).map((g: string) => `We noticed: ${g}. How is that affecting the business today?`),
     flow: CORE_FLOW, niche: NICHE_QUESTIONS[key], objections: OBJECTIONS });
 });
 

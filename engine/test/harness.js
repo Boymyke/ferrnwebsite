@@ -103,9 +103,11 @@ function makeEnv(opts = {}) {
       },
     },
   };
+  const gmailQueries = [];
   const GmailApp = {
     getAliases: () => ['michael@ferrnagency.com'],
-    search: () => inboundThreads.map(t => ({
+    getMessagesForThreads: (ths) => ths.map(t => t.getMessages()),
+    search: (q) => (gmailQueries.push(q), inboundThreads).map(t => ({
       getId: () => t.id,
       getMessages: () => t.messages.map(m => ({
         getId: () => m.id, getFrom: () => m.from, getDate: () => m.date, getSubject: () => m.subject,
@@ -149,7 +151,8 @@ function makeEnv(opts = {}) {
     openById: (id) => ({ getBody: () => ({ setText: (t) => { docs[id] = t; } }) }),
   };
   const triggers = [];
-  const props = {};
+  const cache = {};
+  const props = { REPLY_EVERY_MIN: '0' }; // tests check replies on every tick; one test turns the 15-minute pacing back on
   const ScriptApp = {
     getProjectTriggers: () => triggers,
     deleteTrigger: (t) => { triggers.splice(triggers.indexOf(t), 1); },
@@ -158,6 +161,7 @@ function makeEnv(opts = {}) {
   const ctx = {
     SpreadsheetApp: { getActive: () => ss, getUi: () => ({ createMenu: () => ({ addItem() { return this; }, addToUi() {} }) }) },
     Utilities, Gmail, GmailApp, DriveApp, DocumentApp, ScriptApp,
+    CacheService: { getScriptCache: () => ({ get: (k) => cache[k] ?? null, put: (k, v) => { cache[k] = v; } }) },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] ?? null, setProperty: (k, v) => { props[k] = String(v); } }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => me }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
@@ -174,7 +178,7 @@ function makeEnv(opts = {}) {
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(__dirname + '/../apps-script/Code.gs', 'utf8'), ctx);
   return {
-    ctx, sheets, sent, inboundThreads, driveFiles, docs, triggers, props,
+    ctx, sheets, sent, inboundThreads, driveFiles, docs, triggers, props, gmailQueries, cache,
     setNow: (d) => { clock = new RealDate(d); },
     dropFile: (name, obj) => {
       const inboxId = ctx.settings_().INBOX_FOLDER_ID;

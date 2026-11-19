@@ -21,7 +21,10 @@ export type Prospect = {
   needs?: string[];
   /** Why this business is not a fit (branch of a chain, too big, too small). Never added as a lead. */
   skip?: string;
-  appGaps?: string[];        // web-app signals from their site (no portal, PDF forms)
+  appGaps?: string[];
+  /** Problems that show the website itself is missing, broken, dated or weak. A business with none of these
+   *  has a well-built site and is skipped (Michael, 19 Nov 2026: don't approach businesses whose site is built well). */
+  siteIssues?: string[];        // web-app signals from their site (no portal, PDF forms)
 };
 
 /* ── who is NOT a client for Ferrn ──
@@ -105,8 +108,9 @@ export async function searchPlaces(env: Bindings, query: string, pageToken?: str
     let score = 30;
     const social = p.websiteUri && /facebook|instagram|linktr|wa\.me|business\.site|sites\.google|wixsite|godaddysites|weebly|wordpress\.com|blogspot/i.test(p.websiteUri);
     // Need: what is visibly wrong with how they show up online.
-    if (!p.websiteUri) { score += 18; needs.push('No website listed on Google'); }
-    else if (social) { score += 20; needs.push('Website is a social or free-builder page'); }
+    const siteIssues: string[] = [];
+    if (!p.websiteUri) { score += 18; needs.push('No website listed on Google'); siteIssues.push('No website listed on Google'); }
+    else if (social) { score += 20; needs.push('Website is a social or free-builder page'); siteIssues.push('Website is a social or free-builder page'); }
     // Budget: an established, busy business can pay for a proper build. Tiny or brand-new ones rarely can.
     if (n >= 150) { score += 16; reasons.push(`Established (${n} Google reviews)`); }
     else if (n >= 40) { score += 10; reasons.push(`Active business (${n} Google reviews)`); }
@@ -118,7 +122,7 @@ export async function searchPlaces(env: Bindings, query: string, pageToken?: str
       place_id: p.id, name: p.displayName?.text ?? '', address: p.formattedAddress ?? '',
       phone: p.internationalPhoneNumber ?? p.nationalPhoneNumber, website: p.websiteUri, rating: p.rating,
       reviews: p.userRatingCount, maps_url: p.googleMapsUri, status: p.businessStatus,
-      score: skip ? Math.min(20, score) : Math.max(0, Math.min(100, score)), reasons: [...(skip ? [`Not a fit: ${skip}`] : []), ...needs, ...reasons], needs, skip,
+      score: skip ? Math.min(20, score) : Math.max(0, Math.min(100, score)), reasons: [...(skip ? [`Not a fit: ${skip}`] : []), ...needs, ...reasons], needs, siteIssues, skip,
     };
   });
   results.sort((a, b) => b.score - a.score);
@@ -168,9 +172,9 @@ export function emailsIn(html: string) {
 
 /** Visits a business's own website (home page + its contact page) and returns the business emails it
  *  publishes plus gaps we can point to in a first email. Never guesses an address. */
-export async function readWebsite(url: string, ms = 5000): Promise<{ emails: string[]; gaps: string[]; app: string[]; reached: boolean }> {
+export async function readWebsite(url: string, ms = 5000): Promise<{ emails: string[]; gaps: string[]; strong: string[]; app: string[]; reached: boolean }> {
   const home = await getText(url, ms);
-  if (!home) return { emails: [], gaps: [], app: [], reached: false };
+  if (!home) return { emails: [], gaps: [], strong: [], app: [], reached: false };
   const site = host(home.finalUrl);
   const hrefs = [...home.html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]);
   // Up to two more pages from their own site: the contact page first, then about/team (where named decision-makers are).
@@ -185,26 +189,44 @@ export async function readWebsite(url: string, ms = 5000): Promise<{ emails: str
   const rank = (e: string) => (host('https://' + e.split('@')[1]) === site ? 0 : FREE_MAIL.test(e) ? 2 : 1) * 10 + (/^(info|hello|contact|enquir|admin|office|sales|admissions|bookings?)@/.test(e) ? 0 : 1);
   const emails = [...new Set(all)].filter((e) => !host('https://' + e.split('@')[1]).match(/^(sentry|wix|squarespace|shopify)/)).sort((a, b) => rank(a) - rank(b)).slice(0, 3);
   const html = home.html + (contact?.html ?? '');
-  const gaps: string[] = [];
-  if (!home.finalUrl.startsWith('https:')) gaps.push('Site is not secure (no HTTPS)');
-  if (!/<meta[^>]+name=["']viewport/i.test(home.html)) gaps.push('Not mobile-friendly (no viewport tag)');
+  // Strong = the site itself is missing, broken, dated or weak (enough on its own to approach them).
+  // Soft = small things a well-built site can also have (used as extra detail, never as the reason).
+  const strong: string[] = [];
+  const soft: string[] = [];
+  const plainHome = home.html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<noscript[\s\S]*?<\/noscript>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  const words = plainHome ? plainHome.split(' ').length : 0;
+  if (!home.finalUrl.startsWith('https:')) strong.push('Site is not secure (browsers show “Not secure”)');
+  if (!/<meta[^>]+name=["']viewport/i.test(home.html)) strong.push('Not built for phones (no mobile layout)');
+  const shell = /<div[^>]+id=["'](root|app|__next|__nuxt)["'][^>]*>\s*<\/div>/i.test(home.html) || /You need to enable JavaScript to run this app/i.test(home.html);
+  if (shell && words < 60) strong.push('Search engines see an empty page: the site is a JavaScript shell with no text in it');
+  const desc = (home.html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)/i) || home.html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description/i) || [])[1] ?? '';
+  const defaultDesc = /web site created using create-react-app|just another wordpress site|^my (wordpress|wix) (blog|site)|generated by create next app|vite \+ react|powered by wix/i.exec(desc + ' ' + (home.html.match(/<title[^>]*>([^<]{0,160})/i)?.[1] ?? ''));
+  if (defaultDesc) strong.push(`Google shows the template's default text: “${defaultDesc[0]}”`);
+  else if (!desc || desc.length < 20) soft.push('No search description (Google shows random text)');
   const years = [...html.matchAll(/(?:©|&copy;|copyright)\s*(?:\d{4}\s*[-–]\s*)?(20\d\d)/gi)].map((m) => Number(m[1]));
   const year = new Date().getUTCFullYear();
-  if (years.length && Math.max(...years) <= year - 2) gaps.push(`Footer says © ${Math.max(...years)} (looks unmaintained)`);
-  if (emails.length && emails.every((e) => FREE_MAIL.test(e))) gaps.push('Uses a Gmail/Yahoo address on the site');
+  if (years.length && Math.max(...years) <= year - 2) strong.push(`Footer says © ${Math.max(...years)} (looks unmaintained)`);
+  if (/lorem ipsum|coming soon|under construction|website is being updated|sample page|hello world!/i.test(html)) strong.push('Placeholder or “coming soon” text on the site');
+  if (/wix\.com|wixstatic|weebly\.com|godaddy\.com\/websites|squarespace-cdn|sites\.google\.com/i.test(home.html) && /(created|built|made|powered)\s+(with|by|on)\s+(wix|weebly|godaddy|squarespace)/i.test(home.html)) strong.push('Free site-builder badge still showing');
+  const oldTech = /<(font|marquee|center|frameset)[\s>]/i.test(home.html) ? 'old HTML tags' :
+    /jquery[.-]?1\.\d+(\.\d+)?(\.min)?\.js/i.test(home.html) ? 'jQuery 1.x' :
+    (/<meta[^>]+generator[^>]+WordPress ([1-4]\.|5\.[0-4]\b)/i.exec(home.html) ? 'an old WordPress version' :
+    /<meta[^>]+generator[^>]+Joomla! ?(1\.|2\.|3\.)/i.test(home.html) ? 'an old Joomla version' : '');
+  if (oldTech) strong.push(`Built on old technology (${oldTech}): slow, and harder to keep secure`);
+  if (!shell && words < 120) strong.push('Very little on the home page (under 120 words), so visitors and Google learn almost nothing');
+  if (/\b(casino|slot gacor|judi online|togel|viagra|cialis|payday loans?|essay writing service)\b/i.test(plainHome)) strong.push('Spam text injected into the page (the site looks hacked)');
+  if (emails.length && emails.every((e) => FREE_MAIL.test(e))) soft.push('Uses a Gmail/Yahoo address on the site');
   const hasBooking = /calendly|acuityscheduling|simplybook|booksy|zocdoc|setmore|squareup\.com\/appointments|book(ing)?[-_ ]?(online|now|an? appointment)|schedule[-_ ]?(online|now|an? (appointment|visit|call|consultation))|request[-_ ]?(an? )?(appointment|quote|callback)/i.test(html);
-  if (!/<form[\s>]/i.test(html) && !hasBooking) gaps.push('No enquiry or booking form');
+  if (!/<form[\s>]/i.test(html) && !hasBooking) soft.push('No contact form or online booking');
   const title = home.html.match(/<title[^>]*>([^<]{0,160})/i)?.[1]?.trim() ?? '';
-  if (!title || /^(home|home page|welcome|untitled|index|my site|just another wordpress site)$/i.test(title)) gaps.push(`Page title is ${title ? `just “${title}”` : 'missing'} (hard to find on Google)`);
-  if (!/<meta[^>]+name=["']description["'][^>]+content=["'][^"']{20,}/i.test(home.html) && !/<meta[^>]+content=["'][^"']{20,}["'][^>]+name=["']description/i.test(home.html)) gaps.push('No search description (Google shows random text)');
-  if (/lorem ipsum|coming soon|under construction|website is being updated/i.test(html)) gaps.push('Placeholder or “coming soon” text on the site');
-  if (/wix\.com|wixstatic|weebly\.com|godaddy\.com\/websites|squarespace-cdn|sites\.google\.com/i.test(home.html) && /(created|built|made|powered)\s+(with|by|on)\s+(wix|weebly|godaddy|squarespace)/i.test(home.html)) gaps.push('Free site-builder badge still showing');
+  if (!title || /^(home|home page|welcome|untitled|index|my site|just another wordpress site|react app)$/i.test(title)) strong.push(`Page title is ${title ? `just “${title}”` : 'missing'}, so Google can't tell what the business does`);
+  const gaps = [...strong, ...soft];
   // Web-app signals: things their customers or staff still do by hand that a portal or app would handle.
   const app: string[] = [];
   const plain = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ');
   if (!/log\s?-?in|sign\s?-?in|portal|my[-_ ]?account|dashboard|client[-_ ]?area|track(ing)?[-_ ]?(your|my|a|an)?[-_ ]?(shipment|order|parcel|cargo|application)|e-?learning|pay[-_ ]?(online|now|fees)|apply[-_ ]?(online|now)/i.test(plain)) app.push('No customer login, portal or online tracking');
   if (hrefs.some((h) => /\.(pdf|docx?)(\?|$)/i.test(h) && /form|applic|admission|registr|enrol|referral|order|quote/i.test(h))) app.push('Forms are documents to download and fill by hand');
-  return { emails, gaps, app, reached: true };
+  return { emails, gaps, strong, app, reached: true };
 }
 
 /** Adds published emails and website gaps to search results (top `limit` with a real website), then re-scores. */
@@ -216,9 +238,11 @@ export async function enrichProspects(results: Prospect[], limit = 20, concurren
       r.emails = w.emails;
       r.appGaps = w.app;
       r.needs = r.needs ?? [];
-      if (!w.reached) { r.needs.push('Website did not load'); r.reasons.unshift('Website did not load'); r.score = Math.min(100, r.score + 14); return; }
+      r.siteIssues = r.siteIssues ?? [];
+      if (!w.reached) { r.needs.push('Website did not load'); r.siteIssues.push('Website did not load'); r.reasons.unshift('Website did not load'); r.score = Math.min(100, r.score + 14); return; }
       for (const g of w.gaps) { r.needs.push(g); r.reasons.unshift(g); }
-      r.score = Math.max(0, Math.min(100, r.score + Math.min(36, w.gaps.length * 12) + (w.emails.length ? 12 : 0)));
+      r.siteIssues.push(...w.strong);
+      r.score = Math.max(0, Math.min(100, r.score + Math.min(36, w.strong.length * 14 + (w.gaps.length - w.strong.length) * 4) + (w.emails.length ? 12 : 0)));
     }));
   }
   for (const r of results) {

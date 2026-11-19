@@ -66,13 +66,14 @@ Never invent facts about the person or their business. Use only what you are giv
  * "I noticed your…", so the shape of each draft is chosen here, in code: three different opening moves per
  * lead, picked at random, with the stock openers banned and checked after the model answers. */
 const OPENERS: { key: string; how: string; start: string }[] = [
-  { key: 'question', how: 'Open with a short, genuine question about how they handle one specific thing in their business (enquiries, bookings, quotes, admissions, tracking). Then say why you ask.', start: 'a question word such as "How", "Do", "What" or "When"' },
+  { key: 'looked', how: 'Open with "I looked at" and their website address, then the one specific problem you found on it, named exactly (what Google shows for them, a broken or empty page, a template text, a © year, no phone layout).', start: '"I looked at" and their domain' },
+  { key: 'question', how: 'Open with a short, genuine question about what people see when they look them up (on Google or on their site). Then say why you ask: the specific problem you found.', start: 'a question word such as "How", "Do", "What" or "When"' },
   { key: 'detail', how: 'Open with the specific detail itself, quoted or named exactly as it appears on their site (a service, a programme, a number, an area they serve). Then the idea it gave you.', start: 'the detail itself, never with "I" or "Your"' },
   { key: 'customer', how: 'Open from their customer\'s side: describe in one line what someone looking for their service tonight would run into on their site. Then the fix.', start: 'the customer, e.g. "Someone looking for…" or "A parent comparing…"' },
   { key: 'proof', how: 'Open with one short line about a result or build from Ferrn\'s real past work that is close to their business, then connect it to them in the next line.', start: 'the past project or what it did, e.g. "We built…" or "A freight company we work with…"' },
   { key: 'greeting', how: 'Open with "Hi" and their first name (or the company name plus "team" if no name is given), then go straight to one useful idea for their business in plain words. No small talk.', start: '"Hi " and the name' },
   { key: 'compliment', how: 'Open with one honest, specific thing they do well (from the facts given), in a few words, then the one thing that undersells it online.', start: 'the thing they do well, never with "I love" or "Great"' },
-  { key: 'direct', how: 'Open by saying in one plain line who you are and the one manual job you would take off their team first. Short sentences.', start: '"Michael here" or "Michael from Ferrn"' },
+  { key: 'direct', how: 'Open by saying in one plain line who you are and the one thing on their site you would fix first. Short sentences.', start: '"Michael here" or "Michael from Ferrn"' },
 ];
 const STOCK = /^\W*(i\s+(noticed|see|saw|came across|was (looking|checking|browsing|going)|just (saw|came|checked)|observed|hope|wanted to reach|stumbled)|your (website|company|business|firm|page|team|site|instagram|school|clinic|practice)\b|hope (you|this)|just (wanted|reaching)|i'?m reaching out|reaching out)/i;
 const firstWords = (t: string, n = 2) => t.trim().toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).slice(0, n).join(' ');
@@ -93,7 +94,7 @@ export function cleanDrafts(drafts: string[], recent: string[]): string[] {
 }
 
 /** Bump when the DM brief changes: waiting drafts written under an older version are rewritten by the cron. */
-const DRAFT_V = 6;
+const DRAFT_V = 7;
 /** Past work is only proof when it is the same kind of business. */
 const PROOF_NICHES = /^(logistics|engineering|construction|manufacturing)$/;
 const words = (t: string) => t.trim().split(/\s+/).length;
@@ -105,8 +106,9 @@ async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, un
     const moves = shuffle(OPENERS).filter((o) => (o.key !== 'greeting' || ctx.person || ctx.company) && (o.key !== 'proof' || PROOF_NICHES.test(String(ctx.niche ?? '')))).slice(0, 3);
     const spec = `${li ? 'Return JSON {"note": string, "drafts": [string, string, string]}.\n"note" is a LinkedIn connection request note, max 280 characters, personal, no pitch, about one specific thing they do.\n"drafts" are 3 first messages to send once they accept, 60-100 words each.'
       : 'Return JSON {"drafts": [string, string, string]}. 3 Instagram DMs, 35-60 words each, the way a person types a DM, no formal sign-off.'}
-Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move. Part 2: their need and what fixing it does for their business. Name the actual job (quotes, tracking, admissions, results, bookings, payments, orders) and the gain in their terms: fewer calls, faster payment, no lost enquiries, staff hours back. Never \"serve clients better\". Part 3: the close. No sentence longer than 18 words. Never join ideas with commas into one long sentence. Never quote their phone number or address.
-The three drafts must use three DIFFERENT closes, in this order: Draft 1 ends with a genuine question about how they handle that job today. Draft 2 offers to send a short note on how it would work for their business and asks if they want it. Draft 3 offers to put together a free concept of it for them to look at, no obligation, and asks if they want to see it. Only draft 3 may use the word \"free\".
+Every draft must GIVE VALUE: it names one specific, checkable problem with their website or how they show up online (from gaps_we_saw or the facts given), says what it means for the business, and says the fix in one plain line, so the message is useful even if they never reply.
+Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move with the problem. Part 2: what it means for them and the fix. Say what it costs them in their terms: people who search for their service find a competitor instead, the business looks smaller or less trustworthy than it is, bigger clients or customers abroad judge them by the site, it looks unsafe or broken on a phone. Never write about enquiries, leads or missed messages, and never use the words "enquiry", "enquiries", "inquiry" or "leads". Never \"serve clients better\". Part 3: the free offer as one easy question. No sentence longer than 18 words. Never join ideas with commas into one long sentence. Never quote their phone number or address.
+Every draft ends by offering something FREE, with no obligation, and the three drafts offer three DIFFERENT free things, in this order: Draft 1: a free mock-up of what a new <Company> homepage could look like. Draft 2: a free short list of the three changes that would make the biggest difference to their site. Draft 3: a free check of what people see when they search Google for their service in their city, and how they compare. Say it is free in plain words ("free", "at no cost") and never say or imply it is already made.
 Each draft uses a DIFFERENT opening move. Follow these exactly, in this order:
 ${moves.map((m, i) => `Draft ${i + 1}: ${m.how} It must start with ${m.start}.`).join('\n')}
 
@@ -114,7 +116,7 @@ Rules for every draft:
 - Everything you know about them comes from THEIR WEBSITE and the notes given. You have not seen their ${li ? 'LinkedIn' : 'Instagram'} page, so never mention it, their posts, their feed or their followers. Say "your site" when you refer to what you saw.
 - Use one concrete detail from the facts given (a named service, place, number, programme, or one of gaps_we_saw). No generic praise such as "strong online presence", "wide range of services" or "great reviews".
 - Never start a draft with "I noticed", "I see", "I saw", "I came across", "Your website", "Your company", "I hope" or "Just". No two drafts may start with the same word.
-- One idea per message, and it is about THEM, not about us. If our_angle is given, that is the idea: the web app or portal that would take a manual job off their team or let their customers serve themselves. Otherwise, the single change that would bring them more enquiries or bookings. Spend most of the words on their situation and what they gain, in plain words, never in tech terms. Do not describe Ferrn's services.
+- One idea per message, and it is about THEM, not about us: the website problem you found and what fixing it does for them. If our_angle (a web app) is given, you may mention it in a few words as what the new site could grow into, never as the main point. Spend most of the words on their situation and what they gain, in plain words, never in tech terms. Do not describe Ferrn's services.
 - Say who you are once, in a few words ("Michael, Ferrn" or "I run Ferrn, we build web apps"), anywhere except the first line unless the move says so. Do not list services.
 - Suggest one thing only. Never add "we can also help with" or a second fix. Mention past work only if it is the same kind of business as theirs.
 - End with one easy question that takes a yes, a no or a few words to answer. Never ask for a call in the first message.
@@ -128,6 +130,7 @@ Rules for every draft:
       if (j.note && !note) note = String(j.note).slice(0, 300);
       const proofOk = PROOF_NICHES.test(String(ctx.niche ?? ''));
       const offer = (d: string) => words(d) >= 26 && words(d) <= (li ? 120 : 75)
+        && /\bfree\b|at no cost|no charge/i.test(d) && !/enquir|inquir|\bleads?\b/i.test(d)        // always a free offer; never about enquiries
         && !/\d{7,}|\+\d[\d\s-]{8,}/.test(d)                                   // never quote their phone number back at them
         && (proofOk || !/relay|gromzia|synergix|m-p infrastructure|pwan|insightblitz|aroda/i.test(d)); // proof only from the same kind of business
       const tidy = (d: string) => d.split(/\n/).map((l) => l.trim()).filter(Boolean).join('\n');

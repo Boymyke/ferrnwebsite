@@ -286,6 +286,7 @@ console.log('13. email tracking (opens + clicks, shown in Studio → Emails)');
   ok(!E.ctx.trackingOn_({ TRACK_EMAILS: 'FALSE', API_KEY: 'k' }) && E.ctx.trackingOn_({ API_KEY: 'k' }), 'TRACK_EMAILS=FALSE switches tracking off (on by default)');
   const saved = E.ctx.GmailApp.getAliases;
   E.ctx.GmailApp.getAliases = () => [];
+  delete E.cache.ALIASES; // aliases are cached for 6 hours
   const fc = E.ctx.fromCheck_(S1);
   ok(fc.ok === false && fc.address === fc.me, 'without a verified "Send mail as" alias it reports the real sending address');
   E.ctx.GmailApp.getAliases = saved;
@@ -366,6 +367,18 @@ console.log('16. two senders: premium (michael@ferrnagency.com) and volume (the 
   const br = Object.values(E.docs).pop();
   ok(/== WHAT IS WORKING[\s\S]*close:b: sent \d+, replied 1/.test(br) && /GOT A REPLY \| open:detail\|close:b/.test(br), 'brief shows reply rates by variant so the morning run can learn');
   ok(E.rows('Settings').some(r => r.key === 'VOLUME_START' && r.value), 'warm-up start recorded');
+}
+
+console.log('17. reply checks stay inside the Gmail read quota');
+{
+  const E = makeEnv({ now: '2026-11-19T09:00:00+01:00' });
+  E.ctx.setup();
+  delete E.props.REPLY_EVERY_MIN;
+  E.dropFile('q.json', { leads: [{ key: 'q', company: 'Quota Co', tier: 'B', city: 'Lagos', email: 'hi@quota.ng', website: 'quota.ng' }], messages: [] });
+  for (let mins = 9 * 60; mins < 10 * 60; mins += 5) { E.setNow(`2026-11-19T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); }
+  ok(E.gmailQueries.length === 4, 'one inbox search every 15 minutes, not every tick (' + E.gmailQueries.length + ' in an hour)');
+  ok(/^newer_than:2d/.test(E.gmailQueries[0]) && /^after:\d+ /.test(E.gmailQueries[1]), 'later searches only look at mail since the last check');
+  ok(E.gmailQueries.every(q => /-category:promotions/.test(q) && /-category:social/.test(q)), 'newsletters and social mail are skipped');
 }
 
 console.log(`\nALL ${passed} CHECKS PASSED`);
