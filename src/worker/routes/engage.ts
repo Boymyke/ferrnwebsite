@@ -94,7 +94,7 @@ export function cleanDrafts(drafts: string[], recent: string[]): string[] {
 }
 
 /** Bump when the DM brief changes: waiting drafts written under an older version are rewritten by the cron. */
-const DRAFT_V = 7;
+const DRAFT_V = 8;
 /** Past work is only proof when it is the same kind of business. */
 const PROOF_NICHES = /^(logistics|engineering|construction|manufacturing)$/;
 const words = (t: string) => t.trim().split(/\s+/).length;
@@ -106,9 +106,12 @@ async function draftDm(env: Bindings, platform: Platform, ctx: Record<string, un
     const moves = shuffle(OPENERS).filter((o) => (o.key !== 'greeting' || ctx.person || ctx.company) && (o.key !== 'proof' || PROOF_NICHES.test(String(ctx.niche ?? '')))).slice(0, 3);
     const spec = `${li ? 'Return JSON {"note": string, "drafts": [string, string, string]}.\n"note" is a LinkedIn connection request note, max 280 characters, personal, no pitch, about one specific thing they do.\n"drafts" are 3 first messages to send once they accept, 60-100 words each.'
       : 'Return JSON {"drafts": [string, string, string]}. 3 Instagram DMs, 35-60 words each, the way a person types a DM, no formal sign-off.'}
-Every draft must GIVE VALUE: it names one specific, checkable problem with their website or how they show up online (from gaps_we_saw or the facts given), says what it means for the business, and says the fix in one plain line, so the message is useful even if they never reply.
-Shape of every draft: three short parts, each on its own line (use \\n between them). Part 1: the opening move with the problem. Part 2: what it means for them and the fix. Say what it costs them in their terms: people who search for their service find a competitor instead, the business looks smaller or less trustworthy than it is, bigger clients or customers abroad judge them by the site, it looks unsafe or broken on a phone. Never write about enquiries, leads or missed messages, and never use the words "enquiry", "enquiries", "inquiry" or "leads". Never \"serve clients better\". Part 3: the free offer as one easy question. No sentence longer than 18 words. Never join ideas with commas into one long sentence. Never quote their phone number or address.
-Every draft ends by offering something FREE, with no obligation, and the three drafts offer three DIFFERENT free things, in this order: Draft 1: a free mock-up of what a new <Company> homepage could look like. Draft 2: a free short list of the three changes that would make the biggest difference to their site. Draft 3: a free check of what people see when they search Google for their service in their city, and how they compare. Say it is free in plain words ("free", "at no cost") and never say or imply it is already made.
+Every draft must GIVE VALUE: it names one specific, checkable problem with their website or how they show up online (from gaps_we_saw or the facts given), says plainly what that problem does to their business, and gives the fix in one short sentence, so the message is useful even if they never reply.
+Shape of every draft: three or four short lines separated by \\n. Line 1: the opening move with the problem. Line 2: what THAT problem does to them, in your own words, and it must follow logically from the problem (a broken booking button means patients can't book; template text means Google can't describe them; no phone layout means it looks broken on a phone; a Gmail address makes a big business look small). Line 3: the fix in one sentence. Last line: the free offer as one easy question. Write to them as "you" and "your", never "they" or "their". Each sentence under 18 words; never chain ideas with commas. When you name their website, write the bare domain (example.com), never https:// or www. Never quote their phone number or address.
+Never write about enquiries, leads or missed messages, and never use the words "enquiry", "enquiries", "inquiry" or "leads". No stock phrases such as "find a competitor instead", "serve clients better", "take your business to the next level".
+Every draft ends by offering something FREE, with no obligation, and the three drafts offer three DIFFERENT free things, in this order: Draft 1: a free mock-up of a new homepage for them. Draft 2: a free list of the three fixes you'd make first on their site. Draft 3: a free Google check of what people see when they search for their service in their area. Say "free" plainly and never say or imply it is already made.
+Example of the standard (different business; never copy its wording):
+"I looked at splendidfreight.com. Search engines see an empty page with the template text 'Web site created using create-react-app'.\\nSo your pharma and ATM logistics work can't show up when a procurement team searches for a partner.\\nThe fix is real text and a proper title on each service page.\\nWant a free mock-up of a new Splendid Freight homepage?"
 Each draft uses a DIFFERENT opening move. Follow these exactly, in this order:
 ${moves.map((m, i) => `Draft ${i + 1}: ${m.how} It must start with ${m.start}.`).join('\n')}
 
@@ -125,12 +128,13 @@ Rules for every draft:
       const r = await complete(env, [
         { role: 'system', content: `${VOICE}\nReal past work you may cite (never invent others or any numbers): Gromzia Ventures (logistics company website), Synergix Africa (entrepreneurship platform), M-P Infrastructure (engineering and construction site), Relay (freight operations web app), PWAN EHA (AI chatbot for civic and legal guidance).\n${spec}` },
         { role: 'user', content: JSON.stringify(ctx) },
-      ], { maxTokens: 1000, json: true, bucket: 'studio', temperature: 0.9 });
+      ], { maxTokens: 1000, json: true, bucket: 'studio', temperature: 0.7 });
       const j = extractJson<{ drafts?: string[]; note?: string }>(r.text, {});
       if (j.note && !note) note = String(j.note).slice(0, 300);
       const proofOk = PROOF_NICHES.test(String(ctx.niche ?? ''));
       const offer = (d: string) => words(d) >= 26 && words(d) <= (li ? 120 : 75)
         && /\bfree\b|at no cost|no charge/i.test(d) && !/enquir|inquir|\bleads?\b/i.test(d)        // always a free offer; never about enquiries
+        && /\n/.test(d) && !/https?:\/\/|competitor instead|\btheir (site|service|business|website)\b/i.test(d)
         && !/\d{7,}|\+\d[\d\s-]{8,}/.test(d)                                   // never quote their phone number back at them
         && (proofOk || !/relay|gromzia|synergix|m-p infrastructure|pwan|insightblitz|aroda/i.test(d)); // proof only from the same kind of business
       const tidy = (d: string) => d.split(/\n/).map((l) => l.trim()).filter(Boolean).join('\n');
