@@ -98,6 +98,47 @@ export const WEBAPP_PITCH: Record<string, string> = {
   hospitality: 'Direct booking system: guests book and pay on your own site, with a dashboard for rooms and enquiries',
   homecare: 'Care management app: visit schedules, staff compliance, care notes and a family view',
 };
+/** Where the website is core: customers find, compare, book, buy, apply or check the business online before
+ *  they ever call, or the business sells to people far away. Only these are prospected (Michael, 20 Nov 2026:
+ *  "clients that cannot do without one", not businesses that only might need a site). */
+export const CORE_WHY: Record<string, string> = {
+  hospitality: 'guests compare and book hotels online; every booking through an agent costs commission',
+  shortlet: 'guests find, check and book shortlets online, often from abroad',
+  realestate: 'buyers, many abroad, judge a developer by its website before they pay',
+  school: 'parents shortlist schools online and apply during admission season',
+  clinic: 'patients look up a hospital and book before they visit',
+  fertility: 'patients research fertility clinics privately online, often from abroad',
+  lab: 'patients and doctors book tests and look for results online',
+  dental: 'patients compare clinics and book online',
+  logistics: 'shippers check a forwarder online, ask for quotes and expect tracking',
+  travel: 'travellers book and verify agencies online before they pay',
+  studyabroad: 'students and parents check an agency online before trusting it with fees',
+  events: 'couples and companies shortlist venues online',
+  autodealer: 'buyers browse stock online before visiting',
+  solar: 'homeowners and businesses search for installers and compare quotes online',
+  microfinance: 'customers check a lender online before they apply',
+  insurance: 'clients compare brokers and request quotes online',
+  professional: 'clients search for lawyers and accountants online, especially immigration clients abroad',
+  homecare: 'families search for care providers online and check them before calling',
+  ecommerce: 'the website is the shop',
+};
+/** The AI automation each niche gets the most from: the pitch when the visible need is hand-run customer chats. */
+export const AI_PITCH: Record<string, string> = {
+  hospitality: 'WhatsApp and website assistant that answers guests, quotes rates and takes bookings at any hour',
+  shortlet: 'WhatsApp assistant that answers guests, checks dates, quotes and takes bookings instantly',
+  realestate: 'WhatsApp assistant that answers buyers, sends brochures and payment plans, and books inspections',
+  school: 'WhatsApp assistant that answers parents, sends admission steps and fee details, and books visits',
+  clinic: 'WhatsApp assistant that books appointments, sends reminders and answers common patient questions',
+  fertility: 'Private WhatsApp assistant that answers first questions and books consultations',
+  lab: 'WhatsApp assistant that books tests, gives preparation instructions and tells patients when results are ready',
+  dental: 'WhatsApp assistant that books, confirms and reminds appointments',
+  logistics: 'WhatsApp assistant that gives quotes, takes bookings and answers "where is my cargo?"',
+  travel: 'WhatsApp assistant that answers visa and flight questions and collects documents',
+  studyabroad: 'WhatsApp assistant that answers student questions, checks eligibility and books consultations',
+  events: 'WhatsApp assistant that checks venue dates, sends packages and books viewings',
+  autodealer: 'WhatsApp assistant that answers stock and price questions and books test drives',
+  ecommerce: 'WhatsApp ordering assistant that answers product questions, takes orders and confirms payment',
+};
 /** Business-to-business niches have few Google reviews by nature, so a lower bar proves they are established. */
 const B2B = new Set(['logistics', 'construction', 'engineering', 'manufacturing', 'professional', 'staffing', 'security', 'insurance', 'pharma', 'facility', 'microfinance']);
 /** Size test (about $10k a month profit or more): a busy consumer business has 40+ reviews; a B2B firm with 12+ is established. */
@@ -149,8 +190,8 @@ export const AREAS: Record<string, string[]> = {
 export const DEFAULT_AUTO: AutoConfig = {
   enabled: false,
   // Businesses that typically clear about $10k a month and run on processes a web app can take over.
-  niches: ['logistics', 'clinic', 'fertility', 'lab', 'realestate', 'school', 'construction', 'engineering', 'manufacturing', 'solar',
-    'professional', 'microfinance', 'insurance', 'pharma', 'facility', 'staffing', 'security', 'autodealer', 'hospitality', 'homecare'],
+  niches: ['hospitality', 'shortlet', 'realestate', 'school', 'clinic', 'fertility', 'lab', 'dental', 'logistics', 'travel', 'studyabroad',
+    'events', 'autodealer', 'solar', 'microfinance', 'insurance', 'professional', 'homecare'],
   cities: ['Lagos', 'London', 'Manchester', 'Birmingham', 'Houston', 'Dallas', 'Atlanta', 'New York', 'Washington DC', 'Toronto', 'Calgary', 'Dublin'],
   dailyCap: 12, minScore: 65, whatsappShare: 20,
 };
@@ -262,7 +303,14 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
       // site is skipped even if it has no portal. Abroad also needs a second thing to point to, because a business
       // with a decent site has little reason to hire an agency in another country.
       const needs = x.needs ?? [];
-      if (!(x.siteIssues ?? []).length) continue;
+      // Only businesses that can't do without a website (or without automating customer chats).
+      const key0 = nicheKey(niche);
+      if (!CORE_WHY[key0]) continue;
+      const badSite = (x.siteIssues ?? []).length > 0;
+      // AI track: customers are handled by hand at volume (busy: 60+ reviews) and nothing answers for them.
+      const aiNeed = (x.aiSignals ?? []).length > 0 && (x.reviews ?? 0) >= 60 && !!AI_PITCH[key0];
+      if (!badSite && !aiNeed) continue;
+      if (aiNeed) for (const g of x.aiSignals ?? []) if (!needs.includes(g)) { needs.push(g); x.reasons.unshift(g); x.score = Math.min(100, x.score + 8); }
       // Web-app fit: where this niche runs on a portal, a missing one is extra detail for the message.
       const key = nicheKey(niche);
       if (WEBAPP_PITCH[key]) for (const g of x.appGaps ?? []) if (!needs.includes(g)) { needs.push(g); x.reasons.unshift(g); x.score = Math.min(100, x.score + 6); }
@@ -282,16 +330,17 @@ export async function runAutoProspect(env: Bindings, opts: { force?: boolean; by
       if (email && (await first(env.DB, 'SELECT id FROM leads WHERE lower(email) = ?', email))) continue;
       const tier = x.score >= 80 && needs.length >= 2 && (x.reviews ?? 0) >= 40 ? 'A' : 'B'; // no Tier C: below the minimum score is not added
       const id = newId('L-');
-      const gaps = x.reasons.filter((r) => r !== 'Email published on their site').join('; ');
+      const gaps = [...x.reasons.filter((r) => r !== 'Email published on their site'), `Website is core: ${CORE_WHY[key]}`].join('; ');
+      const pitch = !badSite && aiNeed ? `AI automation: ${AI_PITCH[key]}` : (WEBAPP_PITCH[key] ?? '');
       const source = `Autopilot · Google Maps · ${query}`;
       await run(env.DB,
         `INSERT INTO leads (id, created, niche, company, website, email, phone, city, country, tier, score, gaps, pitch, status, source, origin, found_by, maps_place_id, rating, notes, next_action, updated_by)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', ?, 'maps', 'auto', ?, ?, ?, ?, 'Autopilot')`,
         id, today, key, x.name.slice(0, 160), x.website ?? null, email ?? null, x.phone ?? null, city, countryOf(city) ?? 'Nigeria', tier, x.score,
-        gaps, WEBAPP_PITCH[key] ?? null, source, x.place_id, x.rating ?? null,
+        gaps, pitch || null, source, x.place_id, x.rating ?? null,
         [x.address, x.maps_url, x.emails && x.emails.length > 1 ? `Other emails on site: ${x.emails.slice(1).join(', ')}` : ''].filter(Boolean).join('\n'),
         email ? 'Email sequence: written by the morning routine, sent by LeadsHunter' : 'Send a WhatsApp intro');
-      if (email) pushed.push({ id, company: x.name.slice(0, 160), website: x.website ?? '', email, phone: x.phone ?? '', city, niche: key, tier, score: x.score, gaps, pitch: WEBAPP_PITCH[key] ?? '', source, notes: x.address });
+      if (email) pushed.push({ id, company: x.name.slice(0, 160), website: x.website ?? '', email, phone: x.phone ?? '', city, niche: key, tier, score: x.score, gaps, pitch, source, notes: x.address });
       else waAdded++;
       added++;
     }

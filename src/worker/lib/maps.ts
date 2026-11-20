@@ -24,7 +24,10 @@ export type Prospect = {
   appGaps?: string[];
   /** Problems that show the website itself is missing, broken, dated or weak. A business with none of these
    *  has a well-built site and is skipped (Michael, 19 Nov 2026: don't approach businesses whose site is built well). */
-  siteIssues?: string[];        // web-app signals from their site (no portal, PDF forms)
+  siteIssues?: string[];
+  /** Signs that customer conversations run by hand at volume (orders or bookings by DM, WhatsApp or phone) with
+   *  no assistant or booking tool in place: the AI-automation track. */
+  aiSignals?: string[];        // web-app signals from their site (no portal, PDF forms)
 };
 
 /* ── who is NOT a client for Ferrn ──
@@ -172,9 +175,9 @@ export function emailsIn(html: string) {
 
 /** Visits a business's own website (home page + its contact page) and returns the business emails it
  *  publishes plus gaps we can point to in a first email. Never guesses an address. */
-export async function readWebsite(url: string, ms = 5000): Promise<{ emails: string[]; gaps: string[]; strong: string[]; app: string[]; reached: boolean }> {
+export async function readWebsite(url: string, ms = 5000): Promise<{ emails: string[]; gaps: string[]; strong: string[]; app: string[]; ai: string[]; reached: boolean }> {
   const home = await getText(url, ms);
-  if (!home) return { emails: [], gaps: [], strong: [], app: [], reached: false };
+  if (!home) return { emails: [], gaps: [], strong: [], app: [], ai: [], reached: false };
   const site = host(home.finalUrl);
   const hrefs = [...home.html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]);
   // Up to two more pages from their own site: the contact page first, then about/team (where named decision-makers are).
@@ -226,7 +229,17 @@ export async function readWebsite(url: string, ms = 5000): Promise<{ emails: str
   const plain = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ');
   if (!/log\s?-?in|sign\s?-?in|portal|my[-_ ]?account|dashboard|client[-_ ]?area|track(ing)?[-_ ]?(your|my|a|an)?[-_ ]?(shipment|order|parcel|cargo|application)|e-?learning|pay[-_ ]?(online|now|fees)|apply[-_ ]?(online|now)/i.test(plain)) app.push('No customer login, portal or online tracking');
   if (hrefs.some((h) => /\.(pdf|docx?)(\?|$)/i.test(h) && /form|applic|admission|registr|enrol|referral|order|quote/i.test(h))) app.push('Forms are documents to download and fill by hand');
-  return { emails, gaps, strong, app, reached: true };
+  // AI-automation signals: customers are served by hand over DM, WhatsApp or phone, and nothing answers for them.
+  const ai: string[] = [];
+  const said = plain.replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ');
+  const hasBot = /tawk\.to|intercom|crisp\.chat|manychat|wati\.io|landbot|tidio|drift\.com|livechatinc|zendesk|freshchat|chatbot|botpress|voiceflow/i.test(html);
+  if (!hasBot) {
+    if (/\b(dm|message|chat with|whatsapp|text)\b[^.]{0,30}\b(to|for)\s+(order|book|reserve|buy|purchase|place an order|make a booking|get a quote|prices?|rates)\b/i.test(said)) ai.push('Orders, bookings or prices handled by DM or WhatsApp, by hand');
+    if (/\bcall\s+(us\s+)?(now\s+)?(to|for)\s+(book|order|reserve|an appointment|appointments|a quote)\b/i.test(said) && !hasBooking) ai.push('Bookings or orders only by phone call');
+    if ((html.match(/wa\.me\/|api\.whatsapp\.com\/send/gi) ?? []).length >= 2 && !hasBooking) ai.push('WhatsApp is the main way in, and every message is answered by a person');
+    if (/price list (is )?(available )?on request|send (us )?a (message|dm) for (the )?(price|rates)/i.test(said)) ai.push('Prices given one customer at a time on request');
+  }
+  return { emails, gaps, strong, app, ai, reached: true };
 }
 
 /** Adds published emails and website gaps to search results (top `limit` with a real website), then re-scores. */
@@ -242,6 +255,7 @@ export async function enrichProspects(results: Prospect[], limit = 20, concurren
       if (!w.reached) { r.needs.push('Website did not load'); r.siteIssues.push('Website did not load'); r.reasons.unshift('Website did not load'); r.score = Math.min(100, r.score + 14); return; }
       for (const g of w.gaps) { r.needs.push(g); r.reasons.unshift(g); }
       r.siteIssues.push(...w.strong);
+      r.aiSignals = w.ai;
       r.score = Math.max(0, Math.min(100, r.score + Math.min(36, w.strong.length * 14 + (w.gaps.length - w.strong.length) * 4) + (w.emails.length ? 12 : 0)));
     }));
   }
