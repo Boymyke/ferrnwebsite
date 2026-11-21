@@ -162,7 +162,14 @@ studio.get('/leads/counts', async (c): Promise<Response> => {
 studio.get('/prospects/auto', async (c): Promise<Response> => {
   const cfg = await getAuto(c.env);
   const recent = await all(c.env.DB, "SELECT id, company, niche, city, score, tier, phone, email, website, status, created FROM leads WHERE found_by IN ('auto','claude') ORDER BY created DESC, updated_at DESC LIMIT 30");
-  const byDay = await all(c.env.DB, "SELECT created AS day, SUM(found_by='auto') AS auto, SUM(found_by='claude') AS claude FROM leads WHERE found_by IN ('auto','claude') AND created >= date('now','-29 day') GROUP BY created ORDER BY created");
+  /* Three sources: the Maps autopilot, Claude's AI web search (its leads arrive through the LeadsHunter engine), and lists Michael uploads. */
+  const mine = "(origin = 'studio' OR COALESCE(notes,'') LIKE '%From Michael''s%')";
+  const byDay = await all(c.env.DB, `SELECT created AS day,
+      SUM(CASE WHEN found_by = 'auto' THEN 1 ELSE 0 END) AS auto,
+      SUM(CASE WHEN COALESCE(found_by,'') <> 'auto' AND NOT ${mine} AND (found_by = 'claude' OR origin = 'engine') THEN 1 ELSE 0 END) AS claude,
+      SUM(CASE WHEN COALESCE(found_by,'') <> 'auto' AND ${mine} THEN 1 ELSE 0 END) AS mine
+    FROM leads WHERE created >= date('now','-29 day') AND (found_by IN ('auto','claude') OR origin IN ('engine','studio'))
+    GROUP BY created ORDER BY created`);
   const pairs = pairsOf(cfg); const allow = await searchAllowance(c.env).catch(() => null);
   const today = new Date().toISOString().slice(0, 10);
   const plan = { lagos: pairs.ng.length, abroad: pairs.abroad.length, perDay: allow?.perDay ?? null, mapsLeft: allow?.left ?? null, mapsLimit: allow?.limit ?? null, searchedToday: cfg.day?.date === today ? cfg.day.searches : 0 };

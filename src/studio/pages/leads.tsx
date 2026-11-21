@@ -311,7 +311,9 @@ function Autopilot() {
   const save = async (next = c) => { try { await api('/prospects/auto', { method: 'PUT', body: next }); setCfg(null); reload(); toast(next.enabled ? 'Autopilot saved — it runs on the next cycle' : 'Autopilot saved'); } catch (x: any) { toast(x.message, 'err'); } };
   const runNow = async () => { setBusy(true); try { const r = await api('/prospects/auto/run', { body: {} }); toast(`Searched “${r.result.query}” · ${r.result.added} new leads`); reload(); } catch (x: any) { toast(x.message, 'err'); } finally { setBusy(false); } };
   const days = data?.byDay ?? [];
-  const max = Math.max(1, ...days.map((d: any) => Number(d.auto) + Number(d.claude)));
+  const n = (v: any) => Number(v ?? 0);
+  const max = Math.max(1, ...days.map((d: any) => n(d.auto) + n(d.claude) + n(d.mine)));
+  const tot = days.reduce((t: any, d: any) => ({ auto: t.auto + n(d.auto), claude: t.claude + n(d.claude), mine: t.mine + n(d.mine) }), { auto: 0, claude: 0, mine: 0 });
   const plan = data?.plan;
   return (
     <Card className="autopilot" title={<span className="ap-title"><Zap size={16} />Lead autopilot <Badge tone={c.enabled ? 'green' : 'default'}>{c.enabled ? 'on' : 'off'}</Badge></span>}
@@ -335,13 +337,20 @@ function Autopilot() {
       {dirty && admin ? <div className="row-actions"><button className="btn sm primary" onClick={() => save()}>Save changes</button><button className="btn sm ghost" onClick={() => setCfg(null)}>Discard</button></div> : null}
       <div className="ap-bottom">
         <div className="ap-chart" aria-label="Leads found per day, last 30 days">
-          <span className="side-label">Found per day · 30 days</span>
+          <span className="side-label">Found per day · last 30 days · {tot.auto + tot.claude + tot.mine} in total</span>
           <div className="ap-bars">{Array.from({ length: 30 }, (_, i) => {
-            const d = new Date(Date.now() - (29 - i) * 864e5).toISOString().slice(0, 10);
-            const row = days.find((x: any) => x.day === d); const a = Number(row?.auto ?? 0), cl = Number(row?.claude ?? 0);
-            return <i key={d} title={`${d}: ${a} autopilot, ${cl} Claude`}><b style={{ height: `${(a / max) * 100}%` }} /><b className="cl" style={{ height: `${(cl / max) * 100}%` }} /></i>;
+            const dt = new Date(Date.now() - (29 - i) * 864e5); const d = dt.toISOString().slice(0, 10);
+            const row = days.find((x: any) => x.day === d); const a = n(row?.auto), cl = n(row?.claude), me = n(row?.mine), all = a + cl + me;
+            const label = dt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+            return (
+              <div key={d} className="ap-col" title={`${label}: ${all} found (${a} autopilot, ${cl} Claude AI search, ${me} your uploads)`}>
+                <span className="ap-num">{all || ''}</span>
+                <i><b style={{ height: `${(a / max) * 100}%` }} /><b className="cl" style={{ height: `${(cl / max) * 100}%` }} /><b className="me" style={{ height: `${(me / max) * 100}%` }} /></i>
+                <span className={`ap-day${dt.getDay() === 1 ? ' mon' : ''}`}>{dt.getDate()}{dt.getDate() === 1 || i === 0 ? <em>{dt.toLocaleDateString('en-GB', { month: 'short' })}</em> : null}</span>
+              </div>
+            );
           })}</div>
-          <span className="ap-legend"><i /> autopilot <i className="cl" /> Claude</span>
+          <span className="ap-legend"><i /> Autopilot (Google Maps) {tot.auto} <i className="cl" /> Claude AI search {tot.claude} <i className="me" /> Your uploads {tot.mine}</span>
         </div>
         <div className="ap-recent">
           <span className="side-label">Latest found</span>
