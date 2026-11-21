@@ -584,6 +584,26 @@ function pageBits() {
     if (guess === 'USD') setCurrency('USD');
   } catch {}
 
+  // Portfolio tabs: Websites / Web apps / AI automations over one card (arrow keys move between tabs).
+  $$('[data-pf]').forEach((root) => {
+    const tabs = $$<HTMLButtonElement>('[data-pf-tab]', root);
+    const show = (k: string, focus = false) => tabs.forEach((b) => {
+      const on = b.dataset.pfTab === k; b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1;
+      const panel = $(`[data-pf-panel="${b.dataset.pfTab}"]`, root); if (panel) panel.hidden = !on;
+      if (on && focus) b.focus();
+    });
+    tabs.forEach((b, i) => {
+      b.addEventListener('click', () => show(b.dataset.pfTab!));
+      b.addEventListener('keydown', (e) => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return;
+        e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].dataset.pfTab!, true);
+      });
+    });
+  });
+
+  // Close a testimonial transcript when another one opens, so only one covers a photo at a time.
+  $$<HTMLDetailsElement>('.qc-photo .voice-transcript').forEach((d, _, all) => d.addEventListener('toggle', () => { if (d.open) all.forEach((o) => { if (o !== d) o.open = false; }); }));
+
   $$('[data-quotes]').forEach((s) => {
     const track = $('.quotes-track', s)!; const n = track.children.length; let i = 0;
     const pos = $('[data-quotes-pos]', s);

@@ -99,25 +99,31 @@ export function ProductCard({ p, lang }: { p: ProductRow; lang: Lang }) {
 export function Testimonial({ x, i }: { x: TestimonialRow; i: number }) {
   const audio = mediaUrl(x.audio);
   // Only the client's own recording is ever played (no synthetic voices). With a recording the card is a
-  // voice note plus a Transcript toggle; until one is uploaded in Studio, the card shows their written words.
+  // voice note; its transcript opens over the photo in a small scrollable panel, so the card never changes size.
   const said = (x.transcript || x.quote || '').trim();
+  const photo = x.avatar ? sized(x.avatar, 480, 400) : null;
   return (
     <figure class={`quote-card vn ${audio ? 'has-audio' : 'text-only'}`} data-quote style={`--i:${i}`}>
+      <div class="qc-photo">
+        {photo ? <img src={photo} alt={x.name} loading="lazy" decoding="async" width="480" height="400" /> : <span class="qc-initials" aria-hidden="true">{initials(x.name)}</span>}
+        {audio && said ? (
+          <details class="voice-transcript">
+            <summary aria-label={`Transcript of ${x.name}’s voice note`}>{icon('file-text', { size: 13 })} Transcript</summary>
+            <div class="vt-panel" tabindex={0}><p>{said}</p></div>
+          </details>
+        ) : null}
+      </div>
       <figcaption>
-        {x.avatar ? <img src={sized(x.avatar, 48)!} alt="" loading="lazy" decoding="async" width="48" height="48" /> : <span class="avatar sm">{initials(x.name)}</span>}
         <span><strong>{x.name}</strong><small>{[x.role, x.company].filter(Boolean).join(', ')}</small></span>
         {x.logo ? <img class="quote-logo" src={mediaUrl(x.logo)!} alt={x.company ?? ''} loading="lazy" height="22" /> : null}
       </figcaption>
       {audio ? (
-        <>
-          <div class="voice" data-voice>
-            <button class="voice-btn" type="button" data-voice-play aria-label={`Play ${x.name}’s voice note`}>{icon('play', { size: 16 })}<span class="voice-pause">{icon('pause', { size: 16 })}</span></button>
-            <span class="voice-bars" aria-hidden="true">{Array.from({ length: 32 }, (_, k) => <i style={`--k:${k};--h:${[38, 62, 45, 80, 55, 30, 70, 90, 48, 66, 35, 58, 84, 42, 72, 50, 28, 64, 88, 46, 60, 34, 76, 52, 40, 68, 86, 44, 56, 32, 62, 48][k]}%`}></i>)}</span>
-            <span class="voice-time" data-voice-time>0:00</span>
-            <audio preload="metadata" src={audio}></audio>
-          </div>
-          {said ? <details class="voice-transcript"><summary>{icon('file-text', { size: 15 })} Transcript</summary><p>{said}</p></details> : null}
-        </>
+        <div class="voice" data-voice>
+          <button class="voice-btn" type="button" data-voice-play aria-label={`Play ${x.name}’s voice note`}>{icon('play', { size: 16 })}<span class="voice-pause">{icon('pause', { size: 16 })}</span></button>
+          <span class="voice-bars" aria-hidden="true">{Array.from({ length: 32 }, (_, k) => <i style={`--k:${k};--h:${[38, 62, 45, 80, 55, 30, 70, 90, 48, 66, 35, 58, 84, 42, 72, 50, 28, 64, 88, 46, 60, 34, 76, 52, 40, 68, 86, 44, 56, 32, 62, 48][k]}%`}></i>)}</span>
+          <span class="voice-time" data-voice-time>0:00</span>
+          <audio preload="metadata" src={audio}></audio>
+        </div>
       ) : (
         <blockquote><span class="quote-mark" aria-hidden="true">“</span>{x.quote}</blockquote>
       )}
@@ -190,7 +196,6 @@ export function HomePage(p: {
       { '@type': 'FAQPage', mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
     ],
   };
-  const featured = (p.projects.filter((x) => x.featured).length ? p.projects.filter((x) => x.featured) : p.projects).slice(0, 3);
   const flick = ctx.list('home.hero.flick').length ? ctx.list('home.hero.flick') : ['Websites'];
   const levers = ctx.get('home.growth.levers').split('\n').map((l) => l.split('|').map((x) => x.trim())).filter((x) => x.length >= 2);
   const H = ({ text, cls = 'h-display' }: { text: string; cls?: string }) => <Lines text={text} tag="h2" class={cls} />;
@@ -359,6 +364,69 @@ export function HomePage(p: {
         );
       })()}
 
+      {/* ── portfolio: tabs (websites, web apps, AI automation) over one card ── */}
+      {(() => {
+        const TABS: [string, string, string][] = [['website', 'Websites', 'globe'], ['webapp', 'Web apps', 'layout-dashboard'], ['ai', 'AI automations', 'bot']];
+        const groups = TABS.map(([k, label, ic]) => {
+          const all = p.projects.filter((x) => (x.category || 'website') === k);
+          return { k, label, ic, items: [...all.filter((x) => x.featured), ...all.filter((x) => !x.featured)].slice(0, 3), total: all.length };
+        }).filter((g) => g.items.length);
+        if (!groups.length) return null;
+        const Card = ({ x, i, n }: { x: PublicProject; i: number; n: number }) => { const img = shotOf(x); return (
+          <a class={`wk wk-${i + 1}`} href={href(lang, `/work/${x.slug}`)}>
+            <div class="wk-shot">{img ? <img src={img} alt={`${x.title}`} loading="lazy" decoding="async" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
+            <div class="wk-cap">
+              <span class="wk-n">{String(i + 1).padStart(2, '0')}</span>
+              <span class="wk-t">
+                <strong>{x.title}</strong>
+                <span class="wk-tags">{[x.type, x.industry].filter(Boolean).map((tg) => <i>{tg}</i>)}</span>
+              </span>
+              <span class="wk-go" aria-hidden="true">{icon('arrow-up-right', { size: 18 })}</span>
+            </div>
+          </a>
+        ); };
+        return (
+          <section class="room room-light room-haze pf-room" id="work" aria-labelledby="pf-title">
+            <div class="wrap">
+              <div class="room-head">
+                <Lines text={ctx.get('home.work.title')} tag="h2" class="h-display" id="pf-title" />
+                {ctx.get('home.work.lead') ? <p class="room-lead reveal">{ctx.get('home.work.lead')}</p> : null}
+              </div>
+              <div class="pf reveal" data-pf>
+                <div class="pf-tabs" role="tablist" aria-label="Type of work">
+                  {groups.map((g, gi) => (
+                    <button type="button" role="tab" id={`pf-tab-${g.k}`} aria-controls={`pf-panel-${g.k}`} aria-selected={gi === 0 ? 'true' : 'false'} tabindex={gi === 0 ? 0 : -1} data-pf-tab={g.k}>
+                      {icon(g.ic, { size: 16 })}<span>{g.label}</span><em>{g.total}</em>
+                    </button>
+                  ))}
+                </div>
+                <div class="pf-card">
+                  {groups.map((g, gi) => (
+                    <div class="pf-panel" role="tabpanel" id={`pf-panel-${g.k}`} aria-labelledby={`pf-tab-${g.k}`} hidden={gi !== 0} data-pf-panel={g.k}>
+                      {g.items.length === 1 ? (() => { const x = g.items[0]; return (
+                        <div class="pf-solo">
+                          <Card x={x} i={0} n={1} />
+                          <div class="pf-solo-text">
+                            <span class="pf-kind">{x.type}{x.industry ? ` · ${x.industry}` : ''}</span>
+                            <h3>{x.title}</h3>
+                            {x.summary ? <p>{x.summary}</p> : null}
+                            {x.solution ? <p class="pf-muted">{x.solution}</p> : null}
+                            <a class="btn btn-primary" href={href(lang, `/work/${x.slug}`)}>Read the case study {icon('arrow-up-right', { size: 15 })}</a>
+                          </div>
+                        </div>
+                      ); })() : (
+                        <div class={`wk-grid n-${g.items.length}`}>{g.items.map((x, i) => <Card x={x} i={i} n={g.items.length} />)}</div>
+                      )}
+                    </div>
+                  ))}
+                  <div class="pf-foot"><a class="link" href={href(lang, '/work')}>{t(lang, 'nav.work')} {icon('arrow-right', { size: 15 })}</a></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* ── growth: how the work turns into revenue ── */}
       <section class="growth" id="growth">
         <div class="wrap">
@@ -415,32 +483,6 @@ export function HomePage(p: {
             ))}
           </div>
           <div class="room-links reveal"><a class="btn btn-ghost btn-pill" href={href(lang, '/marketplace')}>{t(lang, 'nav.marketplace')} {icon('arrow-right', { size: 15 })}</a></div>
-        </div>
-      </section>
-
-      {/* ── light room: work with device mockups ── */}
-      <section class="room room-light room-haze" id="work">
-        <div class="wrap">
-          <div class="room-head">
-            <H text={ctx.get('home.work.title')} />
-            {ctx.get('home.work.lead') ? <p class="room-lead reveal">{ctx.get('home.work.lead')}</p> : null}
-          </div>
-          <div class="wk-grid">
-            {featured.map((x, i) => { const img = shotOf(x); return (
-              <a class={`wk reveal wk-${i + 1}`} style={`--d:${i * 0.08}s`} href={href(lang, `/work/${x.slug}`)}>
-                <div class="wk-shot">{img ? <img src={img} alt={`${x.title} website`} loading="lazy" decoding="async" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
-                <div class="wk-cap">
-                  <span class="wk-n">{String(i + 1).padStart(2, '0')}</span>
-                  <span class="wk-t">
-                    <strong>{x.title}</strong>
-                    <span class="wk-tags">{[x.type, x.industry].filter(Boolean).map((tg) => <i>{tg}</i>)}</span>
-                  </span>
-                  <span class="wk-go" aria-hidden="true">{icon('arrow-up-right', { size: 18 })}</span>
-                </div>
-              </a>
-            ); })}
-          </div>
-          <div class="room-links reveal"><a class="link" href={href(lang, '/work')}>{t(lang, 'nav.work')} {icon('arrow-right', { size: 15 })}</a></div>
         </div>
       </section>
 
