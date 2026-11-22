@@ -396,7 +396,7 @@ export function HomePage(p: {
                 <div class="pf-tabs" role="tablist" aria-label="Type of work">
                   {groups.map((g, gi) => (
                     <button type="button" role="tab" id={`pf-tab-${g.k}`} aria-controls={`pf-panel-${g.k}`} aria-selected={gi === 0 ? 'true' : 'false'} tabindex={gi === 0 ? 0 : -1} data-pf-tab={g.k}>
-                      {icon(g.ic, { size: 16 })}<span>{g.label}</span><em>{g.total}</em>
+                      {icon(g.ic, { size: 16 })}<span>{g.label}</span>
                     </button>
                   ))}
                 </div>
