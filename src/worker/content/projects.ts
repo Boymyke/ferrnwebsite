@@ -207,6 +207,76 @@ export const PROJECTS: Project[] = [
         "slug": "fashion-fusion-africa"
     },
     {
+        "title": "Ataam",
+        "type": "Web Application",
+        "category": "webapp",
+        "industry": "Healthcare Staffing",
+        "year": "2026",
+        "live": "",
+        "client": "Ataam Health Care LLC",
+        "featured": true,
+        "meta": "A secure care-operations web app for Ataam Health Care: GPS-assisted clock-in, staff credentials, care documentation, incidents and management analytics in one place.",
+        "summary": "One connected system for every shift: a secure, mobile-friendly web app that replaces paper timesheets and scattered records for a US care-staffing provider.",
+        "context": "Ataam provides staffing, therapy and residential care services. Attendance, staff credentials, patient documentation, incidents and appointments were handled across paper and separate tools.",
+        "challenge": "Leadership needed to see what was scheduled, who actually arrived, who is authorised to record care and what is approaching non-compliance, without chasing paperwork.",
+        "solution": "We designed an admin control centre for the office and a phone-first staff app for the field: GPS-assisted clock-in and out with supervisor verification, licence expiry alerts, intake, daily notes, incidents and analytics, built as an installable PWA.",
+        "impact": "Shifts, credentials and care records move into one auditable, permissioned workflow.",
+        "points": [
+            {
+                "icon": "map-pin",
+                "title": "Verified attendance",
+                "text": "GPS-assisted clock-in and out, supervisor verification and a logged fallback."
+            },
+            {
+                "icon": "badge-check",
+                "title": "Credential control",
+                "text": "Licence and certification expiry surfaces before it blocks a shift."
+            },
+            {
+                "icon": "layout-dashboard",
+                "title": "Management view",
+                "text": "Scheduled, verified, exceptions and licences due on one overview."
+            }
+        ],
+        "image": "/assets/work/ataam.webp",
+        "slug": "ataam"
+    },
+    {
+        "title": "Vertical Solar",
+        "type": "Website + CRM + Field App",
+        "category": "webapp",
+        "industry": "Solar Energy",
+        "year": "2026",
+        "live": "",
+        "client": "Vertical Energy & Networks Ltd",
+        "featured": true,
+        "meta": "A 27-page solar website with cost estimator and AI assistant, plus the CRM and field app that run quotes, installations and staff behind it.",
+        "summary": "A solar company's whole operation in one build: a 27-page website that sizes systems and books surveys, and the CRM and field app behind it.",
+        "context": "Vertical Solar sells and installs solar, inverter and lithium battery systems for Nigerian homes, businesses and industry, with field technicians on site every day.",
+        "challenge": "Quotes, installations, staff schedules, attendance, stock and support lived in different places, and customers needed help sizing a system before they would call.",
+        "solution": "We built the website with a homepage cost estimator, packages and load calculator, a three-step quote request and Vola, an AI assistant that speaks English, Pidgin, Yoruba, Igbo and Hausa. Behind it sits a CRM with pipeline, quotation engine, installations, geofenced clock-in, a technician field app, inventory, tickets, warranties and phone push alerts.",
+        "impact": "One system runs the customer journey from first visit to installation and after-care.",
+        "points": [
+            {
+                "icon": "gauge",
+                "title": "Self-serve sizing",
+                "text": "Cost estimator and load calculator size a system before the first call."
+            },
+            {
+                "icon": "bot",
+                "title": "Vola assistant",
+                "text": "Answers in English, Pidgin, Yoruba, Igbo and Hausa."
+            },
+            {
+                "icon": "smartphone",
+                "title": "Field app",
+                "text": "Schedules, geofenced clock-in and on-site reports for technicians."
+            }
+        ],
+        "image": "/assets/work/vertical-solar.webp",
+        "slug": "vertical-solar"
+    },
+    {
         "title": "Relay",
         "type": "Web Application",
         "category": "webapp",
@@ -273,5 +343,180 @@ export const PROJECTS: Project[] = [
             }
         ],
         "slug": "pwan-eha"
+    },
+    {
+        "title": "Avid Dental Clinic",
+        "type": "Clinic Website",
+        "category": "website",
+        "industry": "Dental Care",
+        "year": "2026",
+        "live": "",
+        "client": "Avid Dental Clinic",
+        "featured": false,
+        "meta": "A calm, modern website for a family dental clinic in Ikeja, Lagos, built around clear treatment explanations and easy booking.",
+        "summary": "A dental clinic website that explains treatments plainly and makes booking a check-up the obvious next step.",
+        "context": "Avid Dental offers family dentistry in Ikeja, Lagos, with HMO and flexible payment options.",
+        "challenge": "Patients choosing a dentist want reassurance first: clear treatments, real prices and an easy way to book.",
+        "solution": "We designed a light, airy site with treatment pages, a 'why Avid' story, reviews and a booking path on every screen, plus WhatsApp for quick questions.",
+        "impact": "A clinic site designed to turn first visits into booked check-ups.",
+        "points": [
+            {
+                "icon": "search",
+                "title": "Clear treatments",
+                "text": "Each treatment explained in plain words."
+            },
+            {
+                "icon": "shield-check",
+                "title": "Trust first",
+                "text": "HMOs, payment options and reviews up front."
+            },
+            {
+                "icon": "smartphone",
+                "title": "Built for phones",
+                "text": "Booking and WhatsApp a tap away."
+            }
+        ],
+        "image": "/assets/work/avid-dental.webp",
+        "slug": "avid-dental"
+    },
+    {
+        "title": "BRAD. The Barber",
+        "type": "Barber Website",
+        "category": "website",
+        "industry": "Grooming",
+        "year": "2026",
+        "live": "",
+        "client": "BRAD. The Barber, Burnley",
+        "featured": false,
+        "meta": "A bold, image-led website for a Burnley barber, with before-and-after styles and a straight path to booking.",
+        "summary": "A barber website that lets the work sell itself: bold type, real cuts and a booking button never far away.",
+        "context": "BRAD. is a barber in Burnley offering modern grooming for ladies, gents and children.",
+        "challenge": "A barber is chosen on the quality of the cut, so the site had to show the work fast and make booking effortless.",
+        "solution": "We built a dark, confident design with a before-and-after slider, services, testimonials and a gallery, with 'Book appointment' fixed in the header.",
+        "impact": "Browsing styles leads straight to booking.",
+        "points": [
+            {
+                "icon": "users",
+                "title": "Show the work",
+                "text": "Before-and-after slider and gallery."
+            },
+            {
+                "icon": "clock",
+                "title": "Easy booking",
+                "text": "A booking button on every screen."
+            },
+            {
+                "icon": "smartphone",
+                "title": "Mobile first",
+                "text": "Designed for people browsing on their phones."
+            }
+        ],
+        "image": "/assets/work/brad-barber.webp",
+        "slug": "brad-the-barber"
+    },
+    {
+        "title": "Giga Electrical",
+        "type": "Corporate Website",
+        "category": "website",
+        "industry": "Electrical Testing",
+        "year": "2026",
+        "live": "",
+        "client": "Giga Electrical",
+        "featured": false,
+        "meta": "A corporate website for a NETA-accredited electrical testing and engineering firm in Commerce, California.",
+        "summary": "A confident, industrial website for an electrical testing firm, built to earn trust with facility and engineering teams.",
+        "context": "Giga Electrical provides independent electrical testing, maintenance and engineering for critical power systems.",
+        "challenge": "Facility managers and contractors need to see accreditation, capability and safety culture before they request a quote.",
+        "solution": "We designed a bold industrial look with NETA accreditation up front, clear service and engineering pages and a direct 'get in touch' path.",
+        "impact": "Accreditation and capability are clear within seconds.",
+        "points": [
+            {
+                "icon": "badge-check",
+                "title": "Accreditation up front",
+                "text": "NETA status visible from the hero."
+            },
+            {
+                "icon": "zap",
+                "title": "Service clarity",
+                "text": "Testing, maintenance and engineering on their own pages."
+            },
+            {
+                "icon": "shield-check",
+                "title": "Safety culture",
+                "text": "Independent expertise and safety told plainly."
+            }
+        ],
+        "image": "/assets/work/giga-electrical.webp",
+        "slug": "giga-electrical"
+    },
+    {
+        "title": "Skagit Electric",
+        "type": "Corporate Website",
+        "category": "website",
+        "industry": "Electrical Testing",
+        "year": "2026",
+        "live": "",
+        "client": "Skagit Electric",
+        "featured": false,
+        "meta": "A website for a NETA-accredited electrical engineering, testing and maintenance company in Washington State.",
+        "summary": "A clean, technical website for an electrical testing company, built around capabilities and a fast service request.",
+        "context": "Skagit Electric offers electrical engineering, testing, maintenance, troubleshooting and commissioning.",
+        "challenge": "Facilities that cannot afford shortcuts need to find the right capability fast and reach the team without friction.",
+        "solution": "We designed a structured site with capabilities, services and work pages, a NETA accreditation badge and a one-click call and service request.",
+        "impact": "Capabilities and contact paths are clear for technical buyers.",
+        "points": [
+            {
+                "icon": "zap",
+                "title": "Capabilities",
+                "text": "Engineering, testing and commissioning clearly separated."
+            },
+            {
+                "icon": "badge-check",
+                "title": "NETA accredited",
+                "text": "Accreditation shown where buyers look."
+            },
+            {
+                "icon": "clock",
+                "title": "Fast contact",
+                "text": "Service call request and phone in the header."
+            }
+        ],
+        "image": "/assets/work/skagit-electric.webp",
+        "slug": "skagit-electric"
+    },
+    {
+        "title": "Taurus Power Services",
+        "type": "Corporate Website",
+        "category": "website",
+        "industry": "Electrical Testing",
+        "year": "2026",
+        "live": "",
+        "client": "Taurus Power Services",
+        "featured": false,
+        "meta": "A website for an independent electrical power testing and power systems studies company in Tualatin, Oregon.",
+        "summary": "A polished website for a third-party power testing company, built to make technical services easy to understand and quote.",
+        "context": "Taurus provides independent testing for electrical power systems and equipment, plus power studies.",
+        "challenge": "Buyers compare testing firms on independence, voltage range and studies offered; the site needed to make that comparison easy.",
+        "solution": "We designed a calm blue site with testing, power studies and 'why Taurus' sections and a service quote request on every page.",
+        "impact": "Technical services become easy to compare and quote.",
+        "points": [
+            {
+                "icon": "search",
+                "title": "Easy comparison",
+                "text": "Testing, studies and voltage range laid out clearly."
+            },
+            {
+                "icon": "badge-check",
+                "title": "Independent",
+                "text": "Third-party, NETA-accredited positioning."
+            },
+            {
+                "icon": "file-text",
+                "title": "Quote ready",
+                "text": "A service quote request on every page."
+            }
+        ],
+        "image": "/assets/work/taurus-power.webp",
+        "slug": "taurus-power"
     }
 ];

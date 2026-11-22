@@ -1358,3 +1358,7 @@ main .room-close h2.h-display { max-width: 16ch; }
 .quotes-nav button[data-next]:hover svg { transform: translateX(2px); }
 .quotes-nav button[data-prev]:hover svg { transform: translateX(-2px); }
 .wk-go:focus-visible, .quotes-nav button:focus-visible, .reel-close:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.quotes-nav button:disabled { opacity: .35; cursor: default; pointer-events: none; }
+[data-quotes].fits .quotes-nav { display: none; }
+/* Light mode: no purple glow behind sections (22 Nov) */
+[data-theme="light"] .room-light::before, [data-theme="light"] .room-haze::before { display: none; }

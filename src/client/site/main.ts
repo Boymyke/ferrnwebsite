@@ -604,15 +604,32 @@ function pageBits() {
   // Close a testimonial transcript when another one opens, so only one covers a photo at a time.
   $$<HTMLDetailsElement>('.qc-photo .voice-transcript').forEach((d, _, all) => d.addEventListener('toggle', () => { if (d.open) all.forEach((o) => { if (o !== d) o.open = false; }); }));
 
+  // Testimonial carousel: counts positions, not cards (with 3 cards in view, 5 cards = 3 positions),
+  // and the arrows stop at each end instead of counting past what can scroll.
   $$('[data-quotes]').forEach((s) => {
     const track = $('.quotes-track', s)!; const n = track.children.length; let i = 0;
     const pos = $('[data-quotes-pos]', s);
-    const go = (d: number) => { i = (i + d + n) % n; (track.children[i] as HTMLElement).scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest', inline: 'start' }); pos && (pos.textContent = `${i + 1} / ${n}`); };
-    $('[data-next]', s)?.addEventListener('click', () => go(1));
-    $('[data-prev]', s)?.addEventListener('click', () => go(-1));
-    // Several cards can be in view at once: step by one card's width (plus the gap).
-    const step = () => { const c = track.children[0] as HTMLElement | undefined; return c ? c.offsetWidth + (parseFloat(getComputedStyle(track).columnGap) || 0) : track.clientWidth; };
-    track.addEventListener('scroll', () => { const k = Math.min(n - 1, Math.round(track.scrollLeft / Math.max(1, step()))); if (k !== i) { i = k; pos && (pos.textContent = `${i + 1} / ${n}`); } }, { passive: true });
+    const prev = $<HTMLButtonElement>('[data-prev]', s), next = $<HTMLButtonElement>('[data-next]', s);
+    const gap = () => parseFloat(getComputedStyle(track).columnGap) || 0;
+    const step = () => { const c = track.children[0] as HTMLElement | undefined; return c ? c.offsetWidth + gap() : track.clientWidth; };
+    const last = () => Math.max(0, n - Math.max(1, Math.round((track.clientWidth + gap()) / Math.max(1, step()))));
+    const render = () => {
+      const L = last(); i = Math.min(i, L);
+      if (pos) pos.textContent = `${i + 1} / ${L + 1}`;
+      if (prev) prev.disabled = i <= 0;
+      if (next) next.disabled = i >= L;
+      s.classList.toggle('fits', L === 0);
+    };
+    const go = (d: number) => { i = Math.max(0, Math.min(last(), i + d)); track.scrollTo({ left: i * step(), behavior: reduced ? 'auto' : 'smooth' }); render(); };
+    next?.addEventListener('click', () => go(1));
+    prev?.addEventListener('click', () => go(-1));
+    track.addEventListener('scroll', () => {
+      const atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+      const k = atEnd ? last() : Math.min(last(), Math.round(track.scrollLeft / Math.max(1, step())));
+      if (k !== i) { i = k; render(); }
+    }, { passive: true });
+    addEventListener('resize', render, { passive: true });
+    render();
   });
 
   // Voice-note testimonials: one plays at a time; bars animate while playing. A card with the client's own
