@@ -48,7 +48,6 @@ export function WorkRow({ p, lang, i }: { p: PublicProject; lang: Lang; i: numbe
   const img = shotOf(p);
   return (
     <a class="work-row reveal" href={href(lang, `/work/${p.slug}`)} data-category={p.category} style={p.accent ? `--tint:${p.accent}` : undefined}>
-      <span class="work-i">{String(i + 1).padStart(2, '0')}</span>
       <span class="work-main">
         <span class="work-title">{p.title}</span>
         <span class="work-meta">{[p.type, p.industry, p.year].filter(Boolean).join(' · ')}</span>
@@ -376,7 +375,6 @@ export function HomePage(p: {
           <a class="wk pf-item" href={href(lang, `/work/${x.slug}`)}>
             <div class="wk-shot">{img ? <img src={img} alt={`${x.title}`} loading="lazy" decoding="async" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
             <div class="wk-cap">
-              <span class="wk-n">{String(i + 1).padStart(2, '0')}</span>
               <span class="wk-t">
                 <strong>{x.title}</strong>
                 <span class="wk-tags">{[x.type, x.industry].filter(Boolean).map((tg) => <i>{tg}</i>)}</span>

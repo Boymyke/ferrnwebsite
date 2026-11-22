@@ -175,6 +175,26 @@ studio.get('/prospects/auto', async (c): Promise<Response> => {
   const plan = { lagos: pairs.ng.length, abroad: pairs.abroad.length, perDay: allow?.perDay ?? null, mapsLeft: allow?.left ?? null, mapsLimit: allow?.limit ?? null, searchedToday: cfg.day?.date === today ? cfg.day.searches : 0 };
   return c.json({ ok: true, config: cfg, plan, niches: Object.keys(NICHE_QUERY), cities: LAGOS_AND_ABROAD, hasKey: !!c.env.GOOGLE_MAPS_API_KEY, recent, byDay });
 });
+/* Portfolio covers: capture a live site's homepage after it has fully loaded (preloaders finished) and keep it in R2. */
+studio.post('/covers/capture', async (c): Promise<Response> => {
+  const u = c.get('user')!;
+  if (!can(u, 'admin')) return c.json({ ok: false, error: 'Only admins capture covers.' }, 403);
+  const b = (await c.req.json().catch(() => ({}))) as { slug?: string; url?: string; wait?: number };
+  const slug = String(b.slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+  let url: URL; try { url = new URL(String(b.url || '')); } catch { return c.json({ ok: false, error: 'Bad url' }, 400); }
+  if (!slug || !/^https?:$/.test(url.protocol)) return c.json({ ok: false, error: 'slug and an http(s) url are needed' }, 400);
+  const wait = Math.min(10, Math.max(1, Math.round(Number(b.wait) || 7)));
+  const shot = `https://image.thum.io/get/width/1440/crop/900/viewportWidth/1440/wait/${wait}/noanimate/${url.href}`;
+  const r = await fetch(shot, { cf: { cacheTtl: 0 } } as RequestInit);
+  const type = r.headers.get('content-type') || '';
+  if (!r.ok || !type.startsWith('image/')) return c.json({ ok: false, error: `Capture failed (${r.status} ${type})` }, 502);
+  const buf = await r.arrayBuffer();
+  const ext = type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : 'jpg';
+  const key = `covers/${slug}-${new Date().toISOString().slice(0, 10)}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+  await c.env.MEDIA.put(key, buf, { httpMetadata: { contentType: type, cacheControl: 'public, max-age=31536000, immutable' } });
+  return c.json({ ok: true, key, path: `/media/${key}`, bytes: buf.byteLength });
+});
+
 studio.put('/prospects/auto', async (c): Promise<Response> => {
   const u = c.get('user')!;
   if (!can(u, 'admin')) return c.json({ ok: false, error: 'Only admins change the autopilot.' }, 403);

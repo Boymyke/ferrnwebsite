@@ -1362,3 +1362,14 @@ main .room-close h2.h-display { max-width: 16ch; }
 [data-quotes].fits .quotes-nav { display: none; }
 /* Light mode: no purple glow behind sections (22 Nov) */
 [data-theme="light"] .room-light::before, [data-theme="light"] .room-haze::before { display: none; }
+
+/* ── Portfolio cards (22 Nov): the whole homepage screenshot sits above the caption (16:10, nothing cropped); no numbering ── */
+.work-row { grid-template-columns: 1fr 60px; }
+.pf-grid .pf-item { aspect-ratio: auto; display: flex; flex-direction: column; }
+.pf-grid .pf-item .wk-shot { position: relative; inset: auto; aspect-ratio: 16 / 10; overflow: hidden; background: var(--bg-2); }
+.pf-grid .pf-item .wk-shot img { object-fit: cover; object-position: top center; }
+.pf-grid .pf-item .wk-cap { position: static; grid-template-columns: 1fr auto; border-radius: 0; border: 0; border-top: var(--bw) solid var(--line); background: var(--panel); color: var(--ink); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; padding: 14px 14px 14px 18px; flex: 1; }
+.pf-grid .pf-item .wk-tags i { border-color: var(--line-2); color: var(--muted); }
+.pf-grid .pf-item .wk-go { background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); }
+.pf-grid .pf-item:hover .wk-go { background: var(--orange); color: #fff; }
+.pf-foot .link { border-bottom: 0; padding-bottom: 0; }
