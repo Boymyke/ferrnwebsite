@@ -42,20 +42,34 @@ const fill = (s: string) => s.replace(/\{name\}/g, visitor || 'friend');
 let soundOn = ls.get('ferrn-bob-sound') !== '0';
 let serverVoice: boolean | null = root.dataset.bobVoice === 'browser' ? false : null;
 let current: { stop: () => void } | null = null;
+/** Is Bob talking right now? Drives every Stop button, the talking pose and the tour music ducking. */
+let speakingNow = false;
+const speakingHooks: ((on: boolean) => void)[] = [];
+function setSpeaking(on: boolean) { if (on === speakingNow) return; speakingNow = on; speakingHooks.forEach((f) => f(on)); }
 const fillerCache = new Map<string, Blob>();
 function pickVoice() {
   const vs = 'speechSynthesis' in window ? speechSynthesis.getVoices() : [];
-  const want = ['en', 'yo', 'ig', 'ha'].includes(lang) ? ['en-NG', 'en-GB', 'en-US', 'en'] : [lang];
-  for (const w of want) { const v = vs.find((x) => x.lang.replace('_', '-').toLowerCase().startsWith(w.toLowerCase())); if (v) return v; }
-  return null;
+  if (!['en', 'yo', 'ig', 'ha'].includes(lang)) return vs.find((x) => x.lang.toLowerCase().startsWith(lang)) || null;
+  const low = (v: SpeechSynthesisVoice) => `${v.name} ${v.lang}`.toLowerCase();
+  // 1. A genuine Nigerian voice on the device (Edge ships Microsoft Abeo and Ezinne; Bob is a he, so Abeo first).
+  const ng = vs.filter((v) => /en[-_]ng/i.test(v.lang) || /abeo|ezinne|nigeria/i.test(v.name));
+  const best = ng.find((v) => /abeo/i.test(v.name)) || ng.find((v) => /male/i.test(low(v)) && !/female/i.test(low(v))) || ng[0];
+  if (best) return best;
+  // 2. Otherwise a natural-sounding English voice, never the robotic default.
+  const natural = vs.filter((v) => /^en/i.test(v.lang) && /natural|online|neural|premium|enhanced|google/i.test(v.name));
+  const male = (v: SpeechSynthesisVoice) => /ryan|guy|thomas|daniel|arthur|male|davis|christopher|andrew|brian/i.test(v.name) && !/female/i.test(v.name);
+  return natural.find((v) => /en[-_]gb/i.test(v.lang) && male(v)) || natural.find(male) || natural.find((v) => /en[-_]gb/i.test(v.lang)) || natural[0]
+    || vs.find((v) => /en[-_]gb/i.test(v.lang) && male(v)) || vs.find((v) => /en[-_]gb/i.test(v.lang)) || vs.find((v) => /^en/i.test(v.lang)) || null;
 }
+if ('speechSynthesis' in window) speechSynthesis.addEventListener?.('voiceschanged', () => {});
 /** Speaks and resolves when finished (or immediately if sound is off / no voice). */
 export function speak(text: string, opts: { force?: boolean; level?: (n: number) => void } = {}): Promise<void> {
   hush();
   const plain = text.replace(/https?:\/\/\S+/g, '').replace(/[*#_`“”"]/g, '').replace(/\s+/g, ' ').trim();
   if (!plain || (!soundOn && !opts.force)) return Promise.resolve();
   return new Promise<void>(async (resolve) => {
-    let done = false; const finish = () => { if (done) return; done = true; ghostLevel(0); resolve(); };
+    let done = false; const finish = () => { if (done) return; done = true; ghostLevel(0); setSpeaking(false); resolve(); };
+    setSpeaking(true);
     if (serverVoice !== false) {
       try {
         const cached = fillerCache.get(plain);
@@ -73,7 +87,7 @@ export function speak(text: string, opts: { force?: boolean; level?: (n: number)
       } catch { serverVoice = false; }
     }
     if (!('speechSynthesis' in window)) return finish();
-    const u = new SpeechSynthesisUtterance(plain); u.voice = pickVoice(); u.rate = 1.02; u.pitch = 1.05;
+    const u = new SpeechSynthesisUtterance(plain); const v = pickVoice(); u.voice = v; if (v) u.lang = v.lang; u.rate = 1; u.pitch = 1;
     let t = 0; const pulse = () => { if (done) return; t += 0.2; ghostLevel(0.3 + Math.abs(Math.sin(t)) * 0.5); requestAnimationFrame(pulse); };
     const t0 = performance.now();
     u.onend = () => {
@@ -85,16 +99,19 @@ export function speak(text: string, opts: { force?: boolean; level?: (n: number)
     speechSynthesis.speak(u); if (!reduced) pulse();
   });
 }
-export function hush() { current?.stop(); current = null; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+export function hush() { current?.stop(); current = null; if ('speechSynthesis' in window) speechSynthesis.cancel(); setSpeaking(false); }
 
 /* ══ the ghost that moves around the page ══ */
-const GHOST_SVG = (root.querySelector('svg.ghost')?.outerHTML || '').replace('id="ghost-g"', 'id="ghost-g2"').replace('url(#ghost-g)', 'url(#ghost-g2)');
-const HAND_SVG = '<svg viewBox="0 0 40 44" width="34" height="38" aria-hidden="true"><path d="M14 4c2.2 0 4 1.8 4 4v12l2-.4c2.2-.4 4.2 1 4.6 3.1l.2 1 1.2-.2c2.2-.3 4.2 1.2 4.5 3.4l.1.6.7-.1c2.1-.2 4 1.3 4.2 3.4l.5 5.6c.4 5-3.1 9.4-8 10.2l-6 1c-4.6.7-9-1.9-10.6-6.2L4.6 30c-.8-2.1.2-4.4 2.3-5.2 1.6-.6 3.4-.1 4.4 1.2l.7.9V8c0-2.2 1.8-4 4-4Z" fill="#fff" stroke="#1a0d06" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+const GHOST_SRC = root.querySelector('svg.ghost')?.outerHTML || '';
+/** A copy of Bob's SVG with its own gradient ids (two copies on a page must not share ids). */
+const ghostCopy = (id: string) => GHOST_SRC.replace(/bobg-/g, `${id}-`);
+const GHOST_SVG = ghostCopy('bobg2');
+const HAND_SVG = '<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><defs><radialGradient id="bobx-hand-g" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ffb48a"/><stop offset=".5" stop-color="#ff5a1a"/><stop offset="1" stop-color="#b83000"/></radialGradient></defs><circle cx="21" cy="23" r="14" fill="url(#bobx-hand-g)"/><circle cx="10" cy="13" r="6.5" fill="#ff8f5a"/><circle cx="15" cy="17" r="3.6" fill="#fff" opacity=".35"/></svg>';
 let ghost: HTMLElement | null = null;
 function ghostEl() {
   if (ghost) return ghost;
   ghost = document.createElement('div'); ghost.className = 'bobx-ghost'; ghost.setAttribute('aria-hidden', 'true');
-  ghost.innerHTML = `<div class="bobx-ghost-in">${GHOST_SVG}</div><span class="bobx-carry"></span>`;
+  ghost.innerHTML = `<div class="bobx-ghost-in">${GHOST_SVG}</div>`;
   document.body.appendChild(ghost);
   return ghost;
 }
@@ -126,6 +143,7 @@ async function portal(dir: 'in' | 'out', x: number, y: number) {
 async function point(el: Element, click = false) {
   const r = el.getBoundingClientRect(); if (!r.width) return;
   const from = ghost && !ghost.hidden ? { x: gx, y: gy } : home();
+  ghost?.classList.add('pointing');
   const h = document.createElement('div'); h.className = 'bobx-hand'; h.innerHTML = HAND_SVG;
   h.style.transform = `translate(${from.x}px, ${from.y}px)`; document.body.appendChild(h);
   await wait(30);
@@ -136,7 +154,7 @@ async function point(el: Element, click = false) {
   await wait(260);
   h.classList.remove('press');
   if (click) (el as HTMLElement).click();
-  await wait(380); h.classList.add('gone'); el.classList.remove('bobx-pressed');
+  await wait(380); h.classList.add('gone'); el.classList.remove('bobx-pressed'); ghost?.classList.remove('pointing');
   setTimeout(() => h.remove(), 400);
 }
 
@@ -167,14 +185,19 @@ const panel = document.createElement('section');
 panel.className = 'bobx-panel'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', `${BOB}, the Ferrn assistant`); panel.hidden = true;
 panel.innerHTML = `
   <header class="bobx-head">
-    <div class="bobx-modes" role="tablist" aria-label="How to talk to ${BOB}">
-      <button role="tab" data-mode="chat">Chat</button><button role="tab" data-mode="talk">Talk</button><button role="tab" data-mode="present">Present</button>
+    <div class="bobx-who">
+      <span class="bobx-avatar">${ghostCopy('bobav')}</span>
+      <span><strong>${BOB}</strong><small data-status>Online · Ferrn assistant</small></span>
     </div>
     <div class="bobx-tools">
+      <button class="bobx-stop" data-stop type="button" hidden><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>Stop</button>
       <button class="bobx-icon" data-sound aria-label="Sound" title="Sound"></button>
       <button class="bobx-icon" data-close aria-label="Close ${BOB}" title="Close">${'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'}</button>
     </div>
   </header>
+  <div class="bobx-modes" role="tablist" aria-label="How to talk to ${BOB}">
+    <button role="tab" data-mode="chat">Chat</button><button role="tab" data-mode="talk">Talk</button><button role="tab" data-mode="present">Tour</button>
+  </div>
   <div class="bobx-view" data-view="chat">
     <div class="bobx-quotes" data-quotes aria-live="polite"></div>
     <div class="bobx-chips" data-chips></div>
@@ -186,7 +209,7 @@ panel.innerHTML = `
   </div>
   <div class="bobx-view" data-view="talk" hidden>
     <div class="bobx-talk">
-      <div class="bobx-talk-ghost">${GHOST_SVG.replace('id="ghost-g2"', 'id="ghost-g3"').replace('url(#ghost-g2)', 'url(#ghost-g3)')}</div>
+      <div class="bobx-talk-ghost">${ghostCopy('bobg3')}</div>
       <p class="bobx-talk-state" data-talk-state>Tap the button and talk to me like a person.</p>
       <p class="bobx-talk-live" data-talk-live></p>
       <button class="bobx-talk-btn" data-talk-btn type="button">Start talking</button>
@@ -210,6 +233,10 @@ const soundBtn = $('[data-sound]', panel)!;
 const paintSound = () => { soundBtn.innerHTML = ICON_SOUND(soundOn); soundBtn.setAttribute('aria-pressed', String(soundOn)); soundBtn.title = soundOn ? 'Sound on' : 'Sound off'; };
 paintSound();
 soundBtn.addEventListener('click', () => { soundOn = !soundOn; ls.set('ferrn-bob-sound', soundOn ? '1' : '0'); paintSound(); if (!soundOn) hush(); });
+const stopBtn = $<HTMLButtonElement>('[data-stop]', panel)!, statusEl = $('[data-status]', panel)!;
+stopBtn.addEventListener('click', () => { hush(); reader.stop(); });
+const status = (s?: string) => { statusEl.textContent = s || 'Online · Ferrn assistant'; };
+speakingHooks.push((on) => { stopBtn.hidden = !on; panel.classList.toggle('speaking', on); status(on ? 'Talking…' : undefined); ghost?.classList.toggle('talking', on); });
 
 let mode = 'chat', panelRaf = 0;
 function setMode(m: string) {
@@ -242,25 +269,41 @@ const linkify = (s: string) => esc(s)
   .replace(/(https?:\/\/[^\s)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
   .replace(/(^|\s)(\/(?:marketplace|work|services|contact|team|about|insights|profile|careers|rfp)[\w\-/#]*)/g, '$1<a href="$2">$2</a>')
   .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-/** Older messages fade the further back they are, but stay readable on hover and in the scroll. */
-function ageQuotes() {
-  const items = $$('.bobx-q', quotes);
-  items.forEach((q, i) => q.style.setProperty('--age', String(Math.min(4, items.length - 1 - i))));
-}
-function addQuote(role: 'user' | 'assistant', text: string, reply?: Reply) {
-  const q = document.createElement('figure');
-  q.className = `bobx-q ${role === 'user' ? 'me' : 'from-bob'}`;
-  q.innerHTML = role === 'user' ? `<blockquote>${esc(text)}</blockquote><figcaption>${visitor ? esc(visitor) : 'You'}</figcaption>` : `<blockquote>${linkify(text)}</blockquote><figcaption>${BOB}</figcaption>`;
+const clock = () => new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+let msgSeq = 0;
+/** A normal chat: Bob on the left with his avatar, the visitor on the right. Bob's words appear as he "types". */
+function addQuote(role: 'user' | 'assistant', text: string, reply?: Reply, opts: { animate?: boolean } = {}) {
+  const row = document.createElement('div');
+  row.className = `bobx-msg ${role === 'user' ? 'me' : 'bot'}`;
+  const id = `m${++msgSeq}`;
+  row.innerHTML = role === 'user'
+    ? `<div class="bobx-bubble">${esc(text)}</div><span class="bobx-meta">${clock()}</span>`
+    : `<span class="bobx-mini">${ghostCopy('bobm' + msgSeq)}</span><div class="bobx-col"><div class="bobx-bubble" data-b="${id}"></div><div class="bobx-foot"><span class="bobx-meta">${BOB} · ${clock()}</span></div></div>`;
+  quotes.appendChild(row);
   if (role === 'assistant') {
-    const acts = document.createElement('div'); acts.className = 'bobx-q-acts';
-    const sp = document.createElement('button'); sp.type = 'button'; sp.textContent = 'Listen'; sp.addEventListener('click', () => speak(text, { force: true }));
-    acts.appendChild(sp);
-    if (reply?.action?.type === 'navigate') { const a = document.createElement('a'); a.href = reply.action.href; a.textContent = (reply.action.label || 'Take me there') + ' →'; acts.appendChild(a); }
-    q.appendChild(acts);
+    const bubble = $(`[data-b="${id}"]`, row)!;
+    const html = linkify(text);
+    const finish = () => {
+      bubble.innerHTML = html;
+      const acts = document.createElement('div'); acts.className = 'bobx-q-acts';
+      const sp = document.createElement('button'); sp.type = 'button'; sp.className = 'bobx-play';
+      const paint = (on: boolean) => { sp.innerHTML = on ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>Stop' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>Play'; };
+      let mine = false; paint(false);
+      sp.addEventListener('click', () => { if (mine && speakingNow) { hush(); return; } mine = true; paint(true); speak(text, { force: true }).then(() => { mine = false; paint(false); }); });
+      speakingHooks.push((on) => { if (!on && mine) { mine = false; paint(false); } });
+      acts.appendChild(sp);
+      if (reply?.action?.type === 'navigate') { const a = document.createElement('a'); a.href = reply.action.href; a.textContent = (reply.action.label || 'Take me there') + ' →'; acts.appendChild(a); }
+      row.querySelector('.bobx-foot')!.appendChild(acts);
+    };
+    if (opts.animate && !reduced) {
+      // Word-by-word, like a live reply (about 3 seconds for a long answer, never slower).
+      const words = text.split(/(\s+)/); let i = 0; const step = Math.max(8, Math.min(28, 2600 / Math.max(1, words.length)));
+      const tick = () => { i += 2; bubble.textContent = words.slice(0, i).join(''); quotes.scrollTop = quotes.scrollHeight; if (i < words.length) setTimeout(tick, step); else finish(); };
+      tick();
+    } else finish();
   }
-  quotes.appendChild(q); ageQuotes();
   quotes.scrollTo({ top: quotes.scrollHeight, behavior: reduced ? 'auto' : 'smooth' });
-  return q;
+  return row;
 }
 function setChips(list: [string, () => void][]) {
   chips.innerHTML = '';
@@ -300,25 +343,26 @@ async function ask(q: string, opts: { voice?: boolean } = {}): Promise<Reply | n
     if (c.name) {
       setVisitor(c.name);
       const a = `Nice to meet you, ${c.name}! Have a look around, I’ve made the site yours. What would you like to know?`;
-      addQuote('assistant', a); remember(q, a); if (opts.voice || soundOn) await speak(a); return { message: a };
+      addQuote('assistant', a, undefined, { animate: true }); remember(q, a); if (opts.voice || soundOn) await speak(a); return { message: a };
     }
     askedName = true; addQuote('assistant', c.ask!); remember(q, c.ask!); if (opts.voice) await speak(c.ask!); return { message: c.ask! };
   }
   addQuote('user', q);
-  const typing = document.createElement('div'); typing.className = 'bobx-typing'; typing.innerHTML = '<i></i><i></i><i></i>';
+  const typing = document.createElement('div'); typing.className = 'bobx-msg bot bobx-typing-row'; typing.innerHTML = `<span class="bobx-mini">${ghostCopy('bobt' + (++msgSeq))}</span><div class="bobx-bubble bobx-typing"><i></i><i></i><i></i></div>`;
+  status(`${BOB} is typing…`);
   quotes.appendChild(typing); quotes.scrollTop = quotes.scrollHeight;
   ghostLevel(0.2);
   try {
     const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ message: q, history, lang, path: location.pathname, session, visitor }) });
     const j = (await r.json()) as Reply;
-    typing.remove();
-    addQuote('assistant', j.message, j); remember(q, j.message);
+    typing.remove(); status();
+    addQuote('assistant', j.message, j, { animate: true }); remember(q, j.message);
     if (opts.voice || soundOn) await speak(j.message);
     await act(j);
     return j;
   } catch {
-    typing.remove(); const m = S.error || 'Something went wrong, try again in a moment.'; addQuote('assistant', m); return { message: m };
+    typing.remove(); status(); const m = S.error || 'Something went wrong, try again in a moment.'; addQuote('assistant', m); return { message: m };
   }
 }
 /** Do what the answer suggests: read, scroll to a section (pointing at it), or go to a page (clicking a real link). */
@@ -449,14 +493,64 @@ const tour = (() => {
   let stillTimer = 0, pauseTimer = 0;
   const cap = document.createElement('div'); cap.className = 'bobx-cap'; cap.setAttribute('role', 'dialog'); cap.setAttribute('aria-live', 'polite'); cap.hidden = true;
   cap.innerHTML = `<p class="bobx-cap-text" data-cap-text></p><div class="bobx-cap-ask" data-cap-ask></div>
-    <div class="bobx-cap-bar"><span class="bobx-cap-step" data-cap-step></span><button type="button" data-cap-pause>Pause</button><button type="button" data-cap-skip>Next</button><button type="button" data-cap-end>End tour</button></div>`;
+    <form class="bobx-cap-q" data-cap-q><input name="q" maxlength="400" autocomplete="off" placeholder="Ask ${BOB} a question…" aria-label="Ask ${BOB} a question during the tour" /><button type="submit" aria-label="Ask">${'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>'}</button></form>
+    <div class="bobx-cap-bar"><span class="bobx-cap-step" data-cap-step></span><button type="button" data-cap-stop hidden>Stop talking</button><button type="button" data-cap-music aria-pressed="true">Music on</button><button type="button" data-cap-pause>Pause</button><button type="button" data-cap-skip>Next</button><button type="button" data-cap-end>End tour</button></div>`;
   document.body.appendChild(cap);
   const capText = $('[data-cap-text]', cap)!, capAsk = $('[data-cap-ask]', cap)!, capStep = $('[data-cap-step]', cap)!;
+  const capStop = $<HTMLButtonElement>('[data-cap-stop]', cap)!, capMusic = $<HTMLButtonElement>('[data-cap-music]', cap)!, capQ = $<HTMLFormElement>('[data-cap-q]', cap)!;
+  capStop.addEventListener('click', () => hush());
+  speakingHooks.push((on) => { capStop.hidden = !on; bgm.duck(on); });
+
+  /* Background music while Bob isn't talking: a calm track from the site's own playlist, quiet, ducked under his voice. */
+  const bgm = (() => {
+    let list: { src: string }[] = []; try { list = JSON.parse($('[data-music]')?.dataset.music || '[]'); } catch {}
+    const a = new Audio(); a.loop = true; a.preload = 'none';
+    let on = ls.get('ferrn-bob-tour-music') !== '0', playing = false, target = 0.16, raf = 0;
+    const fade = (to: number) => { cancelAnimationFrame(raf); const step = () => { const d = to - a.volume; if (Math.abs(d) < 0.01) { a.volume = to; if (!to && !playing) a.pause(); return; } a.volume = Math.max(0, Math.min(1, a.volume + d * 0.15)); raf = requestAnimationFrame(step); }; step(); };
+    const paint = () => { capMusic.textContent = on ? 'Music on' : 'Music off'; capMusic.setAttribute('aria-pressed', String(on)); };
+    paint();
+    capMusic.addEventListener('click', () => { on = !on; ls.set('ferrn-bob-tour-music', on ? '1' : '0'); paint(); on ? start() : stop(); });
+    // Don't stack on top of music the visitor already has playing from the control centre.
+    const siteMusicOn = () => !!$('[data-music].playing');
+    function start() {
+      if (!on || !list.length || siteMusicOn()) return;
+      if (!a.src) a.src = list[(list.length > 1 ? 1 : 0)].src;
+      playing = true; a.volume = 0; a.play().then(() => fade(speakingNow ? 0.03 : target)).catch(() => { playing = false; });
+    }
+    function stop() { playing = false; fade(0); }
+    return { start, stop, duck: (talking: boolean) => { if (playing) fade(talking ? 0.03 : target); } };
+  })();
+
+  /* Questions during the tour: the tour pauses, Bob answers (spoken), then carries on when the visitor is ready. */
+  let asking = false;
+  capQ.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const inp = $<HTMLInputElement>('input', capQ)!; const q = inp.value.trim(); if (!q || asking) return;
+    inp.value = ''; asking = true; clearTimers(); hush();
+    const wasPaused = paused; paused = true; $('[data-cap-pause]', cap)!.textContent = 'Resume';
+    const keep = { text: capText.textContent, ask: capAsk.innerHTML };
+    capText.textContent = 'Hmm, let me think…'; capAsk.innerHTML = '';
+    let answer = '';
+    try {
+      const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: q, history, lang, path: location.pathname, session, visitor, voice: true, tour: STEPS[idx]?.say.slice(0, 160) }) });
+      answer = ((await r.json()) as Reply).message;
+    } catch { answer = 'Sorry, I lost my train of thought. Ask me again?'; }
+    remember(q, answer);
+    capText.textContent = answer;
+    capAsk.innerHTML = '<button type="button" class="bobx-chip on" data-carry>Carry on with the tour</button>';
+    $('[data-carry]', capAsk)!.addEventListener('click', () => {
+      hush(); asking = false; capText.textContent = fill(STEPS[idx]?.say || keep.text || ''); capAsk.innerHTML = keep.ask;
+      // re-wire the step's own buttons after restoring them
+      if (STEPS[idx]?.ask) askUi(STEPS[idx]);
+      if (!wasPaused) setPaused(false);
+    });
+    await speak(answer, { force: true });
+  });
 
   const STEPS: Step[] = [
     { page: '/', say: `Hi, I’m ${BOB}. Before we start, what should I call you?`, ask: 'name' },
     { page: '/', say: `Lovely to meet you, {name}. Sit back and relax, I’ll take you on a quick journey through Ferrn.`, before: async () => {} },
-    { page: '/', target: '.hx-title', say: `This is Ferrn. We build websites, web apps and AI assistants for businesses that want to grow, not just look nice online. Let me borrow this…`, done: () => pluck() },
+    { page: '/', target: '.hx-title', say: `This is Ferrn. We build websites, web apps and AI assistants for businesses that want to grow, not just look nice online.` },
     { page: '/', target: '.trusted', say: `These are some of the businesses that already trust us with theirs.` },
     { page: '/', target: '.levers', say: `Every site we build earns its keep in three places: helping people find you, helping them choose you, and making sure no enquiry goes cold.` },
     { page: '/', target: '.calc', say: `Quick question, {name}: roughly how many people visit your website each month?`, ask: 'chips', options: Object.keys(VISITS), key: 'visits',
@@ -476,7 +570,7 @@ const tour = (() => {
     { page: '/contact', target: 'form[data-form="contact"]', say: `Here we are, {name}. I’ve filled it in for you, check it over and press Send when you’re happy. I won’t send anything for you.` },
   ];
 
-  const save = () => ss.set('ferrn-bob-tour', JSON.stringify({ idx, ans, letter: $('.bobx-carry')?.textContent || '' }));
+  const save = () => ss.set('ferrn-bob-tour', JSON.stringify({ idx, ans }));
   function clearTimers() { clearTimeout(stillTimer); clearTimeout(pauseTimer); }
   function waitAnswer(): Promise<string> {
     return new Promise((resolve) => {
@@ -509,21 +603,6 @@ const tour = (() => {
     }
     for (const o of st.options || []) { const b = document.createElement('button'); b.type = 'button'; b.className = 'bobx-chip'; b.textContent = o; b.addEventListener('click', () => resolveAnswer?.(o)); capAsk.appendChild(b); }
   }
-  /** Bob plucks the first letter of the orange word in the hero and carries it to the end of the tour. */
-  async function pluck() {
-    const w = $('.hx-flick-word'); const carry = ghostEl().querySelector('.bobx-carry') as HTMLElement;
-    if (!w || !carry || carry.textContent) return;
-    const range = document.createRange(); const tn = w.firstChild;
-    if (!tn || !tn.textContent) return;
-    range.setStart(tn, 0); range.setEnd(tn, 1);
-    const r = range.getBoundingClientRect(); const ch = tn.textContent[0];
-    const fly = document.createElement('span'); fly.className = 'bobx-letter'; fly.textContent = ch;
-    fly.style.cssText = `left:${r.left}px;top:${r.top}px;font-size:${parseFloat(getComputedStyle(w).fontSize)}px`;
-    document.body.appendChild(fly);
-    await flyTo(r.left + r.width + 40, r.top + r.height / 2, 700);
-    fly.classList.add('go'); fly.style.left = `${gx - 8}px`; fly.style.top = `${gy + 6}px`; fly.style.fontSize = '22px';
-    await wait(reduced ? 0 : 650); fly.remove(); carry.textContent = ch;
-  }
   async function position(el: Element | null) {
     if (!el) { const h = home(); await flyTo(h.x - 30, h.y - 140); placeCap(); return; }
     el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
@@ -536,7 +615,8 @@ const tour = (() => {
   function placeCap() {
     cap.hidden = false; requestAnimationFrame(() => cap.classList.add('on'));
     const w = Math.min(380, innerWidth - 24), left = Math.max(12, Math.min(innerWidth - w - 12, gx - w + 40));
-    const top = gy + 52 + 220 < innerHeight ? gy + 52 : Math.max(12, gy - 260);
+    const h = cap.offsetHeight || 260;
+    const top = gy + 60 + h < innerHeight ? gy + 60 : Math.max(12, gy - h - 60);
     cap.style.width = w + 'px'; cap.style.transform = `translate(${left}px, ${top}px)`;
   }
   async function run(my: number) {
@@ -582,7 +662,7 @@ const tour = (() => {
       idx++; save();
     }
     if (running && my === token) {
-      // Last step: drop the letter into the form and type the prefilled fields in.
+      // Last step: type the prefilled fields in.
       await finishOnContact();
       end(false);
     }
@@ -598,9 +678,8 @@ const tour = (() => {
   }
   async function finishOnContact() {
     const f = $<HTMLFormElement>('form[data-form="contact"]'); if (!f) return;
-    const carry = ghost?.querySelector('.bobx-carry') as HTMLElement | null;
     const msg = f.elements.namedItem('message') as HTMLTextAreaElement | null;
-    if (carry?.textContent && msg) { await point(msg); carry.textContent = ''; }
+    if (msg) await point(msg);
     const p = prefill();
     for (const k of ['name', 'email', 'message'] as const) {
       const el = f.elements.namedItem(k) as HTMLInputElement | null; if (!el || !p[k]) continue;
@@ -627,10 +706,11 @@ const tour = (() => {
     } else {
       await portal('in', innerWidth - 120, 150);
     }
+    bgm.start();
     save(); run(my);
   }
   function end(quiet: boolean) {
-    token++; running = false; clearTimers(); resolveAnswer = null; hush(); spotlight(null);
+    token++; running = false; clearTimers(); resolveAnswer = null; hush(); spotlight(null); bgm.stop(); asking = false;
     cap.classList.remove('on'); setTimeout(() => (cap.hidden = true), 300);
     ss.set('ferrn-bob-tour', null);
     document.documentElement.classList.remove('bob-touring');
@@ -643,10 +723,12 @@ const tour = (() => {
   $('[data-cap-end]', cap)!.addEventListener('click', () => end(true));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && running) end(true); });
   addEventListener('resize', () => { if (running) placeCap(); });
+  // The caption grows when Bob answers a question: keep it clear of him.
+  if ('ResizeObserver' in window) new ResizeObserver(() => { if (running && !cap.hidden) placeCap(); }).observe(cap);
   $('[data-tour-start]', panel)!.addEventListener('click', () => start(0));
   return {
     start, end,
-    resume() { const t = ss.get('ferrn-bob-tour'); if (!t) return false; try { const s = JSON.parse(t); if (s.letter) ghostEl().querySelector('.bobx-carry')!.textContent = String(s.letter).slice(0, 1); start(s.idx || 0, s.ans || {}); return true; } catch { return false; } },
+    resume() { const t = ss.get('ferrn-bob-tour'); if (!t) return false; try { const s = JSON.parse(t); start(s.idx || 0, s.ans || {}); return true; } catch { return false; } },
     get running() { return running; },
   };
 })();

@@ -133,3 +133,76 @@
 @media (prefers-reduced-motion: reduce) {
   .bobx-ghost-in, .bobx-talk-ghost svg { animation: none !important; }
 }
+
+/* ══ 22 Nov: a normal chat layout, a real Stop, questions during the tour, Bob with arms ══ */
+.bobx-panel { border-radius: 8px; }
+.bobx-head { padding: 12px 12px 12px 14px; }
+.bobx-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.bobx-who strong { display: block; font-size: 15.5px; line-height: 1.2; }
+.bobx-who small { display: block; font-size: 12px; color: var(--muted); }
+.bobx-who small::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-right: 6px; vertical-align: 1px; }
+.bobx-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--orange) 14%, transparent); flex: none; overflow: visible; }
+.bobx-avatar svg { width: 36px; height: auto; overflow: visible; }
+.bobx-panel.speaking .bobx-avatar svg .g-mouth { animation: bobx-talkmouth .26s ease-in-out infinite alternate; }
+.bobx-stop { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--orange); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.bobx-stop[hidden] { display: none; }
+.bobx-stop:hover { filter: brightness(1.08); }
+.bobx-panel > .bobx-modes { margin: 10px 12px 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+.bobx-modes button { border-radius: 6px; }
+.bobx-icon { border-radius: 8px; }
+
+.bobx-quotes { gap: 14px; padding: 16px 14px 8px; }
+.bobx-msg { display: flex; gap: 8px; align-items: flex-end; max-width: 100%; animation: bobx-in .25s ease-out; }
+@keyframes bobx-in { from { opacity: 0; transform: translateY(6px); } }
+.bobx-msg.me { flex-direction: column; align-items: flex-end; align-self: flex-end; max-width: 82%; gap: 4px; }
+.bobx-msg.bot { align-self: flex-start; max-width: 90%; }
+.bobx-mini { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--orange) 14%, transparent); margin-bottom: 20px; }
+.bobx-mini svg { width: 26px; height: auto; overflow: visible; }
+.bobx-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.bobx-bubble { padding: 10px 13px; border-radius: 16px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+.bobx-msg.bot .bobx-bubble { background: color-mix(in srgb, var(--ink) 7%, var(--panel)); color: var(--ink); border-bottom-left-radius: 4px; }
+.bobx-msg.me .bobx-bubble { background: var(--orange); color: #fff; border-bottom-right-radius: 4px; }
+.bobx-bubble a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.bobx-msg.bot .bobx-bubble a { color: var(--orange); }
+.bobx-meta { font-size: 11px; color: var(--faint); padding: 0 4px; }
+.bobx-msg .bobx-q-acts { margin: 2px 0 0; }
+.bobx-play { display: inline-flex; align-items: center; gap: 5px; }
+.bobx-typing { display: flex; gap: 5px; padding: 13px 14px; }
+.bobx-typing-row .bobx-mini { margin-bottom: 0; }
+.bobx-q-acts button, .bobx-q-acts a { border-radius: 8px; }
+.bobx-chips button, .bobx-chip { border-radius: 8px; }
+.bobx-chip.on { background: var(--orange); border-color: var(--orange); color: #fff; }
+.bobx-form input, .bobx-send { border-radius: 8px; }
+
+/* talk view: the new ghost */
+.bobx-talk-ghost svg { width: 130px; height: auto; }
+.bobx-panel[data-talk="speaking"] .bobx-talk-ghost .g-mouth { animation: bobx-talkmouth .28s ease-in-out infinite alternate; }
+.bobx-panel[data-talk="speaking"] .bobx-talk-ghost .g-arm-r { animation: bobx-gesture 1.8s ease-in-out infinite; }
+.bobx-panel[data-talk="listening"] .bobx-talk-ghost .g-arm-l { transform: rotate(60deg); }
+
+/* the roaming ghost talks with his hands and points */
+.bobx-ghost { width: 72px; height: 78px; }
+.bobx-ghost.talking .g-arm-r { animation: bobx-gesture 1.6s ease-in-out infinite; }
+.bobx-ghost.talking .g-arm-l { animation: bobx-gesture-l 2.1s ease-in-out infinite; }
+.bobx-ghost.talking .g-mouth { animation: bobx-talkmouth .26s ease-in-out infinite alternate; }
+.bobx-ghost.pointing .g-arm-r { transform: rotate(-70deg); }
+.bobx-ghost.face-left.pointing .g-arm-r { transform: rotate(-70deg); }
+@keyframes bobx-gesture { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-35deg); } 60% { transform: rotate(-12deg); } }
+@keyframes bobx-gesture-l { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(25deg); } 70% { transform: rotate(8deg); } }
+.bobx-hand svg { filter: drop-shadow(0 6px 12px rgba(249,68,6,.35)); }
+
+/* tour caption: ask a question, stop talking, music */
+.bobx-cap { border-radius: 8px; }
+.bobx-cap-q { display: flex; gap: 6px; margin-top: 12px; }
+.bobx-cap-q input { flex: 1; min-width: 0; border-radius: 8px; border: var(--bw) solid var(--line-2); background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; padding: 8px 11px; }
+.bobx-cap-q input:focus { outline: none; border-color: var(--orange); }
+.bobx-cap-q button { width: 38px; border-radius: 8px; border: 0; background: var(--ink); color: var(--bg); display: grid; place-items: center; cursor: pointer; }
+.bobx-cap-bar { flex-wrap: wrap; }
+.bobx-cap-bar [data-cap-stop] { background: var(--orange); color: #fff; font-weight: 600; }
+.bobx-cap-bar [data-cap-stop][hidden] { display: none; }
+.bobx-cap-bar [data-cap-music][aria-pressed="false"] { opacity: .6; }
+@media (prefers-reduced-motion: reduce) { .bobx-ghost .g-arm, .bobx-talk-ghost .g-arm, .bobx-msg { animation: none !important; } }
+.bobx-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 24px; }
+.bobx-foot .bobx-q-acts { margin: 0; }
+.bobx-foot .bobx-q-acts button, .bobx-foot .bobx-q-acts a { padding: 3px 8px; font-size: 12px; }
+.bobx-mini { margin-bottom: 26px; }

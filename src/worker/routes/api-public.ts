@@ -57,9 +57,9 @@ api.post('/forms/:type', async (c) => {
 
 /* ── Bob, the AI assistant ── */
 api.post('/chat', async (c) => {
-  if (await limited(c, 'chat', 40, 3600)) return c.json({ ok: false, message: 'You’ve sent a lot of messages — please email info@ferrnagency.com and we’ll pick it up.' }, 429);
-  if (await limited(c, 'chat-day', 150, 86400)) return c.json({ ok: false, message: 'That’s the daily limit for the assistant — email info@ferrnagency.com and a person will reply.' }, 429);
-  const b = (await c.req.json().catch(() => ({}))) as { message?: string; history?: { role: string; content: string }[]; lang?: string; path?: string; session?: string; visitor?: string; voice?: boolean };
+  if (await limited(c, 'chat', 40, 3600)) return c.json({ ok: false, message: 'You’ve sent a lot of messages, please email info@ferrnagency.com and we’ll pick it up.' }, 429);
+  if (await limited(c, 'chat-day', 150, 86400)) return c.json({ ok: false, message: 'That’s the daily limit for the assistant, email info@ferrnagency.com and a person will reply.' }, 429);
+  const b = (await c.req.json().catch(() => ({}))) as { message?: string; history?: { role: string; content: string }[]; lang?: string; path?: string; session?: string; visitor?: string; voice?: boolean; tour?: string };
   const message = clamp(b.message, 1500);
   if (!message) return c.json({ ok: false, message: 'Write a message first.' }, 422);
   const lang = isLang(b.lang) ? b.lang : 'en';
@@ -68,7 +68,7 @@ api.post('/chat', async (c) => {
   const session = clamp(b.session, 60);
   const bobSet = Object.fromEntries((await all<{ key: string; value: string }>(c.env.DB, "SELECT key, value FROM settings WHERE key IN ('bob.enabled','bob.model','bob.daily_limit')").catch(() => [])).map((r) => [r.key, r.value]));
   if (bobSet['bob.enabled'] === '0') return c.json({ ok: false, message: 'The assistant is taking a break. Email info@ferrnagency.com and we’ll reply within a working day.' }, 503);
-  const model = bobSet['bob.model'] || '@cf/meta/llama-3.1-8b-instruct-fp8-fast';
+  const model = bobSet['bob.model'] || '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
   // Site-wide daily ceiling so Bob can never run up a bill (counts model answers only).
   const dayKey = `bob:answers:${new Date().toISOString().slice(0, 10)}`;
   const answersToday = Number((await c.env.CACHE.get(dayKey)) ?? 0);
@@ -84,7 +84,7 @@ api.post('/chat', async (c) => {
 
   // Quick intents that need no model.
   if (/^(read|read (this|the) page|read (it )?(to|for) me|listen|read aloud)\b/i.test(message)) {
-    const reply = 'Sure — reading this page now. Use the controls to pause, restart or stop.';
+    const reply = 'Sure, reading this page now. Use the controls to pause, restart or stop.';
     log(reply, 'intent'); return c.json({ ok: true, message: reply, action: { type: 'read' }, sources: [] });
   }
 
@@ -97,22 +97,24 @@ api.post('/chat', async (c) => {
   try { const p = await bobPrompt(c.env, { langName, path, message }); system = p.system; hits = p.hits; }
   catch { system = await assistantSystemPrompt(c.env, { channel: 'web', langName }); }
 
-  // The visitor told Bob their first name (validated client-side; re-checked here) — and voice answers stay short.
+  // The visitor told Bob their first name (validated client-side; re-checked here), and voice answers stay short.
   const visitor = /^[\p{L}'’-]{2,12}$/u.test(String(b.visitor || '')) ? String(b.visitor) : '';
-  if (visitor) system += `\n\nThe visitor's first name is ${visitor}. Use it naturally now and then — not in every message.`;
+  if (visitor) system += `\n\nThe visitor's first name is ${visitor}. Use it naturally now and then, not in every message.`;
   if (b.voice) system += '\n\nThis answer will be spoken aloud in a live conversation: keep it to two or three short sentences, no lists, no links.';
-  const history = (b.history ?? []).slice(-8).filter((m) => m.role === 'user' || m.role === 'assistant')
+  const tourAt = clamp(b.tour, 200);
+  if (tourAt) system += `\n\nYou are in the middle of giving the visitor a guided tour of the site (right now: ${tourAt}). They paused it to ask this. Answer briefly and warmly, then say you can carry on with the tour whenever they are ready. No navigate action.`;
+  const history = (b.history ?? []).slice(-12).filter((m) => m.role === 'user' || m.role === 'assistant')
     .map((m) => ({ role: m.role as 'user' | 'assistant', content: clamp(m.content, 1500) }));
   const messages: ChatMessage[] = [{ role: 'system', content: system }, ...history, { role: 'user', content: message }];
 
   let reply: { message: string; action?: BobAction; sources: string[] } = { message: '', sources: [] }, provider = 'none';
   try {
-    const r = await complete(c.env, messages, { maxTokens: 450, json: hits.length > 0 || system.includes('Output strictly as JSON'), model, bucket: 'bob' });
+    const r = await complete(c.env, messages, { maxTokens: 600, json: hits.length > 0 || system.includes('Output strictly as JSON'), model, bucket: 'bob' });
     provider = r.provider;
     reply = await parseReply(c.env, r.text, hits);
     if (!reply.message) reply.message = 'I’m not sure about that one. Email info@ferrnagency.com or book a call at ' + (c.env.BOOKING_URL || 'https://cal.com/ferrn-agency') + ' and the team will help.';
   } catch {
-    reply.message = 'I can’t answer right now — please email info@ferrnagency.com or book a call at https://cal.com/ferrn-agency.';
+    reply.message = 'I can’t answer right now, please email info@ferrnagency.com or book a call at https://cal.com/ferrn-agency.';
   }
 
   // Capture contact details shared in chat as a lead.

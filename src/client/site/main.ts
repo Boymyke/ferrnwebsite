@@ -11,8 +11,8 @@ let lang = document.body.dataset.lang || 'en';
 let S: Strings = JSON.parse(document.body.dataset.i18n || '{}');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ── intro: "Websites? / Web apps? / AI automations?" type in and out → "all in FERRN" → an orange curtain drops,
-   a black one follows, and both carry on down to reveal the page. Once per session; Escape ends it. ── */
+/* ── intro: "Websites? / Web apps? / AI automations?" type in and out → "all in FERRN" → Bob floats up, grips the
+   two dark curtains with his hands and pulls them apart to reveal the page, then flies home to his corner. Once per session; Escape ends it. ── */
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function runIntro(done: () => void) {
   const intro = $('.intro');
@@ -36,11 +36,13 @@ function runIntro(done: () => void) {
     await type(lead, 44);
     const b = document.createElement('span'); b.className = 'intro-brand'; text.after(b);
     for (let i = 1; i <= brand.length && !skipped; i++) { b.textContent = brand.slice(0, i); await wait(52); }
-    await wait(750);
-    intro.classList.add('drop');          // orange, then black, fall over the words…
-    await wait(1250);
-    intro.classList.add('away');          // …and the whole stack keeps falling, uncovering the page
-    await wait(900);
+    await wait(650);
+    // Bob floats up, takes hold of the two curtains and pulls them apart, then flies home to his corner.
+    intro.classList.add('bob-in'); await wait(950);
+    intro.classList.add('grip'); await wait(450);
+    intro.classList.add('open'); await wait(1100);
+    intro.classList.add('home'); await wait(700);
+    intro.classList.add('away');
     finish();
   })().catch(finish);
   setTimeout(finish, 12000); // safety net

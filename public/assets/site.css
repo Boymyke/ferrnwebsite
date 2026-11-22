@@ -1386,3 +1386,55 @@ main .room-close h2.h-display { max-width: 16ch; }
 .case-sec h2, .case-results h2 { font-size: clamp(22px, 2vw, 28px); font-weight: 600; margin-bottom: 12px; }
 .case-sec p { color: var(--ink); opacity: .78; }
 @media (max-width: 640px) { .case-cover { aspect-ratio: auto; } .cc-bar { height: 30px; } .cc-bar span { font-size: 11px; transform: none; } }
+
+/* ── Bob, the ghost (22 Nov): arms pivot at the shoulders, eyes blink and follow, mouth talks, tail sways ── */
+.ghost .g-arm { transform-box: view-box; transition: transform .35s cubic-bezier(.3,1.4,.5,1); }
+.ghost .g-arm-l { transform-origin: 34px 90px; }
+.ghost .g-arm-r { transform-origin: 126px 90px; }
+.ghost .g-eyes { transform-box: fill-box; transform-origin: center; transition: transform .25s ease-out, scale .09s ease-in-out; }
+.ghost .g-mouth { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(calc(1 + var(--level, 0) * 1.8)); transition: transform .08s linear; }
+.ghost .g-body-wrap { transform-box: fill-box; transform-origin: 50% 0; animation: g-sway 4.2s ease-in-out infinite; }
+@keyframes g-sway { 0%, 100% { transform: skewX(0); } 50% { transform: skewX(-2deg); } }
+.bob-ghost .ghost-float { width: 66px; }
+.bob-ghost.blink .g-eyes, .ghost.blink .g-eyes { scale: 1 .1; }
+.bob-ghost .ghost { width: 66px; height: auto; filter: drop-shadow(0 10px 18px rgba(249,68,6,.35)); }
+.bob-ghost.act-wave .g-arm-r, .ghost.act-wave .g-arm-r { animation: g-wave 1.5s ease-in-out; }
+.bob-ghost.act-wave2 .g-arm-l, .ghost.act-wave2 .g-arm-l { animation: g-wave-l 1.6s ease-in-out; }
+@keyframes g-wave { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(-115deg); } 30% { transform: rotate(-90deg); } 45% { transform: rotate(-120deg); } 60% { transform: rotate(-90deg); } 75% { transform: rotate(-115deg); } }
+@keyframes g-wave-l { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(115deg); } 30% { transform: rotate(90deg); } 45% { transform: rotate(120deg); } 60% { transform: rotate(90deg); } 75% { transform: rotate(115deg); } }
+.bob-ghost.act-look .g-eyes { animation: g-look 2.2s ease-in-out; }
+@keyframes g-look { 0%, 100% { translate: 0 0; } 20%, 40% { translate: -5px 0; } 60%, 80% { translate: 5px -1px; } }
+.bob-ghost.act-hop .ghost { animation: g-hop .9s cubic-bezier(.3,1.6,.5,1); }
+@keyframes g-hop { 0%, 100% { transform: translateY(0) scale(1); } 20% { transform: translateY(2px) scale(1.06, .92); } 50% { transform: translateY(-14px) scale(.96, 1.05); } 80% { transform: translateY(0) scale(1.04, .96); } }
+.bob-ghost.act-loop .ghost { animation: g-loop 1.3s cubic-bezier(.5,0,.3,1); }
+@keyframes g-loop { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+.bob-ghost.act-peek .ghost { animation: g-peek 2.4s ease-in-out; }
+.bob-ghost.act-peek .g-arm { animation: g-cover 2.4s ease-in-out; }
+@keyframes g-peek { 0%, 100% { transform: translateX(0); } 30%, 70% { transform: translateX(10px) rotate(8deg); } }
+@keyframes g-cover { 0%, 100% { transform: rotate(0); } 25%, 75% { transform: rotate(var(--cov, -40deg)); } }
+.bob-ghost.act-peek .g-arm-l { --cov: 40deg; }
+.bob-ghost:hover .ghost { transform: translateY(-4px) scale(1.06); }
+@media (prefers-reduced-motion: reduce) { .ghost .g-body-wrap, .bob-ghost[class*="act-"] .ghost, .bob-ghost[class*="act-"] .g-arm, .bob-ghost[class*="act-"] .g-eyes { animation: none !important; } }
+
+/* ── Intro (22 Nov): Bob arrives and pulls the curtains open with his hands ── */
+.play-intro .intro { background: transparent; }
+.intro-half { position: absolute; top: 0; bottom: 0; width: 50.5%; z-index: 0; background: #090a0c; transition: transform 1.05s cubic-bezier(.7,0,.2,1); will-change: transform; }
+.intro-half-l { left: 0; box-shadow: inset -2px 0 0 rgba(249,68,6,.0); }
+.intro-half-r { right: 0; }
+.intro-half::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40px; background: linear-gradient(90deg, transparent, rgba(249,68,6,.0)); }
+.intro.open .intro-half-l { transform: translateX(-102%); }
+.intro.open .intro-half-r { transform: translateX(102%); }
+.intro.grip .intro-half-l { box-shadow: inset -3px 0 0 var(--orange), inset -40px 0 60px -30px rgba(249,68,6,.5); }
+.intro.grip .intro-half-r { box-shadow: inset 3px 0 0 var(--orange), inset 40px 0 60px -30px rgba(249,68,6,.5); }
+.intro-type { z-index: 2; transition: opacity .3s, transform .4s; }
+.intro.bob-in .intro-type { opacity: 0; transform: translateY(-30px); }
+.intro-bob { position: absolute; left: 50%; top: 50%; z-index: 3; width: 200px; translate: -50% -50%; transform: translateY(110vh); opacity: 0; transition: transform .9s cubic-bezier(.3,1.25,.5,1), opacity .3s; pointer-events: none; }
+.intro-bob .ghost { width: 200px; height: auto; display: block; filter: drop-shadow(0 30px 60px rgba(249,68,6,.45)); }
+.intro.bob-in .intro-bob { transform: translateY(0); opacity: 1; }
+.intro.grip .intro-bob .g-arm-l { transform: rotate(-12deg) translateX(-10px); }
+.intro.grip .intro-bob .g-arm-r { transform: rotate(12deg) translateX(10px); }
+.intro.open .intro-bob .g-arm-l { transform: rotate(-30deg) translateX(-16px); transition-duration: .5s; }
+.intro.open .intro-bob .g-arm-r { transform: rotate(30deg) translateX(16px); transition-duration: .5s; }
+.intro.open .intro-bob .g-mouth { transform: scaleY(2.2); }
+.intro.home .intro-bob { transition: transform .9s cubic-bezier(.6,0,.3,1), opacity .4s .6s; transform: translate(calc(50vw - 70px), calc(50vh - 70px)) scale(.33); opacity: 0; }
+.intro.away { animation: none; }

@@ -60,7 +60,7 @@ export function prefillContact() {
 export function bobLauncher() {
   const root = $('[data-bob]'); if (!root) return;
   const btn = $<HTMLButtonElement>('[data-bob-open]', root)!;
-  const eyes = $<SVGGElement>('.ghost-eyes', root);
+  const eyes = $<SVGGElement>('.g-eyes', root);
   const open = (mode?: string) => {
     root.classList.add('loading');
     loadBob().then((b) => b.open(mode)).catch(() => { root.classList.remove('loading'); location.href = '/contact'; })
@@ -82,6 +82,16 @@ export function bobLauncher() {
       setTimeout(blink, 3800 + Math.random() * 3200);
     };
     setTimeout(blink, 3000);
+    // A mind of his own: every so often Bob waves, looks around, hops or does a little loop. Hovering makes him wave.
+    const ACTS: [string, number][] = [['act-wave', 1600], ['act-look', 2200], ['act-hop', 900], ['act-loop', 1300], ['act-wave2', 1700], ['act-peek', 2400]];
+    let busy = false;
+    const play = (cls: string, ms: number) => { if (busy) return; busy = true; btn.classList.add(cls); setTimeout(() => { btn.classList.remove(cls); busy = false; }, ms); };
+    const idle = () => {
+      if (document.visibilityState === 'visible' && !root.classList.contains('is-open') && !root.classList.contains('away')) { const [c, ms] = ACTS[Math.floor(Math.random() * ACTS.length)]; play(c, ms); }
+      setTimeout(idle, 9000 + Math.random() * 9000);
+    };
+    setTimeout(idle, 4500);
+    btn.addEventListener('pointerenter', () => play('act-wave', 1600));
   }
   // The eyes follow the pointer (cheap: one transform per frame at most).
   if (eyes && matchMedia('(hover: hover)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {

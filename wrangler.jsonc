@@ -53,7 +53,7 @@
     "WORKERS_AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "TTS_PROVIDER": "azure",
     "AZURE_SPEECH_REGION": "westeurope",
-    "AZURE_VOICE": "en-NG-EzinneNeural",
+    "AZURE_VOICE": "en-NG-AbeoNeural",
     "ELEVENLABS_VOICE_ID": "U7wWSnxIJwCjioxt86mk",
     "ENGINE_URL": "https://script.google.com/macros/s/AKfycbxHGrYu59me2dpKLI1ZCzTjoEeWuukYK-5kJDfZv-eCfp3W8rjRbD_YrWUDblJXOJtK/exec"
   }
