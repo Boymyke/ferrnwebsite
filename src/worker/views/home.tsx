@@ -369,11 +369,11 @@ export function HomePage(p: {
         const TABS: [string, string, string][] = [['website', 'Websites', 'globe'], ['webapp', 'Web apps', 'layout-dashboard'], ['ai', 'AI automations', 'bot']];
         const groups = TABS.map(([k, label, ic]) => {
           const all = p.projects.filter((x) => (x.category || 'website') === k);
-          return { k, label, ic, items: [...all.filter((x) => x.featured), ...all.filter((x) => !x.featured)].slice(0, 3), total: all.length };
+          return { k, label, ic, items: [...all.filter((x) => x.featured), ...all.filter((x) => !x.featured)].slice(0, 6), total: all.length };
         }).filter((g) => g.items.length);
         if (!groups.length) return null;
         const Card = ({ x, i, n }: { x: PublicProject; i: number; n: number }) => { const img = shotOf(x); return (
-          <a class={`wk wk-${i + 1}`} href={href(lang, `/work/${x.slug}`)}>
+          <a class="wk pf-item" href={href(lang, `/work/${x.slug}`)}>
             <div class="wk-shot">{img ? <img src={img} alt={`${x.title}`} loading="lazy" decoding="async" /> : <div class="work-media-empty">{icon('image', { size: 26 })}</div>}</div>
             <div class="wk-cap">
               <span class="wk-n">{String(i + 1).padStart(2, '0')}</span>
@@ -403,20 +403,7 @@ export function HomePage(p: {
                 <div class="pf-card">
                   {groups.map((g, gi) => (
                     <div class="pf-panel" role="tabpanel" id={`pf-panel-${g.k}`} aria-labelledby={`pf-tab-${g.k}`} hidden={gi !== 0} data-pf-panel={g.k}>
-                      {g.items.length === 1 ? (() => { const x = g.items[0]; return (
-                        <div class="pf-solo">
-                          <Card x={x} i={0} n={1} />
-                          <div class="pf-solo-text">
-                            <span class="pf-kind">{x.type}{x.industry ? ` · ${x.industry}` : ''}</span>
-                            <h3>{x.title}</h3>
-                            {x.summary ? <p>{x.summary}</p> : null}
-                            {x.solution ? <p class="pf-muted">{x.solution}</p> : null}
-                            <a class="btn btn-primary" href={href(lang, `/work/${x.slug}`)}>Read the case study {icon('arrow-up-right', { size: 15 })}</a>
-                          </div>
-                        </div>
-                      ); })() : (
-                        <div class={`wk-grid n-${g.items.length}`}>{g.items.map((x, i) => <Card x={x} i={i} n={g.items.length} />)}</div>
-                      )}
+                      <div class="pf-grid">{g.items.map((x, i) => <Card x={x} i={i} n={g.items.length} />)}</div>
                     </div>
                   ))}
                   <div class="pf-foot"><a class="link" href={href(lang, '/work')}>{t(lang, 'nav.work')} {icon('arrow-right', { size: 15 })}</a></div>

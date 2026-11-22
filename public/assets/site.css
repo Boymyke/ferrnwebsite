@@ -934,7 +934,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .ab-silk img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); transition: transform 1.2s cubic-bezier(.2,.8,.2,1); }
 .ab-k1:hover .ab-silk img { transform: scale(1.12) rotate(-1deg); }
 .ab-plus { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #0b0c10; color: #fff; transition: rotate .35s cubic-bezier(.2,.8,.2,1); }
-.ab-k1:hover .ab-plus { rotate: 45deg; }
+.ab-k1:hover .ab-plus { background: var(--orange); }
 .ab-k2 { background: var(--orange); border: 0; color: #fff; text-decoration: none; overflow: hidden; }
 .ab-k2 .ab-num { color: #fff; } .ab-k2 .ab-num-cap { color: rgba(255,255,255,.86); }
 .ab-k2[data-tilt]:hover { background: #ff5a1f; }
@@ -949,7 +949,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .ab-notch::before, .ab-notch::after { content: ''; position: absolute; width: 18px; height: 18px; background: radial-gradient(circle at 0 100%, transparent 17.5px, var(--bg) 18px); }
 .ab-notch::before { top: 0; left: -18px; } .ab-notch::after { right: 0; bottom: -18px; }
 .ab-notch-btn { width: 46px; height: 46px; margin: 0 0 6px 6px; border-radius: 50%; display: grid; place-items: center; border: var(--bw) solid var(--line-2); color: var(--ink); background: var(--bg); transition: background-color .25s, color .25s, rotate .35s cubic-bezier(.2,.8,.2,1); }
-.ab-k2:hover .ab-notch-btn { background: var(--ink); color: var(--bg); rotate: 45deg; }
+.ab-k2:hover .ab-notch-btn { background: var(--orange); border-color: var(--orange); color: #fff; }
 .ab-k3 { overflow: hidden; }
 .ab-orb { position: absolute; top: -70px; right: -70px; width: 230px; height: 230px; border-radius: 50%; pointer-events: none; z-index: -1;
   background: radial-gradient(circle at 38% 38%, #ffd3b5 0%, #ff8a4c 22%, #F94406 48%, rgba(249,68,6,.35) 66%, transparent 72%); filter: blur(10px); opacity: .9; transition: transform 1s cubic-bezier(.2,.8,.2,1); }
@@ -1246,7 +1246,7 @@ html:has(.season-banner) .nav-shell { top: 37px; }
 .wk-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .wk-tags i { font-style: normal; font-size: 11.5px; line-height: 1; padding: 5px 8px; border-radius: 9999px; border: var(--bw) solid rgba(255,255,255,.16); color: rgba(244,243,240,.75); }
 .wk-go { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; background: rgba(255,255,255,.08); color: #f4f3f0; transition: background .3s var(--ease), transform .3s var(--ease); }
-.wk:hover .wk-go { background: var(--orange); transform: rotate(45deg); }
+.wk:hover .wk-go { background: var(--orange); }
 .wk:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (max-width: 1000px) {
   .wk-grid { grid-template-columns: 1fr 1fr; grid-template-rows: none; height: auto; }
@@ -1332,20 +1332,29 @@ main .room-close h2.h-display { max-width: 16ch; }
 .pf-tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
 .pf-tabs button:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .pf-tabs em { font-style: normal; font-size: 11.5px; min-width: 20px; height: 20px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 6px; background: color-mix(in srgb, currentColor 14%, transparent); font-variant-numeric: tabular-nums; }
-.pf-card { padding: clamp(10px, 1.2vw, 16px); border-radius: 8px; border: var(--bw) solid var(--line); background: var(--panel); display: grid; gap: 14px; }
+.pf-card { display: grid; gap: 14px; }
 .pf-panel[hidden] { display: none; }
 .pf-panel:not([hidden]) { animation: vt-in .35s cubic-bezier(.2,.8,.2,1); }
-.pf-card .wk-grid.n-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; height: clamp(360px, 32vw, 520px); }
-.pf-card .wk-grid.n-2 .wk-1 { grid-row: auto; grid-column: auto; aspect-ratio: auto; }
-.pf-solo { display: grid; grid-template-columns: 1.55fr 1fr; gap: clamp(16px, 2vw, 32px); align-items: center; }
-.pf-solo .wk, .pf-solo .wk-1 { grid-column: auto; grid-row: auto; aspect-ratio: 16 / 10.5; display: block; }
-.pf-solo .wk-1 .wk-shot { aspect-ratio: auto; }
-.pf-solo-text { display: grid; gap: 12px; align-content: center; padding: clamp(4px, 1vw, 16px); }
-.pf-solo-text h3 { margin: 0; font-size: clamp(26px, 2.6vw, 40px); line-height: 1.1; letter-spacing: -.025em; font-weight: 600; }
-.pf-solo-text p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--ink); }
-.pf-solo-text p.pf-muted { color: var(--muted); font-size: 15px; }
-.pf-solo-text .btn { justify-self: start; margin-top: 6px; }
-.pf-kind { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.pf-foot { display: flex; justify-content: flex-end; padding: 0 4px 2px; }
-@media (max-width: 1000px) { .pf-card .wk-grid.n-2 { height: auto; } .pf-card .wk-grid.n-2 .wk { aspect-ratio: 4 / 3.4; } .pf-solo { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .pf-tabs { width: 100%; } .pf-tabs button { flex: 1; justify-content: center; padding: 0 8px; font-size: 13px; } .pf-tabs button svg { display: none; } .pf-card .wk-grid.n-2 { grid-template-columns: 1fr; } }
+.pf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pf-grid .pf-item { aspect-ratio: 4 / 3.4; height: auto; grid-column: auto; grid-row: auto; display: block; }
+.pf-grid .pf-item .wk-shot { position: absolute; inset: 0; aspect-ratio: auto; }
+.pf-grid .pf-item .wk-t strong { font-size: 17px; }
+.pf-foot { display: flex; justify-content: flex-end; padding: 0 4px; }
+@media (max-width: 1000px) { .pf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pf-grid { grid-template-columns: 1fr; gap: 12px; } }
+@media (max-width: 640px) { .pf-tabs { width: 100%; } .pf-tabs button { flex: 1; justify-content: center; padding: 0 8px; font-size: 13px; } .pf-tabs button svg { display: none; }  }
+
+/* ── One icon-button style everywhere (22 Nov): 8px square, orange on hover, the arrow nudges; never rotates into a diamond ── */
+.wk-go, .svc-go, .work-arrow, .ab-notch-btn, .ab-plus, .reel-close, .quotes-nav button {
+  border-radius: 8px; rotate: none;
+  transition: background-color .25s var(--ease), border-color .25s var(--ease), color .25s var(--ease), opacity .25s, transform .35s cubic-bezier(.2,.8,.2,1);
+}
+.wk-go svg, .svc-go svg, .work-arrow svg, .ab-notch-btn svg, .quotes-nav button svg { transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.wk:hover .wk-go, [data-theme="light"] .wk:hover .wk-go, .work-row:hover .work-arrow, .ab-k2:hover .ab-notch-btn, .quotes-nav button:hover, .reel-close:hover {
+  transform: none; rotate: none; background: var(--orange); border-color: var(--orange); color: #fff;
+}
+.ab-k1:hover .ab-plus { rotate: none; background: var(--orange); }
+.wk:hover .wk-go svg, .svc-box:hover .svc-go svg, .work-row:hover .work-arrow svg, .ab-k2:hover .ab-notch-btn svg { transform: translate(2px, -2px); }
+.quotes-nav button[data-next]:hover svg { transform: translateX(2px); }
+.quotes-nav button[data-prev]:hover svg { transform: translateX(-2px); }
+.wk-go:focus-visible, .quotes-nav button:focus-visible, .reel-close:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
