@@ -876,3 +876,4 @@ ul.plain, ol.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; } u
 .call-row-end { display: flex; align-items: center; gap: 6px; }
 .call-copy { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: var(--muted); border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
 .call-copy:hover { color: var(--o); border-color: var(--o); }
+.link-actions { display: inline-flex; gap: 6px; white-space: nowrap; justify-content: flex-end; }

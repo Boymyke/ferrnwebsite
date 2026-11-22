@@ -347,10 +347,26 @@ function Logs() {
 }
 
 /* ═══════════════════════════ Links, FAQs, Seasons, Profile ═══════════════════════════ */
+/** Open a link in a new tab or copy it, straight from the table (without opening the editor). */
+function LinkActions({ url }: { url?: string }) {
+  const toast = useToast();
+  if (!url) return null;
+  const full = /^https?:\/\//i.test(url) ? url : url.startsWith('/') ? `https://www.ferrnagency.com${url}` : `https://${url}`;
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const copy = async (e: React.MouseEvent) => { stop(e); try { await navigator.clipboard.writeText(full); toast('Link copied'); } catch { toast('Could not copy', 'err'); } };
+  return (
+    <span className="link-actions" onClick={stop}>
+      <a className="btn sm primary" href={full} target="_blank" rel="noopener noreferrer" onClick={stop}><ExternalLink size={14} />Open</a>
+      <button type="button" className="btn sm ghost" onClick={copy} aria-label="Copy link"><Copy size={14} />Copy</button>
+    </span>
+  );
+}
+
 export function Links() {
   return (
     <ResourcePage res="links" entity="links" title="Important links" sub="Shown at ferrnagency.com/links and in the footer. Company profile, brochure, demos, booking — one place to send people."
-      columns={[{ key: 'title', label: 'Link', render: (r) => <><strong>{r.title}</strong><div className="muted small">{r.url}</div></> }, { key: 'category', label: 'Group' }, { key: 'visible', label: 'Shown', render: (r) => (r.visible ? 'yes' : 'no') }]}
+      columns={[{ key: 'title', label: 'Link', render: (r) => <><strong>{r.title}</strong><div className="muted small">{r.url}</div></> }, { key: 'category', label: 'Group' }, { key: 'visible', label: 'Shown', render: (r) => (r.visible ? 'yes' : 'no') },
+        { key: 'go', label: '', render: (r) => <LinkActions url={r.url} /> }]}
       defaults={{ visible: 1, sort: 100, icon: 'link' }}
       fields={[{ name: 'title', label: 'Title' }, { name: 'url', label: 'URL', type: 'url' }, { name: 'description', label: 'One line', wide: true }, { name: 'category', label: 'Group (e.g. Company, Products, Social)' }, { name: 'icon', label: 'Lucide icon name', help: 'e.g. file-text, play, calendar, download' }, { name: 'sort', label: 'Order', type: 'number' }, { name: 'visible', label: 'Show', type: 'checkbox' }]} />
   );
