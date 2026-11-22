@@ -367,7 +367,7 @@ export function HomePage(p: {
       {(() => {
         const TABS: [string, string, string][] = [['website', 'Websites', 'globe'], ['webapp', 'Web apps', 'layout-dashboard'], ['ai', 'AI automations', 'bot']];
         const groups = TABS.map(([k, label, ic]) => {
-          const all = p.projects.filter((x) => (x.category || 'website') === k);
+          const all = p.projects.filter((x) => (x.category || 'website') === k || (x.also ?? []).includes(k));
           return { k, label, ic, items: [...all.filter((x) => x.featured), ...all.filter((x) => !x.featured)].slice(0, 6), total: all.length };
         }).filter((g) => g.items.length);
         if (!groups.length) return null;

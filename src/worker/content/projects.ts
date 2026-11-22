@@ -1,5 +1,5 @@
 // Generated from the legacy data/projects.php, edit freely.
-export type Project = { slug: string; title: string; type: string; category: "website" | "webapp" | "ai"; industry: string; year: string; live: string; client: string; featured: boolean; meta: string; summary: string; context: string; challenge: string; solution: string; impact: string; image?: string; points: { icon: string; title: string; text: string }[] };
+export type Project = { slug: string; title: string; type: string; category: "website" | "webapp" | "ai"; industry: string; year: string; live: string; client: string; featured: boolean; meta: string; summary: string; context: string; challenge: string; solution: string; impact: string; image?: string; points: { icon: string; title: string; text: string }[]; also?: ("website" | "webapp" | "ai")[] };
 
 export const PROJECTS: Project[] = [
     {
@@ -204,7 +204,7 @@ export const PROJECTS: Project[] = [
                 "text": "Scheduled, verified, exceptions and licences due on one overview."
             }
         ],
-        "image": "/assets/work/ataam.webp",
+        "image": "/assets/work/ataam-login.webp",
         "slug": "ataam"
     },
     {
@@ -239,6 +239,7 @@ export const PROJECTS: Project[] = [
                 "text": "Schedules, geofenced clock-in and on-site reports for technicians."
             }
         ],
+        "also": ["website"],
         "image": "/assets/work/vertical-solar.webp",
         "slug": "vertical-solar"
     },
