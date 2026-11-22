@@ -42,8 +42,17 @@ export function CasePage({ lang, ctx, p, next, testimonial, note }: { lang: Lang
           <p class="page-label reveal">{[p.type, p.industry, p.year].filter(Boolean).join(' · ')}</p>
           <h1 class="h1 reveal-text">{p.title}</h1>
           {p.summary ? <p class="lead reveal">{p.summary}</p> : null}
+          <div class="case-actions reveal">
+            {p.live ? <a class="btn btn-primary" href={p.live} target="_blank" rel="noopener">Visit live site {icon('arrow-up-right', { size: 15 })}</a> : null}
+            <a class="btn btn-ghost" href={href(lang, '/contact')}>Start a project like this {icon('arrow-right', { size: 15 })}</a>
+          </div>
         </div>
-        {cover ? <figure class="case-cover reveal" data-parallax><img src={cover} alt={`${p.title} screenshot`} width="1400" height="900" fetchpriority="high" /></figure> : null}
+        {cover ? (
+          <figure class="case-cover reveal">
+            <div class="cc-bar" aria-hidden="true"><i></i><i></i><i></i><span>{(() => { try { return p.live ? new URL(p.live).host.replace(/^www\./, '') : `${p.title}`; } catch { return p.title; } })()}</span></div>
+            <img src={cover} alt={`${p.title} homepage`} width="1440" height="900" fetchpriority="high" />
+          </figure>
+        ) : null}
       </section>
       <div class="wrap case-body">
         {note ? <p class="machine-note">{t(lang, 'machine.note')}</p> : null}
@@ -52,14 +61,14 @@ export function CasePage({ lang, ctx, p, next, testimonial, note }: { lang: Lang
           {p.live ? <a class="btn btn-ghost btn-sm" href={p.live} target="_blank" rel="noopener">Visit live site {icon('external-link', { size: 14 })}</a> : null}
         </aside>
         <div class="case-story">
-          {sections.filter(([, v]) => v).map(([k, v], i) => <section class="case-sec reveal"><h2><span>0{i + 1}</span>{k}</h2><p>{v}</p></section>)}
+          {sections.filter(([, v]) => v).map(([k, v], i) => <section class="case-sec reveal"><h2>{k}</h2><p>{v}</p></section>)}
           {p.points.length ? <div class="case-points">{p.points.map((x) => <div class="case-point reveal">{icon(x.icon, { size: 20 })}<h3>{x.title}</h3><p>{x.text}</p></div>)}</div> : null}
           {p.gallery.length ? <div class="case-gallery">{p.gallery.map((g) => g.kind === 'video'
             ? <figure class="reveal"><video src={mediaUrl(g.src)!} controls playsinline preload="metadata"></video>{g.caption ? <figcaption>{g.caption}</figcaption> : null}</figure>
             : <figure class="reveal"><img src={mediaUrl(g.src)!} alt={g.alt ?? ''} loading="lazy" decoding="async" />{g.caption ? <figcaption>{g.caption}</figcaption> : null}</figure>)}</div> : null}
           {p.results.length ? (
             <section class="case-results reveal">
-              <h2><span>{String(sections.filter(([, v]) => v).length + 1).padStart(2, '0')}</span>Results</h2>
+              <h2>Results</h2>
               <div class="results">{p.results.map((r) => <div><strong>{r.value}</strong><span>{r.label}</span>{r.note ? <small>{r.note}</small> : null}</div>)}</div>
             </section>
           ) : null}
