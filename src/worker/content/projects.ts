@@ -34,7 +34,7 @@ export const PROJECTS: Project[] = [
                 "text": "Visitors can move quickly from understanding the offer to contacting the team."
             }
         ],
-        "image": "/media/covers/gromzia.webp", "slug": "gromzia"
+        "image": "/media/covers/2026-11/bd36b2332029.webp", "slug": "gromzia"
     },
     {
         "title": "Synergix Africa",
@@ -68,7 +68,7 @@ export const PROJECTS: Project[] = [
                 "text": "Programs and outcomes reinforce trust."
             }
         ],
-        "image": "/media/covers/synergix.webp", "slug": "synergix"
+        "image": "/media/covers/2026-11/cb32f37eda25.webp", "slug": "synergix"
     },
     {
         "title": "M-P Infrastructure",
@@ -136,7 +136,7 @@ export const PROJECTS: Project[] = [
                 "text": "Partner and network depth reinforce execution capacity."
             }
         ],
-        "image": "/media/covers/insightblitz.webp", "slug": "insightblitz"
+        "image": "/media/covers/2026-11/ec2630c9160f.webp", "slug": "insightblitz"
     },
     {
         "title": "Aroda",
@@ -170,41 +170,7 @@ export const PROJECTS: Project[] = [
                 "text": "The structure can absorb additional products."
             }
         ],
-        "slug": "aroda"
-    },
-    {
-        "title": "Fashion Fusion Africa",
-        "type": "Event Website",
-        "category": "website",
-        "industry": "Fashion & Events",
-        "year": "2025",
-        "live": "https://fashionfusionafrica.com/",
-        "client": "Fashion Fusion Africa",
-        "featured": false,
-        "meta": "An event website balancing an editorial fashion experience with clear participation and registration journeys.",
-        "summary": "An event spanning designers, models, exhibitors and attendees needed an experience that could carry fashion energy and still drive action.",
-        "context": "Fashion Fusion Africa brings designers, models, exhibitors and attendees into one event experience.",
-        "challenge": "The website needed multiple registration paths without losing its editorial identity.",
-        "solution": "We used the event narrative as the top layer, then separated participation into clear journeys.",
-        "impact": "Visitors can understand the creative direction and immediately choose how they want to participate.",
-        "points": [
-            {
-                "icon": "palette",
-                "title": "Editorial feel",
-                "text": "The digital experience carries the tone of the event."
-            },
-            {
-                "icon": "list-checks",
-                "title": "Multiple journeys",
-                "text": "Participation routes are separated clearly."
-            },
-            {
-                "icon": "calendar-days",
-                "title": "Event readiness",
-                "text": "Dates and actions sit inside one conversion flow."
-            }
-        ],
-        "slug": "fashion-fusion-africa"
+        "image": "/media/covers/2026-11/f1efc6edc94d.webp", "slug": "aroda"
     },
     {
         "title": "Ataam",
@@ -342,7 +308,7 @@ export const PROJECTS: Project[] = [
                 "text": "The interface is framed around useful guidance rather than pretending to replace professional advice."
             }
         ],
-        "slug": "pwan-eha"
+        "image": "/media/covers/2026-11/4412895252c9.webp", "slug": "pwan-eha"
     },
     {
         "title": "Avid Dental Clinic",
@@ -518,5 +484,39 @@ export const PROJECTS: Project[] = [
         ],
         "image": "/assets/work/taurus-power.webp",
         "slug": "taurus-power"
+    },
+    {
+        "title": "Fashion Fusion Africa",
+        "type": "Event Website",
+        "category": "website",
+        "industry": "Fashion & Events",
+        "year": "2025",
+        "live": "https://fashionfusionafrica.com/",
+        "client": "Fashion Fusion Africa",
+        "featured": false,
+        "meta": "An event website balancing an editorial fashion experience with clear participation and registration journeys.",
+        "summary": "An event spanning designers, models, exhibitors and attendees needed an experience that could carry fashion energy and still drive action.",
+        "context": "Fashion Fusion Africa brings designers, models, exhibitors and attendees into one event experience.",
+        "challenge": "The website needed multiple registration paths without losing its editorial identity.",
+        "solution": "We used the event narrative as the top layer, then separated participation into clear journeys.",
+        "impact": "Visitors can understand the creative direction and immediately choose how they want to participate.",
+        "points": [
+            {
+                "icon": "palette",
+                "title": "Editorial feel",
+                "text": "The digital experience carries the tone of the event."
+            },
+            {
+                "icon": "list-checks",
+                "title": "Multiple journeys",
+                "text": "Participation routes are separated clearly."
+            },
+            {
+                "icon": "calendar-days",
+                "title": "Event readiness",
+                "text": "Dates and actions sit inside one conversion flow."
+            }
+        ],
+        "slug": "fashion-fusion-africa"
     }
 ];
