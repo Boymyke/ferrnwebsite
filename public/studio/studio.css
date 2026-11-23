@@ -877,3 +877,18 @@ ul.plain, ol.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; } u
 .call-copy { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: var(--muted); border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
 .call-copy:hover { color: var(--o); border-color: var(--o); }
 .link-actions { display: inline-flex; gap: 6px; white-space: nowrap; justify-content: flex-end; }
+
+/* Emails › conversation history (23 Nov 2026) */
+.convo { display: grid; gap: 10px; }
+.convo-item { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel2); }
+.convo-item.in { border-left: 3px solid var(--green); background: rgba(34,197,94,.06); margin-right: 36px; }
+.convo-item.out, .convo-item.failed { margin-left: 36px; }
+.convo-item.scheduled, .convo-item.held { margin-left: 36px; border-style: dashed; opacity: .85; }
+.convo-item.cancelled { margin-left: 36px; opacity: .55; }
+.convo-item.current { border-color: var(--o); box-shadow: 0 0 0 1px var(--o) inset; }
+.convo-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.convo-head svg { flex: none; }
+.convo-subject { font-weight: 600; margin-top: 8px; }
+.convo-body { white-space: pre-wrap; word-break: break-word; font-size: 14px; line-height: 1.6; margin-top: 6px; }
+.convo-body.clipped { max-height: 4.8em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
+.link-btn { background: none; border: 0; padding: 4px 0 0; color: var(--o); cursor: pointer; font: inherit; font-size: 13px; }

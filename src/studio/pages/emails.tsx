@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Eye, ExternalLink, Info, Mail, MailCheck, MailOpen, MapPin, MousePointerClick, RefreshCw, Send } from 'lucide-react';
+import { AlertTriangle, Clock, CornerDownLeft, Eye, ExternalLink, Info, Mail, MailCheck, MailOpen, MapPin, MousePointerClick, PauseCircle, RefreshCw, Send, XCircle } from 'lucide-react';
 import { ago, api, fmtDate } from '../api';
 import { Badge, Card, Drawer, Empty, ErrorNote, Loading, Page, Tabs, useData, useRoute, Pager, usePaged } from '../ui';
 
@@ -117,7 +117,7 @@ function EmailDrawer({ id, onClose, onProposal }: { id: string; onClose: () => v
   const { data, loading, error } = useData<{ row: Row & { links: string[]; from_addr: string | null }; events: Ev[]; body?: { html?: string; text?: string } | null }>(() => api(`/emails/${id}`), [id]);
   const r = data?.row;
   return (
-    <Drawer open onClose={onClose} title={r?.subject || 'Email'}>
+    <Drawer open onClose={onClose} title={r?.subject || 'Email'} wide>
       {loading ? <Loading /> : error ? <ErrorNote error={error} /> : r ? (
         <>
           <div style={{ marginBottom: 14 }}><EmailState r={r} /> <Badge tone={r.source === 'outreach' ? 'orange' : 'default'}>{KIND[r.kind] ?? r.kind}</Badge></div>
@@ -132,6 +132,7 @@ function EmailDrawer({ id, onClose, onProposal }: { id: string; onClose: () => v
           </dl>
           {r.proposal_id ? <button className="btn sm ghost" style={{ marginTop: 14 }} onClick={() => onProposal(r.proposal_id!)}><ExternalLink size={14} /> Open the proposal</button> : null}
           <div style={{ height: 16 }} />
+          <Conversation id={id} fallback={
           <Card title="What was sent">
             {data!.body?.html ? (
               <iframe className="email-frame" title="Email content" sandbox="allow-popups allow-popups-to-escape-sandbox" srcDoc={data!.body.html.replace(/<head>/i, '<head><base target="_blank">')} />
@@ -145,6 +146,7 @@ function EmailDrawer({ id, onClose, onProposal }: { id: string; onClose: () => v
               <Empty compact icon={Mail} title="Content not saved">This email was sent before Studio started keeping copies. Every email from now on shows here in full.</Empty>
             )}
           </Card>
+          } />
           <div style={{ height: 16 }} />
           <Card title="Activity">
             {!data!.events.length ? <Empty compact icon={Mail} title="No opens yet">You’ll see each open and click here, with the time and roughly where it happened.</Empty> : (
@@ -163,5 +165,71 @@ function EmailDrawer({ id, onClose, onProposal }: { id: string; onClose: () => v
         </>
       ) : null}
     </Drawer>
+  );
+}
+
+type HistItem = {
+  type: 'out' | 'in' | 'scheduled' | 'held' | 'cancelled' | 'failed'; at: string | null; step?: string; kind?: string; channel?: string;
+  subject?: string | null; body?: string | null; from?: string | null; email_id?: string | null; open_count?: number; click_count?: number;
+  last_opened_at?: string | null; last_clicked_at?: string | null; classification?: string | null; waits?: boolean;
+};
+type HistRes = { company: string | null; to: string; current: string; engine: boolean; items: HistItem[] };
+
+const STEP: Record<string, string> = { '0': 'First email', '1': 'Follow-up 1', '2': 'Follow-up 2', '3': 'Last follow-up', R: 'Reply' };
+const stepLabel = (it: HistItem) => (it.step ? STEP[it.step] ?? `Step ${it.step}` : KIND[it.kind ?? ''] ?? 'Email');
+
+/** Every email in this conversation, oldest first: what you sent (with opens and clicks), what they replied,
+ *  and what is still scheduled. The email you clicked is marked and opened in full. */
+function Conversation({ id, fallback }: { id: string; fallback: React.ReactNode }) {
+  const { data, loading, error } = useData<HistRes>(() => api(`/emails/${id}/history`), [id]);
+  if (loading && !data) return <Card title="Conversation"><Loading /></Card>;
+  if (error || !data || !data.items.length) return <>{fallback}</>;
+  const sent = data.items.filter((x) => x.type === 'out').length;
+  const replies = data.items.filter((x) => x.type === 'in' && x.classification !== 'bounce').length;
+  const coming = data.items.filter((x) => x.type === 'scheduled').length;
+  return (
+    <Card title={`Conversation${data.company ? ` with ${data.company}` : ''}`}>
+      <p className="muted small" style={{ margin: '0 0 12px' }}>
+        {sent} sent · {replies ? <strong>{replies} {replies === 1 ? 'reply' : 'replies'}</strong> : 'no reply yet'}{coming ? ` · ${coming} still to go` : ''} · {data.to}
+      </p>
+      {!data.engine ? <div className="callout" style={{ marginBottom: 12 }}><Info size={15} /> LeadsHunter didn’t answer, so replies and scheduled follow-ups may be missing. Open this again in a minute.</div> : null}
+      <div className="convo">{data.items.map((it, i) => <ConvoItem key={i} it={it} current={!!it.email_id && it.email_id === data.current} />)}</div>
+    </Card>
+  );
+}
+
+function ConvoItem({ it, current }: { it: HistItem; current: boolean }) {
+  const [open, setOpen] = useState(current || it.type === 'in');
+  const long = (it.body || '').length > 220;
+  const when = it.at ? fmtDate(it.at, true) : '';
+  let head: React.ReactNode;
+  if (it.type === 'in') {
+    head = it.classification === 'bounce'
+      ? <><XCircle size={14} /> <strong>Delivery failed</strong> <span className="muted">· {when}</span></>
+      : <><CornerDownLeft size={14} /> <strong>They replied</strong> <span className="muted">· {it.from || ''} · {when}</span>{it.classification ? <> <Badge tone="green">{it.classification.replace(/-/g, ' ')}</Badge></> : null}</>;
+  } else if (it.type === 'scheduled') {
+    head = <><Clock size={14} /> <strong>{stepLabel(it)}</strong> <span className="muted">· {it.waits ? 'goes out after the email before it, if they haven’t replied' : `scheduled for ${when}`}</span></>;
+  } else if (it.type === 'held') {
+    head = <><PauseCircle size={14} /> <strong>{stepLabel(it)}</strong> <span className="muted">· held for you in Outreach › Held</span></>;
+  } else if (it.type === 'cancelled') {
+    head = <><XCircle size={14} /> <strong>{stepLabel(it)}</strong> <span className="muted">· not sent (stopped)</span></>;
+  } else {
+    head = <>
+      <Send size={14} /> <strong>{stepLabel(it)}</strong> <span className="muted">· {when}{it.from ? ` · from ${it.from}` : ''}</span>{' '}
+      {it.type === 'failed' ? <Badge tone="red">Failed</Badge> : it.click_count ? <Badge tone="purple"><MousePointerClick size={12} /> Clicked{it.click_count > 1 ? ` ${it.click_count}×` : ''}</Badge>
+        : it.open_count ? <Badge tone="green"><Eye size={12} /> Opened{it.open_count > 1 ? ` ${it.open_count}×` : ''}</Badge> : it.email_id ? <Badge>Not opened yet</Badge> : null}
+    </>;
+  }
+  return (
+    <div className={`convo-item ${it.type}${current ? ' current' : ''}`}>
+      <div className="convo-head">{head}{current ? <Badge tone="orange">This email</Badge> : null}</div>
+      {it.subject && it.type !== 'in' ? <div className="convo-subject">{it.subject}</div> : null}
+      {it.body ? (
+        <>
+          <div className={`convo-body${open || !long ? '' : ' clipped'}`}>{it.body}</div>
+          {long ? <button className="link-btn small" onClick={() => setOpen(!open)}>{open ? 'Show less' : 'Show all'}</button> : null}
+        </>
+      ) : it.type === 'out' ? <div className="muted small">The text of this email wasn’t saved.</div> : null}
+    </div>
   );
 }

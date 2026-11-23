@@ -201,6 +201,68 @@ emailStudio.get('/:id', async (c) => {
   return c.json({ ok: true, row: { ...row, links: parseJson<string[]>(row.links_json, []) }, events, body });
 });
 
+/** The whole conversation an email belongs to: every email to that company in order (with opens and clicks),
+ *  their replies, and the follow-ups still waiting to go out. Outreach comes from the engine (cached 60 s);
+ *  proposal and invoice emails are matched by recipient. */
+type HistItem = {
+  type: 'out' | 'in' | 'scheduled' | 'held' | 'cancelled' | 'failed'; at: string | null; step?: string; kind?: string; channel?: string;
+  subject?: string | null; body?: string | null; from?: string | null; email_id?: string | null; open_count?: number; click_count?: number;
+  last_opened_at?: string | null; last_clicked_at?: string | null; classification?: string | null; waits?: boolean;
+};
+const cleanId = (x: unknown) => 'lh-' + String(x).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60);
+
+emailStudio.get('/:id/history', async (c) => {
+  const id = c.req.param('id');
+  const row = await first<{ id: string; source: string; lead_id: string | null; to_addr: string; company: string | null }>(c.env.DB,
+    'SELECT id, source, lead_id, to_addr, company FROM email_log WHERE id = ?', id);
+  if (!row) return c.json({ ok: false, error: 'Not found' }, 404);
+  type Log = { id: string; kind: string; subject: string | null; from_addr: string | null; status: string; sent_at: string; open_count: number; click_count: number; last_opened_at: string | null; last_clicked_at: string | null };
+  const logs = await all<Log>(c.env.DB, `SELECT id, kind, subject, from_addr, status, sent_at, open_count, click_count, last_opened_at, last_clicked_at
+      FROM email_log WHERE ${row.lead_id ? 'lead_id = ?' : 'lower(to_addr) = lower(?)'} ORDER BY sent_at ASC LIMIT 100`, row.lead_id || row.to_addr);
+  const byId = new Map(logs.map((l) => [l.id, l]));
+  const used = new Set<string>();
+  const items: HistItem[] = [];
+  const track = (l?: Log) => (l ? { email_id: l.id, from: l.from_addr, open_count: l.open_count, click_count: l.click_count, last_opened_at: l.last_opened_at, last_clicked_at: l.last_clicked_at } : {});
+  let engineOk = true;
+
+  if (row.source === 'outreach' && row.lead_id) {
+    const key = `email:hist:${row.lead_id}`;
+    let d: any = await c.env.CACHE.get(key, 'json').catch(() => null);
+    if (!d) {
+      try {
+        d = await engineCall<any>(c.env, 'getLeadDetail', [row.lead_id]);
+        d = d?.data ?? d;
+        if (d) await c.env.CACHE.put(key, JSON.stringify({ messages: d.messages ?? [], inbox: d.inbox ?? [] }), { expirationTtl: 60 }).catch(() => null);
+      } catch { engineOk = false; d = null; }
+    }
+    const msgs: any[] = d?.messages ?? [];
+    // A follow-up with no send time is waiting for the email before it to go out.
+    for (const m of msgs) {
+      const lid = cleanId(m.id); const l = byId.get(lid); if (l) used.add(lid);
+      const st = String(m.status || '');
+      const type: HistItem['type'] = st === 'sent' || st === 'wa_sent' ? 'out' : st === 'held' ? 'held' : st === 'cancelled' ? 'cancelled' : st === 'failed' ? 'failed' : 'scheduled';
+      items.push({ type, at: m.sent_at || m.send_after || l?.sent_at || null, step: String(m.step ?? ''), channel: m.channel, subject: m.subject || l?.subject || null,
+        body: m.body || null, waits: type === 'scheduled' && !m.send_after, ...track(l) });
+    }
+    for (const r of d?.inbox ?? []) {
+      items.push({ type: 'in', at: r.received_at || null, from: r.from || null, body: r.body || null, subject: r.subject || null, classification: r.classification || null });
+    }
+  }
+  // Tracked emails the engine didn't return (or proposal and invoice emails): show them with their saved copy.
+  const rest = logs.filter((l) => !used.has(l.id));
+  const bodies = await Promise.all(rest.slice(-20).map(async (l) => {
+    const b = await emailBody(c.env, { id: l.id, source: row.source, lead_id: null }).catch(() => null);
+    return [l.id, b?.text ?? (b?.html ? b.html.replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim() : null)] as const;
+  }));
+  const bodyOf = new Map(bodies);
+  for (const l of rest) {
+    items.push({ type: l.status === 'failed' ? 'failed' : 'out', at: l.sent_at, kind: l.kind, subject: l.subject, body: bodyOf.get(l.id) ?? null, ...track(l) });
+  }
+  const t = (x: HistItem) => (x.at ? Date.parse(x.at) : Number.MAX_SAFE_INTEGER);
+  items.sort((a, b) => t(a) - t(b) || Number(a.step ?? 9) - Number(b.step ?? 9));
+  return c.json({ ok: true, company: row.company, to: row.to_addr, current: id, engine: engineOk, items });
+});
+
 /* ── cron: delivery status for site emails (Resend) ── */
 export async function syncEmailStatus(env: Bindings) {
   if (!env.RESEND_API_KEY) return;
