@@ -54,7 +54,7 @@
 .bobx-panel[data-talk="listening"] .bobx-talk-ghost svg { animation-duration: 1.4s; }
 .bobx-panel[data-talk="thinking"] .bobx-talk-ghost svg { animation: bobx-think 1.2s ease-in-out infinite; }
 .bobx-panel[data-talk="speaking"] .bobx-talk-ghost .ghost-mouth { animation: bobx-talkmouth .28s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
-@keyframes bobx-think { 50% { transform: rotate(-6deg) translateY(-4px); } }
+@keyframes bobx-think { 50% { transform: translateY(-4px); } }
 @keyframes bobx-talkmouth { to { transform: scaleY(2.2); } }
 .bobx-talk-state { margin: 0; font-size: 17px; font-weight: 500; }
 .bobx-talk-live { margin: 0; min-height: 3em; color: var(--muted); font-size: 14.5px; max-width: 32ch; }
@@ -76,19 +76,27 @@
 .bobx-ghost { position: fixed; left: 0; top: 0; z-index: 160; width: 64px; height: 72px; pointer-events: none; will-change: transform; --level: 0; }
 .bobx-ghost[hidden] { display: none; }
 .bobx-ghost-in { width: 100%; height: 100%; animation: ghost-float 3.2s ease-in-out infinite; transition: transform .5s cubic-bezier(.22,1,.36,1); }
-.bobx-ghost svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 12px 22px color-mix(in srgb, var(--orange) 50%, transparent)); transform: scale(calc(1 + var(--level) * .08)); transition: transform .12s; }
+.bobx-ghost svg { width: 100%; height: 100%; overflow: visible; transform: scale(calc(1 + var(--level) * .08)); transition: transform .12s; }
 .bobx-ghost.face-left .bobx-ghost-in { transform: scaleX(-1); }
-.bobx-ghost.tiny .bobx-ghost-in { transform: scale(.05) rotate(-200deg); opacity: 0; }
-.bobx-ghost.spin .bobx-ghost-in { transition: transform .65s cubic-bezier(.65,0,.35,1), opacity .5s; }
+.bobx-ghost.sink .bobx-ghost-in { transform: translateY(30px) scale(.08); opacity: 0; transition: transform .58s cubic-bezier(.55,0,.6,.4), opacity .5s ease-in .08s; }
+.bobx-ghost .bobx-ghost-in { transition: transform .6s cubic-bezier(.22,1,.36,1), opacity .4s; }
+.bobx-ghost.now .bobx-ghost-in { transition: none !important; }
 .bobx-carry { position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); font-weight: 600; font-size: 22px; line-height: 1; color: var(--orange); text-shadow: 0 0 14px color-mix(in srgb, var(--orange) 60%, transparent); }
 .bobx-carry:empty { display: none; }
 .bobx-letter { position: fixed; z-index: 161; font-weight: 600; line-height: 1; color: var(--orange); letter-spacing: -.05em; pointer-events: none; transition: left .65s cubic-bezier(.45,.05,.25,1), top .65s cubic-bezier(.45,.05,.25,1), font-size .65s ease; }
-.bobx-portal { position: fixed; z-index: 159; width: 96px; height: 96px; margin: -48px 0 0 -48px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, transparent 38%, color-mix(in srgb, var(--orange) 80%, #fff) 42%, var(--orange) 50%, transparent 66%);
-  box-shadow: 0 0 40px 6px color-mix(in srgb, var(--orange) 55%, transparent); transform: scale(0) rotate(0); animation: bobx-portal-open .3s cubic-bezier(.22,1,.36,1) forwards; }
-.bobx-portal.close { animation: bobx-portal-close .38s cubic-bezier(.65,0,.35,1) forwards; }
-@keyframes bobx-portal-open { to { transform: scale(1) rotate(90deg); } }
-@keyframes bobx-portal-close { from { transform: scale(1) rotate(90deg); } to { transform: scale(0) rotate(220deg); opacity: 0; } }
+.bobx-portal { position: fixed; z-index: 159; width: 96px; height: 96px; margin: -48px 0 0 -48px; pointer-events: none; transition: transform .32s cubic-bezier(.65,0,.35,1); }
+.bobx-portal svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.bobx-portal .p-fill { fill: #120703; transform-box: fill-box; transform-origin: center; transform: scale(0); transition: transform .4s cubic-bezier(.22,1,.36,1); }
+.bobx-portal .p-rim { fill: none; stroke: var(--orange); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 290; stroke-dashoffset: 290; transform: rotate(-90deg); transform-origin: 50px 50px; transition: stroke-dashoffset .7s cubic-bezier(.45,0,.3,1); }
+.bobx-portal.drawn .p-rim { stroke-dashoffset: 0; }
+.bobx-portal.open .p-fill { transform: scale(1); }
+.bobx-portal.close { transform: scale(0); }
+/* opening it: his near hand stirs the circle into being; coming out, both arms up */
+.bobx-ghost.conjure .g-arm-r { animation: bobx-stir .7s ease-in-out infinite; }
+@keyframes bobx-stir { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(-58deg); } }
+.bobx-ghost.conjure .g-f { animation-duration: .5s; }
+.bobx-ghost.rise .g-arm-l { transform: rotate(115deg); }
+.bobx-ghost.rise .g-arm-r { transform: rotate(-115deg); }
 .bobx-hand { position: fixed; left: 0; top: 0; z-index: 162; pointer-events: none; transition: transform .7s cubic-bezier(.45,.05,.25,1), opacity .35s; filter: drop-shadow(0 6px 10px rgba(0,0,0,.3)); }
 .bobx-hand svg { transition: transform .15s; transform-origin: 15% 15%; }
 .bobx-hand.press svg { transform: scale(.82) rotate(-6deg); }
@@ -208,8 +216,6 @@
 /* the roaming ghost: leans into his flight and leaves a faint glow trail */
 .bobx-ghost { width: 72px; height: 86px; }
 .bobx-ghost-in { transition: transform .5s cubic-bezier(.22,1,.36,1), filter .3s; }
-.bobx-ghost.flying .bobx-ghost-in { transform: rotate(var(--lean, 0deg));  }
-.bobx-ghost.flying.face-left .bobx-ghost-in { transform: scaleX(-1) rotate(calc(var(--lean, 0deg) * -1)); }
 .bobx-ghost.flying svg { opacity: .82; }
 .bobx-avatar svg, .bobx-mini svg { width: 30px; }
 .bobx-mini svg { width: 22px; }

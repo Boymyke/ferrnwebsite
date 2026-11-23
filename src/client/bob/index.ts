@@ -131,17 +131,45 @@ async function flyTo(x: number, y: number, ms = 900) {
   await wait(reduced ? 0 : ms);
 }
 function placeAt(x: number, y: number) { const g = ghostEl(); gx = x; gy = y; g.style.transition = 'none'; g.style.transform = `translate(${Math.round(x - 32)}px, ${Math.round(y - 36)}px)`; }
-/** Portal: the ghost spins into a ring of light and is gone (out), or spins out of one (in). */
+/** Portal: Bob opens a plain round hole himself. Going out, he turns to it, draws the circle with his hand,
+ *  circles it once and dives in. Coming in, the circle is drawn and he rises out of it with his arms up,
+ *  pushing it open. No spinning: he stays upright the whole time. */
+const PORTAL_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="p-fill" cx="50" cy="50" r="46"/><circle class="p-rim" cx="50" cy="50" r="46"/></svg>';
 async function portal(dir: 'in' | 'out', x: number, y: number) {
-  const ring = document.createElement('div'); ring.className = `bobx-portal ${dir}`; ring.style.left = x + 'px'; ring.style.top = y + 'px';
-  document.body.appendChild(ring);
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+  const px = dir === 'out' ? clamp(x - 110, 70, innerWidth - 70) : clamp(x, 70, innerWidth - 70);
+  const py = dir === 'out' ? clamp(y + 30, 90, innerHeight - 60) : clamp(y + 40, 90, innerHeight - 60);
+  const ring = document.createElement('div'); ring.className = 'bobx-portal'; ring.innerHTML = PORTAL_SVG;
+  ring.style.left = px + 'px'; ring.style.top = py + 'px';
   const g = ghostEl();
-  if (dir === 'in') { placeAt(x, y); g.classList.add('tiny'); g.hidden = false; }
-  await wait(reduced ? 0 : 260);
-  g.classList.toggle('tiny', dir === 'out'); g.classList.add('spin');
-  await wait(reduced ? 0 : 650);
-  g.classList.remove('spin'); if (dir === 'out') g.hidden = true;
-  ring.classList.add('close'); await wait(reduced ? 0 : 380); ring.remove();
+  const openRing = async () => {
+    document.body.appendChild(ring); void ring.offsetWidth;
+    ring.classList.add('drawn'); await wait(reduced ? 0 : 700);
+    ring.classList.add('open'); await wait(reduced ? 0 : 380);
+  };
+  if (dir === 'in') {
+    await openRing();
+    g.classList.add('sink', 'now', 'rise'); placeAt(px, py - 10); g.hidden = false;
+    void g.offsetWidth; g.classList.remove('now'); g.classList.remove('sink');
+    await wait(reduced ? 0 : 620);
+    await flyTo(px, py - 84, reduced ? 0 : 520);
+    g.classList.remove('rise');
+  } else {
+    // He turns to where the portal will be and draws it with his hand.
+    g.classList.toggle('face-left', px < gx); g.classList.add('conjure');
+    await openRing();
+    g.classList.remove('conjure');
+    if (!reduced) {
+      for (const a of [200, 270, 340, 50, 120]) {
+        const r = (a * Math.PI) / 180;
+        await flyTo(px + Math.cos(r) * 86, py - 34 + Math.sin(r) * 46, 380);
+      }
+      await flyTo(px, py - 46, 380);
+    }
+    g.classList.add('sink'); await wait(reduced ? 0 : 600);
+    g.hidden = true; g.classList.remove('sink');
+  }
+  ring.classList.add('close'); await wait(reduced ? 0 : 340); ring.remove();
 }
 /** A white-glove hand flies from Bob to an element, presses it, and then (optionally) clicks it. */
 async function point(el: Element, click = false) {
