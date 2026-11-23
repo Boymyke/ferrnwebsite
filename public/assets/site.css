@@ -1458,3 +1458,11 @@ main .room-close h2.h-display { max-width: 16ch; }
 .bob-ghost .ghost-float::before { background: radial-gradient(closest-side, rgba(255,106,42,.32), transparent); filter: blur(4px); }
 .intro-bob .ghost { filter: drop-shadow(0 0 40px rgba(255,106,42,.6)); }
 @media (prefers-reduced-motion: reduce) { .ghost .g-aura, .ghost .g-wisp, .ghost .g-mist circle { animation: none !important; } }
+
+/* ── Bob's fingers (23 Nov): each finger wiggles on its own; faster when he waves or talks ── */
+.ghost .g-f { transform-box: view-box; transform-origin: var(--ox) var(--oy); animation: g-wiggle 2.8s ease-in-out infinite; }
+.ghost .g-f2 { animation-delay: -.5s; } .ghost .g-f3 { animation-delay: -1s; } .ghost .g-th { animation-delay: -1.6s; animation-duration: 3.4s; }
+@keyframes g-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(14deg); } 60% { transform: rotate(-10deg); } }
+.bob-ghost.act-wave .g-arm-r .g-f, .bob-ghost.act-wave2 .g-arm-l .g-f, .intro.open .intro-bob .g-f, .bobx-ghost.talking .g-f, .bobx-panel[data-talk="speaking"] .g-f { animation-duration: .55s; }
+.intro.grip .intro-bob .g-f { animation: none; transform: rotate(-22deg); }
+@media (prefers-reduced-motion: reduce) { .ghost .g-f { animation: none !important; } }

@@ -307,6 +307,8 @@ function addQuote(role: 'user' | 'assistant', text: string, reply?: Reply, opts:
     } else finish();
   }
   quotes.scrollTo({ top: quotes.scrollHeight, behavior: reduced ? 'auto' : 'smooth' });
+  // Small avatars stay still (the tail swish is SMIL, which CSS can't switch off).
+  row.querySelectorAll<SVGSVGElement>('.bobx-mini svg').forEach((v) => v.pauseAnimations?.());
   return row;
 }
 function setChips(list: [string, () => void][]) {
@@ -355,6 +357,7 @@ async function ask(q: string, opts: { voice?: boolean } = {}): Promise<Reply | n
   const typing = document.createElement('div'); typing.className = 'bobx-msg bot bobx-typing-row'; typing.innerHTML = `<span class="bobx-mini">${ghostCopy('bobt' + (++msgSeq))}</span><div class="bobx-bubble bobx-typing"><i></i><i></i><i></i></div>`;
   status(`${BOB} is typing…`);
   quotes.appendChild(typing); quotes.scrollTop = quotes.scrollHeight;
+  typing.querySelectorAll<SVGSVGElement>('svg').forEach((v) => v.pauseAnimations?.());
   ghostLevel(0.2);
   try {
     const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' },

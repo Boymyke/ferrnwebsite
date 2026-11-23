@@ -67,6 +67,7 @@ export function bobLauncher() {
       .finally(() => root.classList.remove('loading'));
   };
   btn.addEventListener('click', () => open());
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll<SVGSVGElement>('svg.ghost').forEach((v) => v.pauseAnimations?.());
   // "Try Bob" buttons and the like: <button data-bob-prompt="…"> (empty prompt just opens, "tour" starts the tour)
   document.addEventListener('click', (e) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>('[data-bob-prompt]'); if (!el) return;

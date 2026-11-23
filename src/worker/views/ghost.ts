@@ -1,10 +1,12 @@
 /** Bob, Ferrn's ghost (original design; ghostly version 23 Nov 2026): a glowing, see-through orange spirit whose
  *  body thins into a curling wisp of a tail that fades into mist. Two soft arms with mitten hands. Parts carry
  *  classes the scripts animate: g-arm-l / g-arm-r (wave, point, pull), g-eyes (look, blink), g-mouth (talks with
- *  --level), g-body-wrap (drifts), g-wisp (trails sway), g-mist (rises and fades). `id` keeps ids unique per copy. */
+ *  --level), g-body-wrap (drifts), g-f (fingers wiggle); the tail swishes by itself (SMIL). `id` keeps ids unique per copy. */
 export function ghostSvg(id = 'bg', w = 70, h = 82, cls = 'ghost') {
   const g = (n: string) => `${id}-${n}`;
-  const BODY = 'M80 12C48 12 30 38 30 70v30c0 36 20 58 42 72 12 8 22 14 32 24 6-12 8-26 16-36 8-14 10-34 10-56V70C130 38 112 12 80 12Z';
+  const BODY = 'M80 12C48 12 30 38 30 70v30c0 36 20 58 42 72c12 8 22 14 32 24c6-12 8-26 16-36c8-14 10-34 10-56V70C130 38 112 12 80 12Z';
+  // The tail swishes: the outline morphs between these shapes (same commands, so it animates smoothly).
+  const SWISH = `<animate attributeName="d" dur="3.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1;.45 0 .55 1" values="M80 12C48 12 30 38 30 70v30c0 36 20 58 42 72c12 8 22 14 32 24c6-12 8-26 16-36c8-14 10-34 10-56V70C130 38 112 12 80 12Z;M80 12C48 12 30 38 30 70v30c0 36 16 60 34 74c10 8 14 16 16 24c6-12 12-28 24-38c14-14 26-34 26-56V70C130 38 112 12 80 12Z;M80 12C48 12 30 38 30 70v30c0 36 20 58 42 72c12 8 22 14 32 24c6-12 8-26 16-36c8-14 10-34 10-56V70C130 38 112 12 80 12Z;M80 12C48 12 30 38 30 70v30c0 36 22 56 46 70c14 8 30 12 42 24c2-12 0-26 4-36c6-14 8-32 8-54V70C130 38 112 12 80 12Z;M80 12C48 12 30 38 30 70v30c0 36 20 58 42 72c12 8 22 14 32 24c6-12 8-26 16-36c8-14 10-34 10-56V70C130 38 112 12 80 12Z"/>`;
   return `<svg class="${cls}" viewBox="-4 0 168 200" width="${w}" height="${h}" aria-hidden="true" focusable="false">
   <defs>
     <radialGradient id="${g('body')}" cx="40%" cy="26%" r="80%">
@@ -24,20 +26,13 @@ export function ghostSvg(id = 'bg', w = 70, h = 82, cls = 'ghost') {
     <filter id="${g('glow')}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
     <filter id="${g('soft')}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2"/></filter>
   </defs>
-  <g class="g-aura" opacity=".55"><path d="${BODY}" fill="#ff5a1a" filter="url(#${g('glow')})"/></g>
-  <g class="g-arm g-arm-l"><path d="M36 92C26 96 17 102 12 110" stroke="url(#${g('arm')})" stroke-width="11" stroke-linecap="round" fill="none"/><circle cx="11" cy="112" r="9.5" fill="url(#${g('arm')})"/><circle cx="8" cy="108.5" r="2.8" fill="#fff" opacity=".45"/></g>
-  <g class="g-arm g-arm-r"><path d="M124 92c10 4 19 10 24 18" stroke="url(#${g('arm')})" stroke-width="11" stroke-linecap="round" fill="none"/><circle cx="149" cy="112" r="9.5" fill="url(#${g('arm')})"/><circle cx="146" cy="108.5" r="2.8" fill="#fff" opacity=".45"/></g>
+  <g class="g-aura" opacity=".55"><path d="${BODY}" fill="#ff5a1a" filter="url(#${g('glow')})">${SWISH}</path></g>
+  <g class="g-arm g-arm-l"><path d="M36 92C26 96 17 102 12 110" stroke="url(#${g('arm')})" stroke-width="11" stroke-linecap="round" fill="none"/><g class="g-hand"><g class="g-fingers" fill="url(#${g('arm')})"><g class="g-f g-f1" style="--ox:7.8px;--oy:108.6px"><ellipse cx="4.0" cy="104.5" rx="3.6" ry="5.4" transform="rotate(45 4.0 104.5)"/></g><g class="g-f g-f2" style="--ox:6.7px;--oy:112.0px"><ellipse cx="1.5" cy="112.0" rx="3.6" ry="5.4" transform="rotate(90 1.5 112.0)"/></g><g class="g-f g-f3" style="--ox:7.8px;--oy:115.4px"><ellipse cx="4.0" cy="119.5" rx="3.6" ry="5.4" transform="rotate(135 4.0 119.5)"/></g><g class="g-f g-th" style="--ox:12.3px;--oy:107.7px"><ellipse cx="14.0" cy="102.5" rx="3.6" ry="5.4" transform="rotate(15 14.0 102.5)"/></g></g><circle cx="11" cy="112" r="8.4" fill="url(#${g('arm')})"/><circle cx="14" cy="108.5" r="2.4" fill="#fff" opacity=".45"/></g>
+  <g class="g-arm g-arm-r"><path d="M124 92c10 4 19 10 24 18" stroke="url(#${g('arm')})" stroke-width="11" stroke-linecap="round" fill="none"/><g class="g-hand"><g class="g-fingers" fill="url(#${g('arm')})"><g class="g-f g-f1" style="--ox:152.2px;--oy:108.6px"><ellipse cx="156.0" cy="104.5" rx="3.6" ry="5.4" transform="rotate(-45 156.0 104.5)"/></g><g class="g-f g-f2" style="--ox:153.3px;--oy:112.0px"><ellipse cx="158.5" cy="112.0" rx="3.6" ry="5.4" transform="rotate(-90 158.5 112.0)"/></g><g class="g-f g-f3" style="--ox:152.2px;--oy:115.4px"><ellipse cx="156.0" cy="119.5" rx="3.6" ry="5.4" transform="rotate(-135 156.0 119.5)"/></g><g class="g-f g-th" style="--ox:147.7px;--oy:107.7px"><ellipse cx="146.0" cy="102.5" rx="3.6" ry="5.4" transform="rotate(-15 146.0 102.5)"/></g></g><circle cx="149" cy="112" r="8.4" fill="url(#${g('arm')})"/><circle cx="146" cy="108.5" r="2.4" fill="#fff" opacity=".45"/></g>
   <g class="g-body-wrap">
     <g mask="url(#${g('mask')})">
-      <path class="g-body" fill="url(#${g('body')})" d="${BODY}"/>
-      <path d="${BODY}" fill="none" stroke="#ffd7bd" stroke-opacity=".55" stroke-width="1.6" filter="url(#${g('soft')})"/>
-    </g>
-    <g class="g-wisps" fill="none" stroke-linecap="round">
-      <path class="g-wisp g-wisp-1" d="M104 196c10-1 17-8 18-18" stroke="url(#${g('wisp')})" stroke-width="3.5"/>
-      <path class="g-wisp g-wisp-2" d="M60 168c-10 4-14 12-12 20" stroke="url(#${g('wisp')})" stroke-width="2.5"/>
-    </g>
-    <g class="g-mist" fill="#ffb488">
-      <circle cx="96" cy="194" r="2.2" opacity=".5"/><circle cx="118" cy="190" r="1.7" opacity=".45"/><circle cx="54" cy="192" r="1.5" opacity=".4"/>
+      <path class="g-body" fill="url(#${g('body')})" d="${BODY}">${SWISH}</path>
+      <path d="${BODY}" fill="none" stroke="#ffd7bd" stroke-opacity=".55" stroke-width="1.6" filter="url(#${g('soft')})">${SWISH}</path>
     </g>
     <ellipse class="g-gloss" cx="60" cy="38" rx="17" ry="9.5" fill="#fff" opacity=".42" transform="rotate(-26 60 38)"/>
     <circle cx="49" cy="36" r="3" fill="#fff" opacity=".75"/>
