@@ -369,6 +369,30 @@ console.log('16. two senders: premium (michael@ferrnagency.com) and volume (the 
   ok(E.rows('Settings').some(r => r.key === 'VOLUME_START' && r.value), 'warm-up start recorded');
 }
 
+console.log('16b. Gmail account at 100 a day (Michael, 23 Nov 2026)');
+{
+  const E = makeEnv({ now: '2026-11-23T07:00:00+01:00' }); // Monday
+  E.ctx.setup();
+  E.set('HOLD_MINUTES', '0');
+  E.set('VOLUME_FROM', 'osondumichealcharles@gmail.com');
+  E.set('VOLUME_START', '2026-11-18');
+  E.set('PREMIUM_RULE', 'A,partner');
+  E.set('VOLUME_CAP_TOTAL', '100'); E.set('VOLUME_CAP_FIRST', '75'); E.set('VOLUME_BATCH_SIZE', '60');
+  E.set('VOLUME_GAP_MINUTES', '1'); E.set('VOLUME_RAMP', '20,20');
+  E.set('SEND_BATCHES', '08:00-12:30,13:00-17:55');
+  const L = [], M = [];
+  for (let i = 0; i < 130; i++) { L.push({ key: 'g' + i, company: 'Gamma ' + i + 'q', tier: 'B', city: i % 3 ? 'Lagos' : 'London', email: `g${i}@gamma${i}.ng`, website: `gamma${i}.ng` }); M.push({ lead_key: 'g' + i, step: 0, subject: 'quick one', body: 'Hi' }); }
+  E.dropFile('batch-g.json', { leads: L, messages: M });
+  const day = '2026-11-24'; // Tuesday
+  for (let mins = 7 * 60; mins <= 18 * 60 + 30; mins += 5) { E.setNow(`${day}T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); }
+  const fromOf = (x) => (x.raw.match(/^From: .*<([^>]+)>/m) || [])[1];
+  const vol = E.sent.filter(x => fromOf(x) === 'osondumichealcharles@gmail.com');
+  ok(vol.length === 75, 'Gmail account sends its 75 first emails in one day (' + vol.length + ')');
+  ok(vol.every(x => /gamma/.test(x.raw)), 'Tier B abroad leads go from the Gmail account too');
+  const vt = vol.map(x => x.at.getTime()).sort((a, b) => a - b);
+  ok(vt.slice(1).every((t, i) => t - vt[i] >= 60000), 'still never two in the same minute');
+}
+
 console.log('17. reply checks stay inside the Gmail read quota');
 {
   const E = makeEnv({ now: '2026-11-19T09:00:00+01:00' });

@@ -532,7 +532,9 @@ function sendDue_(ignoreWindow) {
     var st = stat[snd.address];
     var mine = due.filter(function (m) { return String(m.step) !== 'R' && m.status === 'queued' && pickSender(m) === snd; });
     if (!mine.length) return;
-    var jitter = st.lastCold ? (Math.floor(st.lastCold.getTime() / 60000) * 7919 % 9) * 60000 : 0; // 0 to 8 minutes
+    // 0 to 8 extra minutes; a fast volume sender (gap under 5 minutes) gets 0 to 2, so it can use every 5-minute tick.
+    var jmax = snd.volume && snd.gapMs < 5 * 60000 ? 3 : 9;
+    var jitter = st.lastCold ? (Math.floor(st.lastCold.getTime() / 60000) * 7919 % jmax) * 60000 : 0;
     var open = ignoreWindow || (win && st.coldInWindow < snd.batch && (!st.lastCold || now - st.lastCold >= snd.gapMs + jitter));
     if (!open) return;
     if (!ignoreWindow) {
