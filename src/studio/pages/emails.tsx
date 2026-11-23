@@ -117,7 +117,7 @@ function EmailDrawer({ id, onClose, onProposal }: { id: string; onClose: () => v
   const { data, loading, error } = useData<{ row: Row & { links: string[]; from_addr: string | null }; events: Ev[]; body?: { html?: string; text?: string } | null }>(() => api(`/emails/${id}`), [id]);
   const r = data?.row;
   return (
-    <Drawer open onClose={onClose} title={r?.subject || 'Email'} wide>
+    <Drawer open onClose={onClose} title={r?.subject || (r?.company ? `Email to ${r.company}` : 'Email')} wide>
       {loading ? <Loading /> : error ? <ErrorNote error={error} /> : r ? (
         <>
           <div style={{ marginBottom: 14 }}><EmailState r={r} /> <Badge tone={r.source === 'outreach' ? 'orange' : 'default'}>{KIND[r.kind] ?? r.kind}</Badge></div>
