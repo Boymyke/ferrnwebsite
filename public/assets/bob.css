@@ -90,7 +90,7 @@
 @keyframes bobx-portal-open { to { transform: scale(1) rotate(90deg); } }
 @keyframes bobx-portal-close { from { transform: scale(1) rotate(90deg); } to { transform: scale(0) rotate(220deg); opacity: 0; } }
 .bobx-hand { position: fixed; left: 0; top: 0; z-index: 162; pointer-events: none; transition: transform .7s cubic-bezier(.45,.05,.25,1), opacity .35s; filter: drop-shadow(0 6px 10px rgba(0,0,0,.3)); }
-.bobx-hand svg { transition: transform .15s; transform-origin: 40% 20%; }
+.bobx-hand svg { transition: transform .15s; transform-origin: 15% 15%; }
 .bobx-hand.press svg { transform: scale(.82) rotate(-6deg); }
 .bobx-hand.gone { opacity: 0; }
 .bobx-pressed { box-shadow: 0 0 0 4px color-mix(in srgb, var(--orange) 45%, transparent) !important; border-radius: 8px; transition: box-shadow .2s; }
@@ -189,7 +189,6 @@
 .bobx-ghost.face-left.pointing .g-arm-r { transform: rotate(-70deg); }
 @keyframes bobx-gesture { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-35deg); } 60% { transform: rotate(-12deg); } }
 @keyframes bobx-gesture-l { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(25deg); } 70% { transform: rotate(8deg); } }
-.bobx-hand svg { filter: drop-shadow(0 6px 12px rgba(249,68,6,.35)); }
 
 /* tour caption: ask a question, stop talking, music */
 .bobx-cap { border-radius: 8px; }
@@ -209,12 +208,13 @@
 /* the roaming ghost: leans into his flight and leaves a faint glow trail */
 .bobx-ghost { width: 72px; height: 86px; }
 .bobx-ghost-in { transition: transform .5s cubic-bezier(.22,1,.36,1), filter .3s; }
-.bobx-ghost svg { filter: drop-shadow(0 0 16px rgba(255,106,42,.55)); }
-.bobx-ghost.flying .bobx-ghost-in { transform: rotate(var(--lean, 0deg)); filter: drop-shadow(calc(var(--lean, 0deg) / 1deg * -1.4px) 0 10px rgba(255,106,42,.55)) ; }
+.bobx-ghost.flying .bobx-ghost-in { transform: rotate(var(--lean, 0deg));  }
 .bobx-ghost.flying.face-left .bobx-ghost-in { transform: scaleX(-1) rotate(calc(var(--lean, 0deg) * -1)); }
 .bobx-ghost.flying svg { opacity: .82; }
 .bobx-avatar svg, .bobx-mini svg { width: 30px; }
 .bobx-mini svg { width: 22px; }
 /* small chat avatars stay still and cheap: no aura blur, no animation */
-.bobx-mini .ghost, .bobx-mini .ghost *, .bobx-avatar .ghost .g-wisp, .bobx-avatar .ghost .g-mist circle { animation: none !important; }
-.bobx-mini .g-aura, .bobx-mini .g-mist, .bobx-mini .g-wisps { display: none; }
+.bobx-mini .ghost, .bobx-mini .ghost * { animation: none !important; }
+/* no glow around Bob (23 Nov) */
+.bobx-ghost svg, .bobx-ghost.flying .bobx-ghost-in, .bobx-talk-ghost svg { filter: none !important; }
+.bobx-ghost svg { filter: drop-shadow(0 6px 10px rgba(0,0,0,.22)) !important; }

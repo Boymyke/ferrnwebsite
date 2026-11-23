@@ -84,7 +84,7 @@ export function bobLauncher() {
     };
     setTimeout(blink, 3000);
     // A mind of his own: every so often Bob waves, looks around, hops or does a little loop. Hovering makes him wave.
-    const ACTS: [string, number][] = [['act-wave', 1600], ['act-look', 2200], ['act-phase', 2600], ['act-loop', 1300], ['act-wave2', 1700], ['act-peek', 2400], ['act-drift', 3000]];
+    const ACTS: [string, number][] = [['act-wave', 1600], ['act-look', 2200], ['act-phase', 2600], ['act-wave2', 1700], ['act-peek', 2400], ['act-drift', 3000]];
     let busy = false;
     const play = (cls: string, ms: number) => { if (busy) return; busy = true; btn.classList.add(cls); setTimeout(() => { btn.classList.remove(cls); busy = false; }, ms); };
     const idle = () => {

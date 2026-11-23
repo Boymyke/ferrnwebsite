@@ -95,7 +95,7 @@ function Intro() {
       <div class="intro-half intro-half-l"></div>
       <div class="intro-half intro-half-r"></div>
       <p class="intro-type"><span class="intro-text" data-intro-text></span><span class="intro-caret"></span></p>
-      <div class="intro-bob">{raw(ghostSvg('introg', 200, 238))}</div>
+      <div class="intro-bob">{raw(ghostSvg('introg', 228, 238))}</div>
     </div>
   );
 }
@@ -258,7 +258,7 @@ function BobMount({ lang, ctx }: { lang: Lang; ctx?: SiteCtx }) {
   return (
     <div class="bob" data-bob data-bob-name={name} data-bob-voice={ctx?.bob?.voice ?? 'auto'} data-bob-suggest={suggestions.join('|')} data-bob-src={`/assets/bob.js?v=${ASSET_V}`} data-bob-css={`/assets/bob.css?v=${ASSET_V}`}>
       <button class="bob-ghost" type="button" data-bob-open aria-label={`Open ${name}, the Ferrn assistant`} aria-expanded="false">
-        <span class="ghost-float">{raw(ghostSvg('bobg', 66, 78))}</span>
+        <span class="ghost-float">{raw(ghostSvg('bobg', 75, 78))}</span>
         <span class="bob-ghost-label">Ask {name}</span>
       </button>
     </div>

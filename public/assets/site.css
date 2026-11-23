@@ -609,10 +609,9 @@ html:not(.js) .reveal, html:not(.js) .reveal-text, html:not(.js) .lines .line-in
 /* The float runs on an HTML wrapper (compositor only); the SVG itself stays still, so its glow is painted once. */
 .bob-ghost .ghost-float { display: block; position: relative; animation: ghost-float 3.6s ease-in-out infinite; transform-origin: 50% 90%; will-change: transform; }
 /* Glow as a static gradient layer (a drop-shadow filter would be repainted every time the eyes move). */
-.bob-ghost .ghost-float::before { content: ''; position: absolute; left: 6%; right: 6%; top: 30%; bottom: -22%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--orange) 42%, transparent), transparent); pointer-events: none; }
 .bob-ghost .ghost { display: block; position: relative; overflow: visible; transform-origin: 50% 90%; transition: transform .3s var(--ease); }
 .bob-ghost:hover .ghost-float { animation-play-state: paused; }
-.bob-ghost:hover .ghost { transform: translateY(-4px) scale(1.06) rotate(-4deg); }
+.bob-ghost:hover .ghost { transform: translateY(-4px); }
 .bob-ghost .ghost-eyes { transition: transform .25s ease-out, scale .09s ease-in-out; transform-box: fill-box; transform-origin: center; }
 .bob-ghost.blink .ghost-eyes { scale: 1 .1; }
 /* tooltip sits above Bob, right-aligned so it never runs off the screen edge */
@@ -623,7 +622,7 @@ html:not(.js) .reveal, html:not(.js) .reveal-text, html:not(.js) .lines .line-in
 .bob.loading .ghost-float { animation: ghost-float .9s ease-in-out infinite; }
 .bob.is-open .bob-ghost { opacity: 0; pointer-events: none; transform: scale(.6); transition: opacity .25s, transform .3s var(--ease); }
 .bob.away .bob-ghost { opacity: 0; pointer-events: none; }
-@keyframes ghost-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-7px) rotate(2deg); } }
+@keyframes ghost-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 .idle[hidden] { display: none; }
 @keyframes blink { 50% { opacity: .2; } }
 @keyframes pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 25%, transparent); } }
@@ -1389,8 +1388,6 @@ main .room-close h2.h-display { max-width: 16ch; }
 
 /* ── Bob, the ghost (22 Nov): arms pivot at the shoulders, eyes blink and follow, mouth talks, tail sways ── */
 .ghost .g-arm { transform-box: view-box; transition: transform .35s cubic-bezier(.3,1.4,.5,1); }
-.ghost .g-arm-l { transform-origin: 34px 90px; }
-.ghost .g-arm-r { transform-origin: 126px 90px; }
 .ghost .g-eyes { transform-box: fill-box; transform-origin: center; transition: transform .25s ease-out, scale .09s ease-in-out; }
 .ghost .g-mouth { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(calc(1 + var(--level, 0) * 1.8)); transition: transform .08s linear; }
 .ghost .g-body-wrap { transform-box: fill-box; transform-origin: 50% 0; animation: g-sway 4.2s ease-in-out infinite; }
@@ -1406,14 +1403,11 @@ main .room-close h2.h-display { max-width: 16ch; }
 @keyframes g-look { 0%, 100% { translate: 0 0; } 20%, 40% { translate: -5px 0; } 60%, 80% { translate: 5px -1px; } }
 .bob-ghost.act-hop .ghost { animation: g-hop .9s cubic-bezier(.3,1.6,.5,1); }
 @keyframes g-hop { 0%, 100% { transform: translateY(0) scale(1); } 20% { transform: translateY(2px) scale(1.06, .92); } 50% { transform: translateY(-14px) scale(.96, 1.05); } 80% { transform: translateY(0) scale(1.04, .96); } }
-.bob-ghost.act-loop .ghost { animation: g-loop 1.3s cubic-bezier(.5,0,.3,1); }
-@keyframes g-loop { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
 .bob-ghost.act-peek .ghost { animation: g-peek 2.4s ease-in-out; }
 .bob-ghost.act-peek .g-arm { animation: g-cover 2.4s ease-in-out; }
-@keyframes g-peek { 0%, 100% { transform: translateX(0); } 30%, 70% { transform: translateX(10px) rotate(8deg); } }
+@keyframes g-peek { 0%, 100% { transform: translateX(0); } 30%, 70% { transform: translateX(4px); } }
 @keyframes g-cover { 0%, 100% { transform: rotate(0); } 25%, 75% { transform: rotate(var(--cov, -40deg)); } }
 .bob-ghost.act-peek .g-arm-l { --cov: 40deg; }
-.bob-ghost:hover .ghost { transform: translateY(-4px) scale(1.06); }
 @media (prefers-reduced-motion: reduce) { .ghost .g-body-wrap, .bob-ghost[class*="act-"] .ghost, .bob-ghost[class*="act-"] .g-arm, .bob-ghost[class*="act-"] .g-eyes { animation: none !important; } }
 
 /* ── Intro (22 Nov): Bob arrives and pulls the curtains open with his hands ── */
@@ -1429,7 +1423,6 @@ main .room-close h2.h-display { max-width: 16ch; }
 .intro-type { z-index: 2; transition: opacity .3s, transform .4s; }
 .intro.bob-in .intro-type { opacity: 0; transform: translateY(-30px); }
 .intro-bob { position: absolute; left: 50%; top: 50%; z-index: 3; width: 200px; translate: -50% -50%; transform: translateY(110vh); opacity: 0; transition: transform .9s cubic-bezier(.3,1.25,.5,1), opacity .3s; pointer-events: none; }
-.intro-bob .ghost { width: 200px; height: auto; display: block; filter: drop-shadow(0 30px 60px rgba(249,68,6,.45)); }
 .intro.bob-in .intro-bob { transform: translateY(0); opacity: 1; }
 .intro.grip .intro-bob .g-arm-l { transform: rotate(-12deg) translateX(-10px); }
 .intro.grip .intro-bob .g-arm-r { transform: rotate(12deg) translateX(10px); }
@@ -1440,29 +1433,25 @@ main .room-close h2.h-display { max-width: 16ch; }
 .intro.away { animation: none; }
 
 /* ── Bob as a real ghost (23 Nov): glowing aura that breathes, see-through drift, mist from the tail, now and then he fades ── */
-.ghost .g-aura { animation: g-aura 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes g-aura { 0%, 100% { opacity: .42; transform: scale(1); } 50% { opacity: .7; transform: scale(1.05); } }
 .ghost .g-body-wrap { animation: g-drift 5.2s ease-in-out infinite; transform-box: view-box; transform-origin: 80px 30px; }
-@keyframes g-drift { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-2.4deg); } 70% { transform: rotate(2deg); } }
-.ghost .g-wisp { transform-box: fill-box; transform-origin: 0 0; animation: g-wisp 2.6s ease-in-out infinite; }
-.ghost .g-wisp-2 { animation-duration: 3.4s; animation-delay: -1.2s; }
-@keyframes g-wisp { 0%, 100% { transform: rotate(0); opacity: .9; } 50% { transform: rotate(14deg); opacity: .4; } }
-.ghost .g-mist circle { transform-box: fill-box; transform-origin: center; animation: g-mist 3s ease-out infinite; }
-.ghost .g-mist circle:nth-child(2) { animation-delay: -1s; } .ghost .g-mist circle:nth-child(3) { animation-delay: -2s; }
-@keyframes g-mist { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 20% { opacity: .55; } 100% { transform: translate(6px, -22px) scale(.3); opacity: 0; } }
-.bob-ghost .ghost { overflow: visible; filter: drop-shadow(0 0 14px rgba(255,106,42,.45)); }
+@keyframes g-drift { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(-1.5px, -2px); } 70% { transform: translate(1.5px, 1px); } }
 .bob-ghost.act-phase .ghost { animation: g-phase 2.6s ease-in-out; }
-@keyframes g-phase { 0%, 100% { opacity: 1; filter: drop-shadow(0 0 14px rgba(255,106,42,.45)); } 35%, 60% { opacity: .35; filter: drop-shadow(0 0 22px rgba(255,140,80,.8)) blur(.4px); } }
 .bob-ghost.act-drift .ghost { animation: g-float-wide 3s ease-in-out; }
-@keyframes g-float-wide { 0%, 100% { transform: translate(0, 0) rotate(0); } 30% { transform: translate(-10px, -12px) rotate(-8deg); } 65% { transform: translate(6px, -4px) rotate(6deg); } }
-.bob-ghost .ghost-float::before { background: radial-gradient(closest-side, rgba(255,106,42,.32), transparent); filter: blur(4px); }
-.intro-bob .ghost { filter: drop-shadow(0 0 40px rgba(255,106,42,.6)); }
-@media (prefers-reduced-motion: reduce) { .ghost .g-aura, .ghost .g-wisp, .ghost .g-mist circle { animation: none !important; } }
+@keyframes g-float-wide { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(-6px, -10px); } 65% { transform: translate(4px, -4px); } }
 
 /* ── Bob's fingers (23 Nov): each finger wiggles on its own; faster when he waves or talks ── */
-.ghost .g-f { transform-box: view-box; transform-origin: var(--ox) var(--oy); animation: g-wiggle 2.8s ease-in-out infinite; }
-.ghost .g-f2 { animation-delay: -.5s; } .ghost .g-f3 { animation-delay: -1s; } .ghost .g-th { animation-delay: -1.6s; animation-duration: 3.4s; }
-@keyframes g-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(14deg); } 60% { transform: rotate(-10deg); } }
 .bob-ghost.act-wave .g-arm-r .g-f, .bob-ghost.act-wave2 .g-arm-l .g-f, .intro.open .intro-bob .g-f, .bobx-ghost.talking .g-f, .bobx-panel[data-talk="speaking"] .g-f { animation-duration: .55s; }
 .intro.grip .intro-bob .g-f { animation: none; transform: rotate(-22deg); }
 @media (prefers-reduced-motion: reduce) { .ghost .g-f { animation: none !important; } }
+
+/* ── Bob, 23 Nov (2): fingers bend from the knuckle; no glow anywhere around him ── */
+.ghost .g-f { transform-box: fill-box; transform-origin: 0% 50%; animation: g-wiggle 2.8s ease-in-out infinite; }
+.ghost .g-f1 { animation-delay: -.3s; } .ghost .g-f2 { animation-delay: -.7s; } .ghost .g-f3 { animation-delay: -1.1s; } .ghost .g-f4 { animation-delay: -1.5s; }
+.ghost .g-th { animation-delay: -1.9s; animation-duration: 3.4s; }
+@keyframes g-wiggle { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(16deg); } 65% { transform: rotate(-12deg); } }
+.ghost .g-arm-l { transform-origin: 40px 94px; }
+.ghost .g-arm-r { transform-origin: 120px 94px; }
+.bob-ghost .ghost, .bob-ghost:hover .ghost { filter: drop-shadow(0 6px 10px rgba(0,0,0,.22)); }
+.bob-ghost .ghost-float::before { display: none; }
+.intro-bob .ghost { width: 200px; height: auto; display: block; filter: none; }
+@keyframes g-phase { 0%, 100% { opacity: 1; } 35%, 60% { opacity: .4; } }

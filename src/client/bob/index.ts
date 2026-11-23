@@ -106,7 +106,7 @@ const GHOST_SRC = root.querySelector('svg.ghost')?.outerHTML || '';
 /** A copy of Bob's SVG with its own gradient ids (two copies on a page must not share ids). */
 const ghostCopy = (id: string) => GHOST_SRC.replace(/bobg-/g, `${id}-`);
 const GHOST_SVG = ghostCopy('bobg2');
-const HAND_SVG = '<svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><defs><radialGradient id="bobx-hand-g" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ffb48a"/><stop offset=".5" stop-color="#ff5a1a"/><stop offset="1" stop-color="#b83000"/></radialGradient></defs><circle cx="21" cy="23" r="14" fill="url(#bobx-hand-g)"/><circle cx="10" cy="13" r="6.5" fill="#ff8f5a"/><circle cx="15" cy="17" r="3.6" fill="#fff" opacity=".35"/></svg>';
+const HAND_SVG = '<svg viewBox="0 0 40 40" width="36" height="36" aria-hidden="true"><defs><radialGradient id="bobx-hand-g" cx="35%" cy="30%" r="85%"><stop offset="0" stop-color="#ffc39c"/><stop offset=".55" stop-color="#ff6a2a"/><stop offset="1" stop-color="#d9480d"/></radialGradient></defs><g fill="url(#bobx-hand-g)" stroke="#a8380a" stroke-opacity=".4" stroke-width=".8"><rect x="3" y="9" width="20" height="7.4" rx="3.7" transform="rotate(45 6.7 12.7)"/><rect x="18" y="15" width="10" height="6.6" rx="3.3" transform="rotate(70 21 18)"/><rect x="23" y="16.5" width="10" height="6.6" rx="3.3" transform="rotate(80 26 20)"/><rect x="27.5" y="19" width="9" height="6.2" rx="3.1" transform="rotate(90 30.5 22)"/><ellipse cx="23" cy="27" rx="10" ry="9"/><rect x="8" y="24" width="12" height="6.6" rx="3.3" transform="rotate(-20 14 27)"/></g><ellipse cx="9.5" cy="11.5" rx="2.2" ry="1.3" fill="#fff" opacity=".45" transform="rotate(45 9.5 11.5)"/><ellipse cx="20" cy="23" rx="3.4" ry="2" fill="#fff" opacity=".38"/></svg>';
 let ghost: HTMLElement | null = null;
 function ghostEl() {
   if (ghost) return ghost;
@@ -152,7 +152,7 @@ async function point(el: Element, click = false) {
   h.style.transform = `translate(${from.x}px, ${from.y}px)`; document.body.appendChild(h);
   await wait(30);
   const tx = r.left + Math.min(r.width / 2, 40), ty = r.top + r.height / 2;
-  h.style.transform = `translate(${tx - 10}px, ${ty - 4}px)`;
+  h.style.transform = `translate(${tx - 4}px, ${ty - 8}px)`;
   await wait(reduced ? 0 : 700);
   h.classList.add('press'); el.classList.add('bobx-pressed');
   await wait(260);
