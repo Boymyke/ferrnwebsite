@@ -121,6 +121,10 @@ let gx = 0, gy = 0;
 async function flyTo(x: number, y: number, ms = 900) {
   const g = ghostEl();
   g.classList.toggle('face-left', x < gx);
+  // He leans into the direction of travel and leaves a faint trail while flying.
+  const lean = Math.max(-14, Math.min(14, (x - gx) / 30));
+  g.style.setProperty('--lean', `${lean}deg`); g.classList.add('flying');
+  setTimeout(() => { g.classList.remove('flying'); g.style.setProperty('--lean', '0deg'); }, reduced ? 0 : ms);
   gx = x; gy = y;
   g.style.transition = reduced ? 'none' : `transform ${ms}ms cubic-bezier(.45,.05,.25,1)`;
   g.style.transform = `translate(${Math.round(x - 32)}px, ${Math.round(y - 36)}px)`;

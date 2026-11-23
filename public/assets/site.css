@@ -1438,3 +1438,23 @@ main .room-close h2.h-display { max-width: 16ch; }
 .intro.open .intro-bob .g-mouth { transform: scaleY(2.2); }
 .intro.home .intro-bob { transition: transform .9s cubic-bezier(.6,0,.3,1), opacity .4s .6s; transform: translate(calc(50vw - 70px), calc(50vh - 70px)) scale(.33); opacity: 0; }
 .intro.away { animation: none; }
+
+/* ── Bob as a real ghost (23 Nov): glowing aura that breathes, see-through drift, mist from the tail, now and then he fades ── */
+.ghost .g-aura { animation: g-aura 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes g-aura { 0%, 100% { opacity: .42; transform: scale(1); } 50% { opacity: .7; transform: scale(1.05); } }
+.ghost .g-body-wrap { animation: g-drift 5.2s ease-in-out infinite; transform-box: view-box; transform-origin: 80px 30px; }
+@keyframes g-drift { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-2.4deg); } 70% { transform: rotate(2deg); } }
+.ghost .g-wisp { transform-box: fill-box; transform-origin: 0 0; animation: g-wisp 2.6s ease-in-out infinite; }
+.ghost .g-wisp-2 { animation-duration: 3.4s; animation-delay: -1.2s; }
+@keyframes g-wisp { 0%, 100% { transform: rotate(0); opacity: .9; } 50% { transform: rotate(14deg); opacity: .4; } }
+.ghost .g-mist circle { transform-box: fill-box; transform-origin: center; animation: g-mist 3s ease-out infinite; }
+.ghost .g-mist circle:nth-child(2) { animation-delay: -1s; } .ghost .g-mist circle:nth-child(3) { animation-delay: -2s; }
+@keyframes g-mist { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 20% { opacity: .55; } 100% { transform: translate(6px, -22px) scale(.3); opacity: 0; } }
+.bob-ghost .ghost { overflow: visible; filter: drop-shadow(0 0 14px rgba(255,106,42,.45)); }
+.bob-ghost.act-phase .ghost { animation: g-phase 2.6s ease-in-out; }
+@keyframes g-phase { 0%, 100% { opacity: 1; filter: drop-shadow(0 0 14px rgba(255,106,42,.45)); } 35%, 60% { opacity: .35; filter: drop-shadow(0 0 22px rgba(255,140,80,.8)) blur(.4px); } }
+.bob-ghost.act-drift .ghost { animation: g-float-wide 3s ease-in-out; }
+@keyframes g-float-wide { 0%, 100% { transform: translate(0, 0) rotate(0); } 30% { transform: translate(-10px, -12px) rotate(-8deg); } 65% { transform: translate(6px, -4px) rotate(6deg); } }
+.bob-ghost .ghost-float::before { background: radial-gradient(closest-side, rgba(255,106,42,.32), transparent); filter: blur(4px); }
+.intro-bob .ghost { filter: drop-shadow(0 0 40px rgba(255,106,42,.6)); }
+@media (prefers-reduced-motion: reduce) { .ghost .g-aura, .ghost .g-wisp, .ghost .g-mist circle { animation: none !important; } }

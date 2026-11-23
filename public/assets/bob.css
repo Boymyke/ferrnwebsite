@@ -206,3 +206,15 @@
 .bobx-foot .bobx-q-acts { margin: 0; }
 .bobx-foot .bobx-q-acts button, .bobx-foot .bobx-q-acts a { padding: 3px 8px; font-size: 12px; }
 .bobx-mini { margin-bottom: 26px; }
+/* the roaming ghost: leans into his flight and leaves a faint glow trail */
+.bobx-ghost { width: 72px; height: 86px; }
+.bobx-ghost-in { transition: transform .5s cubic-bezier(.22,1,.36,1), filter .3s; }
+.bobx-ghost svg { filter: drop-shadow(0 0 16px rgba(255,106,42,.55)); }
+.bobx-ghost.flying .bobx-ghost-in { transform: rotate(var(--lean, 0deg)); filter: drop-shadow(calc(var(--lean, 0deg) / 1deg * -1.4px) 0 10px rgba(255,106,42,.55)) ; }
+.bobx-ghost.flying.face-left .bobx-ghost-in { transform: scaleX(-1) rotate(calc(var(--lean, 0deg) * -1)); }
+.bobx-ghost.flying svg { opacity: .82; }
+.bobx-avatar svg, .bobx-mini svg { width: 30px; }
+.bobx-mini svg { width: 22px; }
+/* small chat avatars stay still and cheap: no aura blur, no animation */
+.bobx-mini .ghost, .bobx-mini .ghost *, .bobx-avatar .ghost .g-wisp, .bobx-avatar .ghost .g-mist circle { animation: none !important; }
+.bobx-mini .g-aura, .bobx-mini .g-mist, .bobx-mini .g-wisps { display: none; }
