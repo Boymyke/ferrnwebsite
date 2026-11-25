@@ -314,9 +314,11 @@ function processBatch_(data) {
   }
   var previewsAdded = (data.previews && data.previews.length) ? addPreviews_(data.previews, leadsT, keyToId) : 0;
   var rfpAdded = (data.rfps && data.rfps.length) ? addRfps_(data.rfps) : 0;
+  var rfpUpd = 0;
+  (data.rfp_updates || []).slice(0, 50).forEach(function (u) { if (u && u.id && rfpUpdate_(String(u.id), String(u.status || ''), u.note)) rfpUpd++; });
   var intAdded = (data.interactions && data.interactions.length) ? addInteractions_(data.interactions, keyToId) : 0;
   if (data.log) log_('info', 'ai-run', String(data.log).slice(0, 4000));
-  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.previews ? ', previews +' + previewsAdded : '') + (data.rfps ? ', rfps +' + rfpAdded : '') + (data.interactions ? ', interactions +' + intAdded : '');
+  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.previews ? ', previews +' + previewsAdded : '') + (data.rfps ? ', rfps +' + rfpAdded : '') + (data.rfp_updates ? ', rfp updates ' + rfpUpd : '') + (data.interactions ? ', interactions +' + intAdded : '');
 }
 
 // ───────────────────────────── Interactions ─────────────────────────────
@@ -456,6 +458,18 @@ function addRfps_(list) {
   if (rows.length) appendObjects_('RFPs', rows);
   return rows.length;
 }
+/** Changes an RFP's status and/or adds a dated note (Studio buttons, and rfp_updates in batch files from the bid writer). */
+function rfpUpdate_(id, status, note) {
+  if (!(RFP_STATUSES.indexOf(status) > -1 || note)) return false;
+  var rt = table_('RFPs'), rr = indexBy_(rt.rows, 'id')[id];
+  if (!rr) return false;
+  var rch = { updated: new Date() };
+  if (RFP_STATUSES.indexOf(status) > -1) rch.status = status;
+  if (note) rch.notes = (rr.notes ? rr.notes + '\n' : '') + stamp_() + ' ' + String(note).slice(0, 1000);
+  updateRow_(rt, rr, rch);
+  return true;
+}
+
 function rfpRows_() {
   var sh = SpreadsheetApp.getActive().getSheetByName('RFPs');
   return sh ? table_('RFPs').rows : [];
@@ -1231,15 +1245,7 @@ function dashAction(action, p) {
       if (r) updateRow_(inT, r, { status: 'handled', classification: r.classification || 'handled by you', handled_at: new Date() });
       break;
     case 'rfpStatus':
-      if (RFP_STATUSES.indexOf(p.status) > -1 || p.note) {
-        var rt = table_('RFPs'), rr = indexBy_(rt.rows, 'id')[p.id];
-        if (rr) {
-          var rch = { updated: new Date() };
-          if (RFP_STATUSES.indexOf(p.status) > -1) rch.status = p.status;
-          if (p.note) rch.notes = (rr.notes ? rr.notes + '\n' : '') + stamp_() + ' ' + String(p.note).slice(0, 1000);
-          updateRow_(rt, rr, rch);
-        }
-      }
+      rfpUpdate_(p.id, p.status, p.note);
       break;
     case 'previewSynced':
       // The Ferrn site stored the file; record the live URL on the preview and the lead.

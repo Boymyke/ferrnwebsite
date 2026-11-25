@@ -393,6 +393,22 @@ console.log('16b. Gmail account at 100 a day (Michael, 23 Nov 2026)');
   ok(vt.slice(1).every((t, i) => t - vt[i] >= 60000), 'still never two in the same minute');
 }
 
+console.log('16c. bid writer marks RFPs submitted through a batch file');
+{
+  const E = makeEnv({ now: '2026-11-25T11:00:00+01:00' });
+  E.ctx.setup();
+  E.dropFile('rfps-1.json', { rfps: [{ title: 'Website redesign', buyer: 'Org A', url: 'https://example.org/rfp-a', deadline: '2026-12-10T17:00:00Z', fit_score: 80 }] });
+  E.ctx.tick();
+  const r = E.rows('RFPs')[0];
+  ok(r && r.status === 'new', 'scout RFP added as new');
+  E.dropFile('batch-bid.json', { rfp_updates: [{ id: r.id, status: 'submitted', note: 'Bid emailed to bids@example.org' }, { id: 'R-nope', status: 'submitted' }] });
+  E.ctx.tick();
+  const r2 = E.rows('RFPs').find(x => x.id === r.id);
+  ok(r2.status === 'submitted' && /Bid emailed/.test(r2.notes), 'status and note updated by rfp_updates');
+  E.ctx.dashAction('rfpStatus', { id: r.id, status: 'won' });
+  ok(E.rows('RFPs').find(x => x.id === r.id).status === 'won', 'Studio button still works');
+}
+
 console.log('17. reply checks stay inside the Gmail read quota');
 {
   const E = makeEnv({ now: '2026-11-19T09:00:00+01:00' });
