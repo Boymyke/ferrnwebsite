@@ -312,13 +312,26 @@ function processBatch_(data) {
       updateRow_(inT, r, ch);
     });
   }
+  var msgUpd = 0;
+  if (data.message_updates && data.message_updates.length) {
+    var mT2 = table_('Messages'), mById = indexBy_(mT2.rows, 'id');
+    data.message_updates.slice(0, 300).forEach(function (u) {
+      var r = u && mById[String(u.id)];
+      if (!r || ['queued', 'held'].indexOf(r.status) === -1 || String(r.step) === 'R') return;
+      var ch = {};
+      if (typeof u.body === 'string' && u.body.trim()) ch.body = u.body;
+      if (typeof u.subject === 'string' && String(r.step) === '0') ch.subject = u.subject;
+      if (u.cancel === true) { ch.status = 'cancelled'; ch.error = 'cancelled by the writer: ' + String(u.reason || 'old style'); }
+      if (Object.keys(ch).length) { updateRow_(mT2, r, ch); msgUpd++; }
+    });
+  }
   var previewsAdded = (data.previews && data.previews.length) ? addPreviews_(data.previews, leadsT, keyToId) : 0;
   var rfpAdded = (data.rfps && data.rfps.length) ? addRfps_(data.rfps) : 0;
   var rfpUpd = 0;
   (data.rfp_updates || []).slice(0, 50).forEach(function (u) { if (u && u.id && rfpUpdate_(String(u.id), String(u.status || ''), u.note)) rfpUpd++; });
   var intAdded = (data.interactions && data.interactions.length) ? addInteractions_(data.interactions, keyToId) : 0;
   if (data.log) log_('info', 'ai-run', String(data.log).slice(0, 4000));
-  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.previews ? ', previews +' + previewsAdded : '') + (data.rfps ? ', rfps +' + rfpAdded : '') + (data.rfp_updates ? ', rfp updates ' + rfpUpd : '') + (data.interactions ? ', interactions +' + intAdded : '');
+  return 'leads +' + added + ' (dups ' + dups + '), updates ' + upd + ', messages +' + msgs + (data.message_updates ? ', message edits ' + msgUpd : '') + (data.previews ? ', previews +' + previewsAdded : '') + (data.rfps ? ', rfps +' + rfpAdded : '') + (data.rfp_updates ? ', rfp updates ' + rfpUpd : '') + (data.interactions ? ', interactions +' + intAdded : '');
 }
 
 // ───────────────────────────── Interactions ─────────────────────────────
@@ -686,6 +699,25 @@ function lagosTime_(day, h, mi) {
 }
 
 /** Sends one message row. Returns true when an email actually went out. */
+/** Michael, 26 Nov 2026: no more "Picture a..." scenes, website criticism or "free, yours to keep" offers.
+ *  Older queued emails still carry them, so they are taken out right before sending. */
+var OLD_DROP_ = /\b(picture (a|an|this|the|your|someone)|imagine (a|an|this|your)|footer|outdated|yours to keep)\b/i;
+function cleanOld_(body) {
+  var b = String(body || '');
+  if (!/picture|imagine|footer|outdated|yours to keep|for free|at no cost|\bfree\b/i.test(b)) return b;
+  var paras = b.split(/\n\s*\n/).map(function (p) {
+    var sentences = p.split(/(?<=[.?!])\s+(?=[A-Z"'“(])/);
+    var kept = sentences.filter(function (x) { return !OLD_DROP_.test(x) && !/^\s*free[,.]?\s*(and)?\s*\.?$/i.test(x); }).map(function (x) {
+      return x.replace(/,?\s+for free\b/gi, '').replace(/,?\s+(completely\s+)?at no cost( to you)?\b/gi, '')
+        .replace(/\b(a|an) free\s+/gi, function (_, a) { return a.toLowerCase() === 'an' ? 'a ' : a + ' '; })
+        .replace(/\bfree\s+(mock-?up|plan|homepage|demo|check|map|concept|sketch|review|audit)/gi, '$1')
+        .replace(/,?\s*free,?\s*(and)?\s*\.$/i, '.');
+    });
+    return kept.join(' ').trim();
+  }).filter(function (p) { return p.length > 0; });
+  return paras.join('\n\n');
+}
+
 function deliver_(m, lead, mT, lT, s, fromAddr) {
   fromAddr = fromAddr || senderFor_(lead, s);
   var step = String(m.step);
@@ -708,6 +740,7 @@ function deliver_(m, lead, mT, lT, s, fromAddr) {
     var subject = m.subject || (meta ? meta.subject : 'Quick idea for ' + lead.company);
     if (meta && !/^re:/i.test(subject)) subject = 'Re: ' + meta.subject.replace(/^re:\s*/i, '');
     var concept = null, mbody = String(m.body || '');
+    if (!isReply) mbody = cleanOld_(mbody);
     if (mbody.indexOf('{{CONCEPT}}') > -1) {
       // "I redesigned your homepage": wait until the concept is live on the Ferrn site (and its screenshot exists).
       var pv = conceptFor_(lead.id);

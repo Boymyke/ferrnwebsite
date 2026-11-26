@@ -471,6 +471,27 @@ console.log('16e. follow-ups: people who opened first, non-openers later');
   ok(E2.sent.length === 2, 'if opens cannot be read, follow-ups keep their normal schedule');
 }
 
+console.log('16f. old-style lines are taken out before sending; batches can rewrite queued emails');
+{
+  const E = makeEnv({ now: '2026-11-23T09:00:00+01:00' });
+  E.ctx.setup(); E.set('HOLD_MINUTES', '0'); E.set('GAP_MINUTES', '1');
+  const body = 'Hello Marquis team,\n\nA warehouse at Manchester Airport puts Marquis among the few forwarders built for awkward consignments.\n\nPicture a pharma buyer wanting to know where it is at 7am. The UK site offers two phone numbers and a 2023 footer.\n\nA simple customer portal would cut the "where is it?" calls.\n\nShall I mock up what that customer view could look like with your logo? Free, and yours to keep.\n\nMichael';
+  const out = E.ctx.cleanOld_(body);
+  ok(!/picture|footer|yours to keep|free/i.test(out), 'old lines removed');
+  ok(/customer portal would cut/.test(out) && /Shall I mock up what that customer view could look like with your logo\?/.test(out) && /Michael$/.test(out), 'the rest stays intact');
+  ok(E.ctx.cleanOld_('Hi Ade,\n\nWorth a look?\n\nMichael') === 'Hi Ade,\n\nWorth a look?\n\nMichael', 'clean emails are untouched');
+  ok(E.ctx.cleanOld_('I can send a free homepage mock-up for you at no cost.') === 'I can send a homepage mock-up for you.', 'free offers lose the word free');
+  E.dropFile('b.json', { leads: [{ key: 'm', company: 'Marquis', email: 'uk@marquis.co.uk', city: 'Manchester', tier: 'A', website: 'marquis.co.uk' }],
+    messages: [{ lead_key: 'm', step: 0, subject: 'pharma shippers', body: body }, { lead_key: 'm', step: 1, delay_days: 4, body: 'Old follow-up. Free, and yours to keep.' }] });
+  for (let mins = 9 * 60 + 5; mins <= 10 * 60; mins += 5) { E.setNow(`2026-11-23T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); }
+  ok(E.sent.length === 1 && !/Picture|footer|yours to keep/i.test(E.sent[0].raw), 'the sent email has none of the old lines');
+  const fu = E.rows('Messages').find(m => m.step == '1');
+  E.dropFile('u.json', { message_updates: [{ id: fu.id, body: 'Hi James,\n\nStill answering tracking calls by hand?\n\nMichael' }, { id: E.rows('Messages').find(m => m.step == '0').id, body: 'nope' }] });
+  E.setNow('2026-11-23T10:10:00+01:00'); E.ctx.tick();
+  ok(E.rows('Messages').find(m => m.id === fu.id).body.startsWith('Hi James'), 'a queued follow-up can be rewritten by a batch');
+  ok(E.rows('Messages').find(m => m.step == '0').body !== 'nope', 'sent emails cannot be changed');
+}
+
 console.log('17. reply checks stay inside the Gmail read quota');
 {
   const E = makeEnv({ now: '2026-11-19T09:00:00+01:00' });
