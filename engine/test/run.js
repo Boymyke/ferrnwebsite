@@ -409,6 +409,38 @@ console.log('16c. bid writer marks RFPs submitted through a batch file');
   ok(E.rows('RFPs').find(x => x.id === r.id).status === 'won', 'Studio button still works');
 }
 
+console.log('16d. concept-first first emails: wait for the concept, then show its screenshot');
+{
+  const E = makeEnv({ now: '2026-11-26T09:00:00+01:00' }); // Thursday
+  E.ctx.setup();
+  E.set('HOLD_MINUTES', '0');
+  E.set('PREVIEW_BASE_URL', 'https://www.ferrnagency.com/concept');
+  E.dropFile('batch-c.json', {
+    leads: [{ key: 'k', company: 'Kargo Lines', niche: 'logistics', email: 'ade@kargolines.co.uk', city: 'London', tier: 'A', website: 'kargolines.co.uk', contact_name: 'Ade' }],
+    messages: [{ lead_key: 'k', step: 0, subject: 'your new homepage', body: 'Hi Ade,\n\nI redesigned your homepage:\n\n{{CONCEPT}}\n\nWorth a look?\n\nMichael' }],
+    previews: [{ key: 'k', slug: 'kargo-lines', company: 'Kargo Lines', html: '<!doctype html><html><head><title>Kargo Lines</title></head><body>' + 'x'.repeat(300) + '</body></html>' }],
+  });
+  E.setNow('2026-11-26T09:30:00+01:00'); E.ctx.tick();
+  ok(E.sent.length === 0, 'first email waits while the concept is not live yet');
+  E.ctx.dashAction('previewSynced', { slug: 'kargo-lines', url: 'https://www.ferrnagency.com/concept/kargo-lines/' });
+  E.setNow('2026-11-26T09:45:00+01:00'); E.ctx.tick();
+  ok(E.sent.length === 1, 'sent once the concept is live');
+  const raw = E.sent[0].raw;
+  const part = (type) => Buffer.from(raw.split(`Content-Type: ${type}; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n`)[1].split('\r\n--')[0].replace(/\r\n/g, ''), 'base64').toString();
+  const html = part('text/html'), text = part('text/plain');
+  ok(/kargo-lines\/shot\.jpg/.test(html) && /<img /.test(html), 'HTML shows the concept screenshot');
+  ok(text.includes('https://www.ferrnagency.com/concept/kargo-lines/') && !text.includes('{{CONCEPT}}'), 'plain text has the concept link, no placeholder');
+  // a concept that never goes live: after two days the email goes without it
+  const E2 = makeEnv({ now: '2026-11-26T09:00:00+01:00' });
+  E2.ctx.setup(); E2.set('HOLD_MINUTES', '0');
+  E2.dropFile('b2.json', { leads: [{ key: 'z', company: 'Zed Care', email: 'hi@zedcare.co.uk', city: 'London', tier: 'A', website: 'zedcare.co.uk' }],
+    messages: [{ lead_key: 'z', step: 0, subject: 'hello', body: 'Hi,\n\nI redesigned your homepage:\n\n{{CONCEPT}}\n\nMichael' }] });
+  E2.setNow('2026-11-26T09:30:00+01:00'); E2.ctx.tick();
+  ok(E2.sent.length === 0, 'no concept yet: waits');
+  E2.setNow('2026-11-30T09:30:00+01:00'); E2.ctx.tick();
+  ok(E2.sent.length === 1 && !/\{\{CONCEPT\}\}/.test(E2.sent[0].raw), 'after two days it goes without the placeholder');
+}
+
 console.log('17. reply checks stay inside the Gmail read quota');
 {
   const E = makeEnv({ now: '2026-11-19T09:00:00+01:00' });

@@ -7,7 +7,7 @@ import { requireUser, sha256 } from '../lib/auth';
 import { audit, diff } from '../lib/audit';
 import { bumpContentVersion } from '../lib/cache';
 import { complete, extractJson } from '../lib/ai';
-import { engineCall, engineConfigured, hasHandledBy, shapeDash, syncEngine } from '../lib/engine';
+import { captureConceptShot, engineCall, engineConfigured, hasHandledBy, shapeDash, syncEngine } from '../lib/engine';
 import { captureSite } from '../lib/capture';
 import { fromOf } from '../lib/email';
 import { searchPlaces } from '../lib/maps';
@@ -176,6 +176,18 @@ studio.get('/prospects/auto', async (c): Promise<Response> => {
   return c.json({ ok: true, config: cfg, plan, niches: Object.keys(NICHE_QUERY), cities: LAGOS_AND_ABROAD, hasKey: !!c.env.GOOGLE_MAPS_API_KEY, recent, byDay });
 });
 /* Portfolio covers: capture a live site's homepage after it has fully loaded (preloaders finished) and keep it in R2. */
+/** Retakes the screenshot of a live concept (used in "I redesigned your homepage" emails). */
+studio.post('/concepts/:slug/shot', async (c): Promise<Response> => {
+  const u = c.get('user')!;
+  if (!can(u, 'sales')) return c.json({ ok: false, error: 'Not allowed' }, 403);
+  const slug = String(c.req.param('slug') || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+  const row = await c.env.DB.prepare("SELECT slug FROM demos WHERE slug = ? AND kind = 'upload'").bind(slug).first();
+  if (!row) return c.json({ ok: false, error: 'No such concept' }, 404);
+  const url = `${c.env.SITE_URL || 'https://www.ferrnagency.com'}/concept/${slug}/`;
+  const ok = await captureConceptShot(c.env, slug, url);
+  return c.json({ ok, shot: `${url}shot.jpg` }, ok ? 200 : 502);
+});
+
 studio.post('/covers/capture', async (c): Promise<Response> => {
   const u = c.get('user')!;
   if (!can(u, 'admin')) return c.json({ ok: false, error: 'Only admins capture covers.' }, 403);

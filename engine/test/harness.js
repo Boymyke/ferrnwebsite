@@ -124,7 +124,10 @@ function makeEnv(opts = {}) {
   function folderObj(id) {
     return {
       getId: () => id,
-      createFolder: (n) => makeFolder(n),
+      createFolder: (n) => { const f = makeFolder(n); folders[f.getId()].parent = id; return f; },
+      getParents: () => { const pid = folders[id] && folders[id].parent; let done = !pid; return { hasNext: () => !done, next: () => { done = true; return folderObj(pid); } }; },
+      getFoldersByName: (n) => { const list = Object.values(folders).filter((f) => f.parent === id && f.name === n).map((f) => folderObj(f.id)); let i = 0; return { hasNext: () => i < list.length, next: () => list[i++] }; },
+      createFile: (n, content) => { const fid = 'P' + (++folderSeq); driveFiles[fid] = { name: n, content: String(content), parent: id, created: new Date() }; return { getId: () => fid, setContent: (c) => { driveFiles[fid].content = String(c); } }; },
       getFiles: () => {
         const list = Object.entries(driveFiles).filter(([, f]) => f.parent === id).map(([fid]) => fileObj(fid));
         let i = 0;
@@ -144,7 +147,8 @@ function makeEnv(opts = {}) {
   const DriveApp = {
     createFolder: makeFolder,
     getFolderById: (id) => folderObj(id),
-    getFileById: (id) => ({ moveTo: () => {} }),
+    getFileById: (id) => (driveFiles[id] ? { getId: () => id, moveTo: () => {}, setContent: (c) => { driveFiles[id].content = String(c); }, getBlob: () => ({ getDataAsString: () => driveFiles[id].content }) } : { moveTo: () => {} }),
+    getRootFolder: () => folderObj('ROOT'),
   };
   const DocumentApp = {
     create: (name) => { const id = 'D' + uuid().slice(0, 4); docs[id] = ''; return { getId: () => id }; },

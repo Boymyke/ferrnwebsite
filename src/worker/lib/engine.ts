@@ -119,9 +119,23 @@ export async function syncPreviews(env: Bindings): Promise<number> {
         .bind('dm_' + Math.random().toString(36).slice(2, 12), slug, `Preview — ${p.company || slug}`, 'upload', p.lead_id || null, 'Concept site built by the morning routine', 1, p.html.length, 'index.html', 'Morning routine', 'Morning routine').run();
     }
     const url = `${env.SITE_URL || 'https://www.ferrnagency.com'}/concept/${slug}/`;
+    // Screenshot of the concept for the "I redesigned your homepage" email (served at <url>shot.jpg).
+    await captureConceptShot(env, slug, url).catch((e) => console.warn('concept screenshot failed', slug, e));
     if (p.lead_id) await env.DB.prepare("UPDATE leads SET preview_url = ? WHERE id = ?").bind(url, p.lead_id).run().catch(() => null);
     await engineCall(env, 'dashAction', ['previewSynced', { slug, url }]).catch(() => null);
     n++;
   }
   return n;
+}
+
+/** Saves a 1200x750 screenshot of a live concept as demos/<slug>/shot.jpg (thum.io renders the public page). */
+export async function captureConceptShot(env: Bindings, slug: string, url: string): Promise<boolean> {
+  const shot = `https://image.thum.io/get/width/1200/crop/750/viewportWidth/1280/wait/6/noanimate/${url}?v=${Date.now()}`;
+  const r = await fetch(shot, { cf: { cacheTtl: 0 } } as RequestInit);
+  const type = r.headers.get('content-type') || '';
+  if (!r.ok || !type.startsWith('image/')) return false;
+  const buf = await r.arrayBuffer();
+  if (buf.byteLength < 5000) return false; // a blank or error image
+  await env.MEDIA.put(`demos/${slug}/shot.jpg`, buf, { httpMetadata: { contentType: type, cacheControl: 'public, max-age=86400' } });
+  return true;
 }

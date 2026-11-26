@@ -669,10 +669,18 @@ function deliver_(m, lead, mT, lT, s, fromAddr) {
     var meta = threadId ? threadMeta_(threadId) : null;
     var subject = m.subject || (meta ? meta.subject : 'Quick idea for ' + lead.company);
     if (meta && !/^re:/i.test(subject)) subject = 'Re: ' + meta.subject.replace(/^re:\s*/i, '');
-    var body = m.body + '\n\n' + (s.SIGNATURE || '');
+    var concept = null, mbody = String(m.body || '');
+    if (mbody.indexOf('{{CONCEPT}}') > -1) {
+      // "I redesigned your homepage": wait until the concept is live on the Ferrn site (and its screenshot exists).
+      var pv = conceptFor_(lead.id);
+      if (pv) concept = { url: pv.url, company: lead.company };
+      else if (new Date() - new Date(m.created || 0) < 2 * 86400000) return false; // keep it queued and try again later
+      mbody = concept ? mbody.replace('{{CONCEPT}}', concept.url) : mbody.replace(/\n*\{\{CONCEPT\}\}\n*/, '\n\n');
+    }
+    var body = mbody + '\n\n' + (s.SIGNATURE || '');
     if (!isReply && s.OPT_OUT_LINE) body += '\n\n' + s.OPT_OUT_LINE;
     var track = trackingOn_(s) ? { id: 'lh-' + String(m.id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60), t: Date.now() } : null;
-    var res = sendRaw_(m.to, subject, body, threadId, meta ? meta.lastMessageId : '', s, track, fromAddr);
+    var res = sendRaw_(m.to, subject, body, threadId, meta ? meta.lastMessageId : '', s, track, fromAddr, concept);
     var now = new Date();
     if (track && !s.TRACKING_SINCE) { setSetting_('TRACKING_SINCE', new Date(track.t).toISOString()); s.TRACKING_SINCE = new Date(track.t).toISOString(); }
     updateRow_(mT, m, { status: 'sent', sent_at: now, thread_id: res.threadId, gmail_id: res.id, error: '', from: fromAddr });
@@ -706,10 +714,27 @@ function scheduleFollowUps_(leadId, from, mT) {
   });
 }
 
-function sendRaw_(to, subject, text, threadId, inReplyTo, s, track, fromAddr) {
+/** The live concept for a lead (synced to the Ferrn site), or null. */
+function conceptFor_(leadId) {
+  if (!leadId || !SpreadsheetApp.getActive().getSheetByName('Previews')) return null;
+  var rows = table_('Previews').rows.filter(function (r) { return r.lead_id === leadId && r.synced_at && r.url; });
+  return rows.length ? rows[rows.length - 1] : null;
+}
+/** Replaces the concept link with a clickable screenshot of the concept (the Ferrn site saves it as shot.jpg). */
+function conceptHtml_(html, concept) {
+  var url = String(concept.url).replace(/\/?$/, '/');
+  var a = '<a href="' + concept.url + '">' + concept.url + '</a>';
+  var esc = String(concept.company || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  var block = '<a href="' + url + '" style="display:block;text-decoration:none"><img src="' + url + 'shot.jpg" width="560" alt="Homepage concept for ' + esc + '" style="display:block;width:100%;max-width:560px;height:auto;border:1px solid #e3e3e3;border-radius:8px"></a>' +
+    '<span style="font-size:13px"><a href="' + url + '">Open the full concept</a></span>';
+  return html.indexOf(a) > -1 ? html.replace(a, block) : html;
+}
+
+function sendRaw_(to, subject, text, threadId, inReplyTo, s, track, fromAddr, concept) {
   fromAddr = fromAddr && senderOk_(String(fromAddr).toLowerCase()) ? fromAddr : fromCheck_(s).address;
   var from = (s.SENDER_NAME ? encodeWord_(s.SENDER_NAME) + ' ' : '') + '<' + fromAddr + '>';
   var html = toHtml_(text);
+  if (concept && concept.url) html = conceptHtml_(html, concept);
   if (track) html = trackHtml_(html, track, s);
   var boundary = 'ferrn_' + Utilities.getUuid().replace(/-/g, '');
   var head = [
