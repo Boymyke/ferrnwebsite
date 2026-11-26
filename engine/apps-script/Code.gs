@@ -755,7 +755,10 @@ function scheduleFollowUps_(leadId, from, mT) {
 /** The live concept for a lead (synced to the Ferrn site), or null. */
 function conceptFor_(leadId) {
   if (!leadId || !SpreadsheetApp.getActive().getSheetByName('Previews')) return null;
-  var rows = table_('Previews').rows.filter(function (r) { return r.lead_id === leadId && r.synced_at && r.url; });
+  var all = table_('Previews').rows.filter(function (r) { return r.lead_id === leadId; });
+  // A newer concept for this lead (e.g. a homepage after an app screen) is still syncing: wait for it.
+  if (all.some(function (r) { return !r.synced_at; })) return null;
+  var rows = all.filter(function (r) { return r.url; });
   return rows.length ? rows[rows.length - 1] : null;
 }
 /** Replaces the concept link with a clickable screenshot of the concept (the Ferrn site saves it as shot.jpg). */
