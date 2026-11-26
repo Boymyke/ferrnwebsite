@@ -526,8 +526,15 @@ function sendDue_(ignoreWindow) {
   });
   var holdMs = Number(s.HOLD_MINUTES || 0) * 60000;
   var order = { R: 0, '3': 1, '2': 2, '1': 3, '0': 4 };
+  // Follow-ups go first to people who opened; people who never opened get theirs NOOPEN_DELAY_DAYS later.
+  var opened = openedLeads_(s, mT);
+  var noOpenMs = Number(s.NOOPEN_DELAY_DAYS || 3) * 86400000;
+  var isFol = function (m) { var st = String(m.step); return st !== '0' && st !== 'R'; };
   var due = mT.rows.filter(function (m) {
-    return m.status === 'queued' && m.channel === 'email' && m.send_after && new Date(m.send_after) <= now;
+    if (!(m.status === 'queued' && m.channel === 'email' && m.send_after)) return false;
+    var at = new Date(m.send_after);
+    if (opened && isFol(m) && !opened[m.lead_id]) at = new Date(at.getTime() + noOpenMs);
+    return at <= now;
   }).sort(function (a, b) {
     return (order[String(a.step)] || 9) - (order[String(b.step)] || 9) || new Date(a.send_after) - new Date(b.send_after);
   });
@@ -552,9 +559,10 @@ function sendDue_(ignoreWindow) {
     var open = ignoreWindow || (win && st.coldInWindow < snd.batch && (!st.lastCold || now - st.lastCold >= snd.gapMs + jitter));
     if (!open) return;
     if (!ignoreWindow) {
-      var fol = mine.filter(function (m) { return String(m.step) !== '0'; });
+      var folOpen = mine.filter(function (m) { return String(m.step) !== '0' && opened && opened[m.lead_id]; });
+      var fol = mine.filter(function (m) { return String(m.step) !== '0' && !(opened && opened[m.lead_id]); });
       var fst = mine.filter(function (m) { return String(m.step) === '0'; });
-      mine = st.coldInWindow % 2 === 0 ? fst.concat(fol) : fol.concat(fst);
+      mine = folOpen.concat(st.coldInWindow % 2 === 0 ? fst.concat(fol) : fol.concat(fst));
     }
     var cold = 0;
     for (var i = 0; i < mine.length; i++) {
@@ -572,6 +580,36 @@ function sendDue_(ignoreWindow) {
       Utilities.sleep(1500);
     }
   });
+}
+
+/** Leads with at least one opened or clicked email, from the Ferrn site's tracking (cached 20 minutes).
+ *  Returns null when the site can't be reached, so follow-ups then go on their normal schedule. */
+function openedLeads_(s, mT) {
+  var cache = null, hit = null;
+  try { cache = CacheService.getScriptCache(); hit = cache.get('OPENED_IDS'); } catch (e) { cache = null; }
+  var ids = null;
+  if (hit) { try { ids = JSON.parse(hit); } catch (e) { ids = null; } }
+  if (!ids) {
+    try {
+      var base = String(s.TRACKING_BASE || 'https://www.ferrnagency.com').replace(/\/$/, '');
+      var t = String(Date.now());
+      var res = UrlFetchApp.fetch(base + '/api/e/opened?t=' + t + '&s=' + sign_('opened|' + t, s.API_KEY), { muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) return null;
+      ids = (JSON.parse(res.getContentText()) || {}).ids || [];
+      if (cache) { try { cache.put('OPENED_IDS', JSON.stringify(ids), 1200); } catch (e) {} }
+    } catch (e) { return null; }
+  }
+  var byMsg = {};
+  (mT || table_('Messages')).rows.forEach(function (m) { byMsg['lh-' + String(m.id).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60)] = m.lead_id; });
+  var out = {};
+  ids.forEach(function (id) { if (byMsg[id]) out[byMsg[id]] = true; });
+  return out;
+}
+
+/** Run once from the editor (Run > authorizeOpens) to let the engine read email opens from the Ferrn site. */
+function authorizeOpens() {
+  var o = openedLeads_(settings_());
+  return o ? Object.keys(o).length + ' leads with opens' : 'Could not reach the Ferrn site';
 }
 
 /** The sending addresses, with their limits. senders_[0] is always the premium address (FROM_ALIAS). */

@@ -441,6 +441,36 @@ console.log('16d. concept-first first emails: wait for the concept, then show it
   ok(E2.sent.length === 1 && !/\{\{CONCEPT\}\}/.test(E2.sent[0].raw), 'after two days it goes without the placeholder');
 }
 
+console.log('16e. follow-ups: people who opened first, non-openers later');
+{
+  const E = makeEnv({ now: '2026-11-23T09:00:00+01:00' }); // Monday
+  E.ctx.setup(); E.set('HOLD_MINUTES', '0'); E.set('GAP_MINUTES', '1'); E.set('BATCH_SIZE', '50');
+  E.dropFile('b.json', {
+    leads: [{ key: 'o', company: 'Open Co', email: 'a@openco.co.uk', city: 'London', tier: 'A', website: 'openco.co.uk' },
+            { key: 'n', company: 'Nope Co', email: 'b@nopeco.co.uk', city: 'London', tier: 'A', website: 'nopeco.co.uk' }],
+    messages: [{ lead_key: 'o', step: 0, subject: 'one', body: 'Hi' }, { lead_key: 'o', step: 1, delay_days: 4, body: 'fu o' },
+               { lead_key: 'n', step: 0, subject: 'two', body: 'Hi' }, { lead_key: 'n', step: 1, delay_days: 4, body: 'fu n' }] });
+  for (let mins = 9 * 60 + 5; mins <= 11 * 60; mins += 5) { E.setNow(`2026-11-23T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); }
+  ok(E.sent.length === 2, 'both first emails sent');
+  const oMsg = E.rows('Messages').find(m => m.step == '0' && /openco/.test(m.to));
+  E.setFetchReply((url) => ({ code: /\/api\/e\/opened\?t=\d+&s=[0-9a-f]{20}$/.test(url) ? 200 : 403, body: { ids: ['lh-' + oMsg.id] } }));
+  const day = (d) => { for (let mins = 9 * 60; mins <= 11 * 60; mins += 5) { E.setNow(`${d}T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E.ctx.tick(); } };
+  day('2026-11-27');
+  const fuO = E.sent.filter(x => /a@openco/.test(x.raw) && /In-Reply-To/.test(x.raw)).length, fuN = E.sent.filter(x => /b@nopeco/.test(x.raw) && /In-Reply-To/.test(x.raw)).length;
+  ok(fuO === 1 && fuN === 0, 'on day 4 only the person who opened gets the follow-up (' + fuO + '/' + fuN + ')');
+  ok(E.fetches.length >= 1 && E.fetches.every(u => u.startsWith('https://www.ferrnagency.com/api/e/opened?')), 'opens come from the Ferrn site, signed');
+  day('2026-11-30'); day('2026-12-01');
+  ok(E.sent.filter(x => /b@nopeco/.test(x.raw) && /In-Reply-To/.test(x.raw)).length === 1, 'the non-opener gets it three days later');
+  // site unreachable: normal schedule for everyone
+  const E2 = makeEnv({ now: '2026-11-23T09:00:00+01:00' });
+  E2.ctx.setup(); E2.set('HOLD_MINUTES', '0'); E2.set('GAP_MINUTES', '1');
+  E2.dropFile('b.json', { leads: [{ key: 'n', company: 'Nope Co', email: 'b@nopeco.co.uk', city: 'London', tier: 'A', website: 'nopeco.co.uk' }],
+    messages: [{ lead_key: 'n', step: 0, subject: 'two', body: 'Hi' }, { lead_key: 'n', step: 1, delay_days: 4, body: 'fu n' }] });
+  for (let mins = 9 * 60 + 5; mins <= 10 * 60; mins += 5) { E2.setNow(`2026-11-23T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E2.ctx.tick(); }
+  for (let mins = 9 * 60; mins <= 11 * 60; mins += 5) { E2.setNow(`2026-11-27T${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00+01:00`); E2.ctx.tick(); }
+  ok(E2.sent.length === 2, 'if opens cannot be read, follow-ups keep their normal schedule');
+}
+
 console.log('17. reply checks stay inside the Gmail read quota');
 {
   const E = makeEnv({ now: '2026-11-19T09:00:00+01:00' });

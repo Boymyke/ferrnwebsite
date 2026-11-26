@@ -156,6 +156,8 @@ function makeEnv(opts = {}) {
   };
   const triggers = [];
   const cache = {};
+  const fetches = [];
+  let fetchReply = () => ({ code: 404, body: {} });
   const props = { REPLY_EVERY_MIN: '0' }; // tests check replies on every tick; one test turns the 15-minute pacing back on
   const ScriptApp = {
     getProjectTriggers: () => triggers,
@@ -170,6 +172,7 @@ function makeEnv(opts = {}) {
     Session: { getEffectiveUser: () => ({ getEmail: () => me }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
     HtmlService: {}, console,
+    UrlFetchApp: { fetch: (url) => { fetches.push(url); const r = fetchReply(url); return { getResponseCode: () => r.code, getContentText: () => JSON.stringify(r.body) }; } },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (t) => ({ text: t, setMimeType() { return this; }, getContent() { return t; } }) },
   };
   // controllable clock
@@ -182,7 +185,8 @@ function makeEnv(opts = {}) {
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(__dirname + '/../apps-script/Code.gs', 'utf8'), ctx);
   return {
-    ctx, sheets, sent, inboundThreads, driveFiles, docs, triggers, props, gmailQueries, cache,
+    ctx, sheets, sent, inboundThreads, driveFiles, docs, triggers, props, gmailQueries, cache, fetches,
+    setFetchReply: (fn) => { fetchReply = fn; delete cache.OPENED_IDS; },
     setNow: (d) => { clock = new RealDate(d); },
     dropFile: (name, obj) => {
       const inboxId = ctx.settings_().INBOX_FOLDER_ID;

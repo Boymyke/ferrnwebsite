@@ -73,6 +73,18 @@ emailTrack.get('/o/:file', async (c) => {
   return new Response(GIF, { headers: { 'content-type': 'image/gif', 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', pragma: 'no-cache', expires: '0' } });
 });
 
+/** For the LeadsHunter engine: outreach emails opened or clicked in the last 45 days (signed with ENGINE_KEY). */
+emailTrack.get('/opened', async (c) => {
+  const t = c.req.query('t') || '', s = c.req.query('s') || '';
+  if (!c.env.ENGINE_KEY || !/^\d{12,14}$/.test(t) || Math.abs(Date.now() - Number(t)) > 10 * 60000) return c.json({ ok: false }, 403);
+  const want = await sign(c.env.ENGINE_KEY, `opened|${t}`);
+  let d = want.length === s.length ? 0 : 1; for (let i = 0; i < want.length && i < s.length; i++) d |= want.charCodeAt(i) ^ s.charCodeAt(i);
+  if (d) return c.json({ ok: false }, 403);
+  const since = new Date(Date.now() - 45 * 86400000).toISOString();
+  const rows = await all<{ id: string }>(c.env.DB, "SELECT id FROM email_log WHERE source = 'outreach' AND (open_count > 0 OR click_count > 0) AND sent_at >= ? LIMIT 5000", since).catch(() => []);
+  return c.json({ ok: true, ids: rows.map((r) => r.id) }, 200, { 'cache-control': 'no-store' });
+});
+
 emailTrack.get('/c/:id/:n', async (c) => {
   const id = c.req.param('id'); const n = Number(c.req.param('n'));
   const site = (c.env.SITE_URL || 'https://www.ferrnagency.com').replace(/\/$/, '');
